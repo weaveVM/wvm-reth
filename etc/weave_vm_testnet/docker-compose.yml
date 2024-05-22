@@ -86,7 +86,7 @@ services:
       - "3500:3500"
       - "8080:8080"
       - "6060:6060"
-      - "9090:9091"
+      # - "9090:9091"
     volumes:
       - prysm_data:/data
       - ./../jwttoken:/root/jwt:ro
