@@ -11,7 +11,7 @@ services:
       - "8546:8546"
       - "30304:30304/tcp" #p2p
       - "30304:30304/udp" #p2p
-      - '9001:9001' # metrics
+      - "9001:9001" # metrics
     volumes:
       - reth_data:/data
       - reth_jwt:/jwt:ro

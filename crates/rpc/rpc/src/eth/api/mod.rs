@@ -287,6 +287,7 @@ where
             // child block
             latest_header.number += 1;
             // assumed child block is in the next slot: 12s
+            // TODO: WVM-TESTNET
             latest_header.timestamp += 12;
             // base fee of the child block
             let chain_spec = self.provider().chain_spec();
