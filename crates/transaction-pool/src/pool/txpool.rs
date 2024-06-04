@@ -2599,7 +2599,7 @@ mod tests {
         let mut f = MockTransactionFactory::default();
         let mut pool = AllTransactions::default();
 
-        let tx = MockTransaction::eip1559().with_gas_limit(30_000_000);
+        let tx = MockTransaction::eip1559().with_gas_limit(300_000_000);
 
         let InsertOk { state, .. } =
             pool.insert_tx(f.validated(tx), on_chain_balance, on_chain_nonce).unwrap();
