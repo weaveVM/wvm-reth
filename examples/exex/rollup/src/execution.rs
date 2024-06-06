@@ -441,7 +441,7 @@ mod tests {
             rollupChainId: U256::from(CHAIN_ID),
             sequence: U256::from(sequence),
             confirmBy: U256::from(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
-            gasLimit: U256::from(30_000_000),
+            gasLimit: U256::from(300_000_000),
             rewardAddress: ROLLUP_SUBMITTER_ADDRESS,
         };
         let encoded_transactions =
