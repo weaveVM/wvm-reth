@@ -5,10 +5,10 @@ use std::collections::HashSet;
 pub const TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER: usize = 16;
 
 /// The default maximum allowed number of transactions in the given subpool.
-pub const TXPOOL_SUBPOOL_MAX_TXS_DEFAULT: usize = 100_000;
+pub const TXPOOL_SUBPOOL_MAX_TXS_DEFAULT: usize = 1_000_000;
 
 /// The default maximum allowed size of the given subpool.
-pub const TXPOOL_SUBPOOL_MAX_SIZE_MB_DEFAULT: usize = 200;
+pub const TXPOOL_SUBPOOL_MAX_SIZE_MB_DEFAULT: usize = 1024;
 
 /// Default price bump (in %) for the transaction pool underpriced check.
 pub const DEFAULT_PRICE_BUMP: u128 = 10;
