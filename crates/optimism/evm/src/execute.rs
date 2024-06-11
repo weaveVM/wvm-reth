@@ -3,20 +3,18 @@
 use crate::{l1::ensure_create2_deployer, OptimismBlockExecutionError, OptimismEvmConfig};
 use reth_evm::{
     execute::{
-        BatchBlockExecutionOutput, BatchExecutor, BlockExecutionInput, BlockExecutionOutput,
-        BlockExecutorProvider, Executor,
+        BatchExecutor, BlockExecutionError, BlockExecutionInput, BlockExecutionOutput,
+        BlockExecutorProvider, BlockValidationError, Executor, ProviderError,
     },
     ConfigureEvm,
 };
-use reth_interfaces::{
-    executor::{BlockExecutionError, BlockValidationError},
-    provider::ProviderError,
-};
 use reth_optimism_consensus::validate_block_post_execution;
 use reth_primitives::{
-    BlockNumber, BlockWithSenders, ChainSpec, Hardfork, Header, PruneModes, Receipt, Receipts,
-    TxType, Withdrawals, U256,
+    BlockNumber, BlockWithSenders, ChainSpec, Hardfork, Header, Receipt, Receipts, TxType,
+    Withdrawals, U256,
 };
+use reth_provider::BundleStateWithReceipts;
+use reth_prune_types::PruneModes;
 use reth_revm::{
     batch::{BlockBatchRecord, BlockExecutorStats},
     db::states::bundle_state::BundleRetention,
@@ -359,7 +357,12 @@ where
         // NOTE: we need to merge keep the reverts for the bundle retention
         self.state.merge_transitions(BundleRetention::Reverts);
 
-        Ok(BlockExecutionOutput { state: self.state.take_bundle(), receipts, gas_used })
+        Ok(BlockExecutionOutput {
+            state: self.state.take_bundle(),
+            receipts,
+            requests: vec![],
+            gas_used,
+        })
     }
 }
 
@@ -377,7 +380,7 @@ pub struct OpBatchExecutor<EvmConfig, DB> {
 
 impl<EvmConfig, DB> OpBatchExecutor<EvmConfig, DB> {
     /// Returns the receipts of the executed blocks.
-    pub fn receipts(&self) -> &Receipts {
+    pub const fn receipts(&self) -> &Receipts {
         self.batch_record.receipts()
     }
 
@@ -394,7 +397,7 @@ where
     DB: Database<Error = ProviderError>,
 {
     type Input<'a> = BlockExecutionInput<'a, BlockWithSenders>;
-    type Output = BatchBlockExecutionOutput;
+    type Output = BundleStateWithReceipts;
     type Error = BlockExecutionError;
 
     fn execute_and_verify_one(&mut self, input: Self::Input<'_>) -> Result<(), Self::Error> {
@@ -421,10 +424,11 @@ where
     fn finalize(mut self) -> Self::Output {
         self.stats.log_debug();
 
-        BatchBlockExecutionOutput::new(
+        BundleStateWithReceipts::new(
             self.executor.state.take_bundle(),
             self.batch_record.take_receipts(),
             self.batch_record.first_block().unwrap_or_default(),
+            self.batch_record.take_requests(),
         )
     }
 
@@ -539,6 +543,7 @@ mod tests {
                             body: vec![tx, tx_deposit],
                             ommers: vec![],
                             withdrawals: None,
+                            requests: None,
                         },
                         senders: vec![addr, addr],
                     },
@@ -620,6 +625,7 @@ mod tests {
                             body: vec![tx, tx_deposit],
                             ommers: vec![],
                             withdrawals: None,
+                            requests: None,
                         },
                         senders: vec![addr, addr],
                     },
