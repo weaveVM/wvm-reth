@@ -182,6 +182,7 @@ fn fill_tx_env_with_system_contract_call(
         transact_to: TransactTo::Call(contract),
         // Explicitly set nonce to None so revm does not do any nonce checks
         nonce: None,
+        // WVM: gas limit 300kk
         gas_limit: 300_000_000,
         value: U256::ZERO,
         data,

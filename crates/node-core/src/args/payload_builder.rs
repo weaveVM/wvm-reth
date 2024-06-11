@@ -20,6 +20,7 @@ pub struct PayloadBuilderArgs {
     pub extradata: String,
 
     /// Target gas ceiling for built blocks.
+    /// WVM: 300kk
     #[arg(long = "builder.gaslimit", default_value = "300000000", value_name = "GAS_LIMIT")]
     pub max_gas_limit: u64,
 
