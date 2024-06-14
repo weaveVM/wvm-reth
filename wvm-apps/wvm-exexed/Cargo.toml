@@ -1,10 +1,11 @@
-workspace = { members = ["crates/*"] }
 [package]
-name = "wvm-etl"
-version = "0.0.0"
-publish = false
-edition.workspace = true
-license.workspace = true
+name = "wvm-exexed"
+version = "0.1.0"
+rust-version = "1.76"
+edition = "2021"
+
+[lints]
+workspace = true
 
 [dependencies]
 reth.workspace = true
@@ -12,7 +13,6 @@ reth-exex.workspace = true
 reth-node-api.workspace = true
 reth-node-ethereum.workspace = true
 reth-tracing.workspace = true
-
 eyre.workspace = true
 futures.workspace = true
 
@@ -28,3 +28,10 @@ reth-exex-test-utils.workspace = true
 reth-testing-utils.workspace = true
 
 tokio.workspace = true
+
+#[workspace]
+#members = ["crates/*"]
+
+[[bin]]
+name = "wvm-exexed"
+path = "crates/reth-exexed/src/main.rs"
