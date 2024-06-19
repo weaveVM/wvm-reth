@@ -11,16 +11,40 @@ use gcp_bigquery_client::{
     Client,
 };
 
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
+use phf::phf_ordered_map;
+use polars::prelude::*;
+use serde_json::Value;
+
+use eyre::{Result, WrapErr};
+
 
 /// Query client
 /// Impl for this struct is further below
-pub struct GcpBigQueryClient {
+pub struct BigQueryClient {
     client: Client,
     project_id: String,
     dataset_id: String,
-    drop_tables: bool,
-    table_map: HashMap<String, IndexMap<String, String>>,
+    // drop_tables: bool,
+    // table_map: HashMap<String, IndexMap<String, String>>,
+}
+
+pub static COMMON_COLUMNS: phf::OrderedMap<&'static str, &'static str> = phf_ordered_map! {
+    "indexed_id" => "string",  // will need to generate uuid in rust; postgres allows for autogenerate
+    "block_number" => "int",
+    "sealed_block_with_senders" => "string",
+    "timestamp" => "int"
+};
+
+pub fn prepare_blockstate_table_config() -> HashMap<String, IndexMap<String, String>> {
+    let mut table_column_definition: HashMap<String, IndexMap<String, String>> = HashMap::new();
+    let merged_column_types: IndexMap<String, String> = COMMON_COLUMNS
+        .into_iter()
+        .map(|it| (it.0.to_string(), it.1.to_string()))
+        .collect();
+
+    table_column_definition.insert("state".to_string(), merged_column_types);
+    table_column_definition
 }
 
 #[derive(Debug)]
@@ -29,7 +53,7 @@ pub enum GcpClientError {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct IndexerGcpBigQueryConfig {
+pub struct BigQueryConfig {
     #[serde(rename = "dropTableBeforeSync")]
     // #[serde(skip_serializing_if = "Option::is_none")]
     pub drop_tables: bool,
@@ -47,26 +71,22 @@ pub struct IndexerGcpBigQueryConfig {
     pub credentials_path: String,
 }
 
-pub async fn init_gcp_bigquery_db(
-    indexer_gcp_bigquery_config: &IndexerGcpBigQueryConfig,
-    // event_mappings: &[IndexerContractMapping],
-) -> Result<GcpBigQueryClient, GcpClientError> {
-    let gcp_bigquery = GcpBigQueryClient::new(
-        indexer_gcp_bigquery_config,
-        // event_mappings
+pub async fn init_bigquery_db(
+    bigquery_config: &BigQueryConfig,
+) -> Result<BigQueryClient, GcpClientError> {
+    let gcp_bigquery = BigQueryClient::new(
+        bigquery_config,
     ).await?;
 
-    // Drop table iff drop_table property is true
-    if indexer_gcp_bigquery_config.drop_tables {
-        let res = gcp_bigquery.delete_tables().await;
-        match res {
-            Ok(..) => {}
-            Err(err) => return Err(GcpClientError::BigQueryError(err)),
-        }
-    }
+    // if bigquery_config.drop_tables {
+    //     let res = gcp_bigquery.delete_tables().await;
+    //     match res {
+    //         Ok(..) => {}
+    //         Err(err) => return Err(GcpClientError::BigQueryError(err)),
+    //     }
+    // }
 
-    // Create - will create if tables do not exist
-    let res = gcp_bigquery.create_tables().await;
+    let res = gcp_bigquery.create_state_table().await;
     match res {
         Ok(..) => {}
         Err(err) => return Err(GcpClientError::BigQueryError(err)),
@@ -76,26 +96,26 @@ pub async fn init_gcp_bigquery_db(
 }
 
 
-impl GcpBigQueryClient {
+impl BigQueryClient {
     pub async fn new(
-        indexer_gcp_bigquery_config: &IndexerGcpBigQueryConfig,
+        bigquery_config: &BigQueryConfig,
         // indexer_contract_mappings: &[IndexerContractMapping],
     ) -> Result<Self, GcpClientError> {
         let client = gcp_bigquery_client::Client::from_service_account_key_file(
-            indexer_gcp_bigquery_config.credentials_path.as_str(),
+            bigquery_config.credentials_path.as_str(),
         )
             .await;
 
-        let table_map = load_table_configs(indexer_contract_mappings);
+        // let table_map = load_table_configs(indexer_contract_mappings);
 
         match client {
             Err(error) => Err(GcpClientError::BigQueryError(error)),
-            Ok(client) => Ok(GcpBigQueryClient {
+            Ok(client) => Ok(BigQueryClient {
                 client,
-                drop_tables: indexer_gcp_bigquery_config.drop_tables,
-                project_id: indexer_gcp_bigquery_config.project_id.to_string(),
-                dataset_id: indexer_gcp_bigquery_config.dataset_id.to_string(),
-                table_map,
+               // drop_tables: bigquery_config.drop_tables,
+                project_id: bigquery_config.project_id.to_string(),
+                dataset_id: bigquery_config.dataset_id.to_string(),
+              //  table_map,
             }),
         }
     }
@@ -103,47 +123,58 @@ impl GcpBigQueryClient {
     ///
     /// Deletes tables from GCP bigquery, if they exist
     /// Tables are only deleted if the configuration has specified drop_table
-    pub async fn delete_tables(&self) -> Result<(), BQError> {
-        if self.drop_tables {
-            for table_name in self.table_map.keys() {
-                let table_ref = self
-                    .client
-                    .table()
-                    .get(
-                        self.project_id.as_str(),
-                        self.dataset_id.as_str(),
-                        table_name.as_str(),
-                        None,
-                    )
-                    .await;
-
-                if let Ok(table) = table_ref {
-                    // Delete table, since it exists
-                    let res = table.delete(&self.client).await;
-                    match res {
-                        Err(err) => {
-                            return Err(err);
-                        }
-                        Ok(_) => println!("Removed table: {}", table_name),
-                    }
-                }
-            }
-        }
-
-        Ok(())
-    }
+    // pub async fn delete_tables(&self) -> Result<(), BQError> {
+    //     if self.drop_tables {
+    //         for table_name in self.table_map.keys() {
+    //             let table_ref = self
+    //                 .client
+    //                 .table()
+    //                 .get(
+    //                     self.project_id.as_str(),
+    //                     self.dataset_id.as_str(),
+    //                     table_name.as_str(),
+    //                     None,
+    //                 )
+    //                 .await;
+    //
+    //             if let Ok(table) = table_ref {
+    //                 // Delete table, since it exists
+    //                 let res = table.delete(&self.client).await;
+    //                 match res {
+    //                     Err(err) => {
+    //                         return Err(err);
+    //                     }
+    //                     Ok(_) => println!("Removed table: {}", table_name),
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     Ok(())
+    // }
 
     ///
     /// Iterates through all defined tables, calls create_table on each table
-    pub async fn create_tables(&self) -> Result<(), BQError> {
-        for (table_name, column_map) in self.table_map.iter() {
-            let res = self.create_table(table_name, column_map).await;
-            match res {
-                Ok(..) => {}
-                Err(err) => return Err(err),
+    // pub async fn create_tables(&self) -> Result<(), BQError> {
+    //     for (table_name, column_map) in self.table_map.iter() {
+    //         let res = self.create_table(table_name, column_map).await;
+    //         match res {
+    //             Ok(..) => {}
+    //             Err(err) => return Err(err),
+    //         }
+    //     }
+    //     Ok(())
+    // }
+
+    pub async fn create_state_table(&self) -> Result<(), BQError> {
+            for (table_name, column_map) in prepare_blockstate_table_config().iter() {
+                let res = self.create_table(table_name, column_map).await;
+                match res {
+                    Ok(..) => {}
+                    Err(err) => return Err(err),
+                }
             }
-        }
-        Ok(())
+            Ok(())
     }
 
     ///
@@ -185,7 +216,7 @@ impl GcpBigQueryClient {
                 let schema_types: Vec<TableFieldSchema> = column_map
                     .iter()
                     .map(|column| {
-                        GcpBigQueryClient::db_type_to_table_field_schema(
+                        BigQueryClient::db_type_to_table_field_schema(
                             &column.1.to_string(),
                             &column.0.to_string(),
                         )
@@ -214,23 +245,6 @@ impl GcpBigQueryClient {
             }
         }
         Ok(())
-    }
-
-    ///
-    ///  Given CsvWriter object (which indexer writes to / manages)
-    ///  Extract and write to GCP bigquery storage
-    ///
-    ///  # Arguments
-    ///
-    ///  * `table_name` - name of table for dataset
-    ///  * `csv_writer` - csv writer reference
-    pub async fn write_csv_to_storage(&self, table_name: &str, csv_writer: &CsvWriter) {
-        let column_map = &self.table_map[table_name];
-        let dataframe = read_csv_to_polars(csv_writer.path(), column_map);
-        let bq_rowmap_vector =
-            self.build_bigquery_rowmap_vector(&dataframe, &self.table_map[table_name]);
-        self.write_rowmaps_to_gcp(table_name, &bq_rowmap_vector)
-            .await;
     }
 
     ///
@@ -263,7 +277,7 @@ impl GcpBigQueryClient {
                     .get(&name.to_string())
                     .expect("Column should exist");
                 let transformed_value = match col_type.as_str() {
-                    "int" => GcpBigQueryClient::bigquery_anyvalue_numeric_type(&value),
+                    "int" => BigQueryClient::bigquery_anyvalue_numeric_type(&value),
                     "string" => Value::String(value.to_string()),
                     _ => Value::Null,
                 };
@@ -349,19 +363,56 @@ impl GcpBigQueryClient {
             _ => Value::Null,
         }
     }
-}
 
-///
-/// Implements DatasourceWritable wrapper
-/// Allows all writers to be treated uniformly
-#[async_trait]
-impl DatasourceWritable for GcpBigQueryClient {
-    async fn write_data(&self, table_name: &str, csv_writer: &CsvWriter) {
-        println!("   writing / sync bigquery table: {:?}", table_name);
-        self.write_csv_to_storage(table_name, csv_writer).await;
+
+    pub async fn bq_insert_state(
+        &self,
+        table_name: &str,
+        state: types::types::ExecutionTipState,
+    ) -> eyre::Result<()> {
+        // vec_of_rowmaps: &Vec<HashMap<String, Value>>,
+
+        #[derive(Serialize)]
+        struct StateRow {
+            block_number: u64,
+            sealed_block_with_senders: String,
+        }
+
+        let mut insert_request = TableDataInsertAllRequest::new();
+        let json_sealed_block_with_senders = serde_json::to_string(&state.sealed_block_with_senders)?;
+
+        insert_request.add_row(
+            None,
+            StateRow{
+                block_number: state.block_number,
+                sealed_block_with_senders: json_sealed_block_with_senders,
+            },
+        )?;
+
+
+        println!("gcp insert request: {:?}", insert_request);
+
+        let result = self
+            .client
+            .tabledata()
+            .insert_all(
+                self.project_id.as_str(),
+                self.dataset_id.as_str(),
+                table_name,
+                insert_request,
+            )
+            .await;
+
+        match result {
+            Ok(response) => {
+                println!("Success response: {:?}", response);
+                Ok(())
+            },
+            Err(error) => {
+                println!("Failed, reason: {:?}", error);
+                Err(eyre::Report::new(error)).wrap_err("Failed to insert data into BigQuery")
+            },
+        }
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
