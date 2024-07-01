@@ -121,7 +121,7 @@ services:
 #      - --minimum-peers-per-subnet=0
 #      - --enable-debug-rpc-endpoints
 
-  lighthouse:
+  beacon-chain:
     image: sigp/lighthouse:v5.1.3-modern
     depends_on:
       - reth
