@@ -1,6 +1,5 @@
-use std::any::Any;
-use std::collections::HashMap;
 use indexmap::IndexMap;
+use std::{any::Any, collections::HashMap};
 
 use gcp_bigquery_client::{
     error::BQError,
@@ -11,13 +10,12 @@ use gcp_bigquery_client::{
     Client,
 };
 
-use serde::{Serialize, Deserialize};
 use phf::phf_ordered_map;
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use eyre::{Result, WrapErr};
-
 
 /// Query client
 /// Impl for this struct is further below
@@ -38,10 +36,8 @@ pub static COMMON_COLUMNS: phf::OrderedMap<&'static str, &'static str> = phf_ord
 
 pub fn prepare_blockstate_table_config() -> HashMap<String, IndexMap<String, String>> {
     let mut table_column_definition: HashMap<String, IndexMap<String, String>> = HashMap::new();
-    let merged_column_types: IndexMap<String, String> = COMMON_COLUMNS
-        .into_iter()
-        .map(|it| (it.0.to_string(), it.1.to_string()))
-        .collect();
+    let merged_column_types: IndexMap<String, String> =
+        COMMON_COLUMNS.into_iter().map(|it| (it.0.to_string(), it.1.to_string())).collect();
 
     table_column_definition.insert("state".to_string(), merged_column_types);
     table_column_definition
@@ -74,9 +70,7 @@ pub struct BigQueryConfig {
 pub async fn init_bigquery_db(
     bigquery_config: &BigQueryConfig,
 ) -> Result<BigQueryClient, GcpClientError> {
-    let gcp_bigquery = BigQueryClient::new(
-        bigquery_config,
-    ).await?;
+    let gcp_bigquery = BigQueryClient::new(bigquery_config).await?;
 
     // if bigquery_config.drop_tables {
     //     let res = gcp_bigquery.delete_tables().await;
@@ -95,7 +89,6 @@ pub async fn init_bigquery_db(
     Ok(gcp_bigquery)
 }
 
-
 impl BigQueryClient {
     pub async fn new(
         bigquery_config: &BigQueryConfig,
@@ -104,7 +97,7 @@ impl BigQueryClient {
         let client = gcp_bigquery_client::Client::from_service_account_key_file(
             bigquery_config.credentials_path.as_str(),
         )
-            .await;
+        .await;
 
         // let table_map = load_table_configs(indexer_contract_mappings);
 
@@ -112,10 +105,10 @@ impl BigQueryClient {
             Err(error) => Err(GcpClientError::BigQueryError(error)),
             Ok(client) => Ok(BigQueryClient {
                 client,
-               // drop_tables: bigquery_config.drop_tables,
+                // drop_tables: bigquery_config.drop_tables,
                 project_id: bigquery_config.project_id.to_string(),
                 dataset_id: bigquery_config.dataset_id.to_string(),
-              //  table_map,
+                //  table_map,
             }),
         }
     }
@@ -167,14 +160,14 @@ impl BigQueryClient {
     // }
 
     pub async fn create_state_table(&self) -> Result<(), BQError> {
-            for (table_name, column_map) in prepare_blockstate_table_config().iter() {
-                let res = self.create_table(table_name, column_map).await;
-                match res {
-                    Ok(..) => {}
-                    Err(err) => return Err(err),
-                }
+        for (table_name, column_map) in prepare_blockstate_table_config().iter() {
+            let res = self.create_table(table_name, column_map).await;
+            match res {
+                Ok(..) => {}
+                Err(err) => return Err(err),
             }
-            Ok(())
+        }
+        Ok(())
     }
 
     ///
@@ -189,20 +182,12 @@ impl BigQueryClient {
         table_name: &str,
         column_map: &IndexMap<String, String>,
     ) -> Result<(), BQError> {
-        let dataset_ref = self
-            .client
-            .dataset()
-            .get(self.project_id.as_str(), self.dataset_id.as_str())
-            .await;
+        let dataset_ref =
+            self.client.dataset().get(self.project_id.as_str(), self.dataset_id.as_str()).await;
         let table_ref = self
             .client
             .table()
-            .get(
-                self.project_id.as_str(),
-                self.dataset_id.as_str(),
-                table_name,
-                None,
-            )
+            .get(self.project_id.as_str(), self.dataset_id.as_str(), table_name, None)
             .await;
 
         match table_ref {
@@ -255,7 +240,6 @@ impl BigQueryClient {
     ///
     /// * `df` - dataframe
     /// * `table_config` - column to type mapping for table being written to
-    ///
     pub fn build_bigquery_rowmap_vector(
         &self,
         df: &DataFrame,
@@ -273,9 +257,7 @@ impl BigQueryClient {
 
                 //  Convert from AnyValue (polars) to Value (generic value wrapper)
                 //  The converted-to type is already specified in the inbound configuration
-                let col_type = table_config
-                    .get(&name.to_string())
-                    .expect("Column should exist");
+                let col_type = table_config.get(&name.to_string()).expect("Column should exist");
                 let transformed_value = match col_type.as_str() {
                     "int" => BigQueryClient::bigquery_anyvalue_numeric_type(&value),
                     "string" => Value::String(value.to_string()),
@@ -364,7 +346,6 @@ impl BigQueryClient {
         }
     }
 
-
     pub async fn bq_insert_state(
         &self,
         table_name: &str,
@@ -379,16 +360,16 @@ impl BigQueryClient {
         }
 
         let mut insert_request = TableDataInsertAllRequest::new();
-        let json_sealed_block_with_senders = serde_json::to_string(&state.sealed_block_with_senders)?;
+        let json_sealed_block_with_senders =
+            serde_json::to_string(&state.sealed_block_with_senders)?;
 
         insert_request.add_row(
             None,
-            StateRow{
+            StateRow {
                 block_number: state.block_number,
                 sealed_block_with_senders: json_sealed_block_with_senders,
             },
         )?;
-
 
         println!("gcp insert request: {:?}", insert_request);
 
@@ -407,12 +388,11 @@ impl BigQueryClient {
             Ok(response) => {
                 println!("Success response: {:?}", response);
                 Ok(())
-            },
+            }
             Err(error) => {
                 println!("Failed, reason: {:?}", error);
                 Err(eyre::Report::new(error)).wrap_err("Failed to insert data into BigQuery")
-            },
+            }
         }
     }
-
 }

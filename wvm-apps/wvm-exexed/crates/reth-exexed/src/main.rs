@@ -1,13 +1,13 @@
-use std::path::Path;
 use bigquery::client::BigQueryConfig;
+use repository::state_repository;
 use reth::api::FullNodeComponents;
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
-use repository::state_repository;
-use types::types::ExecutionTipState;
-use tokio;
 use serde_json;
+use std::path::Path;
+use tokio;
+use types::types::ExecutionTipState;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -28,15 +28,16 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         };
 
         if let Some(committed_chain) = notification.committed_chain() {
-            ctx.events
-                .send(ExExEvent::FinishedHeight(committed_chain.tip().number))?;
+            ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().number))?;
         }
 
         if let Some(committed_chain) = notification.committed_chain() {
-            state_repository.save(ExecutionTipState{
-                block_number: committed_chain.tip().block.number,
-                sealed_block_with_senders: committed_chain.tip().clone(),
-            }).await?;
+            state_repository
+                .save(ExecutionTipState {
+                    block_number: committed_chain.tip().block.number,
+                    sealed_block_with_senders: committed_chain.tip().clone(),
+                })
+                .await?;
         }
     }
 
@@ -52,21 +53,25 @@ fn main() -> eyre::Result<()> {
                     std::env::var("CONFIG").unwrap_or("./bq-config.json".to_string());
                 println!("config: {}", config_path);
 
-                let config_file = std::fs::File::open(config_path).expect("bigquery config path exists");
+                let config_file =
+                    std::fs::File::open(config_path).expect("bigquery config path exists");
                 let reader = std::io::BufReader::new(config_file);
 
-                let bq_config:BigQueryConfig = serde_json::from_reader(reader).expect("bigquery config read from file");
+                let bq_config: BigQueryConfig =
+                    serde_json::from_reader(reader).expect("bigquery config read from file");
 
                 // init bigquery client
-                let bigquery_client = bigquery::client::init_bigquery_db(&bq_config).await
+                let bigquery_client = bigquery::client::init_bigquery_db(&bq_config)
+                    .await
                     .expect("bigquery client initialized");
 
                 println!("bigquery client initialized");
 
                 // init state repository
-                let state_repo = repository::state_repository::StateRepository::new(bigquery_client);
+                let state_repo =
+                    repository::state_repository::StateRepository::new(bigquery_client);
                 // init state processor
-                let state_processor =  exex_etl::state_processor::StateProcessor::new();
+                let state_processor = exex_etl::state_processor::StateProcessor::new();
 
                 Ok(exex_etl_processor(ctx, state_repo, state_processor))
             })
