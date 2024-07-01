@@ -163,6 +163,16 @@ services:
 #      beacon-chain:
 #        condition: service_started
 
+  validator:
+    image: sigp/lighthouse:v5.1.3-modern
+    volumes:
+      - lighthousedata:/data
+    command:
+      lighthouse vc
+      --testnet-dir /testnetdata
+    depends_on:
+      beacon-chain:
+        condition: service_started
 volumes:
   reth_data:
   reth_jwt:
@@ -171,4 +181,5 @@ volumes:
   prometheusdata:
   grafanadata:
   testnetdata:
+  lighthousedata:
   # prysm_data:
