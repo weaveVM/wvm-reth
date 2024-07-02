@@ -171,6 +171,7 @@ services:
     command:
       lighthouse vc
       --testnet-dir=/testnetdata/
+      --beacon-nodes http://beacon-chain:5052
     depends_on:
       beacon-chain:
         condition: service_started
@@ -184,4 +185,3 @@ volumes:
   grafanadata:
   testnetdata:
   lighthousedata:
-  # prysm_data:
