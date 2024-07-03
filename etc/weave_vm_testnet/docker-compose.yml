@@ -35,7 +35,6 @@ services:
       - --authrpc.port=8551
       - --authrpc.jwtsecret=/root/jwt/jwt.hex
       - --chain=/genesis/genesis.json
-      - --disable-discovery
       - --datadir=/data
       - --log.file.directory=/root/logs
 
@@ -90,37 +89,6 @@ services:
       - --metrics-port=9091
 
   # Consensus client part
-
-  # Runs a Prysm beacon chain from a specified genesis state
-#  beacon-chain:
-#    image: "gcr.io/prysmaticlabs/prysm/beacon-chain:stable"
-#    ports:
-#      - "4000:4000"
-#      - "3500:3500"
-#      - "8080:8080"
-#      - "6060:6060"
-#      # - "9090:9091"
-#    volumes:
-#      - prysm_data:/data
-#      - ./../jwttoken:/root/jwt:ro
-#    command:
-#      - --datadir=/data/beacondata
-#      - --min-sync-peers=0
-#      - --genesis-state=/data/genesis.ssz
-#      - --bootstrap-node=
-#      - --interop-eth1data-votes
-#      - --chain-config-file=/data/config.yml
-#      - --contract-deployment-block=0
-#      - --chain-id=${CHAIN_ID:-9496}
-#      - --execution-endpoint=http://reth:8551
-#      - --rpc-host=0.0.0.0
-#      - --grpc-gateway-host=0.0.0.0
-#      - --accept-terms-of-use
-#      - --jwt-secret=/root/jwt/jwt.hex
-#      - --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7
-#      - --minimum-peers-per-subnet=0
-#      - --enable-debug-rpc-endpoints
-
   beacon-chain:
     image: sigp/lighthouse:v5.1.3-modern
     depends_on:
@@ -138,30 +106,17 @@ services:
     command: >
       lighthouse bn
       --testnet-dir=/testnetdata/
-      --http --http-address 0.0.0.0
+      --http 
+      --http-address 0.0.0.0
       --execution-endpoint http://reth:8551
-      --metrics --metrics-address 0.0.0.0
+      --metrics 
+      --metrics-address 0.0.0.0
       --execution-jwt /root/jwt/jwt.hex
-      --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7
-    # --checkpoint-sync-url https://mainnet.checkpoint.sigp.io
-
-  # We run a validator client with deterministically-generated keys that match
-  # The validator keys present in the beacon chain genesis state generated a few steps above.
-
-#  validator:
-#    image: "gcr.io/prysmaticlabs/prysm/validator:stable"
-#    volumes:
-#      - prysm_data:/data
-#    command:
-#      - --beacon-rpc-provider=beacon-chain:4000
-#      - --datadir=/data/validatordata
-#      - --accept-terms-of-use
-#      - --interop-num-validators=1
-#      - --interop-start-index=0
-#      - --chain-config-file=/data/config.yml
-#    depends_on:
-#      beacon-chain:
-#        condition: service_started
+      --eth1
+      --allow-insecure-genesis-sync
+      --target-peers 0
+      --import-all-attestations
+      --subscribe-all-subnets
 
   validator:
     image: sigp/lighthouse:v5.1.3-modern
@@ -172,6 +127,9 @@ services:
       lighthouse vc
       --testnet-dir=/testnetdata/
       --beacon-nodes http://beacon-chain:5052
+      --datadir=/data/custom/
+      --init-slashing-protection
+      --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7
     depends_on:
       beacon-chain:
         condition: service_started
