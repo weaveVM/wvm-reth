@@ -112,7 +112,7 @@ services:
       --metrics 
       --metrics-address 0.0.0.0
       --execution-jwt /root/jwt/jwt.hex
-      --eth1
+      --staking
       --allow-insecure-genesis-sync
       --target-peers 0
       --import-all-attestations
@@ -128,6 +128,7 @@ services:
       - lighthousedata:/data
     command:
       lighthouse vc
+      --builder-proposals 
       --testnet-dir=/testnetdata/
       --beacon-nodes http://beacon-chain:5052
       --datadir=/data/custom/
