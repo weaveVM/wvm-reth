@@ -110,8 +110,16 @@ sudo ufw allow 9090/tcp
 sudo ufw allow 8551/tcp
 sudo ufw allow 8545/tcp
 sudo ufw allow 8546/tcp
+sudo ufw allow 5052/tcp
+sudo ufw allow 5053/tcp
+sudo ufw allow 5054/tcp
+sudo ufw allow 9000/tcp
+sudo ufw allow 9000/udp
+
 sudo ufw enable
 sudo ufw status
+
+
 ```
 
 ## 11. Generate JWT Token
