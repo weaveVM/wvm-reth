@@ -135,6 +135,7 @@ services:
       --init-slashing-protection
       --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7
       --http-allow-origin "*"
+      --http
     depends_on:
       beacon-chain:
         condition: service_started
