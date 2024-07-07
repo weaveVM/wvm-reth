@@ -118,8 +118,8 @@ services:
       --import-all-attestations
       --subscribe-all-subnets
       --http-allow-origin "*"
-      --disable-deposit-contract-sync
       --enable-private-discovery 
+      --http-allow-sync-stalled 
 
   validator:
     image: sigp/lighthouse:v5.1.3-modern
