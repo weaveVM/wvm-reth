@@ -91,8 +91,11 @@ sudo cp genesis.json /var/lib/docker/volumes/weave_vm_testnet_reth_genesis/_data
 
 ## 9. Configure Firewall on VM and Cloud
 ```bash
-gcloud compute --project=promising-rock-414216 firewall-rules create eth-monitoring --description="ports open for monitoring" --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:3000
 gcloud compute --project=promising-rock-414216 firewall-rules create eth-ports --description="ports open for monitoring and metrics" --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:3000,9090
+gcloud compute --project=promising-rock-414216 firewall-rules create eth-ports --description="ports open for monitoring and metrics" --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:3000,9090
+gcloud compute --project=promising-rock-414216 firewall-rules create consensus-ports --description="ports open for consensus" --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:9000,udp:9000
+gcloud compute --project=promising-rock-414216 firewall-rules create consensus-ports-quic --description="ports open for consensus quic" --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=udp:9001
+
 ```
 
 ## 10. Configure Firewall on VM
@@ -115,6 +118,7 @@ sudo ufw allow 5053/tcp
 sudo ufw allow 5054/tcp
 sudo ufw allow 9000/tcp
 sudo ufw allow 9000/udp
+sudo ufw allow 9001/udp
 
 sudo ufw enable
 sudo ufw status
