@@ -105,24 +105,24 @@ services:
       - ./../jwttoken:/root/jwt:ro
     command: >
       lighthouse bn
-      --testnet-dir=/testnetdata/ \
-      --http \
-      --http-address 0.0.0.0 \
-      --execution-endpoint http://reth:8551 \
-      --metrics \
-      --metrics-address 0.0.0.0 \
-      --execution-jwt /root/jwt/jwt.hex \
-      --staking \
-      --allow-insecure-genesis-sync \
-      --target-peers 1 \
-      --import-all-attestations \
-      --subscribe-all-subnets \
-      --http-allow-origin "*" \
-      --enable-private-discovery \
-      --disable-packet-filter \
-      --http-allow-sync-stalled \
-      --enr-tcp-port 9000 \
-      --enr-udp-port 9000 \
+      --testnet-dir=/testnetdata/ 
+      --http 
+      --http-address 0.0.0.0 
+      --execution-endpoint http://reth:8551 
+      --metrics 
+      --metrics-address 0.0.0.0 
+      --execution-jwt /root/jwt/jwt.hex 
+      --staking 
+      --allow-insecure-genesis-sync 
+      --target-peers 1 
+      --import-all-attestations 
+      --subscribe-all-subnets 
+      --http-allow-origin "*" 
+      --enable-private-discovery 
+      --disable-packet-filter 
+      --http-allow-sync-stalled 
+      --enr-tcp-port 9000 
+      --enr-udp-port 9000 
       --enr-address local_IP
 
   validator:
