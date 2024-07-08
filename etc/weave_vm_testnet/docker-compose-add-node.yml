@@ -107,7 +107,7 @@ services:
       lighthouse bn
       --testnet-dir=/testnetdata/ 
       --http 
-      --http-address 0.0.0.0 \
+      --http-address 0.0.0.0 
       --execution-endpoint http://reth:8551 
       --metrics 
       --metrics-address 0.0.0.0 
