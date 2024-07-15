@@ -207,12 +207,12 @@ impl From<reth_errors::ProviderError> for EthApiError {
     fn from(error: reth_errors::ProviderError) -> Self {
         use reth_errors::ProviderError;
         match error {
-            ProviderError::HeaderNotFound(_)
-            | ProviderError::BlockHashNotFound(_)
-            | ProviderError::BestBlockNotFound
-            | ProviderError::BlockNumberForTransactionIndexNotFound
-            | ProviderError::TotalDifficultyNotFound { .. }
-            | ProviderError::UnknownBlockHash(_) => Self::UnknownBlockNumber,
+            ProviderError::HeaderNotFound(_) |
+            ProviderError::BlockHashNotFound(_) |
+            ProviderError::BestBlockNotFound |
+            ProviderError::BlockNumberForTransactionIndexNotFound |
+            ProviderError::TotalDifficultyNotFound { .. } |
+            ProviderError::UnknownBlockHash(_) => Self::UnknownBlockNumber,
             ProviderError::FinalizedBlockNotFound | ProviderError::SafeBlockNotFound => {
                 Self::UnknownSafeOrFinalizedBlock
             }
@@ -495,10 +495,10 @@ impl From<reth_primitives::InvalidTransactionError> for RpcInvalidTransactionErr
                 Self::OldLegacyChainId
             }
             InvalidTransactionError::ChainIdMismatch => Self::InvalidChainId,
-            InvalidTransactionError::Eip2930Disabled
-            | InvalidTransactionError::Eip1559Disabled
-            | InvalidTransactionError::Eip4844Disabled
-            | InvalidTransactionError::TxTypeNotSupported => Self::TxTypeNotSupported,
+            InvalidTransactionError::Eip2930Disabled |
+            InvalidTransactionError::Eip1559Disabled |
+            InvalidTransactionError::Eip4844Disabled |
+            InvalidTransactionError::TxTypeNotSupported => Self::TxTypeNotSupported,
             InvalidTransactionError::GasUintOverflow => Self::GasUintOverflow,
             InvalidTransactionError::GasTooLow => Self::GasTooLow,
             InvalidTransactionError::GasTooHigh => Self::GasTooHigh,

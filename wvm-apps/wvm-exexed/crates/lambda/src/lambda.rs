@@ -1,12 +1,9 @@
-use reqwest::Client;
-use reth::api::FullNodeComponents;
-use reth::primitives::{address, Address, TransactionSigned};
+use reth::{
+    api::FullNodeComponents,
+    primitives::{Address, TransactionSigned},
+};
 use reth_exex::ExExContext;
-use reth_node_ethereum::EthereumNode;
-use reth_tracing::tracing::info;
-use serde_json;
-use serde_json::json;
-use std::collections::HashMap;
+use serde_json::{self, json};
 
 pub const SEQ_ADDRESS: &str = "0x197f818c1313DC58b32D88078ecdfB40EA822614";
 pub const LAMBDA_ENDPOINT: &str = "https://wvm-lambda-0755acbdae90.herokuapp.com";

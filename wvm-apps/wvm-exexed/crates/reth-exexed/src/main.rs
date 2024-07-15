@@ -1,3 +1,9 @@
+//! WVM node main
+
+#![doc(
+    issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/"
+)]
+
 use bigquery::client::BigQueryConfig;
 use lambda::lambda::exex_lambda_processor;
 use repository::state_repository;
@@ -6,14 +12,12 @@ use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
 use serde_json;
-use std::path::Path;
-use tokio;
 use types::types::ExecutionTipState;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
-    state_repository: repository::state_repository::StateRepository,
-    state_processor: exex_etl::state_processor::StateProcessor,
+    state_repository: state_repository::StateRepository,
+    _state_processor: exex_etl::state_processor::StateProcessor,
 ) -> eyre::Result<()> {
     while let Some(notification) = ctx.notifications.recv().await {
         match &notification {
@@ -45,6 +49,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
     Ok(())
 }
 
+/// Main loop of the WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         let handle = builder

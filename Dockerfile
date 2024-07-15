@@ -1,7 +1,7 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 WORKDIR /app
 
-LABEL org.opencontainers.image.source=https://github.com/paradigmxyz/reth
+LABEL org.opencontainers.image.source=https://github.com/weaveVM/wvm-reth
 LABEL org.opencontainers.image.licenses="MIT OR Apache-2.0"
 
 # Install system dependencies
