@@ -1,0 +1,55 @@
+name: Google Artifact Registry
+on:
+  push:
+    branches:
+      - main
+      - dev
+    tags:
+      - '*'
+
+jobs:
+  docker-release:
+    name: Tagged Docker release to Google Artifact Registry
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v2
+
+      - id: auth
+        name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+          access_token_lifetime: 300s
+
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v1
+        with:
+          registry: us-east1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Get tag
+        id: get-tag
+        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+
+      - name: Set Docker Tag
+        id: tag-branch
+        run: echo "::set-output name=tag::$(if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then echo 'latest'; elif [[ ${{ github.ref }} == 'refs/heads/dev' ]]; then echo 'nightly'; else echo 'custom-tag'; fi)"
+
+      - id: docker-push-tagged
+        name: Tag Docker image and push to Google Artifact Registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: |
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag-branch }}
