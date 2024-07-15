@@ -1,5 +1,5 @@
 use indexmap::IndexMap;
-use std::{any::Any, collections::HashMap};
+use std::collections::HashMap;
 
 use gcp_bigquery_client::{
     error::BQError,

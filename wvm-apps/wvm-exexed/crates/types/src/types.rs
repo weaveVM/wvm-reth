@@ -1,5 +1,5 @@
 use alloy_primitives;
-use reth::{primitives::SealedBlockWithSenders, providers::ExecutionOutcome};
+use reth::primitives::SealedBlockWithSenders;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -1,13 +1,14 @@
 //! Reth genesis initialization utility functions.
 
+use alloy_genesis::GenesisAccount;
+use reth_chainspec::ChainSpec;
 use reth_codecs::Compact;
 use reth_config::config::EtlConfig;
 use reth_db::tables;
 use reth_db_api::{database::Database, transaction::DbTxMut, DatabaseError};
 use reth_etl::Collector;
 use reth_primitives::{
-    Account, Address, Bytecode, ChainSpec, GenesisAccount, Receipts, StaticFileSegment,
-    StorageEntry, B256, U256,
+    Account, Address, Bytecode, Receipts, StaticFileSegment, StorageEntry, B256, U256,
 };
 use reth_provider::{
     bundle_state::{BundleStateInit, RevertsInit},
@@ -463,19 +464,17 @@ fn compute_state_root<DB: Database>(provider: &DatabaseProviderRW<DB>) -> eyre::
             .root_with_progress()?
         {
             StateRootProgress::Progress(state, _, updates) => {
-                let updates_len = updates.len();
+                let updated_len = updates.write_to_database(tx)?;
+                total_flushed_updates += updated_len;
 
                 trace!(target: "reth::cli",
                     last_account_key = %state.last_account_key,
-                    updates_len,
+                    updated_len,
                     total_flushed_updates,
                     "Flushing trie updates"
                 );
 
                 intermediate_state = Some(*state);
-                updates.flush(tx)?;
-
-                total_flushed_updates += updates_len;
 
                 if total_flushed_updates % SOFT_LIMIT_COUNT_FLUSHED_UPDATES == 0 {
                     info!(target: "reth::cli",
@@ -485,15 +484,12 @@ fn compute_state_root<DB: Database>(provider: &DatabaseProviderRW<DB>) -> eyre::
                 }
             }
             StateRootProgress::Complete(root, _, updates) => {
-                let updates_len = updates.len();
-
-                updates.flush(tx)?;
-
-                total_flushed_updates += updates_len;
+                let updated_len = updates.write_to_database(tx)?;
+                total_flushed_updates += updated_len;
 
                 trace!(target: "reth::cli",
                     %root,
-                    updates_len = updates_len,
+                    updated_len,
                     total_flushed_updates,
                     "State root has been computed"
                 );
@@ -524,6 +520,8 @@ struct GenesisAccountWithAddress {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloy_genesis::Genesis;
+    use reth_chainspec::{Chain, HOLESKY, MAINNET, SEPOLIA};
     use reth_db::DatabaseEnv;
     use reth_db_api::{
         cursor::DbCursorRO,
@@ -531,10 +529,8 @@ mod tests {
         table::{Table, TableRow},
         transaction::DbTx,
     };
-    use reth_primitives::{
-        Chain, Genesis, IntegerList, GOERLI, GOERLI_GENESIS_HASH, MAINNET, MAINNET_GENESIS_HASH,
-        SEPOLIA, SEPOLIA_GENESIS_HASH,
-    };
+    use reth_primitives::{HOLESKY_GENESIS_HASH, MAINNET_GENESIS_HASH, SEPOLIA_GENESIS_HASH};
+    use reth_primitives_traits::IntegerList;
     use reth_provider::test_utils::create_test_provider_factory_with_chain_spec;
 
     fn collect_table_entries<DB, T>(
@@ -557,21 +553,21 @@ mod tests {
     }
 
     #[test]
-    fn success_init_genesis_goerli() {
-        let genesis_hash =
-            init_genesis(create_test_provider_factory_with_chain_spec(GOERLI.clone())).unwrap();
-
-        // actual, expected
-        assert_eq!(genesis_hash, GOERLI_GENESIS_HASH);
-    }
-
-    #[test]
     fn success_init_genesis_sepolia() {
         let genesis_hash =
             init_genesis(create_test_provider_factory_with_chain_spec(SEPOLIA.clone())).unwrap();
 
         // actual, expected
         assert_eq!(genesis_hash, SEPOLIA_GENESIS_HASH);
+    }
+
+    #[test]
+    fn success_init_genesis_holesky() {
+        let genesis_hash =
+            init_genesis(create_test_provider_factory_with_chain_spec(HOLESKY.clone())).unwrap();
+
+        // actual, expected
+        assert_eq!(genesis_hash, HOLESKY_GENESIS_HASH);
     }
 
     #[test]
@@ -619,7 +615,7 @@ mod tests {
                 ]),
                 ..Default::default()
             },
-            hardforks: BTreeMap::default(),
+            hardforks: Default::default(),
             genesis_hash: None,
             paris_block_and_final_difficulty: None,
             deposit_contract: None,
