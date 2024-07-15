@@ -1,8 +1,6 @@
 //! WVM node main
 
-#![doc(
-    issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/"
-)]
+#![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
 use bigquery::client::BigQueryConfig;
 use lambda::lambda::exex_lambda_processor;
