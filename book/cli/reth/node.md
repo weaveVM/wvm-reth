@@ -15,7 +15,7 @@ Options:
           Possible values are either a built-in chain or the path to a chain specification file.
 
           Built-in chains:
-              mainnet, sepolia, goerli, holesky, dev
+              mainnet, sepolia, holesky, dev
 
           [default: mainnet]
 
@@ -313,6 +313,16 @@ RPC:
 
           [default: 50000000]
 
+      --rpc.eth-proof-window <RPC_ETH_PROOF_WINDOW>
+          The maximum proof window for historical proof generation. This value allows for generating historical proofs up to configured number of blocks from current tip (up to `tip - window`)
+
+          [default: 0]
+
+      --rpc.proof-permits <COUNT>
+          Maximum number of concurrent getproof requests
+
+          [default: 25]
+
 RPC State Cache:
       --rpc-cache.max-blocks <MAX_BLOCKS>
           Max number of blocks in cache
@@ -447,11 +457,6 @@ Builder:
           [default: 3]
 
 Debug:
-      --debug.continuous
-          Prompt the downloader to download blocks one at a time.
-
-          NOTE: This is for testing purposes only.
-
       --debug.terminate
           Flag indicating whether the node should be terminated after the pipeline sync
 

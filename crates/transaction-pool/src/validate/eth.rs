@@ -9,18 +9,18 @@ use crate::{
     EthBlobTransactionSidecar, EthPoolTransaction, LocalTransactionConfig, PoolTransaction,
     TransactionValidationOutcome, TransactionValidationTaskExecutor, TransactionValidator,
 };
+use reth_chainspec::{ChainSpec, EthereumHardforks};
 use reth_primitives::{
-    constants::{
-        eip4844::{MAINNET_KZG_TRUSTED_SETUP, MAX_BLOBS_PER_BLOCK},
-        ETHEREUM_BLOCK_GAS_LIMIT,
-    },
-    kzg::KzgSettings,
-    revm::compat::calculate_intrinsic_gas_after_merge,
-    ChainSpec, GotExpected, InvalidTransactionError, SealedBlock, EIP1559_TX_TYPE_ID,
+    constants::{eip4844::MAX_BLOBS_PER_BLOCK, ETHEREUM_BLOCK_GAS_LIMIT},
+    GotExpected, InvalidTransactionError, SealedBlock, TxKind, EIP1559_TX_TYPE_ID,
     EIP2930_TX_TYPE_ID, EIP4844_TX_TYPE_ID, LEGACY_TX_TYPE_ID,
 };
 use reth_provider::{AccountReader, BlockReaderIdExt, StateProviderFactory};
 use reth_tasks::TaskSpawner;
+use revm::{
+    interpreter::gas::validate_initial_tx_gas,
+    primitives::{AccessListItem, EnvKzgSettings, SpecId},
+};
 use std::{
     marker::PhantomData,
     sync::{atomic::AtomicBool, Arc},
@@ -124,7 +124,7 @@ pub(crate) struct EthTransactionValidatorInner<Client, T> {
     /// Minimum priority fee to enforce for acceptance into the pool.
     minimum_priority_fee: Option<u128>,
     /// Stores the setup and parameters needed for validating KZG proofs.
-    kzg_settings: Arc<KzgSettings>,
+    kzg_settings: EnvKzgSettings,
     /// How to handle [`TransactionOrigin::Local`](TransactionOrigin) transactions.
     local_transactions_config: LocalTransactionConfig,
     /// Maximum size in bytes a single transaction can have in order to be accepted into the pool.
@@ -368,7 +368,7 @@ where
                 }
                 EthBlobTransactionSidecar::Present(blob) => {
                     // validate the blob
-                    if let Err(err) = transaction.validate_blob(&blob, &self.kzg_settings) {
+                    if let Err(err) = transaction.validate_blob(&blob, self.kzg_settings.get()) {
                         return TransactionValidationOutcome::Invalid(
                             transaction,
                             InvalidPoolTransactionError::Eip4844(
@@ -434,7 +434,7 @@ pub struct EthTransactionValidatorBuilder {
     additional_tasks: usize,
 
     /// Stores the setup and parameters needed for validating KZG proofs.
-    kzg_settings: Arc<KzgSettings>,
+    kzg_settings: EnvKzgSettings,
     /// How to handle [`TransactionOrigin::Local`](TransactionOrigin) transactions.
     local_transactions_config: LocalTransactionConfig,
     /// Max size in bytes of a single transaction allowed
@@ -456,7 +456,7 @@ impl EthTransactionValidatorBuilder {
             block_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
             minimum_priority_fee: None,
             additional_tasks: 1,
-            kzg_settings: Arc::clone(&MAINNET_KZG_TRUSTED_SETUP),
+            kzg_settings: EnvKzgSettings::Default,
             local_transactions_config: Default::default(),
             max_tx_input_bytes: DEFAULT_MAX_TX_INPUT_BYTES,
 
@@ -537,8 +537,8 @@ impl EthTransactionValidatorBuilder {
         self
     }
 
-    /// Sets the [`KzgSettings`] to use for validating KZG proofs.
-    pub fn kzg_settings(mut self, kzg_settings: Arc<KzgSettings>) -> Self {
+    /// Sets the [`EnvKzgSettings`] to use for validating KZG proofs.
+    pub fn kzg_settings(mut self, kzg_settings: EnvKzgSettings) -> Self {
         self.kzg_settings = kzg_settings;
         self
     }
@@ -712,12 +712,11 @@ pub fn ensure_intrinsic_gas<T: PoolTransaction>(
     transaction: &T,
     is_shanghai: bool,
 ) -> Result<(), InvalidPoolTransactionError> {
-    let access_list = transaction.access_list().map(|list| list.flattened()).unwrap_or_default();
-    if transaction.gas_limit()
-        < calculate_intrinsic_gas_after_merge(
+    if transaction.gas_limit() <
+        calculate_intrinsic_gas_after_merge(
             transaction.input(),
             &transaction.kind(),
-            &access_list,
+            transaction.access_list().map(|list| list.0.as_slice()).unwrap_or(&[]),
             is_shanghai,
         )
     {
@@ -727,6 +726,20 @@ pub fn ensure_intrinsic_gas<T: PoolTransaction>(
     }
 }
 
+/// Calculates the Intrinsic Gas usage for a Transaction
+///
+/// Caution: This only checks past the Merge hardfork.
+#[inline]
+pub fn calculate_intrinsic_gas_after_merge(
+    input: &[u8],
+    kind: &TxKind,
+    access_list: &[AccessListItem],
+    is_shanghai: bool,
+) -> u64 {
+    let spec_id = if is_shanghai { SpecId::SHANGHAI } else { SpecId::MERGE };
+    validate_initial_tx_gas(spec_id, input, kind.is_create(), access_list, 0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -734,9 +747,8 @@ mod tests {
         blobstore::InMemoryBlobStore, error::PoolErrorKind, CoinbaseTipOrdering,
         EthPooledTransaction, Pool, TransactionPool,
     };
-    use reth_primitives::{
-        hex, FromRecoveredPooledTransaction, PooledTransactionsElement, MAINNET, U256,
-    };
+    use reth_chainspec::MAINNET;
+    use reth_primitives::{hex, FromRecoveredPooledTransaction, PooledTransactionsElement, U256};
     use reth_provider::test_utils::{ExtendedAccount, MockEthProvider};
 
     fn get_transaction() -> EthPooledTransaction {

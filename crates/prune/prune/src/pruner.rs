@@ -5,18 +5,16 @@ use crate::{
     segments::{PruneInput, Segment},
     Metrics, PrunerError, PrunerEvent,
 };
+use alloy_primitives::BlockNumber;
 use reth_db_api::database::Database;
 use reth_exex_types::FinishedExExHeight;
-use reth_primitives::{BlockNumber, StaticFileSegment};
 use reth_provider::{
     DatabaseProviderRW, ProviderFactory, PruneCheckpointReader, StaticFileProviderFactory,
 };
 use reth_prune_types::{PruneLimiter, PruneMode, PruneProgress, PrunePurpose, PruneSegment};
+use reth_static_file_types::StaticFileSegment;
 use reth_tokio_util::{EventSender, EventStream};
-use std::{
-    collections::BTreeMap,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 use tokio::sync::watch;
 use tracing::debug;
 
@@ -26,7 +24,7 @@ pub type PrunerResult = Result<PruneProgress, PrunerError>;
 /// The pruner type itself with the result of [`Pruner::run`]
 pub type PrunerWithResult<DB> = (Pruner<DB>, PrunerResult);
 
-type PrunerStats = BTreeMap<PruneSegment, (PruneProgress, usize)>;
+type PrunerStats = Vec<(PruneSegment, usize, PruneProgress)>;
 
 /// Pruning routine. Main pruning logic happens in [`Pruner::run`].
 #[derive(Debug)]
@@ -84,7 +82,11 @@ impl<DB: Database> Pruner<DB> {
         self.event_sender.new_listener()
     }
 
-    /// Run the pruner
+    /// Run the pruner. This will only prune data up to the highest finished `ExEx` height, if there
+    /// are no `ExEx`s, .
+    ///
+    /// Returns a [`PruneProgress`], indicating whether pruning is finished, or there is more data
+    /// to prune.
     pub fn run(&mut self, tip_block_number: BlockNumber) -> PrunerResult {
         let Some(tip_block_number) =
             self.adjust_tip_block_number_to_finished_exex_height(tip_block_number)
@@ -236,7 +238,7 @@ impl<DB: Database> Pruner<DB> {
                 if output.pruned > 0 {
                     limiter.increment_deleted_entries_count_by(output.pruned);
                     pruned += output.pruned;
-                    stats.insert(segment.segment(), (output.progress, output.pruned));
+                    stats.push((segment.segment(), output.pruned, output.progress));
                 }
             } else {
                 debug!(target: "pruner", segment = ?segment.segment(), ?purpose, "Nothing to prune for the segment");
@@ -305,8 +307,8 @@ impl<DB: Database> Pruner<DB> {
 
     /// Adjusts the tip block number to the finished `ExEx` height. This is needed to not prune more
     /// data than `ExExs` have processed. Depending on the height:
-    /// - [`FinishedExExHeight::NoExExs`] returns the tip block number as is as no adjustment for
-    ///   `ExExs` is needed.
+    /// - [`FinishedExExHeight::NoExExs`] returns the tip block number as no adjustment for `ExExs`
+    ///   is needed.
     /// - [`FinishedExExHeight::NotReady`] returns `None` as not all `ExExs` have emitted a
     ///   `FinishedHeight` event yet.
     /// - [`FinishedExExHeight::Height`] returns the finished `ExEx` height.
@@ -332,9 +334,9 @@ impl<DB: Database> Pruner<DB> {
 mod tests {
 
     use crate::Pruner;
+    use reth_chainspec::MAINNET;
     use reth_db::test_utils::{create_test_rw_db, create_test_static_files_dir};
     use reth_exex_types::FinishedExExHeight;
-    use reth_primitives::MAINNET;
     use reth_provider::{providers::StaticFileProvider, ProviderFactory};
 
     #[test]

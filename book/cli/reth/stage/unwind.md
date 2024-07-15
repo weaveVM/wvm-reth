@@ -49,7 +49,7 @@ Datadir:
           Possible values are either a built-in chain or the path to a chain specification file.
 
           Built-in chains:
-              mainnet, sepolia, goerli, holesky, dev
+              mainnet, sepolia, holesky, dev
 
           [default: mainnet]
 
@@ -203,6 +203,9 @@ Networking:
           Default is 128 KiB.
 
           [default: 131072]
+
+      --offline
+          If this is enabled, then all stages except headers, bodies, and sender recovery will be unwound
 
 Logging:
       --log.stdout.format <FORMAT>
