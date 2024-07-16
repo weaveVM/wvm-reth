@@ -43,14 +43,14 @@ jobs:
       - name: Set Docker Tag
         id: tag
         run: |
-          if [[ "${{ github.ref }}" == refs/heads/main ]]; then
+          if [[ "${GITHUB_REF}" == refs/heads/main ]]; then
             tag="latest"
-          elif [[ "${{ github.ref }}" == refs/heads/dev ]]; then
+          elif [[ "${GITHUB_REF}" == refs/heads/dev ]]; then
             tag="nightly"
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            tag=${{ github.ref#refs/tags/ }}
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            tag=${GITHUB_REF#refs/tags/}
           else
-            tag=${{ github.ref#refs/heads/ }}
+            tag=${GITHUB_REF#refs/heads/}
           fi
           echo "::set-output name=tag::${tag}"
           echo "Docker tag: ${tag}"
