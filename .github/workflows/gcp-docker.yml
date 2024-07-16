@@ -42,13 +42,14 @@ jobs:
 
       - name: Set Docker Tag
         id: tag-branch
-        run: echo "::set-output name=tag::$(if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then echo 'latest'; elif [[ ${{ github.ref }} == 'refs/heads/dev' ]]; then echo 'nightly'; else echo '${{ github.ref }}'; fi)"
+        run: echo "::set-output name=tag::$(if [[ '${{ github.ref }}' == 'refs/heads/main' ]]; then echo 'latest'; elif [[ '${{ github.ref }}' == 'refs/heads/dev' ]]; then echo 'nightly'; elif [[ '${{ github.ref }}' == refs/tags/* ]]; then echo '${{ github.ref }}' | sed 's/refs\/tags\///'; else echo '${{ github.ref }}' | sed 's/refs\/heads\///'; fi)"
 
       - id: docker-push-tagged
         name: Tag Docker image and push to Google Artifact Registry
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           push: true
           tags: |
+            wevm
             us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}
             us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag-branch }}
