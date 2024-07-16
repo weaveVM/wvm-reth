@@ -11,7 +11,6 @@ jobs:
   docker-release:
     name: Tagged Docker release to Google Artifact Registry
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
     permissions:
       contents: 'read'
