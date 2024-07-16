@@ -5,16 +5,16 @@
 use bigquery::client::BigQueryConfig;
 use lambda::lambda::exex_lambda_processor;
 use repository::state_repository;
-use reth::api::FullNodeComponents;
+use reth::{api::FullNodeComponents, primitives::alloy_primitives::private::serde::Serialize};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
-use serde_json;
 use types::types::ExecutionTipState;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
     state_repository: state_repository::StateRepository,
+    irys_provider: irys::irys::IrysProvider,
     _state_processor: exex_etl::state_processor::StateProcessor,
 ) -> eyre::Result<()> {
     while let Some(notification) = ctx.notifications.recv().await {
@@ -41,6 +41,9 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                     sealed_block_with_senders: committed_chain.tip().clone(),
                 })
                 .await?;
+
+            let id = irys_provider.upload_data_to_irys(b"pretend".to_vec()).await?;
+            println!("irys id: {}", id);
         }
     }
 
@@ -54,7 +57,7 @@ fn main() -> eyre::Result<()> {
             .node(EthereumNode::default())
             .install_exex("exex-etl", |ctx| async move {
                 let config_path: String =
-                    std::env::var("CONFIG").unwrap_or("./bq-config.json".to_string());
+                    std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
                 println!("config: {}", config_path);
 
                 let config_file =
@@ -72,12 +75,14 @@ fn main() -> eyre::Result<()> {
                 println!("bigquery client initialized");
 
                 // init state repository
-                let state_repo =
-                    repository::state_repository::StateRepository::new(bigquery_client);
+                let state_repo = state_repository::StateRepository::new(bigquery_client);
                 // init state processor
                 let state_processor = exex_etl::state_processor::StateProcessor::new();
 
-                Ok(exex_etl_processor(ctx, state_repo, state_processor))
+                // init irys provider
+                let irys_provider = irys::irys::IrysProvider::new();
+
+                Ok(exex_etl_processor(ctx, state_repo, irys_provider, state_processor))
             })
             .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
             .launch()
