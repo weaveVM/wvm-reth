@@ -5,10 +5,11 @@
 use bigquery::client::BigQueryConfig;
 use lambda::lambda::exex_lambda_processor;
 use repository::state_repository;
-use reth::{api::FullNodeComponents, primitives::alloy_primitives::private::serde::Serialize};
+use reth::api::FullNodeComponents;
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
+use serde_json::to_string;
 use types::types::ExecutionTipState;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
@@ -35,18 +36,20 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         }
 
         if let Some(committed_chain) = notification.committed_chain() {
-            // get tip
-            // serialize
+            let sealed_block_with_senders = committed_chain.tip();
+            let json_str = to_string(&sealed_block_with_senders)?;
+
+            let arweave_id =
+                irys_provider.upload_data_to_irys(json_str.clone().into_bytes()).await?;
+            println!("irys id: {}", arweave_id);
 
             state_repository
                 .save(ExecutionTipState {
                     block_number: committed_chain.tip().block.number,
-                    sealed_block_with_senders: committed_chain.tip().clone(),
+                    arweave_id,
+                    sealed_block_with_senders_serialized: json_str,
                 })
                 .await?;
-
-            let id = irys_provider.upload_data_to_irys(b"pretend".to_vec()).await?;
-            println!("irys id: {}", id);
         }
     }
 

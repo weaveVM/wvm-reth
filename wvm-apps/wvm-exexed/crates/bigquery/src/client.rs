@@ -31,6 +31,7 @@ pub static COMMON_COLUMNS: phf::OrderedMap<&'static str, &'static str> = phf_ord
     "indexed_id" => "string",  // will need to generate uuid in rust; postgres allows for autogenerate
     "block_number" => "int",
     "sealed_block_with_senders" => "string",
+    "arweave_id" => "string",
     "timestamp" => "int"
 };
 
@@ -351,23 +352,21 @@ impl BigQueryClient {
         table_name: &str,
         state: types::types::ExecutionTipState,
     ) -> eyre::Result<()> {
-        // vec_of_rowmaps: &Vec<HashMap<String, Value>>,
-
         #[derive(Serialize)]
         struct StateRow {
             block_number: u64,
+            arweave_id: String,
             sealed_block_with_senders: String,
         }
 
         let mut insert_request = TableDataInsertAllRequest::new();
-        let json_sealed_block_with_senders =
-            serde_json::to_string(&state.sealed_block_with_senders)?;
 
         insert_request.add_row(
             None,
             StateRow {
+                arweave_id: state.arweave_id,
                 block_number: state.block_number,
-                sealed_block_with_senders: json_sealed_block_with_senders,
+                sealed_block_with_senders: state.sealed_block_with_senders_serialized,
             },
         )?;
 
