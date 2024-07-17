@@ -47,7 +47,6 @@ impl IrysProvider {
     }
 
     pub async fn upload_data_to_irys(&self, data: Vec<u8>) -> eyre::Result<String> {
-        // Initialize Bundlr inside the blocking task to avoid carrying it across async boundaries
         let tags = vec![Tag::new("Content-Type", "text/plain")];
 
         let id = task::spawn_blocking(move || {
@@ -58,6 +57,7 @@ impl IrysProvider {
                 let mut tx = bundlr
                     .create_transaction(data, tags)
                     .map_err(|e| eyre!("failed to create transaction: {}", e))?;
+
                 bundlr
                     .sign_transaction(&mut tx)
                     .await

@@ -35,6 +35,9 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         }
 
         if let Some(committed_chain) = notification.committed_chain() {
+            // get tip
+            // serialize
+
             state_repository
                 .save(ExecutionTipState {
                     block_number: committed_chain.tip().block.number,
@@ -50,7 +53,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
     Ok(())
 }
 
-/// Main loop of the WVM node
+/// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         let handle = builder
