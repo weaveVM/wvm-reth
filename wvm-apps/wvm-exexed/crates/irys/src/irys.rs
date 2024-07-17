@@ -48,7 +48,7 @@ impl IrysProvider {
 
     pub async fn upload_data_to_irys(&self, data: Vec<u8>) -> eyre::Result<String> {
         let tags = vec![
-            Tag::new("Content-Type", "text/plain"),
+            Tag::new("Content-Type", "application/json"),
             Tag::new("Protocol", "WeaveVM-Testnet-V0"),
         ];
 
