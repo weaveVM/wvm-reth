@@ -47,7 +47,10 @@ impl IrysProvider {
     }
 
     pub async fn upload_data_to_irys(&self, data: Vec<u8>) -> eyre::Result<String> {
-        let tags = vec![Tag::new("Content-Type", "text/plain")];
+        let tags = vec![
+            Tag::new("Content-Type", "text/plain"),
+            Tag::new("Protocol", "WeaveVM-Testnet-V0"),
+        ];
 
         let id = task::spawn_blocking(move || {
             tokio::runtime::Handle::current().block_on(async {
