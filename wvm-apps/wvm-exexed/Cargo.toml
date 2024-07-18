@@ -28,6 +28,7 @@ repository = { path = "crates/repository" }
 bigquery = { path = "crates/bigquery" }
 lambda = { path = "crates/lambda" }
 irys = { path = "crates/irys" }
+wevm-borsh = { path = "crates/borsh" }
 exex-etl = { path = "crates/exex-etl" }
 types = { path = "crates/types" }
 

@@ -12,6 +12,7 @@ description = "Common types in reth."
 workspace = true
 
 [dependencies]
+borsh.workspace = true
 reth-codecs.workspace = true
 
 alloy-consensus = { workspace = true, features = ["serde"] }

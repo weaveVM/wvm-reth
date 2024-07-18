@@ -1,5 +1,5 @@
 [package]
-name = "irys"
+name = "wevm-borsh"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -16,7 +16,6 @@ serde.workspace = true
 reqwest.workspace = true
 eyre.workspace = true
 
-bundlr-sdk = { git = "https://github.com/Irys-xyz/rust-sdk.git", branch = "master" }
 dotenv = {version = "0.15.0"}
 tokio = "1.38.0"
 borsh.workspace = true
