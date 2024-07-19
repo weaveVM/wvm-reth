@@ -1716,7 +1716,7 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 [[package]]
 name = "bundlr-sdk"
 version = "0.5.0"
-source = "git+https://github.com/Irys-xyz/rust-sdk.git?branch=master#eca121d2a5183a4a1b8fa36abbd187ecc5082da2"
+source = "git+https://github.com/weaveVM/wvm-irys-rust-sdk.git?branch=master#cad2c8e1a62373a5573a45ca6c61afdabcfe7aa3"
 dependencies = [
  "anyhow",
  "arweave-rs",

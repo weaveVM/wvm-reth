@@ -7,7 +7,6 @@ use dotenv::dotenv;
 use eyre::eyre;
 use reqwest::Url;
 use std::env;
-use tokio::task;
 
 #[derive(Clone, Debug)]
 pub struct IrysProvider {}

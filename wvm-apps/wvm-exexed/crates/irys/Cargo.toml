@@ -16,6 +16,6 @@ serde.workspace = true
 reqwest.workspace = true
 eyre.workspace = true
 
-bundlr-sdk = { git = "https://github.com/Irys-xyz/rust-sdk.git", branch = "master" }
+bundlr-sdk = { git = "https://github.com/weaveVM/wvm-irys-rust-sdk.git", branch = "master" }
 dotenv = {version = "0.15.0"}
 tokio = "1.38.0"
