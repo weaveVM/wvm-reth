@@ -544,3 +544,6 @@ serial_test = "3"
 similar-asserts = "1.5.0"
 test-fuzz = "5"
 iai-callgrind = "0.11"
+
+# borsh
+borsh = "1.5.1"
