@@ -52,35 +52,28 @@ impl IrysProvider {
             Tag::new("Protocol", "WeaveVM-Testnet-V0"),
         ];
 
-        let id = task::spawn_blocking(move || {
-            tokio::runtime::Handle::current().block_on(async {
-                let bundlr =
-                    init_bundlr().await.map_err(|e| eyre!("failed to initialize bundlr: {}", e))?;
+        let bundlr =
+            init_bundlr().await.map_err(|e| eyre!("failed to initialize bundlr: {}", e))?;
 
-                let mut tx = bundlr
-                    .create_transaction(data, tags)
-                    .map_err(|e| eyre!("failed to create transaction: {}", e))?;
+        let mut tx = bundlr
+            .create_transaction(data, tags)
+            .map_err(|e| eyre!("failed to create transaction: {}", e))?;
 
-                bundlr
-                    .sign_transaction(&mut tx)
-                    .await
-                    .map_err(|e| eyre!("failed to sign transaction: {}", e))?;
+        bundlr
+            .sign_transaction(&mut tx)
+            .await
+            .map_err(|e| eyre!("failed to sign transaction: {}", e))?;
 
-                let result = bundlr
-                    .send_transaction(tx)
-                    .await
-                    .map_err(|e| eyre!("failed to send transaction: {}", e))?;
+        let result = bundlr
+            .send_transaction(tx)
+            .await
+            .map_err(|e| eyre!("failed to send transaction: {}", e))?;
 
-                let id = result["id"]
-                    .as_str()
-                    .ok_or_else(|| eyre!("missing 'id' field in response"))?
-                    .to_string();
+        let id = result["id"]
+            .as_str()
+            .ok_or_else(|| eyre!("missing 'id' field in response"))?
+            .to_string();
 
-                eyre::Ok(id)
-            })
-        })
-        .await??;
-
-        Ok(id)
+        eyre::Ok(id)
     }
 }
