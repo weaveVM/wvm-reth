@@ -1,6 +1,6 @@
-use std::io::{Error, ErrorKind, Read, Write};
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{Signature, U256};
+use std::io::{Error, ErrorKind, Read, Write};
 
 pub struct BorshSignature(pub Signature);
 
@@ -19,11 +19,7 @@ pub fn to_signature(bytes: &[u8]) -> std::io::Result<Signature> {
     let s = U256::from_be_bytes(s_bytes);
     let odd_y_parity = bytes[64] - 27;
 
-    let signature = Signature {
-        r,
-        s,
-        odd_y_parity: odd_y_parity != 0,
-    };
+    let signature = Signature { r, s, odd_y_parity: odd_y_parity != 0 };
 
     Ok(signature)
 }
@@ -39,5 +35,20 @@ impl BorshDeserialize for BorshSignature {
         let sig_vec = Vec::<u8>::deserialize_reader(reader)?;
         let sig = to_signature(sig_vec.as_slice()).unwrap();
         Ok(BorshSignature(sig))
+    }
+}
+
+#[cfg(test)]
+mod signature_tests {
+    use crate::signature::BorshSignature;
+    use reth::primitives::Signature;
+
+    #[test]
+    pub fn test_sealed_header() {
+        let data = Signature::default();
+        let borsh_data = BorshSignature(data.clone());
+        let to_borsh = borsh::to_vec(&borsh_data).unwrap();
+        let from_borsh: BorshSignature = borsh::from_slice(to_borsh.as_slice()).unwrap();
+        assert_eq!(data, from_borsh.0);
     }
 }

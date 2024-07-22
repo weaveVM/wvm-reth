@@ -1,6 +1,6 @@
-use std::io::{Read, Write};
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::Bloom;
+use std::io::{Read, Write};
 
 pub struct BorshBloom(pub Bloom);
 
@@ -20,9 +20,9 @@ impl BorshDeserialize for BorshBloom {
 }
 
 #[cfg(test)]
-mod tests {
-    use reth::primitives::Bloom;
+mod bloom_tests {
     use crate::bloom::BorshBloom;
+    use reth::primitives::Bloom;
 
     #[test]
     pub fn test_bloom_ser_der() {
@@ -32,6 +32,4 @@ mod tests {
         let der: BorshBloom = borsh::from_slice(ser.as_slice()).unwrap();
         assert_eq!(bloom, der.0);
     }
-
 }
-

@@ -1,7 +1,7 @@
-use std::io::{Read, Write};
+use crate::b256::BorshB256;
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{Address, Withdrawal};
-use crate::b256::BorshB256;
+use std::io::{Read, Write};
 
 pub struct BorshWithdrawal(pub Withdrawal);
 
@@ -26,7 +26,22 @@ impl BorshDeserialize for BorshWithdrawal {
             index,
             validator_index,
             address: Address::from_word(address.0),
-            amount
+            amount,
         }))
+    }
+}
+
+#[cfg(test)]
+mod withdrawal_tests {
+    use crate::withdrawal::BorshWithdrawal;
+    use reth::primitives::Withdrawal;
+
+    #[test]
+    pub fn test_sealed_header() {
+        let data = Withdrawal::default();
+        let borsh_data = BorshWithdrawal(data.clone());
+        let to_borsh = borsh::to_vec(&borsh_data).unwrap();
+        let from_borsh: BorshWithdrawal = borsh::from_slice(to_borsh.as_slice()).unwrap();
+        assert_eq!(data, from_borsh.0);
     }
 }

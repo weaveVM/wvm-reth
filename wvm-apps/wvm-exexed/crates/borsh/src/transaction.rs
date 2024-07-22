@@ -1,16 +1,15 @@
-use std::io::{Error, ErrorKind, Read, Write};
-use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::{Signature, Transaction, TransactionSigned, TxType, U256};
-use reth::primitives::alloy_primitives::private::alloy_rlp::Encodable;
 use crate::b256::BorshB256;
 use crate::signature::BorshSignature;
+use borsh::{BorshDeserialize, BorshSerialize};
+use reth::primitives::{Transaction, TransactionSigned};
+use std::io::{Read, Write};
 
 pub struct BorshTransactionSigned(pub TransactionSigned);
 pub struct BorshTransaction(pub Transaction);
 
 impl BorshSerialize for BorshTransaction {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        let mut buff: Vec<u8> = serde_json::to_vec(&self.0).unwrap();
+        let buff: Vec<u8> = serde_json::to_vec(&self.0).unwrap();
         buff.serialize(writer)?;
         Ok(())
     }
@@ -43,7 +42,22 @@ impl BorshDeserialize for BorshTransactionSigned {
         Ok(BorshTransactionSigned(TransactionSigned {
             hash: hash.0,
             signature: bytes_signature.0,
-            transaction: tx.0
+            transaction: tx.0,
         }))
+    }
+}
+
+#[cfg(test)]
+mod txs_tests {
+    use crate::transaction::BorshTransactionSigned;
+    use reth::primitives::TransactionSigned;
+
+    #[test]
+    pub fn test_sealed_header() {
+        let data = TransactionSigned::default();
+        let borsh_data = BorshTransactionSigned(data.clone());
+        let to_borsh = borsh::to_vec(&borsh_data).unwrap();
+        let from_borsh: BorshTransactionSigned = borsh::from_slice(to_borsh.as_slice()).unwrap();
+        assert_eq!(data, from_borsh.0);
     }
 }

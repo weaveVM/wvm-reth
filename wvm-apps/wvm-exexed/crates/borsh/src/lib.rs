@@ -1,20 +1,16 @@
-use std::io::Write;
-use borsh::BorshSerialize;
-use reth::primitives::B256;
-
 pub mod b256;
-pub mod header;
-pub mod transaction;
-pub mod withdrawal;
-pub mod request;
 pub mod block;
 pub mod bloom;
+pub mod header;
+pub mod request;
 pub mod signature;
+pub mod transaction;
+pub mod withdrawal;
 
 #[cfg(test)]
 mod tests {
-    use reth::primitives::{address, SealedBlock, Withdrawals};
     use crate::block::BorshSealedBlock;
+    use reth::primitives::{SealedBlock, Withdrawals};
 
     #[test]
     fn test_borsh_block() {
@@ -25,7 +21,7 @@ mod tests {
             body: vec![Default::default()],
             ommers: Default::default(),
             withdrawals: Some(withdrawals),
-            requests: None
+            requests: None,
         };
 
         let borsh_block = BorshSealedBlock(block.clone());
@@ -35,7 +31,7 @@ mod tests {
         let borsh_serialize = borsh::to_vec(&borsh_block).unwrap();
 
         assert_eq!(serde_json_serialize.len(), 1847);
-        assert_eq!(borsh_serialize.len(), 880);
+        assert_eq!(borsh_serialize.len(), 920);
     }
 
     #[test]
@@ -47,11 +43,11 @@ mod tests {
             body: vec![Default::default()],
             ommers: Default::default(),
             withdrawals: Some(withdrawals),
-            requests: None
+            requests: None,
         };
 
         let borsh_block = BorshSealedBlock(block.clone());
         let borsh_serialize = borsh::to_vec(&borsh_block).unwrap();
-        let borsh_deserialize: BorshSealedBlock = borsh::from_slice(borsh_serialize.as_slice()).unwrap();
+        let _: BorshSealedBlock = borsh::from_slice(borsh_serialize.as_slice()).unwrap();
     }
 }

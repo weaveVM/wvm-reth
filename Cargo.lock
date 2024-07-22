@@ -13040,6 +13040,7 @@ dependencies = [
 name = "wevm-borsh"
 version = "1.0.1"
 dependencies = [
+ "alloy-eips",
  "borsh 1.5.1",
  "dotenv",
  "eyre",

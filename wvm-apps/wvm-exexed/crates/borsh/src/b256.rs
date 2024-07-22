@@ -1,6 +1,6 @@
-use std::io::{Read, Write};
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{B256, U256};
+use std::io::{Read, Write};
 
 pub struct BorshB256(pub B256);
 pub struct BorshU256(pub U256);
@@ -35,9 +35,9 @@ impl BorshDeserialize for BorshU256 {
 }
 
 #[cfg(test)]
-mod tests {
-    use reth::primitives::B256;
-    use crate::b256::BorshB256;
+mod b256_tests {
+    use crate::b256::{BorshB256, BorshU256};
+    use reth::primitives::{B256, U256};
 
     #[test]
     pub fn test_borsh_b256_ser_der() {
@@ -47,5 +47,15 @@ mod tests {
         let borsh_ser = borsh::to_vec(&borsh_b256).unwrap();
         let borsh_der: BorshB256 = borsh::from_slice(borsh_ser.as_slice()).unwrap();
         assert_eq!(bclone, borsh_der.0);
+    }
+
+    #[test]
+    pub fn test_borsh_u256_ser_der() {
+        let u256 = U256::MAX;
+        let uclone = u256.clone();
+        let borsh_u256 = BorshU256(u256);
+        let borsh_ser = borsh::to_vec(&borsh_u256).unwrap();
+        let borsh_der: BorshU256 = borsh::from_slice(borsh_ser.as_slice()).unwrap();
+        assert_eq!(uclone, borsh_der.0);
     }
 }

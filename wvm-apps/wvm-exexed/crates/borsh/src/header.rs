@@ -1,8 +1,8 @@
-use std::io::{Read, Write};
-use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::{Address, Bloom, Bytes, Header, SealedHeader};
 use crate::b256::{BorshB256, BorshU256};
 use crate::bloom::BorshBloom;
+use borsh::{BorshDeserialize, BorshSerialize};
+use reth::primitives::{Address, Bytes, Header, SealedHeader};
+use std::io::{Read, Write};
 
 pub struct BorshHeader(pub Header);
 pub struct BorshSealedHeader(pub SealedHeader);
@@ -73,14 +73,14 @@ impl BorshDeserialize for BorshHeader {
             gas_limit,
             gas_used,
             timestamp,
-            mix_hash: Default::default(),
+            mix_hash: mix_hash.0,
             nonce,
             base_fee_per_gas,
             blob_gas_used,
             excess_blob_gas,
             parent_beacon_block_root: parent_beacon_block_root.map(|i| i.0),
             requests_root: requests_root.map(|i| i.0),
-            extra_data: Bytes::from(extra_data)
+            extra_data: Bytes::from(extra_data),
         };
 
         Ok(BorshHeader(header))
@@ -102,5 +102,20 @@ impl BorshDeserialize for BorshSealedHeader {
         let header = BorshHeader::deserialize_reader(reader)?;
 
         Ok(BorshSealedHeader(SealedHeader::new(header.0, hash.0)))
+    }
+}
+
+#[cfg(test)]
+mod header_tests {
+    use crate::header::BorshSealedHeader;
+    use reth::primitives::SealedHeader;
+
+    #[test]
+    pub fn test_sealed_header() {
+        let block = SealedHeader::default();
+        let borsh_block = BorshSealedHeader(block.clone());
+        let to_borsh = borsh::to_vec(&borsh_block).unwrap();
+        let from_borsh: BorshSealedHeader = borsh::from_slice(to_borsh.as_slice()).unwrap();
+        assert_eq!(block, from_borsh.0);
     }
 }
