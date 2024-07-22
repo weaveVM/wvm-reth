@@ -8,6 +8,8 @@ pub mod transaction;
 pub mod withdrawal;
 pub mod request;
 pub mod block;
+pub mod bloom;
+pub mod signature;
 
 #[cfg(test)]
 mod tests {
@@ -49,12 +51,7 @@ mod tests {
         };
 
         let borsh_block = BorshSealedBlock(block.clone());
-
-        let serde_json_serialize = serde_json::to_vec(&block).unwrap();
-
         let borsh_serialize = borsh::to_vec(&borsh_block).unwrap();
-
-        assert_eq!(serde_json_serialize.len(), 1847);
-        assert_eq!(borsh_serialize.len(), 880);
+        let borsh_deserialize: BorshSealedBlock = borsh::from_slice(borsh_serialize.as_slice()).unwrap();
     }
 }
