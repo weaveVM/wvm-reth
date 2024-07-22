@@ -13379,6 +13379,7 @@ version = "1.0.0"
 dependencies = [
  "alloy-primitives",
  "bigquery",
+ "borsh 1.5.1",
  "exex-etl",
  "eyre",
  "futures",

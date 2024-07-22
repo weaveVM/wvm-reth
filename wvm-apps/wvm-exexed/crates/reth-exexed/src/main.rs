@@ -39,10 +39,10 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         if let Some(committed_chain) = notification.committed_chain() {
             let sealed_block_with_senders = committed_chain.tip();
             let clone_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
-            let borsh = borsh::to_vec(&clone_block)?;
-            // let json_str = to_string(&sealed_block_with_senders)?;
+            let borsh_data = borsh::to_vec(&clone_block)?;
+            let json_str = to_string(&sealed_block_with_senders)?;
 
-            let arweave_id = irys_provider.upload_data_to_irys(borsh).await?;
+            let arweave_id = irys_provider.upload_data_to_irys(borsh_data.clone()).await?;
             println!("irys id: {}", arweave_id);
 
             state_repository
