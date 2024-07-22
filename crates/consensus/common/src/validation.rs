@@ -29,8 +29,8 @@ pub fn validate_header_base_fee(
     header: &SealedHeader,
     chain_spec: &ChainSpec,
 ) -> Result<(), ConsensusError> {
-    if chain_spec.is_fork_active_at_block(EthereumHardfork::London, header.number) &&
-        header.base_fee_per_gas.is_none()
+    if chain_spec.is_fork_active_at_block(EthereumHardfork::London, header.number)
+        && header.base_fee_per_gas.is_none()
     {
         return Err(ConsensusError::BaseFeeMissing);
     }
@@ -174,13 +174,13 @@ pub fn validate_against_parent_hash_number(
         return Err(ConsensusError::ParentBlockNumberMismatch {
             parent_block_number: parent.number,
             block_number: header.number,
-        })
+        });
     }
 
     if parent.hash() != header.parent_hash {
         return Err(ConsensusError::ParentHashMismatch(
             GotExpected { got: header.parent_hash, expected: parent.hash() }.into(),
-        ))
+        ));
     }
 
     Ok(())
@@ -210,7 +210,7 @@ pub fn validate_against_parent_eip1559_base_fee(
             return Err(ConsensusError::BaseFeeDiff(GotExpected {
                 expected: expected_base_fee,
                 got: base_fee,
-            }))
+            }));
         }
     }
 
@@ -227,7 +227,7 @@ pub fn validate_against_parent_timestamp(
         return Err(ConsensusError::TimestampIsInPast {
             parent_timestamp: parent.timestamp,
             timestamp: header.timestamp,
-        })
+        });
     }
     Ok(())
 }
@@ -250,7 +250,7 @@ pub fn validate_against_parent_4844(
     let parent_excess_blob_gas = parent.excess_blob_gas.unwrap_or(0);
 
     if header.blob_gas_used.is_none() {
-        return Err(ConsensusError::BlobGasUsedMissing)
+        return Err(ConsensusError::BlobGasUsedMissing);
     }
     let excess_blob_gas = header.excess_blob_gas.ok_or(ConsensusError::ExcessBlobGasMissing)?;
 
@@ -261,7 +261,7 @@ pub fn validate_against_parent_4844(
             diff: GotExpected { got: excess_blob_gas, expected: expected_excess_blob_gas },
             parent_excess_blob_gas,
             parent_blob_gas_used,
-        })
+        });
     }
 
     Ok(())

@@ -278,7 +278,7 @@ pub trait Trace: LoadState {
 
             if block.body.is_empty() {
                 // nothing to trace
-                return Ok(Some(Vec::new()))
+                return Ok(Some(Vec::new()));
             }
 
             // replay all transactions of the block

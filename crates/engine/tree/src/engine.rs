@@ -83,7 +83,7 @@ where
                                 // bubble up the event
                                 Poll::Ready(HandlerEvent::Event(ev))
                             }
-                        }
+                        };
                     }
                     RequestHandlerEvent::Download(req) => {
                         // delegate download request to the downloader
@@ -97,17 +97,17 @@ where
                 // and delegate the request to the handler
                 self.handler.on_event(FromEngine::Request(req));
                 // skip downloading in this iteration to allow the handler to process the request
-                continue
+                continue;
             }
 
             // advance the downloader
             if let Poll::Ready(DownloadOutcome::Blocks(blocks)) = self.downloader.poll(cx) {
                 // delegate the downloaded blocks to the handler
                 self.handler.on_event(FromEngine::DownloadedBlocks(blocks));
-                continue
+                continue;
             }
 
-            return Poll::Pending
+            return Poll::Pending;
         }
     }
 }

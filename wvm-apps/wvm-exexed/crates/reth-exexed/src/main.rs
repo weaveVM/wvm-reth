@@ -11,6 +11,7 @@ use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
 use serde_json::to_string;
 use types::types::ExecutionTipState;
+use wevm_borsh::block::BorshSealedBlockWithSenders;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -37,10 +38,11 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
         if let Some(committed_chain) = notification.committed_chain() {
             let sealed_block_with_senders = committed_chain.tip();
-            let json_str = to_string(&sealed_block_with_senders)?;
+            let clone_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
+            let borsh = borsh::to_vec(&clone_block)?;
+            // let json_str = to_string(&sealed_block_with_senders)?;
 
-            let arweave_id =
-                irys_provider.upload_data_to_irys(json_str.clone().into_bytes()).await?;
+            let arweave_id = irys_provider.upload_data_to_irys(borsh).await?;
             println!("irys id: {}", arweave_id);
 
             state_repository

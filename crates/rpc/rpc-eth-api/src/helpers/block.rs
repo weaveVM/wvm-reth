@@ -67,7 +67,7 @@ pub trait EthBlocks: LoadBlock {
         async move {
             if block_id.is_pending() {
                 // Pending block can be fetched directly without need for caching
-                return Ok(LoadBlock::provider(self).pending_block()?.map(|block| block.body.len()))
+                return Ok(LoadBlock::provider(self).pending_block()?.map(|block| block.body.len()));
             }
 
             let block_hash = match LoadBlock::provider(self).block_hash_for_id(block_id)? {
@@ -118,7 +118,7 @@ pub trait EthBlocks: LoadBlock {
                             .map(|builder| builder.build())
                     })
                     .collect::<EthResult<Vec<_>>>();
-                return receipts.map(Some)
+                return receipts.map(Some);
             }
 
             Ok(None)
@@ -137,11 +137,11 @@ pub trait EthBlocks: LoadBlock {
             if block_id.is_pending() {
                 return Ok(LoadBlock::provider(self)
                     .pending_block_and_receipts()?
-                    .map(|(sb, receipts)| (sb, Arc::new(receipts))))
+                    .map(|(sb, receipts)| (sb, Arc::new(receipts))));
             }
 
             if let Some(block_hash) = LoadBlock::provider(self).block_hash_for_id(block_id)? {
-                return Ok(LoadReceipt::cache(self).get_block_and_receipts(block_hash).await?)
+                return Ok(LoadReceipt::cache(self).get_block_and_receipts(block_hash).await?);
             }
 
             Ok(None)
@@ -220,7 +220,7 @@ pub trait LoadBlock: LoadPendingBlock + SpawnBlocking {
                     Ok(maybe_pending)
                 } else {
                     self.local_pending_block().await
-                }
+                };
             }
 
             let block_hash = match LoadPendingBlock::provider(self).block_hash_for_id(block_id)? {

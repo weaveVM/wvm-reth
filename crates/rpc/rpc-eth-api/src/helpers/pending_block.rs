@@ -122,7 +122,7 @@ pub trait LoadPendingBlock {
         async move {
             let pending = self.pending_block_env_and_cfg()?;
             if pending.origin.is_actual_pending() {
-                return Ok(pending.origin.into_actual_pending())
+                return Ok(pending.origin.into_actual_pending());
             }
 
             let mut lock = self.pending_block().lock().await;
@@ -132,11 +132,11 @@ pub trait LoadPendingBlock {
             // check if the block is still good
             if let Some(pending_block) = lock.as_ref() {
                 // this is guaranteed to be the `latest` header
-                if pending.block_env.number.to::<u64>() == pending_block.block.number &&
-                    pending.origin.header().hash() == pending_block.block.parent_hash &&
-                    now <= pending_block.expires_at
+                if pending.block_env.number.to::<u64>() == pending_block.block.number
+                    && pending.origin.header().hash() == pending_block.block.parent_hash
+                    && now <= pending_block.expires_at
                 {
-                    return Ok(Some(pending_block.block.clone()))
+                    return Ok(Some(pending_block.block.clone()));
                 }
             }
 
@@ -151,7 +151,7 @@ pub trait LoadPendingBlock {
                 Ok(block) => block,
                 Err(err) => {
                     debug!(target: "rpc", "Failed to build pending block: {:?}", err);
-                    return Ok(None)
+                    return Ok(None);
                 }
             };
 

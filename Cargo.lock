@@ -8943,6 +8943,7 @@ name = "reth-exexed"
 version = "1.0.1"
 dependencies = [
  "bigquery",
+ "borsh 1.5.1",
  "exex-etl",
  "eyre",
  "irys",
@@ -8954,6 +8955,7 @@ dependencies = [
  "reth-tracing",
  "serde_json",
  "types",
+ "wevm-borsh",
 ]
 
 [[package]]

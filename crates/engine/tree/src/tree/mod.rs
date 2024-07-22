@@ -408,7 +408,7 @@ where
     ) -> ProviderResult<Option<B256>> {
         // Check if parent exists in side chain or in canonical chain.
         if self.block_by_hash(parent_hash)?.is_some() {
-            return Ok(Some(parent_hash))
+            return Ok(Some(parent_hash));
         }
 
         // iterate over ancestors in the invalid cache
@@ -422,7 +422,7 @@ where
             // If current_header is None, then the current_hash does not have an invalid
             // ancestor in the cache, check its presence in blockchain tree
             if current_header.is_none() && self.block_by_hash(current_hash)?.is_some() {
-                return Ok(Some(current_hash))
+                return Ok(Some(current_hash));
             }
         }
         Ok(None)
@@ -487,17 +487,17 @@ where
                 "Failed to validate total difficulty for block {}: {e}",
                 block.header.hash()
             );
-            return Err(e)
+            return Err(e);
         }
 
         if let Err(e) = self.consensus.validate_header(block) {
             error!(?block, "Failed to validate header {}: {e}", block.header.hash());
-            return Err(e)
+            return Err(e);
         }
 
         if let Err(e) = self.consensus.validate_block_pre_execution(block) {
             error!(?block, "Failed to validate block {}: {e}", block.header.hash());
-            return Err(e)
+            return Err(e);
         }
 
         Ok(())
@@ -512,7 +512,7 @@ where
 
     fn buffer_block(&mut self, block: SealedBlockWithSenders) -> Result<(), InsertBlockError> {
         if let Err(err) = self.validate_block(&block) {
-            return Err(InsertBlockError::consensus_error(err, block.block))
+            return Err(InsertBlockError::consensus_error(err, block.block));
         }
         self.state.buffer.insert_block(block);
         Ok(())
@@ -542,7 +542,7 @@ where
     ) -> Result<InsertPayloadOk, InsertBlockErrorKind> {
         if self.block_by_hash(block.hash())?.is_some() {
             let attachment = BlockAttachment::Canonical; // TODO: remove or revise attachment
-            return Ok(InsertPayloadOk::AlreadySeen(BlockStatus::Valid(attachment)))
+            return Ok(InsertPayloadOk::AlreadySeen(BlockStatus::Valid(attachment)));
         }
 
         // validate block consensus rules
@@ -568,7 +568,7 @@ where
             return Err(ConsensusError::BodyStateRootDiff(
                 GotExpected { got: state_root, expected: block.state_root }.into(),
             )
-            .into())
+            .into());
         }
 
         let executed = ExecutedBlock {
@@ -598,21 +598,21 @@ where
         state: ForkchoiceState,
     ) -> ProviderResult<Option<OnForkChoiceUpdated>> {
         if state.head_block_hash.is_zero() {
-            return Ok(Some(OnForkChoiceUpdated::invalid_state()))
+            return Ok(Some(OnForkChoiceUpdated::invalid_state()));
         }
 
         // check if the new head hash is connected to any ancestor that we previously marked as
         // invalid
         let lowest_buffered_ancestor_fcu = self.lowest_buffered_ancestor_or(state.head_block_hash);
         if let Some(status) = self.check_invalid_ancestor(lowest_buffered_ancestor_fcu)? {
-            return Ok(Some(OnForkChoiceUpdated::with_invalid(status)))
+            return Ok(Some(OnForkChoiceUpdated::with_invalid(status)));
         }
 
         if self.is_pipeline_active {
             // We can only process new forkchoice updates if the pipeline is idle, since it requires
             // exclusive access to the database
             trace!(target: "consensus::engine", "Pipeline is syncing, skipping forkchoice update");
-            return Ok(Some(OnForkChoiceUpdated::syncing()))
+            return Ok(Some(OnForkChoiceUpdated::syncing()));
         }
 
         Ok(None)
@@ -682,7 +682,7 @@ where
                     };
 
                 let status = PayloadStatusEnum::from(error);
-                return Ok(TreeOutcome::new(PayloadStatus::new(status, latest_valid_hash)))
+                return Ok(TreeOutcome::new(PayloadStatus::new(status, latest_valid_hash)));
             }
         };
 
@@ -696,7 +696,7 @@ where
         if let Some(status) =
             self.check_invalid_ancestor_with_head(lowest_buffered_ancestor, block_hash)?
         {
-            return Ok(TreeOutcome::new(status))
+            return Ok(TreeOutcome::new(status));
         }
 
         let status = if self.is_pipeline_active {
@@ -705,13 +705,13 @@ where
         } else {
             let mut latest_valid_hash = None;
             let status = match self.insert_block_without_senders(block).unwrap() {
-                InsertPayloadOk::Inserted(BlockStatus::Valid(_)) |
-                InsertPayloadOk::AlreadySeen(BlockStatus::Valid(_)) => {
+                InsertPayloadOk::Inserted(BlockStatus::Valid(_))
+                | InsertPayloadOk::AlreadySeen(BlockStatus::Valid(_)) => {
                     latest_valid_hash = Some(block_hash);
                     PayloadStatusEnum::Valid
                 }
-                InsertPayloadOk::Inserted(BlockStatus::Disconnected { .. }) |
-                InsertPayloadOk::AlreadySeen(BlockStatus::Disconnected { .. }) => {
+                InsertPayloadOk::Inserted(BlockStatus::Disconnected { .. })
+                | InsertPayloadOk::AlreadySeen(BlockStatus::Disconnected { .. }) => {
                     // TODO: isn't this check redundant?
                     // check if the block's parent is already marked as invalid
                     // if let Some(status) = self
@@ -749,7 +749,7 @@ where
     ) -> ProviderResult<TreeOutcome<OnForkChoiceUpdated>> {
         if let Some(on_updated) = self.pre_validate_forkchoice_update(state)? {
             self.state.forkchoice_state_tracker.set_latest(state, on_updated.forkchoice_status());
-            return Ok(TreeOutcome::new(on_updated))
+            return Ok(TreeOutcome::new(on_updated));
         }
 
         todo!()

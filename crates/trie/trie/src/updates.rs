@@ -22,9 +22,9 @@ pub struct TrieUpdates {
 impl TrieUpdates {
     /// Returns `true` if the updates are empty.
     pub fn is_empty(&self) -> bool {
-        self.account_nodes.is_empty() &&
-            self.removed_nodes.is_empty() &&
-            self.storage_tries.is_empty()
+        self.account_nodes.is_empty()
+            && self.removed_nodes.is_empty()
+            && self.storage_tries.is_empty()
     }
 
     /// Returns reference to updated account nodes.
@@ -95,7 +95,7 @@ impl TrieUpdates {
         TX: DbTx + DbTxMut,
     {
         if self.is_empty() {
-            return Ok(0)
+            return Ok(0);
         }
 
         // Track the number of inserted entries.
@@ -228,7 +228,7 @@ impl StorageTrieUpdates {
         TX: DbTx + DbTxMut,
     {
         if self.is_empty() {
-            return Ok(0)
+            return Ok(0);
         }
 
         let mut cursor = tx.cursor_dup_write::<tables::StoragesTrie>()?;

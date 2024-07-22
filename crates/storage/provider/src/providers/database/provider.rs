@@ -133,8 +133,8 @@ impl<TX: DbTx + 'static> DatabaseProvider<TX> {
         self,
         mut block_number: BlockNumber,
     ) -> ProviderResult<StateProviderBox> {
-        if block_number == self.best_block_number().unwrap_or_default() &&
-            block_number == self.last_block_number().unwrap_or_default()
+        if block_number == self.best_block_number().unwrap_or_default()
+            && block_number == self.last_block_number().unwrap_or_default()
         {
             return Ok(Box::new(LatestStateProvider::new(self.tx, self.static_file_provider)));
         }
@@ -448,7 +448,7 @@ impl<TX: DbTx> DatabaseProvider<TX> {
         ) -> ProviderResult<R>,
     {
         if range.is_empty() {
-            return Ok(Vec::new())
+            return Ok(Vec::new());
         }
 
         let len = range.end().saturating_sub(*range.start()) as usize;
@@ -2484,8 +2484,8 @@ impl<TX: DbTxMut + DbTx> HistoryWriter for DatabaseProvider<TX> {
                 StorageShardedKey::last(address, storage_key),
                 rem_index,
                 |storage_sharded_key| {
-                    storage_sharded_key.address == address &&
-                        storage_sharded_key.sharded_key.key == storage_key
+                    storage_sharded_key.address == address
+                        && storage_sharded_key.sharded_key.key == storage_key
                 },
             )?;
 

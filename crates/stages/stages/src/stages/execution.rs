@@ -160,8 +160,8 @@ impl<E> ExecutionStage<E> {
 
         // If we're not executing MerkleStage from scratch (by threshold or first-sync), then erase
         // changeset related pruning configurations
-        if !(max_block - start_block > self.external_clean_threshold ||
-            provider.count_entries::<tables::AccountsTrie>()?.is_zero())
+        if !(max_block - start_block > self.external_clean_threshold
+            || provider.count_entries::<tables::AccountsTrie>()?.is_zero())
         {
             prune_modes.account_history = None;
             prune_modes.storage_history = None;
@@ -206,8 +206,8 @@ where
         let static_file_provider = provider.static_file_provider();
 
         // We only use static files for Receipts, if there is no receipt pruning of any kind.
-        let static_file_producer = if self.prune_modes.receipts.is_none() &&
-            self.prune_modes.receipts_log_filter.is_empty()
+        let static_file_producer = if self.prune_modes.receipts.is_none()
+            && self.prune_modes.receipts_log_filter.is_empty()
         {
             let mut producer = prepare_static_file_producer(provider, start_block)?;
             // Since there might be a database <-> static file inconsistency (read
@@ -537,8 +537,8 @@ fn execution_checkpoint(
                 block_range: CheckpointBlockRange { from: start_block, to: max_block },
                 progress: EntitiesCheckpoint {
                     processed,
-                    total: processed +
-                        calculate_gas_used_from_headers(provider, start_block..=max_block)?,
+                    total: processed
+                        + calculate_gas_used_from_headers(provider, start_block..=max_block)?,
                 },
             }
         }

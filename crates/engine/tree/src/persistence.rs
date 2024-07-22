@@ -50,7 +50,7 @@ impl<DB: Database> Persistence<DB> {
 
         if blocks.is_empty() {
             debug!(target: "tree::persistence", "Attempted to write empty block range");
-            return Ok(())
+            return Ok(());
         }
 
         let first_number = blocks.first().unwrap().block().number;

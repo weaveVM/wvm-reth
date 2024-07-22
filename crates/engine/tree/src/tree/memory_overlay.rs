@@ -31,7 +31,7 @@ where
     fn block_hash(&self, number: BlockNumber) -> ProviderResult<Option<B256>> {
         for block in self.in_memory.iter().rev() {
             if block.block.number == number {
-                return Ok(Some(block.block.hash()))
+                return Ok(Some(block.block.hash()));
             }
         }
 
@@ -67,7 +67,7 @@ where
     fn basic_account(&self, address: Address) -> ProviderResult<Option<Account>> {
         for block in self.in_memory.iter().rev() {
             if let Some(account) = block.execution_output.account(&address) {
-                return Ok(account)
+                return Ok(account);
             }
         }
 
@@ -116,7 +116,7 @@ where
     ) -> ProviderResult<Option<StorageValue>> {
         for block in self.in_memory.iter().rev() {
             if let Some(value) = block.execution_output.storage(&address, storage_key.into()) {
-                return Ok(Some(value))
+                return Ok(Some(value));
             }
         }
 
@@ -126,7 +126,7 @@ where
     fn bytecode_by_hash(&self, code_hash: B256) -> ProviderResult<Option<Bytecode>> {
         for block in self.in_memory.iter().rev() {
             if let Some(contract) = block.execution_output.bytecode(&code_hash) {
-                return Ok(Some(contract))
+                return Ok(Some(contract));
             }
         }
 

@@ -101,7 +101,7 @@ where
                 "Pipeline target cannot be zero hash."
             );
             // precaution to never sync to the zero hash
-            return
+            return;
         }
         self.pending_pipeline_target = Some(target);
     }
@@ -164,14 +164,14 @@ where
     fn poll(&mut self, cx: &mut Context<'_>) -> Poll<BackfillEvent> {
         // try to spawn a pipeline if a target is set
         if let Some(event) = self.try_spawn_pipeline() {
-            return Poll::Ready(event)
+            return Poll::Ready(event);
         }
 
         // make sure we poll the pipeline if it's active, and return any ready pipeline events
         if !self.is_pipeline_idle() {
             // advance the pipeline
             if let Poll::Ready(event) = self.poll_pipeline(cx) {
-                return Poll::Ready(event)
+                return Poll::Ready(event);
             }
         }
 
