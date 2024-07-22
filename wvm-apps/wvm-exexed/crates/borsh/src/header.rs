@@ -1,7 +1,8 @@
+use crate::address::BorshAddress;
 use crate::b256::{BorshB256, BorshU256};
 use crate::bloom::BorshBloom;
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::{Address, Bytes, Header, SealedHeader};
+use reth::primitives::{Bytes, Header, SealedHeader};
 use std::io::{Read, Write};
 
 pub struct BorshHeader(pub Header);
@@ -11,7 +12,7 @@ impl BorshSerialize for BorshHeader {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
         BorshB256(self.0.parent_hash).serialize(writer)?;
         BorshB256(self.0.ommers_hash).serialize(writer)?;
-        BorshB256(self.0.beneficiary.into_word()).serialize(writer)?;
+        BorshAddress(self.0.beneficiary).serialize(writer)?;
         BorshB256(self.0.state_root).serialize(writer)?;
         BorshB256(self.0.transactions_root).serialize(writer)?;
         BorshB256(self.0.receipts_root).serialize(writer)?;
@@ -39,7 +40,7 @@ impl BorshDeserialize for BorshHeader {
     fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
         let parent_hash = BorshB256::deserialize_reader(reader)?;
         let ommers_hash = BorshB256::deserialize_reader(reader)?;
-        let beneficiary = BorshB256::deserialize_reader(reader)?;
+        let beneficiary = BorshAddress::deserialize_reader(reader)?;
         let state_root = BorshB256::deserialize_reader(reader)?;
         let transactions_root = BorshB256::deserialize_reader(reader)?;
         let receipts_root = BorshB256::deserialize_reader(reader)?;
@@ -62,7 +63,7 @@ impl BorshDeserialize for BorshHeader {
         let header = Header {
             parent_hash: parent_hash.0,
             ommers_hash: ommers_hash.0,
-            beneficiary: Address::from_word(beneficiary.0),
+            beneficiary: beneficiary.0,
             state_root: state_root.0,
             transactions_root: transactions_root.0,
             receipts_root: receipts_root.0,

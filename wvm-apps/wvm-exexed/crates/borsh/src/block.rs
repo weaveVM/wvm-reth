@@ -1,12 +1,16 @@
+use crate::address::BorshAddress;
 use crate::header::{BorshHeader, BorshSealedHeader};
 use crate::request::BorshRequest;
 use crate::transaction::BorshTransactionSigned;
 use crate::withdrawal::BorshWithdrawal;
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::{Request, Requests, SealedBlock, Withdrawal, Withdrawals};
+use reth::primitives::{
+    Request, Requests, SealedBlock, SealedBlockWithSenders, Withdrawal, Withdrawals,
+};
 use std::io::{Read, Write};
 
 pub struct BorshSealedBlock(pub SealedBlock);
+pub struct BorshSealedBlockWithSenders(pub SealedBlockWithSenders);
 
 impl BorshSerialize for BorshSealedBlock {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
@@ -68,10 +72,37 @@ impl BorshDeserialize for BorshSealedBlock {
     }
 }
 
+impl BorshSerialize for BorshSealedBlockWithSenders {
+    fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        let borsh_sealed_block = BorshSealedBlock(self.0.block.clone());
+        let senders: Vec<BorshAddress> =
+            self.0.senders.clone().into_iter().map(BorshAddress).collect();
+
+        borsh_sealed_block.serialize(writer)?;
+        senders.serialize(writer)?;
+
+        Ok(())
+    }
+}
+
+impl BorshDeserialize for BorshSealedBlockWithSenders {
+    fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
+        let sealed_block: BorshSealedBlock = BorshDeserialize::deserialize_reader(reader)?;
+        let senders: Vec<BorshAddress> = BorshDeserialize::deserialize_reader(reader)?;
+
+        let sealed_block_w_senders = SealedBlockWithSenders {
+            block: sealed_block.0,
+            senders: senders.into_iter().map(|i| i.0).collect(),
+        };
+
+        Ok(BorshSealedBlockWithSenders(sealed_block_w_senders))
+    }
+}
+
 #[cfg(test)]
 mod block_tests {
-    use crate::block::BorshSealedBlock;
-    use reth::primitives::SealedBlock;
+    use crate::block::{BorshSealedBlock, BorshSealedBlockWithSenders};
+    use reth::primitives::{SealedBlock, SealedBlockWithSenders};
 
     #[test]
     pub fn test_sealed_block() {
@@ -79,6 +110,16 @@ mod block_tests {
         let borsh_block = BorshSealedBlock(block.clone());
         let to_borsh = borsh::to_vec(&borsh_block).unwrap();
         let from_borsh: BorshSealedBlock = borsh::from_slice(to_borsh.as_slice()).unwrap();
+        assert_eq!(block, from_borsh.0);
+    }
+
+    #[test]
+    pub fn test_sealed_block_w_senders() {
+        let block = SealedBlockWithSenders::default();
+        let borsh_block = BorshSealedBlockWithSenders(block.clone());
+        let to_borsh = borsh::to_vec(&borsh_block).unwrap();
+        let from_borsh: BorshSealedBlockWithSenders =
+            borsh::from_slice(to_borsh.as_slice()).unwrap();
         assert_eq!(block, from_borsh.0);
     }
 }
