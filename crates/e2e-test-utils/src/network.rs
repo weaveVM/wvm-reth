@@ -41,7 +41,7 @@ impl NetworkTestContext {
             match ev {
                 NetworkEvent::SessionEstablished { peer_id, .. } => {
                     info!("Session established with peer: {:?}", peer_id);
-                    return Some(peer_id)
+                    return Some(peer_id);
                 }
                 _ => continue,
             }

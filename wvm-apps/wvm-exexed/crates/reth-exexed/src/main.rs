@@ -9,12 +9,14 @@ use reth::api::FullNodeComponents;
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
-use serde_json;
+use serde_json::to_string;
 use types::types::ExecutionTipState;
+use wevm_borsh::block::BorshSealedBlockWithSenders;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
     state_repository: state_repository::StateRepository,
+    irys_provider: irys::irys::IrysProvider,
     _state_processor: exex_etl::state_processor::StateProcessor,
 ) -> eyre::Result<()> {
     while let Some(notification) = ctx.notifications.recv().await {
@@ -35,10 +37,19 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         }
 
         if let Some(committed_chain) = notification.committed_chain() {
+            let sealed_block_with_senders = committed_chain.tip();
+            let clone_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
+            let borsh_data = borsh::to_vec(&clone_block)?;
+            let json_str = to_string(&sealed_block_with_senders)?;
+
+            let arweave_id = irys_provider.upload_data_to_irys(borsh_data.clone()).await?;
+            println!("irys id: {}", arweave_id);
+
             state_repository
                 .save(ExecutionTipState {
                     block_number: committed_chain.tip().block.number,
-                    sealed_block_with_senders: committed_chain.tip().clone(),
+                    arweave_id,
+                    sealed_block_with_senders_serialized: json_str,
                 })
                 .await?;
         }
@@ -47,14 +58,14 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
     Ok(())
 }
 
-/// Main loop of the WVM node
+/// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         let handle = builder
             .node(EthereumNode::default())
             .install_exex("exex-etl", |ctx| async move {
                 let config_path: String =
-                    std::env::var("CONFIG").unwrap_or("./bq-config.json".to_string());
+                    std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
                 println!("config: {}", config_path);
 
                 let config_file =
@@ -72,12 +83,14 @@ fn main() -> eyre::Result<()> {
                 println!("bigquery client initialized");
 
                 // init state repository
-                let state_repo =
-                    repository::state_repository::StateRepository::new(bigquery_client);
+                let state_repo = state_repository::StateRepository::new(bigquery_client);
                 // init state processor
                 let state_processor = exex_etl::state_processor::StateProcessor::new();
 
-                Ok(exex_etl_processor(ctx, state_repo, state_processor))
+                // init irys provider
+                let irys_provider = irys::irys::IrysProvider::new();
+
+                Ok(exex_etl_processor(ctx, state_repo, irys_provider, state_processor))
             })
             .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
             .launch()

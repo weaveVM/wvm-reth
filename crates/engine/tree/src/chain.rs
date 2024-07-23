@@ -92,7 +92,7 @@ where
                                 tracing::error!( %err, "backfill sync failed");
                                 Poll::Ready(ChainEvent::FatalError)
                             }
-                        }
+                        };
                     }
                     BackfillEvent::TaskDropped(err) => {
                         tracing::error!( %err, "backfill sync task dropped");
@@ -109,7 +109,7 @@ where
                         HandlerEvent::BackfillSync(target) => {
                             // trigger backfill sync and start polling it
                             this.backfill_sync.on_action(BackfillAction::Start(target));
-                            continue 'outer
+                            continue 'outer;
                         }
                         HandlerEvent::Event(ev) => {
                             // bubble up the event
@@ -119,7 +119,7 @@ where
                 }
                 Poll::Pending => {
                     // no more events to process
-                    break 'outer
+                    break 'outer;
                 }
             }
         }

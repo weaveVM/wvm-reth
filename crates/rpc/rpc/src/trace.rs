@@ -263,7 +263,7 @@ where
         if start > end {
             return Err(EthApiError::InvalidParams(
                 "invalid parameters: fromBlock cannot be greater than toBlock".to_string(),
-            ))
+            ));
         }
 
         // ensure that the range is not too large, since we need to fetch all blocks in the range
@@ -338,7 +338,7 @@ where
             } else {
                 // no block reward, means we're past the Paris hardfork and don't expect any rewards
                 // because the blocks in ascending order
-                break
+                break;
             }
         }
 

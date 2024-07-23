@@ -75,7 +75,7 @@ pub trait EthCall: Call + LoadPendingBlock {
         async move {
             let Bundle { transactions, block_override } = bundle;
             if transactions.is_empty() {
-                return Err(EthApiError::InvalidParams(String::from("transactions are empty.")))
+                return Err(EthApiError::InvalidParams(String::from("transactions are empty.")));
             }
 
             let StateContext { transaction_index, block_number } =
@@ -463,7 +463,7 @@ pub trait Call: LoadState + SpawnBlocking {
         for tx in transactions {
             if tx.hash() == target_tx_hash {
                 // reached the target transaction
-                break
+                break;
             }
 
             let sender = tx.signer();
@@ -553,7 +553,7 @@ pub trait Call: LoadState + SpawnBlocking {
                         env.tx.gas_limit = MIN_TRANSACTION_GAS;
                         if let Ok((res, _)) = self.transact(&mut db, env) {
                             if res.result.is_success() {
-                                return Ok(U256::from(MIN_TRANSACTION_GAS))
+                                return Ok(U256::from(MIN_TRANSACTION_GAS));
                             }
                         }
                     }
@@ -597,7 +597,7 @@ pub trait Call: LoadState + SpawnBlocking {
             ExecutionResult::Halt { reason, gas_used } => {
                 // here we don't check for invalid opcode because already executed with highest gas
                 // limit
-                return Err(RpcInvalidTransactionError::halt(reason, gas_used).into())
+                return Err(RpcInvalidTransactionError::halt(reason, gas_used).into());
             }
             ExecutionResult::Revert { output, .. } => {
                 // if price or limit was included in the request then we can execute the request
@@ -607,7 +607,7 @@ pub trait Call: LoadState + SpawnBlocking {
                 } else {
                     // the transaction did revert
                     Err(RpcInvalidTransactionError::Revert(RevertError::new(output)).into())
-                }
+                };
             }
         };
 
@@ -658,10 +658,10 @@ pub trait Call: LoadState + SpawnBlocking {
             // An estimation error is allowed once the current gas limit range used in the binary
             // search is small enough (less than 1.5% of the highest gas limit)
             // <https://github.com/ethereum/go-ethereum/blob/a5a4fa7032bb248f5a7c40f4e8df2b131c4186a4/eth/gasestimator/gasestimator.go#L152
-            if (highest_gas_limit - lowest_gas_limit) as f64 / (highest_gas_limit as f64) <
-                ESTIMATE_GAS_ERROR_RATIO
+            if (highest_gas_limit - lowest_gas_limit) as f64 / (highest_gas_limit as f64)
+                < ESTIMATE_GAS_ERROR_RATIO
             {
-                break
+                break;
             };
 
             env.tx.gas_limit = mid_gas_limit;
@@ -734,7 +734,7 @@ pub trait Call: LoadState + SpawnBlocking {
                         // These cases should be unreachable because we know the transaction
                         // succeeds, but if they occur, treat them as an
                         // error.
-                        return Err(RpcInvalidTransactionError::EvmHalt(err).into())
+                        return Err(RpcInvalidTransactionError::EvmHalt(err).into());
                     }
                 }
             }

@@ -75,8 +75,8 @@ impl CustomRlpxProtoMessage {
         buf.put_u8(self.message_type as u8);
         match &self.message {
             CustomRlpxProtoMessageKind::Ping | CustomRlpxProtoMessageKind::Pong => {}
-            CustomRlpxProtoMessageKind::PingMessage(msg) |
-            CustomRlpxProtoMessageKind::PongMessage(msg) => {
+            CustomRlpxProtoMessageKind::PingMessage(msg)
+            | CustomRlpxProtoMessageKind::PongMessage(msg) => {
                 buf.put(msg.as_bytes());
             }
         }
