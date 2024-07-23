@@ -2,7 +2,11 @@
 
 #![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
+pub mod util;
+
+use crate::util::to_brotli;
 use bigquery::client::BigQueryConfig;
+use irys::irys::IrysRequest;
 use lambda::lambda::exex_lambda_processor;
 use repository::state_repository;
 use reth::api::FullNodeComponents;
@@ -40,15 +44,22 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             let sealed_block_with_senders = committed_chain.tip();
             let clone_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
             let borsh_data = borsh::to_vec(&clone_block)?;
+            let brotli_borsh = to_brotli(borsh_data);
             let json_str = to_string(&sealed_block_with_senders)?;
 
-            let arweave_id = irys_provider.upload_data_to_irys(borsh_data.clone()).await?;
+            let arweave_id = IrysRequest::new()
+                .set_tag("Content-Type", "application/octet-stream")
+                .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
+                .set_data(brotli_borsh)
+                .send_with_provider(&irys_provider)
+                .await?;
+
             println!("irys id: {}", arweave_id);
 
             state_repository
                 .save(ExecutionTipState {
                     block_number: committed_chain.tip().block.number,
-                    arweave_id,
+                    arweave_id: arweave_id.clone(),
                     sealed_block_with_senders_serialized: json_str,
                 })
                 .await?;

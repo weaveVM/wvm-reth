@@ -45,11 +45,12 @@ impl IrysProvider {
         IrysProvider {}
     }
 
-    pub async fn upload_data_to_irys(&self, data: Vec<u8>) -> eyre::Result<String> {
-        let tags = vec![
-            Tag::new("Content-Type", "application/json"),
+    pub async fn upload_data_to_irys(&self, data: Vec<u8>, param_tags: Vec<Tag>) -> eyre::Result<String> {
+        let mut tags = vec![
             Tag::new("Protocol", "WeaveVM-Testnet-V0"),
         ];
+
+        tags.extend(param_tags);
 
         let bundlr =
             init_bundlr().await.map_err(|e| eyre!("failed to initialize bundlr: {}", e))?;
@@ -75,4 +76,42 @@ impl IrysProvider {
 
         eyre::Ok(id)
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct IrysRequest {
+    tags: Vec<Tag>,
+    data: Vec<u8>
+}
+
+impl IrysRequest {
+
+    pub fn new() -> Self {
+        IrysRequest {
+            tags: vec![],
+            data: vec![]
+        }
+    }
+
+    pub fn set_tag(&mut self,
+                   name: &str,
+                   value: &str) -> &mut IrysRequest {
+        self.tags.push(Tag::new(name, value));
+        self
+    }
+
+    pub fn set_data(&mut self, data: Vec<u8>) -> &mut IrysRequest {
+        self.data = data;
+        self
+    }
+
+    pub async fn send(&self) -> eyre::Result<String> {
+        let provider = IrysProvider::new();
+        self.send_with_provider(&provider).await
+    }
+
+    pub async fn send_with_provider(&self, provider: &IrysProvider) -> eyre::Result<String> {
+        provider.upload_data_to_irys(self.data.clone(), self.tags.clone()).await
+    }
+
 }

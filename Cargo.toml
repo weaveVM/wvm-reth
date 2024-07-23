@@ -548,3 +548,6 @@ iai-callgrind = "0.11"
 
 # borsh
 borsh = "1.5.1"
+
+# brotli
+brotlic = "0.8.2"
