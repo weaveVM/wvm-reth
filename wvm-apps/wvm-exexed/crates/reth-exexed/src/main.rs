@@ -2,6 +2,9 @@
 
 #![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
+pub mod util;
+
+use crate::util::to_brotli;
 use bigquery::client::BigQueryConfig;
 use lambda::lambda::exex_lambda_processor;
 use repository::state_repository;
@@ -40,9 +43,10 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             let sealed_block_with_senders = committed_chain.tip();
             let clone_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
             let borsh_data = borsh::to_vec(&clone_block)?;
+            let brotli_borsh = to_brotli(borsh_data);
             let json_str = to_string(&sealed_block_with_senders)?;
 
-            let arweave_id = irys_provider.upload_data_to_irys(borsh_data.clone()).await?;
+            let arweave_id = irys_provider.upload_data_to_irys(brotli_borsh).await?;
             println!("irys id: {}", arweave_id);
 
             state_repository
