@@ -49,7 +49,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
             let arweave_id = IrysRequest::new()
                 .set_tag("Content-Type", "application/octet-stream")
-                .set_tag("WeaveVM:Encoding", "Borsh,Brotli")
+                .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
                 .set_data(brotli_borsh)
                 .send_with_provider(&irys_provider)
                 .await?;
