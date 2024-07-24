@@ -1,5 +1,4 @@
-use crate::b256::BorshB256;
-use crate::signature::BorshSignature;
+use crate::{b256::BorshB256, signature::BorshSignature};
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{Transaction, TransactionSigned};
 use std::io::{Read, Write};

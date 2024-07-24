@@ -76,7 +76,8 @@ impl ConfigureEvmEnv for EthEvmConfig {
             transact_to: TxKind::Call(contract),
             // Explicitly set nonce to None so revm does not do any nonce checks
             nonce: None,
-            gas_limit: 30_000_000,
+            // WVM: 300_000_000 gas limit
+            gas_limit: 300_000_000,
             value: U256::ZERO,
             data,
             // Setting the gas price to zero enforces that no value is transferred as part of the
