@@ -72,40 +72,43 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
-        let handle = builder
-            .node(EthereumNode::default())
-            .install_exex("exex-etl", |ctx| async move {
-                let config_path: String =
-                    std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
-                println!("config: {}", config_path);
+        let mut handle = builder.node(EthereumNode::default());
 
-                let config_file =
-                    std::fs::File::open(config_path).expect("bigquery config path exists");
-                let reader = std::io::BufReader::new(config_file);
+        let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
+        if run_exex == "true" {
+            handle = handle
+                .install_exex("exex-etl", |ctx| async move {
+                    let config_path: String =
+                        std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
+                    println!("config: {}", config_path);
 
-                let bq_config: BigQueryConfig =
-                    serde_json::from_reader(reader).expect("bigquery config read from file");
+                    let config_file =
+                        std::fs::File::open(config_path).expect("bigquery config path exists");
+                    let reader = std::io::BufReader::new(config_file);
 
-                // init bigquery client
-                let bigquery_client = bigquery::client::init_bigquery_db(&bq_config)
-                    .await
-                    .expect("bigquery client initialized");
+                    let bq_config: BigQueryConfig =
+                        serde_json::from_reader(reader).expect("bigquery config read from file");
 
-                println!("bigquery client initialized");
+                    // init bigquery client
+                    let bigquery_client = bigquery::client::init_bigquery_db(&bq_config)
+                        .await
+                        .expect("bigquery client initialized");
 
-                // init state repository
-                let state_repo = state_repository::StateRepository::new(bigquery_client);
-                // init state processor
-                let state_processor = exex_etl::state_processor::StateProcessor::new();
+                    println!("bigquery client initialized");
 
-                // init irys provider
-                let irys_provider = irys::irys::IrysProvider::new();
+                    // init state repository
+                    let state_repo = state_repository::StateRepository::new(bigquery_client);
+                    // init state processor
+                    let state_processor = exex_etl::state_processor::StateProcessor::new();
 
-                Ok(exex_etl_processor(ctx, state_repo, irys_provider, state_processor))
-            })
-            .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
-            .launch()
-            .await?;
+                    // init irys provider
+                    let irys_provider = irys::irys::IrysProvider::new();
+
+                    Ok(exex_etl_processor(ctx, state_repo, irys_provider, state_processor))
+                })
+                .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
+        }
+        let handle = handle.launch().await?;
 
         handle.wait_for_node_exit().await
     })
