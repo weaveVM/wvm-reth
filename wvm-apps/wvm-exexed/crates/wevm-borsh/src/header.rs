@@ -1,6 +1,8 @@
-use crate::address::BorshAddress;
-use crate::b256::{BorshB256, BorshU256};
-use crate::bloom::BorshBloom;
+use crate::{
+    address::BorshAddress,
+    b256::{BorshB256, BorshU256},
+    bloom::BorshBloom,
+};
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{Bytes, Header, SealedHeader};
 use std::io::{Read, Write};

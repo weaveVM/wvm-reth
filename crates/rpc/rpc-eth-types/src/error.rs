@@ -142,26 +142,26 @@ impl EthApiError {
 impl From<EthApiError> for jsonrpsee_types::error::ErrorObject<'static> {
     fn from(error: EthApiError) -> Self {
         match error {
-            EthApiError::FailedToDecodeSignedTransaction
-            | EthApiError::InvalidTransactionSignature
-            | EthApiError::EmptyRawTransactionData
-            | EthApiError::InvalidBlockRange
-            | EthApiError::ExceedsMaxProofWindow
-            | EthApiError::ConflictingFeeFieldsInRequest
-            | EthApiError::Signing(_)
-            | EthApiError::BothStateAndStateDiffInOverride(_)
-            | EthApiError::InvalidTracerConfig
-            | EthApiError::TransactionConversionError => invalid_params_rpc_err(error.to_string()),
+            EthApiError::FailedToDecodeSignedTransaction |
+            EthApiError::InvalidTransactionSignature |
+            EthApiError::EmptyRawTransactionData |
+            EthApiError::InvalidBlockRange |
+            EthApiError::ExceedsMaxProofWindow |
+            EthApiError::ConflictingFeeFieldsInRequest |
+            EthApiError::Signing(_) |
+            EthApiError::BothStateAndStateDiffInOverride(_) |
+            EthApiError::InvalidTracerConfig |
+            EthApiError::TransactionConversionError => invalid_params_rpc_err(error.to_string()),
             EthApiError::InvalidTransaction(err) => err.into(),
             EthApiError::PoolError(err) => err.into(),
-            EthApiError::PrevrandaoNotSet
-            | EthApiError::ExcessBlobGasNotSet
-            | EthApiError::InvalidBlockData(_)
-            | EthApiError::Internal(_)
-            | EthApiError::TransactionNotFound
-            | EthApiError::EvmCustom(_)
-            | EthApiError::EvmPrecompile(_)
-            | EthApiError::InvalidRewardPercentiles => internal_rpc_err(error.to_string()),
+            EthApiError::PrevrandaoNotSet |
+            EthApiError::ExcessBlobGasNotSet |
+            EthApiError::InvalidBlockData(_) |
+            EthApiError::Internal(_) |
+            EthApiError::TransactionNotFound |
+            EthApiError::EvmCustom(_) |
+            EthApiError::EvmPrecompile(_) |
+            EthApiError::InvalidRewardPercentiles => internal_rpc_err(error.to_string()),
             EthApiError::UnknownBlockNumber | EthApiError::UnknownBlockOrTxIndex => {
                 rpc_error_with_code(EthRpcErrorCode::ResourceNotFound.code(), error.to_string())
             }
@@ -207,12 +207,12 @@ impl From<reth_errors::ProviderError> for EthApiError {
     fn from(error: reth_errors::ProviderError) -> Self {
         use reth_errors::ProviderError;
         match error {
-            ProviderError::HeaderNotFound(_)
-            | ProviderError::BlockHashNotFound(_)
-            | ProviderError::BestBlockNotFound
-            | ProviderError::BlockNumberForTransactionIndexNotFound
-            | ProviderError::TotalDifficultyNotFound { .. }
-            | ProviderError::UnknownBlockHash(_) => Self::UnknownBlockNumber,
+            ProviderError::HeaderNotFound(_) |
+            ProviderError::BlockHashNotFound(_) |
+            ProviderError::BestBlockNotFound |
+            ProviderError::BlockNumberForTransactionIndexNotFound |
+            ProviderError::TotalDifficultyNotFound { .. } |
+            ProviderError::UnknownBlockHash(_) => Self::UnknownBlockNumber,
             ProviderError::FinalizedBlockNotFound | ProviderError::SafeBlockNotFound => {
                 Self::UnknownSafeOrFinalizedBlock
             }
@@ -495,10 +495,10 @@ impl From<reth_primitives::InvalidTransactionError> for RpcInvalidTransactionErr
                 Self::OldLegacyChainId
             }
             InvalidTransactionError::ChainIdMismatch => Self::InvalidChainId,
-            InvalidTransactionError::Eip2930Disabled
-            | InvalidTransactionError::Eip1559Disabled
-            | InvalidTransactionError::Eip4844Disabled
-            | InvalidTransactionError::TxTypeNotSupported => Self::TxTypeNotSupported,
+            InvalidTransactionError::Eip2930Disabled |
+            InvalidTransactionError::Eip1559Disabled |
+            InvalidTransactionError::Eip4844Disabled |
+            InvalidTransactionError::TxTypeNotSupported => Self::TxTypeNotSupported,
             InvalidTransactionError::GasUintOverflow => Self::GasUintOverflow,
             InvalidTransactionError::GasTooLow => Self::GasTooLow,
             InvalidTransactionError::GasTooHigh => Self::GasTooHigh,
