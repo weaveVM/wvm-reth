@@ -5,7 +5,7 @@ use reth_consensus::ConsensusError;
 use reth_primitives::{
     constants::{
         eip4844::{DATA_GAS_PER_BLOB, MAX_DATA_GAS_PER_BLOCK},
-        MAXIMUM_EXTRA_DATA_SIZE,
+        ETHEREUM_BLOCK_GAS_LIMIT, MAXIMUM_EXTRA_DATA_SIZE,
     },
     eip4844::calculate_excess_blob_gas,
     EthereumHardfork, GotExpected, Header, SealedBlock, SealedHeader,
@@ -417,7 +417,7 @@ mod tests {
             logs_bloom: hex!("002400000000004000220000800002000000000000000000000000000000100000000000000000100000000000000021020000000800000006000000002100040000000c0004000000000008000008200000000000000000000000008000000001040000020000020000002000000800000002000020000000022010000000000000010002001000000000020200000000000001000200880000004000000900020000000000020000000040000000000000000000000000000080000000000001000002000000000000012000200020000000000000001000000000000020000010321400000000100000000000000000000000000000400000000000000000").into(),
             difficulty: U256::ZERO, // total difficulty: 0xc70d815d562d3cfa955).into(),
             number: 0xf21d20,
-            gas_limit: 0x11E1A300, // WVM: 300_000_000 gas limit
+            gas_limit: ETHEREUM_BLOCK_GAS_LIMIT, // WVM: 300_000_000 gas limit
             gas_used: 0x6e813,
             timestamp: 0x635f9657,
             extra_data: hex!("")[..].into(),
@@ -434,7 +434,7 @@ mod tests {
 
         let mut parent = header.clone();
         parent.gas_used = 17763076;
-        parent.gas_limit = 300_000_000;
+        parent.gas_limit = ETHEREUM_BLOCK_GAS_LIMIT;
         parent.base_fee_per_gas = Some(0x28041f7f5);
         parent.number -= 1;
         parent.timestamp -= 1;

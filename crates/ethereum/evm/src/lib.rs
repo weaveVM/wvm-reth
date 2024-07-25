@@ -14,7 +14,11 @@ extern crate alloc;
 
 use reth_chainspec::{ChainSpec, Head};
 use reth_evm::{ConfigureEvm, ConfigureEvmEnv};
-use reth_primitives::{transaction::FillTxEnv, Address, Header, TransactionSigned, U256};
+use reth_primitives::{
+    constants::ETHEREUM_BLOCK_GAS_LIMIT, transaction::FillTxEnv, Address, Header,
+    TransactionSigned, U256,
+};
+
 use reth_revm::{Database, EvmBuilder};
 use revm_primitives::{AnalysisKind, Bytes, CfgEnvWithHandlerCfg, Env, TxEnv, TxKind};
 
@@ -77,7 +81,7 @@ impl ConfigureEvmEnv for EthEvmConfig {
             // Explicitly set nonce to None so revm does not do any nonce checks
             nonce: None,
             // WVM: 300_000_000 gas limit
-            gas_limit: 300_000_000,
+            gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
             value: U256::ZERO,
             data,
             // Setting the gas price to zero enforces that no value is transferred as part of the
