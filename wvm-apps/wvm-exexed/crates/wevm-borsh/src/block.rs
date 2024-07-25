@@ -1,8 +1,10 @@
-use crate::address::BorshAddress;
-use crate::header::{BorshHeader, BorshSealedHeader};
-use crate::request::BorshRequest;
-use crate::transaction::BorshTransactionSigned;
-use crate::withdrawal::BorshWithdrawal;
+use crate::{
+    address::BorshAddress,
+    header::{BorshHeader, BorshSealedHeader},
+    request::BorshRequest,
+    transaction::BorshTransactionSigned,
+    withdrawal::BorshWithdrawal,
+};
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{
     Request, Requests, SealedBlock, SealedBlockWithSenders, Withdrawal, Withdrawals,

@@ -450,10 +450,10 @@ impl PeersManager {
                     // exempt trusted peers from reputation slashing for
                     if matches!(
                         rep,
-                        ReputationChangeKind::Dropped
-                            | ReputationChangeKind::BadAnnouncement
-                            | ReputationChangeKind::Timeout
-                            | ReputationChangeKind::AlreadySeenTransaction
+                        ReputationChangeKind::Dropped |
+                            ReputationChangeKind::BadAnnouncement |
+                            ReputationChangeKind::Timeout |
+                            ReputationChangeKind::AlreadySeenTransaction
                     ) {
                         return;
                     }
@@ -790,10 +790,10 @@ impl PeersManager {
     /// Returns `None` if no peer is available.
     fn best_unconnected(&mut self) -> Option<(PeerId, &mut Peer)> {
         let mut unconnected = self.peers.iter_mut().filter(|(_, peer)| {
-            !peer.is_backed_off()
-                && !peer.is_banned()
-                && peer.state.is_unconnected()
-                && (!self.trusted_nodes_only || peer.is_trusted())
+            !peer.is_backed_off() &&
+                !peer.is_banned() &&
+                peer.state.is_unconnected() &&
+                (!self.trusted_nodes_only || peer.is_trusted())
         });
 
         // keep track of the best peer, if there's one
@@ -960,8 +960,8 @@ impl ConnectionInfo {
 
     ///  Returns `true` if there's still capacity for a new outgoing connection.
     const fn has_out_capacity(&self) -> bool {
-        self.num_pending_out < self.config.max_concurrent_outbound_dials
-            && self.num_outbound < self.config.max_outbound
+        self.num_pending_out < self.config.max_concurrent_outbound_dials &&
+            self.num_outbound < self.config.max_outbound
     }
 
     ///  Returns `true` if there's still capacity for a new incoming connection.

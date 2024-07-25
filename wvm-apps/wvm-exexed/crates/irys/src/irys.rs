@@ -45,10 +45,12 @@ impl IrysProvider {
         IrysProvider {}
     }
 
-    pub async fn upload_data_to_irys(&self, data: Vec<u8>, param_tags: Vec<Tag>) -> eyre::Result<String> {
-        let mut tags = vec![
-            Tag::new("Protocol", "WeaveVM-Testnet-V0"),
-        ];
+    pub async fn upload_data_to_irys(
+        &self,
+        data: Vec<u8>,
+        param_tags: Vec<Tag>,
+    ) -> eyre::Result<String> {
+        let mut tags = vec![Tag::new("Protocol", "WeaveVM-Testnet-V0")];
 
         tags.extend(param_tags);
 
@@ -81,21 +83,15 @@ impl IrysProvider {
 #[derive(Clone, Debug)]
 pub struct IrysRequest {
     tags: Vec<Tag>,
-    data: Vec<u8>
+    data: Vec<u8>,
 }
 
 impl IrysRequest {
-
     pub fn new() -> Self {
-        IrysRequest {
-            tags: vec![],
-            data: vec![]
-        }
+        IrysRequest { tags: vec![], data: vec![] }
     }
 
-    pub fn set_tag(&mut self,
-                   name: &str,
-                   value: &str) -> &mut IrysRequest {
+    pub fn set_tag(&mut self, name: &str, value: &str) -> &mut IrysRequest {
         self.tags.push(Tag::new(name, value));
         self
     }
@@ -113,5 +109,4 @@ impl IrysRequest {
     pub async fn send_with_provider(&self, provider: &IrysProvider) -> eyre::Result<String> {
         provider.upload_data_to_irys(self.data.clone(), self.tags.clone()).await
     }
-
 }
