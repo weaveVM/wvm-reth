@@ -5,7 +5,7 @@ use reth_consensus::ConsensusError;
 use reth_primitives::{
     constants::{
         eip4844::{DATA_GAS_PER_BLOB, MAX_DATA_GAS_PER_BLOCK},
-        ETHEREUM_BLOCK_GAS_LIMIT, MAXIMUM_EXTRA_DATA_SIZE,
+        MAXIMUM_EXTRA_DATA_SIZE,
     },
     eip4844::calculate_excess_blob_gas,
     EthereumHardfork, GotExpected, Header, SealedBlock, SealedHeader,
@@ -274,9 +274,9 @@ mod tests {
     use rand::Rng;
     use reth_chainspec::ChainSpecBuilder;
     use reth_primitives::{
-        hex_literal::hex, proofs, Account, Address, BlockBody, BlockHash, BlockHashOrNumber,
-        BlockNumber, Bytes, Signature, Transaction, TransactionSigned, TxEip4844, Withdrawal,
-        Withdrawals, U256,
+        constants::ETHEREUM_BLOCK_GAS_LIMIT, hex_literal::hex, proofs, Account, Address, BlockBody,
+        BlockHash, BlockHashOrNumber, BlockNumber, Bytes, Signature, Transaction,
+        TransactionSigned, TxEip4844, Withdrawal, Withdrawals, U256,
     };
     use reth_storage_api::{
         errors::provider::ProviderResult, AccountReader, HeaderProvider, WithdrawalsProvider,

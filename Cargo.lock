@@ -8242,6 +8242,7 @@ dependencies = [
  "confy",
  "humantime-serde",
  "reth-network-types",
+ "reth-primitives",
  "reth-prune-types",
  "reth-stages-types",
  "serde",
