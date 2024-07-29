@@ -50,6 +50,8 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             let arweave_id = IrysRequest::new()
                 .set_tag("Content-Type", "application/octet-stream")
                 .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
+                .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
+                .set_tag("Block-Hash", sealed_block_with_senders.block.hash().to_string().as_str())
                 .set_data(brotli_borsh)
                 .send_with_provider(&irys_provider)
                 .await?;
