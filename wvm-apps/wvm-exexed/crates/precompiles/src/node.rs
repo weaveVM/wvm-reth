@@ -5,6 +5,7 @@ use reth::payload::{EthBuiltPayload, EthPayloadBuilderAttributes};
 use reth_ethereum_engine_primitives::EthPayloadAttributes;
 use reth_node_ethereum::{EthEngineTypes, EthEvmConfig, EthExecutorProvider};
 use reth_node_ethereum::node::{EthereumConsensusBuilder, EthereumNetworkBuilder, EthereumPayloadBuilder, EthereumPoolBuilder};
+use crate::inner::wvm_precompiles;
 use crate::wevm_node_config::WvmEthEvmConfig;
 
 /// Type configuration for a regular Ethereum node.
@@ -83,7 +84,7 @@ impl<Node> ExecutorBuilder<Node> for WvmEthExecutorBuilder
         let evm_config = WvmEthEvmConfig::new(
             EthEvmConfig::default(),
             Default::default(),
-            vec![].into_iter()
+            wvm_precompiles()
         );
         let executor = EthExecutorProvider::new(chain_spec, evm_config.clone());
 

@@ -7156,6 +7156,7 @@ name = "precompiles"
 version = "1.0.1"
 dependencies = [
  "eyre",
+ "irys",
  "parking_lot 0.12.3",
  "reqwest 0.12.5",
  "reth",
@@ -7168,6 +7169,7 @@ dependencies = [
  "schnellru",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
