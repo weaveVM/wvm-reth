@@ -5,12 +5,12 @@ use reth::revm::precompile::{PrecompileWithAddress, u64_to_address};
 use reth_revm::primitives::B256;
 
 pub const PC_ADDRESS: u64 = 0x99;
-pub const IRYS_PC_BASE: u64 = 3_450;
+pub const ARWEAVE_PC_BASE: u64 = 3_450;
 
-pub const IRYS_UPLOAD_PC: PrecompileWithAddress =
-    PrecompileWithAddress(u64_to_address(PC_ADDRESS), Precompile::Standard(irys_upload));
+pub const ARWEAVE_UPLOAD_PC: PrecompileWithAddress =
+    PrecompileWithAddress(u64_to_address(PC_ADDRESS), Precompile::Standard(arweave_upload));
 
-fn irys_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
+fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let res = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -18,7 +18,6 @@ fn irys_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         .block_on(async {
             IrysRequest::new()
                 .set_tag("Content-Type", "application/octet-stream")
-                .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
                 .set_tag("WeaveVM:Precompile", "true")
                 .set_data(input.0.to_vec())
                 .send()
@@ -32,6 +31,20 @@ fn irys_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     };
 
 
-    let out = PrecompileOutput::new(IRYS_PC_BASE, byte_resp.into());
+    let out = PrecompileOutput::new(ARWEAVE_PC_BASE, byte_resp.into());
     Ok(out)
+}
+
+#[cfg(test)]
+mod irys_pc_tests {
+    use reth::primitives::Bytes;
+    use reth::primitives::revm_primitives::PrecompileOutput;
+    use crate::inner::arweave_precompile::arweave_upload;
+
+    #[test]
+    pub fn test_irys_precompile() {
+        let input = Bytes::from("Hello world".as_bytes());
+        let PrecompileOutput { gas_used, bytes } = arweave_upload(&input, 0 as u64).unwrap();
+    }
+
 }
