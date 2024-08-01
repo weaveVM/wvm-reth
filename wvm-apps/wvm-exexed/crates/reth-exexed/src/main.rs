@@ -115,7 +115,7 @@ fn main() -> eyre::Result<()> {
                     let state_processor = exex_etl::state_processor::StateProcessor::new();
 
                     // init irys provider
-                    let irys_provider = irys::irys::IrysProvider::new();
+                    let irys_provider = irys::irys::IrysProvider::new(None);
 
                     Ok(exex_etl_processor(ctx, state_repo, irys_provider, state_processor))
                 })

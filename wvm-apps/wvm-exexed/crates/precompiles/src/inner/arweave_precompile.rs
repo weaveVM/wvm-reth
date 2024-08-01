@@ -42,6 +42,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             IrysRequest::new()
                 .set_tag("Content-Type", "application/octet-stream")
                 .set_tag("WeaveVM:Precompile", "true")
+                .set_tag("WeaveVM:Precompile-Address", PC_ADDRESS.to_string().as_str())
                 .set_data(input.0.to_vec())
                 .send()
                 .await
