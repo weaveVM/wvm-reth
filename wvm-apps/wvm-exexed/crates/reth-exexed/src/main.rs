@@ -14,6 +14,8 @@ use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
 use serde_json::to_string;
+use reth::builder::Node;
+use reth_node_ethereum::node::EthereumExecutorBuilder;
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
@@ -68,11 +70,28 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
     Ok(())
 }
+use reth::{
+    builder::{components::ExecutorBuilder, BuilderContext, NodeBuilder},
+    primitives::{
+        revm_primitives::{CfgEnvWithHandlerCfg, Env, PrecompileResult, TxEnv},
+        Address, Bytes, U256,
+    },
+    revm::{
+        handler::register::EvmHandler,
+        inspector_handle_register,
+        precompile::{Precompile, PrecompileSpecId},
+        ContextPrecompile, ContextPrecompiles, Database, Evm, EvmBuilder, GetInspector,
+    },
+    tasks::TaskManager,
+};
 
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
-        let mut handle = builder.node(EthereumNode::default());
+        let mut handle = builder
+            .with_types::<EthereumNode>()
+            .with_components(EthereumNode::components().executor(EthereumExecutorBuilder::default()));
+
 
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
         if run_exex == "true" {

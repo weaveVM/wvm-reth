@@ -23,11 +23,11 @@ services:
       - --metrics=0.0.0.0:9001
       - --http
       - --http.addr=0.0.0.0
-      - --http.api=eth,net,trace,txpool,web3,rpc,debug
+      - --http.api=eth,net,trace,txpool,web3,rpc,debug,admin
       - --http.corsdomain=*
       - --ws
       - --ws.addr=0.0.0.0
-      - --ws.api=eth,net,trace,txpool,web3,rpc,debug
+      - --ws.api=eth,net,trace,txpool,web3,rpc,debug,admin
       - --ws.origins=*
       - --auth-ipc
       - --auth-ipc.path=/data/reth_engine_api.ipc
@@ -37,6 +37,7 @@ services:
       - --chain=/genesis/genesis.json
       - --datadir=/data
       - --log.file.directory=/root/logs
+      - --trusted-peers="enode://abcd@ip:port"
 
   # default prometheus + grafana setup
   prometheus:
@@ -112,7 +113,7 @@ services:
       --execution-jwt /root/jwt/jwt.hex 
       --staking 
       --allow-insecure-genesis-sync 
-      --target-peers 1 
+      --target-peers 2 
       --import-all-attestations 
       --subscribe-all-subnets 
       --http-allow-origin "*" 
