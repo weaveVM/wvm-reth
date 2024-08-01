@@ -7152,6 +7152,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
+name = "precompiles"
+version = "1.0.1"
+dependencies = [
+ "eyre",
+ "irys",
+ "parking_lot 0.12.3",
+ "reqwest 0.12.5",
+ "reth",
+ "reth-chainspec",
+ "reth-ethereum-engine-primitives",
+ "reth-exex",
+ "reth-node-ethereum",
+ "reth-revm",
+ "reth-tracing",
+ "schnellru",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "predicates"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8968,6 +8989,7 @@ dependencies = [
  "eyre",
  "irys",
  "lambda",
+ "precompiles",
  "repository",
  "reth",
  "reth-exex",
@@ -13409,14 +13431,20 @@ dependencies = [
  "indexmap 2.2.6",
  "irys",
  "lambda",
+ "parking_lot 0.12.3",
+ "precompiles",
  "repository",
  "reth",
+ "reth-chainspec",
+ "reth-ethereum-engine-primitives",
  "reth-exex",
  "reth-exex-test-utils",
  "reth-node-api",
  "reth-node-ethereum",
+ "reth-revm",
  "reth-testing-utils",
  "reth-tracing",
+ "schnellru",
  "serde",
  "serde_json",
  "tokio",

@@ -22,3 +22,4 @@ exex-etl = { path = "../exex-etl" }
 types = { path = "../types" }
 lambda = { path = "../lambda" }
 irys = { path = "../irys" }
+precompiles = { path = "../precompiles" }

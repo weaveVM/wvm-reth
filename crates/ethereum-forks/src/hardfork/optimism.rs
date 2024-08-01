@@ -57,22 +57,22 @@ impl OptimismHardfork {
         match_hardfork(
             fork,
             |fork| match fork {
-                EthereumHardfork::Frontier |
-                EthereumHardfork::Homestead |
-                EthereumHardfork::Dao |
-                EthereumHardfork::Tangerine |
-                EthereumHardfork::SpuriousDragon |
-                EthereumHardfork::Byzantium |
-                EthereumHardfork::Constantinople |
-                EthereumHardfork::Petersburg |
-                EthereumHardfork::Istanbul |
-                EthereumHardfork::MuirGlacier |
-                EthereumHardfork::Berlin |
-                EthereumHardfork::London |
-                EthereumHardfork::ArrowGlacier |
-                EthereumHardfork::GrayGlacier |
-                EthereumHardfork::Paris |
-                EthereumHardfork::Shanghai => Some(2106456),
+                EthereumHardfork::Frontier
+                | EthereumHardfork::Homestead
+                | EthereumHardfork::Dao
+                | EthereumHardfork::Tangerine
+                | EthereumHardfork::SpuriousDragon
+                | EthereumHardfork::Byzantium
+                | EthereumHardfork::Constantinople
+                | EthereumHardfork::Petersburg
+                | EthereumHardfork::Istanbul
+                | EthereumHardfork::MuirGlacier
+                | EthereumHardfork::Berlin
+                | EthereumHardfork::London
+                | EthereumHardfork::ArrowGlacier
+                | EthereumHardfork::GrayGlacier
+                | EthereumHardfork::Paris
+                | EthereumHardfork::Shanghai => Some(2106456),
                 EthereumHardfork::Cancun => Some(6383256),
                 _ => None,
             },
@@ -90,22 +90,22 @@ impl OptimismHardfork {
         match_hardfork(
             fork,
             |fork| match fork {
-                EthereumHardfork::Frontier |
-                EthereumHardfork::Homestead |
-                EthereumHardfork::Dao |
-                EthereumHardfork::Tangerine |
-                EthereumHardfork::SpuriousDragon |
-                EthereumHardfork::Byzantium |
-                EthereumHardfork::Constantinople |
-                EthereumHardfork::Petersburg |
-                EthereumHardfork::Istanbul |
-                EthereumHardfork::MuirGlacier |
-                EthereumHardfork::Berlin |
-                EthereumHardfork::London |
-                EthereumHardfork::ArrowGlacier |
-                EthereumHardfork::GrayGlacier |
-                EthereumHardfork::Paris |
-                EthereumHardfork::Shanghai => Some(9101527),
+                EthereumHardfork::Frontier
+                | EthereumHardfork::Homestead
+                | EthereumHardfork::Dao
+                | EthereumHardfork::Tangerine
+                | EthereumHardfork::SpuriousDragon
+                | EthereumHardfork::Byzantium
+                | EthereumHardfork::Constantinople
+                | EthereumHardfork::Petersburg
+                | EthereumHardfork::Istanbul
+                | EthereumHardfork::MuirGlacier
+                | EthereumHardfork::Berlin
+                | EthereumHardfork::London
+                | EthereumHardfork::ArrowGlacier
+                | EthereumHardfork::GrayGlacier
+                | EthereumHardfork::Paris
+                | EthereumHardfork::Shanghai => Some(9101527),
                 EthereumHardfork::Cancun => Some(11188936),
                 _ => None,
             },
@@ -123,22 +123,22 @@ impl OptimismHardfork {
         match_hardfork(
             fork,
             |fork| match fork {
-                EthereumHardfork::Frontier |
-                EthereumHardfork::Homestead |
-                EthereumHardfork::Dao |
-                EthereumHardfork::Tangerine |
-                EthereumHardfork::SpuriousDragon |
-                EthereumHardfork::Byzantium |
-                EthereumHardfork::Constantinople |
-                EthereumHardfork::Petersburg |
-                EthereumHardfork::Istanbul |
-                EthereumHardfork::MuirGlacier |
-                EthereumHardfork::Berlin |
-                EthereumHardfork::London |
-                EthereumHardfork::ArrowGlacier |
-                EthereumHardfork::GrayGlacier |
-                EthereumHardfork::Paris |
-                EthereumHardfork::Shanghai => Some(1699981200),
+                EthereumHardfork::Frontier
+                | EthereumHardfork::Homestead
+                | EthereumHardfork::Dao
+                | EthereumHardfork::Tangerine
+                | EthereumHardfork::SpuriousDragon
+                | EthereumHardfork::Byzantium
+                | EthereumHardfork::Constantinople
+                | EthereumHardfork::Petersburg
+                | EthereumHardfork::Istanbul
+                | EthereumHardfork::MuirGlacier
+                | EthereumHardfork::Berlin
+                | EthereumHardfork::London
+                | EthereumHardfork::ArrowGlacier
+                | EthereumHardfork::GrayGlacier
+                | EthereumHardfork::Paris
+                | EthereumHardfork::Shanghai => Some(1699981200),
                 EthereumHardfork::Cancun => Some(1708534800),
                 _ => None,
             },
@@ -156,22 +156,22 @@ impl OptimismHardfork {
         match_hardfork(
             fork,
             |fork| match fork {
-                EthereumHardfork::Frontier |
-                EthereumHardfork::Homestead |
-                EthereumHardfork::Dao |
-                EthereumHardfork::Tangerine |
-                EthereumHardfork::SpuriousDragon |
-                EthereumHardfork::Byzantium |
-                EthereumHardfork::Constantinople |
-                EthereumHardfork::Petersburg |
-                EthereumHardfork::Istanbul |
-                EthereumHardfork::MuirGlacier |
-                EthereumHardfork::Berlin |
-                EthereumHardfork::London |
-                EthereumHardfork::ArrowGlacier |
-                EthereumHardfork::GrayGlacier |
-                EthereumHardfork::Paris |
-                EthereumHardfork::Shanghai => Some(1704992401),
+                EthereumHardfork::Frontier
+                | EthereumHardfork::Homestead
+                | EthereumHardfork::Dao
+                | EthereumHardfork::Tangerine
+                | EthereumHardfork::SpuriousDragon
+                | EthereumHardfork::Byzantium
+                | EthereumHardfork::Constantinople
+                | EthereumHardfork::Petersburg
+                | EthereumHardfork::Istanbul
+                | EthereumHardfork::MuirGlacier
+                | EthereumHardfork::Berlin
+                | EthereumHardfork::London
+                | EthereumHardfork::ArrowGlacier
+                | EthereumHardfork::GrayGlacier
+                | EthereumHardfork::Paris
+                | EthereumHardfork::Shanghai => Some(1704992401),
                 EthereumHardfork::Cancun => Some(1710374401),
                 _ => None,
             },

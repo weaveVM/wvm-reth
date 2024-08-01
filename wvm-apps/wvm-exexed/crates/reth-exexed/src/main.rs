@@ -8,9 +8,12 @@ use crate::util::to_brotli;
 use bigquery::client::BigQueryConfig;
 use irys::irys::IrysRequest;
 use lambda::lambda::exex_lambda_processor;
+use precompiles::node::WvmEthExecutorBuilder;
 use repository::state_repository;
 use reth::api::FullNodeComponents;
+use reth::builder::Node;
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
+use reth_node_ethereum::node::EthereumExecutorBuilder;
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
 use serde_json::to_string;
@@ -74,7 +77,15 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
-        let mut handle = builder.node(EthereumNode::default());
+        // let mut builder = builder.with_types::<EthereumNode>();
+        // let builder = builder.with_components(EthereumNode::components().executor())
+        // let node = EthereumNode::default();
+        //
+        // let mut handle = builder.node(node);
+
+        let mut handle = builder
+            .with_types::<EthereumNode>()
+            .with_components(EthereumNode::components().executor(WvmEthExecutorBuilder::default()));
 
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
         if run_exex == "true" {
@@ -104,7 +115,7 @@ fn main() -> eyre::Result<()> {
                     let state_processor = exex_etl::state_processor::StateProcessor::new();
 
                     // init irys provider
-                    let irys_provider = irys::irys::IrysProvider::new();
+                    let irys_provider = irys::irys::IrysProvider::new(None);
 
                     Ok(exex_etl_processor(ctx, state_repo, irys_provider, state_processor))
                 })
