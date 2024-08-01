@@ -67,7 +67,9 @@ pub trait EthBlocks: LoadBlock {
         async move {
             if block_id.is_pending() {
                 // Pending block can be fetched directly without need for caching
-                return Ok(LoadBlock::provider(self).pending_block()?.map(|block| block.body.len()));
+                return Ok(LoadBlock::provider(self)
+                    .pending_block()?
+                    .map(|block| block.body.len()));
             }
 
             let block_hash = match LoadBlock::provider(self).block_hash_for_id(block_id)? {

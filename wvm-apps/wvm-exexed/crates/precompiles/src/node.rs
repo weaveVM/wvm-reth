@@ -1,12 +1,14 @@
-use reth::api::{FullNodeTypes, NodeTypes, PayloadTypes};
-use reth::builder::{BuilderContext, Node};
-use reth::builder::components::{ComponentsBuilder, ExecutorBuilder};
-use reth::payload::{EthBuiltPayload, EthPayloadBuilderAttributes};
-use reth_ethereum_engine_primitives::EthPayloadAttributes;
-use reth_node_ethereum::{EthEngineTypes, EthEvmConfig, EthExecutorProvider};
-use reth_node_ethereum::node::{EthereumConsensusBuilder, EthereumNetworkBuilder, EthereumPayloadBuilder, EthereumPoolBuilder};
 use crate::inner::wvm_precompiles;
 use crate::wevm_node_config::WvmEthEvmConfig;
+use reth::api::{FullNodeTypes, NodeTypes, PayloadTypes};
+use reth::builder::components::{ComponentsBuilder, ExecutorBuilder};
+use reth::builder::{BuilderContext, Node};
+use reth::payload::{EthBuiltPayload, EthPayloadBuilderAttributes};
+use reth_ethereum_engine_primitives::EthPayloadAttributes;
+use reth_node_ethereum::node::{
+    EthereumConsensusBuilder, EthereumNetworkBuilder, EthereumPayloadBuilder, EthereumPoolBuilder,
+};
+use reth_node_ethereum::{EthEngineTypes, EthEvmConfig, EthExecutorProvider};
 
 /// Type configuration for a regular Ethereum node.
 #[derive(Debug, Default, Clone, Copy)]
@@ -23,13 +25,13 @@ impl WvmEthereumNode {
         WvmEthExecutorBuilder,
         EthereumConsensusBuilder,
     >
-        where
-            Node: FullNodeTypes,
-            <Node as NodeTypes>::Engine: PayloadTypes<
-                BuiltPayload = EthBuiltPayload,
-                PayloadAttributes = EthPayloadAttributes,
-                PayloadBuilderAttributes = EthPayloadBuilderAttributes,
-            >,
+    where
+        Node: FullNodeTypes,
+        <Node as NodeTypes>::Engine: PayloadTypes<
+            BuiltPayload = EthBuiltPayload,
+            PayloadAttributes = EthPayloadAttributes,
+            PayloadBuilderAttributes = EthPayloadBuilderAttributes,
+        >,
     {
         ComponentsBuilder::default()
             .node_types::<Node>()
@@ -47,8 +49,8 @@ impl NodeTypes for WvmEthereumNode {
 }
 
 impl<N> Node<N> for WvmEthereumNode
-    where
-        N: FullNodeTypes<Engine = EthEngineTypes>,
+where
+    N: FullNodeTypes<Engine = EthEngineTypes>,
 {
     type ComponentsBuilder = ComponentsBuilder<
         N,
@@ -70,8 +72,8 @@ impl<N> Node<N> for WvmEthereumNode
 pub struct WvmEthExecutorBuilder;
 
 impl<Node> ExecutorBuilder<Node> for WvmEthExecutorBuilder
-    where
-        Node: FullNodeTypes,
+where
+    Node: FullNodeTypes,
 {
     type EVM = WvmEthEvmConfig;
     type Executor = EthExecutorProvider<Self::EVM>;
@@ -81,11 +83,8 @@ impl<Node> ExecutorBuilder<Node> for WvmEthExecutorBuilder
         ctx: &BuilderContext<Node>,
     ) -> eyre::Result<(Self::EVM, Self::Executor)> {
         let chain_spec = ctx.chain_spec();
-        let evm_config = WvmEthEvmConfig::new(
-            EthEvmConfig::default(),
-            Default::default(),
-            wvm_precompiles()
-        );
+        let evm_config =
+            WvmEthEvmConfig::new(EthEvmConfig::default(), Default::default(), wvm_precompiles());
         let executor = EthExecutorProvider::new(chain_spec, evm_config.clone());
 
         Ok((evm_config, executor))

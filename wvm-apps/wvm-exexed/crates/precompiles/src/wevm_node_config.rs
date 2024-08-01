@@ -1,15 +1,20 @@
-use std::collections::HashMap;
-use std::sync::{Arc};
+use parking_lot::RwLock;
 use reth::api::{ConfigureEvm, ConfigureEvmEnv};
 use reth::primitives::{Address, Bytes, Header, TransactionSigned, U256};
-use reth::revm::{ContextPrecompile, ContextPrecompiles, Database, Evm, EvmBuilder, GetInspector, inspector_handle_register};
 use reth::revm::handler::register::EvmHandler;
-use reth::revm::precompile::{Precompile, PrecompileResult, PrecompileSpecId, PrecompileWithAddress, StatefulPrecompileMut};
+use reth::revm::precompile::{
+    Precompile, PrecompileResult, PrecompileSpecId, PrecompileWithAddress, StatefulPrecompileMut,
+};
 use reth::revm::primitives::{CfgEnvWithHandlerCfg, Env, SpecId, TxEnv};
+use reth::revm::{
+    inspector_handle_register, ContextPrecompile, ContextPrecompiles, Database, Evm, EvmBuilder,
+    GetInspector,
+};
 use reth_chainspec::ChainSpec;
 use reth_node_ethereum::EthEvmConfig;
-use parking_lot::RwLock;
-use schnellru::{LruMap, ByLength};
+use schnellru::{ByLength, LruMap};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Type alias for the LRU cache used within the [`PrecompileCache`].
 type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResult>;
@@ -29,7 +34,7 @@ pub struct PrecompileCache {
 pub struct WvmEthEvmConfig {
     pub evm_config: EthEvmConfig,
     pub precompile_cache: Arc<RwLock<PrecompileCache>>,
-    pub exts: Vec<PrecompileWithAddress>
+    pub exts: Vec<PrecompileWithAddress>,
 }
 
 /// A custom precompile that contains the cache and precompile it wraps.
@@ -68,18 +73,17 @@ impl ConfigureEvmEnv for WvmEthEvmConfig {
 }
 
 impl WvmEthEvmConfig {
-
-    pub fn new<PCI>(evm_config: EthEvmConfig,
-               precompile_cache: Arc<RwLock<PrecompileCache>>,
-               precompiles_ext: PCI) -> Self where PCI: Iterator<Item = PrecompileWithAddress> {
-
+    pub fn new<PCI>(
+        evm_config: EthEvmConfig,
+        precompile_cache: Arc<RwLock<PrecompileCache>>,
+        precompiles_ext: PCI,
+    ) -> Self
+    where
+        PCI: Iterator<Item = PrecompileWithAddress>,
+    {
         let exts: Vec<PrecompileWithAddress> = precompiles_ext.collect();
 
-        Self {
-            evm_config,
-            precompile_cache,
-            exts
-        }
+        Self { evm_config, precompile_cache, exts }
     }
 
     /// Sets the precompiles to the EVM handler
@@ -91,10 +95,10 @@ impl WvmEthEvmConfig {
     pub fn set_precompiles<EXT, DB, PCI>(
         handler: &mut EvmHandler<EXT, DB>,
         cache: Arc<RwLock<PrecompileCache>>,
-        extensions: PCI
+        extensions: PCI,
     ) where
         DB: Database,
-        PCI: Iterator<Item = PrecompileWithAddress>
+        PCI: Iterator<Item = PrecompileWithAddress>,
     {
         // first we need the evm spec id, which determines the precompiles
         let spec_id = handler.cfg.spec_id;
@@ -124,8 +128,8 @@ impl WvmEthEvmConfig {
         precompile: ContextPrecompile<DB>,
         cache: Arc<RwLock<LruMap<(Bytes, u64), PrecompileResult>>>,
     ) -> ContextPrecompile<DB>
-        where
-            DB: Database,
+    where
+        DB: Database,
     {
         let ContextPrecompile::Ordinary(precompile) = precompile else {
             // context stateful precompiles are not supported, due to lifetime issues or skill
@@ -176,9 +180,9 @@ impl ConfigureEvm for WvmEthEvmConfig {
     }
 
     fn evm_with_inspector<'a, DB, I>(&self, db: DB, inspector: I) -> Evm<'a, I, DB>
-        where
-            DB: Database + 'a,
-            I: GetInspector<DB>,
+    where
+        DB: Database + 'a,
+        I: GetInspector<DB>,
     {
         let precompiles_cache = self.precompile_cache.clone();
         let exts = self.exts.clone().into_iter();

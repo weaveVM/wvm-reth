@@ -235,9 +235,9 @@ where
 
         // Drop non-local transactions with a fee lower than the configured fee for acceptance into
         // the pool.
-        if !self.local_transactions_config.is_local(origin, transaction.sender()) &&
-            transaction.is_eip1559() &&
-            transaction.max_priority_fee_per_gas() < self.minimum_priority_fee
+        if !self.local_transactions_config.is_local(origin, transaction.sender())
+            && transaction.is_eip1559()
+            && transaction.max_priority_fee_per_gas() < self.minimum_priority_fee
         {
             return TransactionValidationOutcome::Invalid(
                 transaction,
@@ -712,8 +712,8 @@ pub fn ensure_intrinsic_gas<T: PoolTransaction>(
     transaction: &T,
     is_shanghai: bool,
 ) -> Result<(), InvalidPoolTransactionError> {
-    if transaction.gas_limit() <
-        calculate_intrinsic_gas_after_merge(
+    if transaction.gas_limit()
+        < calculate_intrinsic_gas_after_merge(
             transaction.input(),
             &transaction.kind(),
             transaction.access_list().map(|list| list.0.as_slice()).unwrap_or(&[]),
