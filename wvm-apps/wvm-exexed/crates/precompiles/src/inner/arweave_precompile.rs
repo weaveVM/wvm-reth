@@ -57,7 +57,7 @@ mod irys_pc_tests {
     use reth::primitives::Bytes;
 
     #[test]
-    pub fn test_irys_precompile() {
+    pub fn test_arweave_precompile() {
         let input = Bytes::from("Hello world".as_bytes());
         let PrecompileOutput { gas_used, bytes } = arweave_upload(&input, 0 as u64).unwrap();
     }
