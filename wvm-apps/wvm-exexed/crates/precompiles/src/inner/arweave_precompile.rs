@@ -7,7 +7,7 @@ use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 use reth_revm::precompile::PrecompileErrors;
 use reth_revm::primitives::B256;
 
-pub const PC_ADDRESS: u64 = 0x99;
+pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
 
 pub const ARWEAVE_UPLOAD_PC: PrecompileWithAddress =
@@ -19,6 +19,10 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
     if gas_used > gas_limit {
         return Err(PrecompileErrors::Error(PrecompileError::OutOfGas));
+    }
+
+    if input.is_empty() {
+        return Err(PrecompileErrors::Error(PrecompileError::Other("Data cannot be empty when uploading to arweave".to_string())));
     }
 
     /// We use 1012 as a measure to handle exceptions on Irys side.
