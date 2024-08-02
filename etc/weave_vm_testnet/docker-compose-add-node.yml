@@ -9,9 +9,11 @@ services:
       - "8551:8551"
       - "8545:8545"
       - "8546:8546"
-      - "30304:30304/tcp" #p2p
-      - "30304:30304/udp" #p2p
-      - '9001:9001' #metrics
+      - "30303:30303/udp"
+      - "30303:30303/tcp"
+      - "30304:30304/udp"
+      - "30304:30304/tcp"
+      - "9001:9001" #metrics
     volumes:
       - reth_data:/data
       - reth_jwt:/jwt:ro
@@ -37,7 +39,12 @@ services:
       - --chain=/genesis/genesis.json
       - --datadir=/data
       - --log.file.directory=/root/logs
-      - --trusted-peers="enode://abcd@ip:port"
+      - --discovery.addr=0.0.0.0
+      - --port=30303
+      - --discovery.port=30303
+      - --enable-discv5-discovery
+      - --discovery.v5.port=30304
+      - --bootnodes=enode://6c1166d128b2891e6c4be438f1b86d13876970f58da10f460acf3106bffb3af76550071b8bdbfb95aae019e596621bc768abbdb2ece442193ad830314778d104@34.107.39.173:30303
 
   # default prometheus + grafana setup
   prometheus:
@@ -113,7 +120,6 @@ services:
       --execution-jwt /root/jwt/jwt.hex 
       --staking 
       --allow-insecure-genesis-sync 
-      --target-peers 2 
       --import-all-attestations 
       --subscribe-all-subnets 
       --http-allow-origin "*" 
