@@ -22,3 +22,4 @@ reqwest.workspace = true
 eyre.workspace = true
 irys = { path = "../irys" }
 tokio.workspace = true
+reqwest-graphql = "1.0.0"
