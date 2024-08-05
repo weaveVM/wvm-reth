@@ -171,6 +171,14 @@ mod arweave_read_pc_tests {
     }
 
     #[test]
+    pub fn test_arweave_read_precompile_custom_gateway() {
+        let input = Bytes::from("https://ar-io.dev;bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI".as_bytes());
+        let PrecompileOutput { gas_used, bytes } = arweave_read(&input, 100_000).unwrap();
+        assert_eq!(bytes.len(), 11);
+        assert_eq!(bytes.to_vec(), "Hello world".as_bytes().to_vec());
+    }
+
+    #[test]
     pub fn test_parse_url() {
         let input = "http://arweave-custom.net;bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI";
         let parse_url_data = parse_url(input);
