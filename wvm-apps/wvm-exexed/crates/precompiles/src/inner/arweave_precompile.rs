@@ -1,12 +1,12 @@
-use std::str::FromStr;
 use irys::irys::IrysRequest;
 use reth::primitives::revm_primitives::{
     Precompile, PrecompileError, PrecompileOutput, PrecompileResult,
 };
-use reth::primitives::{Bytes, hex};
+use reth::primitives::{hex, Bytes};
 use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 use reth_revm::precompile::PrecompileErrors;
 use reth_revm::primitives::B256;
+use std::str::FromStr;
 
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
@@ -14,7 +14,8 @@ pub const ARWEAVE_PC_BASE: u64 = 3_450;
 pub const ARWEAVE_UPLOAD_PC: PrecompileWithAddress =
     PrecompileWithAddress(u64_to_address(PC_ADDRESS), Precompile::Standard(arweave_upload));
 
-pub const SOLANA_SILLY_PRIVATE_KEY: &str = "kNykCXNxgePDjFbDWjPNvXQRa8U12Ywc19dFVaQ7tebUj3m7H4sF4KKdJwM7yxxb3rqxchdjezX9Szh8bLcQAjb";
+pub const SOLANA_SILLY_PRIVATE_KEY: &str =
+    "kNykCXNxgePDjFbDWjPNvXQRa8U12Ywc19dFVaQ7tebUj3m7H4sF4KKdJwM7yxxb3rqxchdjezX9Szh8bLcQAjb";
 
 fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let data_size = input.len();
@@ -49,12 +50,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         },
     );
 
-    let byte_resp =
-        if let Ok(tx_id) = res {
-            tx_id.into_bytes()
-        } else {
-            vec![]
-        };
+    let byte_resp = if let Ok(tx_id) = res { tx_id.into_bytes() } else { vec![] };
 
     let out = PrecompileOutput::new(gas_used, byte_resp.into());
     Ok(out)
@@ -62,10 +58,10 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
 #[cfg(test)]
 mod irys_pc_tests {
-    use std::env;
     use crate::inner::arweave_precompile::{arweave_upload, SOLANA_SILLY_PRIVATE_KEY};
     use reth::primitives::revm_primitives::PrecompileOutput;
     use reth::primitives::Bytes;
+    use std::env;
 
     #[test]
     pub fn test_arweave_precompile() {
