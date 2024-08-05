@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use eyre::Error;
 use serde::{Deserialize, Serialize};
 use reth::primitives::Bytes;
 use reth::primitives::revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult};
@@ -12,8 +14,6 @@ pub const ARWEAVE_READ_PC: PrecompileWithAddress =
     PrecompileWithAddress(u64_to_address(PC_ADDRESS), Precompile::Standard(arweave_read));
 
 pub const ARWEAVE_TX_ENDPOINT: &str = "https://arweave.net/";
-
-pub const ARWEAVE_GRAPHQL_ENDPOINT: &str = "https://arweave.net/graphql";
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
@@ -46,6 +46,50 @@ struct NodeData {
     size: String,
 }
 
+fn parse_url(input: &str) -> (String, String) {
+    let default_endpoint = ARWEAVE_TX_ENDPOINT;
+    let mut parts = input.split(';');
+    let first_part = parts.next().unwrap_or(default_endpoint);
+    let second_part = parts.next().unwrap_or(first_part);
+
+    let endpoint = if input.contains(';') { first_part } else { default_endpoint };
+
+    (endpoint.to_string(), second_part.to_string())
+}
+
+fn clean_gateway_url(gateway: &str) -> String {
+    let clean_gateway = if gateway.ends_with('/') {
+        &gateway[..gateway.len() - 1]
+    } else {
+        gateway
+    };
+
+    clean_gateway.to_string()
+}
+
+async fn send_graphql(gateway: &str, tx_id: &str) -> Result<Response, Error> {
+    // Define the GraphQL query
+    let mut query = "{\n  transactions(ids: [\"$id\"]) {\n    edges {\n      node {\n        id\n        data {\n          size\n        }\n      }\n    }\n  }\n}\n";
+    let query = query.replace("$id", tx_id);
+
+    let query = serde_json::json!({
+        "variables": {},
+        "query": query
+    });
+
+    // Create a client
+    let client = reqwest::Client::new();
+
+    // Send the request
+    let res = client.post(format!("{}/{}", gateway, "graphql"))
+        .header("Content-Type", "application/json")
+        .json(&query)
+        .send()
+        .await?;
+
+    Ok(res.json::<Response>().await?)
+}
+
 fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let data_size = input.len();
     let gas_used: u64 = (10_000 + data_size * 3) as u64;
@@ -64,26 +108,11 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
     let res = match id_str {
         Ok(id) => {
+            let (gateway, tx_id) = parse_url(id.as_str());
             tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
                 async {
-
-                    let query = r#"query {
-  transactions(ids: ["$ID"]) {
-    edges {
-      node {
-        id
-        data {
-          size
-        }
-      }
-    }
-  }
-}"#;
-
-                    let query = query.replace("$ID", id.as_str());
-
-                    let graphql_client = reqwest_graphql::Client::new(ARWEAVE_GRAPHQL_ENDPOINT);
-                    let data = graphql_client.query::<Response>(query.as_str()).await;
+                    let clean_gateway = clean_gateway_url(gateway.as_str());
+                    let data = send_graphql(clean_gateway.as_str(), tx_id.as_str()).await;
 
                     let tx_size = if let Ok(data) = data {
                         let resp = data.data;
@@ -100,7 +129,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                     };
 
                     if TX_MAX_SIZE >= tx_size {
-                        let download_tx = reqwest::get(format!("{}{}", ARWEAVE_TX_ENDPOINT, id.as_str())).await;
+                        let download_tx = reqwest::get(format!("{}/{}", clean_gateway, tx_id.as_str())).await;
                         match download_tx {
                             Ok(tx) => {
                                 Ok(PrecompileOutput::new(gas_used, tx.bytes().await.unwrap().into()))
@@ -133,7 +162,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 mod arweave_read_pc_tests {
     use reth::primitives::Bytes;
     use reth::primitives::revm_primitives::PrecompileOutput;
-    use crate::inner::arweave_read_precompile::arweave_read;
+    use crate::inner::arweave_read_precompile::{arweave_read, parse_url};
 
     #[test]
     pub fn test_arweave_read_precompile() {
@@ -141,6 +170,19 @@ mod arweave_read_pc_tests {
         let PrecompileOutput { gas_used, bytes } = arweave_read(&input, 100_000).unwrap();
         assert_eq!(bytes.len(), 11);
         assert_eq!(bytes.to_vec(), "Hello world".as_bytes().to_vec());
+    }
+
+    #[test]
+    pub fn test_parse_url() {
+        let input = "http://arweave-custom.net;bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI";
+        let parse_url_data = parse_url(input);
+        assert_eq!(parse_url_data.0, "http://arweave-custom.net");
+        assert_eq!(parse_url_data.1, "bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI");
+
+        let input = "bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI";
+        let parse_url_data = parse_url(input);
+        assert_eq!(parse_url_data.0, "https://arweave.net/");
+        assert_eq!(parse_url_data.1, "bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI");
     }
 
 }
