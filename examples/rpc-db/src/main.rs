@@ -28,7 +28,7 @@ use reth_db_api::models::ClientVersion;
 
 // Bringing up the RPC
 use reth::rpc::builder::{
-    EthApiBuild, RethRpcModule, RpcModuleBuilder, RpcServerConfig, TransportRpcModuleConfig,
+    RethRpcModule, RpcModuleBuilder, RpcServerConfig, TransportRpcModuleConfig,
 };
 // Configuring the network parts, ideally also wouldn't need to think about this.
 use myrpc_ext::{MyRpcExt, MyRpcExtApiServer};
