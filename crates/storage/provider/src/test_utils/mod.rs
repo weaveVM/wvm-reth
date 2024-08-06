@@ -1,20 +1,13 @@
-<<<<<<< HEAD
-use crate::{providers::StaticFileProvider, ProviderFactory};
-=======
 use crate::{providers::StaticFileProvider, HashingWriter, ProviderFactory, TrieWriter};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_chainspec::{ChainSpec, MAINNET};
 use reth_db::{
     test_utils::{create_test_rw_db, create_test_static_files_dir, TempDatabase},
     Database, DatabaseEnv,
 };
-<<<<<<< HEAD
-=======
 use reth_errors::ProviderResult;
 use reth_primitives::{Account, StorageEntry, B256};
 use reth_trie::StateRoot;
 use reth_trie_db::DatabaseStateRoot;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::sync::Arc;
 
 pub mod blocks;

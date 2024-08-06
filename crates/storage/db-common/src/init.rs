@@ -472,11 +472,7 @@ fn compute_state_root<DB: Database>(provider: &DatabaseProviderRW<DB>) -> eyre::
             .root_with_progress()?
         {
             StateRootProgress::Progress(state, _, updates) => {
-<<<<<<< HEAD
-                let updated_len = updates.write_to_database(tx)?;
-=======
                 let updated_len = provider.write_trie_updates(&updates)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 total_flushed_updates += updated_len;
 
                 trace!(target: "reth::cli",
@@ -496,11 +492,7 @@ fn compute_state_root<DB: Database>(provider: &DatabaseProviderRW<DB>) -> eyre::
                 }
             }
             StateRootProgress::Complete(root, _, updates) => {
-<<<<<<< HEAD
-                let updated_len = updates.write_to_database(tx)?;
-=======
                 let updated_len = provider.write_trie_updates(&updates)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 total_flushed_updates += updated_len;
 
                 trace!(target: "reth::cli",

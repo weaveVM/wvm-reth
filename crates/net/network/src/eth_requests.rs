@@ -1,22 +1,5 @@
 //! Blocks/Headers management for the p2p network.
 
-<<<<<<< HEAD
-use crate::{
-    budget::DEFAULT_BUDGET_TRY_DRAIN_DOWNLOADERS, metered_poll_nested_stream_with_budget,
-    metrics::EthRequestHandlerMetrics, peers::PeersHandle,
-};
-use alloy_rlp::Encodable;
-use futures::StreamExt;
-use reth_eth_wire::{
-    BlockBodies, BlockHeaders, GetBlockBodies, GetBlockHeaders, GetNodeData, GetReceipts,
-    HeadersDirection, NodeData, Receipts,
-};
-use reth_network_p2p::error::RequestResult;
-use reth_network_peers::PeerId;
-use reth_primitives::{BlockBody, BlockHashOrNumber, Header};
-use reth_storage_api::{BlockReader, HeaderProvider, ReceiptProvider};
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     future::Future,
     pin::Pin,
@@ -149,11 +132,7 @@ where
                 headers.push(header);
 
                 if headers.len() >= MAX_HEADERS_SERVE || total_bytes > SOFT_RESPONSE_LIMIT {
-<<<<<<< HEAD
-                    break;
-=======
                     break
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 }
             } else {
                 break;
@@ -193,14 +172,10 @@ where
                 bodies.push(body);
 
                 if bodies.len() >= MAX_BODIES_SERVE || total_bytes > SOFT_RESPONSE_LIMIT {
-<<<<<<< HEAD
-                    break;
-=======
                     break
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 }
             } else {
-                break;
+                break
             }
         }
 
@@ -232,14 +207,10 @@ where
                 receipts.push(receipt);
 
                 if receipts.len() >= MAX_RECEIPTS_SERVE || total_bytes > SOFT_RESPONSE_LIMIT {
-<<<<<<< HEAD
-                    break;
-=======
                     break
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 }
             } else {
-                break;
+                break
             }
         }
 

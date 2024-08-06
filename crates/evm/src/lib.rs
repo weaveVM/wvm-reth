@@ -14,16 +14,10 @@ extern crate alloc;
 
 use core::ops::Deref;
 
-<<<<<<< HEAD
-use reth_chainspec::ChainSpec;
-use reth_primitives::{Address, Header, TransactionSigned, TransactionSignedEcRecovered, U256};
-use revm::{inspector_handle_register, Database, Evm, EvmBuilder, GetInspector};
-=======
 use crate::builder::RethEvmBuilder;
 use reth_chainspec::ChainSpec;
 use reth_primitives::{Address, Header, TransactionSigned, TransactionSignedEcRecovered, U256};
 use revm::{Database, Evm, GetInspector};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use revm_primitives::{
     BlockEnv, Bytes, CfgEnvWithHandlerCfg, Env, EnvWithHandlerCfg, SpecId, TxEnv,
 };

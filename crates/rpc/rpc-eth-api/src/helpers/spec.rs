@@ -1,12 +1,5 @@
 //! Loads chain metadata.
 
-<<<<<<< HEAD
-use futures::Future;
-use reth_chainspec::ChainInfo;
-use reth_errors::RethResult;
-use reth_primitives::{Address, U64};
-use reth_rpc_types::SyncStatus;
-=======
 use std::sync::Arc;
 
 use futures::Future;
@@ -18,32 +11,12 @@ use reth_provider::{BlockNumReader, ChainSpecProvider, StageCheckpointReader};
 use reth_rpc_types::{Stage, SyncInfo, SyncStatus};
 
 use super::EthSigner;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// `Eth` API trait.
 ///
 /// Defines core functionality of the `eth` API implementation.
 #[auto_impl::auto_impl(&, Arc)]
 pub trait EthApiSpec: Send + Sync {
-<<<<<<< HEAD
-    /// Returns the current ethereum protocol version.
-    fn protocol_version(&self) -> impl Future<Output = RethResult<U64>> + Send;
-
-    /// Returns the chain id
-    fn chain_id(&self) -> U64;
-
-    /// Returns provider chain info
-    fn chain_info(&self) -> RethResult<ChainInfo>;
-
-    /// Returns a list of addresses owned by provider.
-    fn accounts(&self) -> Vec<Address>;
-
-    /// Returns `true` if the network is undergoing sync.
-    fn is_syncing(&self) -> bool;
-
-    /// Returns the [`SyncStatus`] of the network
-    fn sync_status(&self) -> RethResult<SyncStatus>;
-=======
     /// Returns a handle for reading data from disk.
     fn provider(&self) -> impl ChainSpecProvider + BlockNumReader + StageCheckpointReader;
 
@@ -117,5 +90,4 @@ pub trait EthApiSpec: Send + Sync {
     fn chain_spec(&self) -> Arc<ChainSpec> {
         self.provider().chain_spec()
     }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }

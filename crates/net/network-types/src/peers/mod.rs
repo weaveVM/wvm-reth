@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-pub mod reputation;
-pub use reputation::ReputationChangeWeights;
-
-pub mod config;
-pub use config::{ConnectionsConfig, PeersConfig};
-=======
 pub mod addr;
 pub mod config;
 pub mod kind;
@@ -144,4 +137,3 @@ impl Peer {
         matches!(self.kind, PeerKind::Static)
     }
 }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1

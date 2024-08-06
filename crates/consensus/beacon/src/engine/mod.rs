@@ -1446,11 +1446,7 @@ where
             warn!(target: "consensus::engine", invalid_hash=?bad_block.hash(), invalid_number=?bad_block.number, "Bad block detected in unwind");
             // update the `invalid_headers` cache with the new invalid header
             self.invalid_headers.insert(*bad_block);
-<<<<<<< HEAD
-            return Ok(());
-=======
             return Ok(())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         let sync_target_state = match self.forkchoice_state_tracker.sync_target_state() {

@@ -1,13 +1,7 @@
-<<<<<<< HEAD:crates/trie/trie/src/trie_cursor/database_cursors.rs
-use super::{TrieCursor, TrieCursorFactory};
-use crate::{BranchNodeCompact, Nibbles, StoredNibbles, StoredNibblesSubKey};
-use reth_db::{tables, DatabaseError};
-=======
 use reth_db::{
     cursor::{DbCursorRW, DbDupCursorRW},
     tables,
 };
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/trie/db/src/trie_cursor.rs
 use reth_db_api::{
     cursor::{DbCursorRO, DbDupCursorRO},
     transaction::DbTx,
@@ -39,21 +33,13 @@ impl<'a, TX> DatabaseTrieCursorFactory<'a, TX> {
 }
 
 /// Implementation of the trie cursor factory for a database transaction.
-<<<<<<< HEAD:crates/trie/trie/src/trie_cursor/database_cursors.rs
-impl<'a, TX: DbTx> TrieCursorFactory for &'a TX {
-=======
 impl<'a, TX: DbTx> TrieCursorFactory for DatabaseTrieCursorFactory<'a, TX> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/trie/db/src/trie_cursor.rs
     type AccountTrieCursor = DatabaseAccountTrieCursor<<TX as DbTx>::Cursor<tables::AccountsTrie>>;
     type StorageTrieCursor =
         DatabaseStorageTrieCursor<<TX as DbTx>::DupCursor<tables::StoragesTrie>>;
 
     fn account_trie_cursor(&self) -> Result<Self::AccountTrieCursor, DatabaseError> {
-<<<<<<< HEAD:crates/trie/trie/src/trie_cursor/database_cursors.rs
-        Ok(DatabaseAccountTrieCursor::new(self.cursor_read::<tables::AccountsTrie>()?))
-=======
         Ok(DatabaseAccountTrieCursor::new(self.0.cursor_read::<tables::AccountsTrie>()?))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/trie/db/src/trie_cursor.rs
     }
 
     fn storage_trie_cursor(
@@ -61,11 +47,7 @@ impl<'a, TX: DbTx> TrieCursorFactory for DatabaseTrieCursorFactory<'a, TX> {
         hashed_address: B256,
     ) -> Result<Self::StorageTrieCursor, DatabaseError> {
         Ok(DatabaseStorageTrieCursor::new(
-<<<<<<< HEAD:crates/trie/trie/src/trie_cursor/database_cursors.rs
-            self.cursor_dup_read::<tables::StoragesTrie>()?,
-=======
             self.0.cursor_dup_read::<tables::StoragesTrie>()?,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/trie/db/src/trie_cursor.rs
             hashed_address,
         ))
     }

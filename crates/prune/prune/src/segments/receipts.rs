@@ -70,81 +70,12 @@ pub(crate) fn save_checkpoint<DB: Database>(
     // limit their pruning start point.
     provider.save_prune_checkpoint(PruneSegment::ContractLogs, checkpoint)?;
 
-<<<<<<< HEAD
-    fn mode(&self) -> Option<PruneMode> {
-        Some(self.mode)
-    }
-
-    #[instrument(level = "trace", target = "pruner", skip(self, provider), ret)]
-    fn prune(
-        &self,
-        provider: &DatabaseProviderRW<DB>,
-        input: PruneInput,
-    ) -> Result<PruneOutput, PrunerError> {
-        let tx_range = match input.get_next_tx_num_range(provider)? {
-            Some(range) => range,
-            None => {
-                trace!(target: "pruner", "No receipts to prune");
-                return Ok(PruneOutput::done());
-            }
-        };
-        let tx_range_end = *tx_range.end();
-
-        let mut limiter = input.limiter;
-
-        let mut last_pruned_transaction = tx_range_end;
-        let (pruned, done) = provider.prune_table_with_range::<tables::Receipts>(
-            tx_range,
-            &mut limiter,
-            |_| false,
-            |row| last_pruned_transaction = row.0,
-        )?;
-        trace!(target: "pruner", %pruned, %done, "Pruned receipts");
-
-        let last_pruned_block = provider
-            .transaction_block(last_pruned_transaction)?
-            .ok_or(PrunerError::InconsistentData("Block for transaction is not found"))?
-            // If there's more receipts to prune, set the checkpoint block number to previous,
-            // so we could finish pruning its receipts on the next run.
-            .checked_sub(if done { 0 } else { 1 });
-
-        let progress = PruneProgress::new(done, &limiter);
-
-        Ok(PruneOutput {
-            progress,
-            pruned,
-            checkpoint: Some(PruneOutputCheckpoint {
-                block_number: last_pruned_block,
-                tx_number: Some(last_pruned_transaction),
-            }),
-        })
-    }
-
-    fn save_checkpoint(
-        &self,
-        provider: &DatabaseProviderRW<DB>,
-        checkpoint: PruneCheckpoint,
-    ) -> ProviderResult<()> {
-        provider.save_prune_checkpoint(PruneSegment::Receipts, checkpoint)?;
-
-        // `PruneSegment::Receipts` overrides `PruneSegment::ContractLogs`, so we can preemptively
-        // limit their pruning start point.
-        provider.save_prune_checkpoint(PruneSegment::ContractLogs, checkpoint)?;
-
-        Ok(())
-    }
-=======
     Ok(())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 #[cfg(test)]
 mod tests {
-<<<<<<< HEAD
-    use crate::segments::{PruneInput, PruneOutput, Receipts, Segment};
-=======
     use crate::segments::{PruneInput, SegmentOutput};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     use alloy_primitives::{BlockNumber, TxNumber, B256};
     use assert_matches::assert_matches;
     use itertools::{

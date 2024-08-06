@@ -3,13 +3,8 @@ use crate::{
     forward_cursor::ForwardInMemoryCursor,
     updates::{StorageTrieUpdatesSorted, TrieUpdatesSorted},
 };
-<<<<<<< HEAD
-use reth_db::DatabaseError;
-use reth_primitives::B256;
-=======
 use reth_primitives::B256;
 use reth_storage_errors::db::DatabaseError;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_trie_common::{BranchNodeCompact, Nibbles};
 use std::collections::HashSet;
 
@@ -66,11 +61,7 @@ pub struct InMemoryAccountTrieCursor<'a, C> {
     last_key: Option<Nibbles>,
 }
 
-<<<<<<< HEAD
-impl<'a, C> InMemoryAccountTrieCursor<'a, C> {
-=======
 impl<'a, C: TrieCursor> InMemoryAccountTrieCursor<'a, C> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     const fn new(cursor: C, trie_updates: &'a TrieUpdatesSorted) -> Self {
         let in_memory_cursor = ForwardInMemoryCursor::new(&trie_updates.account_nodes);
         Self {
@@ -80,8 +71,6 @@ impl<'a, C: TrieCursor> InMemoryAccountTrieCursor<'a, C> {
             last_key: None,
         }
     }
-<<<<<<< HEAD
-=======
 
     fn seek_inner(
         &mut self,
@@ -123,36 +112,20 @@ impl<'a, C: TrieCursor> InMemoryAccountTrieCursor<'a, C> {
         // Compare two entries and return the lowest.
         Ok(compare_trie_node_entries(in_memory, db_entry))
     }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 impl<'a, C: TrieCursor> TrieCursor for InMemoryAccountTrieCursor<'a, C> {
     fn seek_exact(
         &mut self,
-<<<<<<< HEAD
-        _key: Nibbles,
-    ) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
-        unimplemented!()
-=======
         key: Nibbles,
     ) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
         let entry = self.seek_inner(key, true)?;
         self.last_key = entry.as_ref().map(|(nibbles, _)| nibbles.clone());
         Ok(entry)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     fn seek(
         &mut self,
-<<<<<<< HEAD
-        _key: Nibbles,
-    ) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
-        unimplemented!()
-    }
-
-    fn current(&mut self) -> Result<Option<Nibbles>, DatabaseError> {
-        unimplemented!()
-=======
         key: Nibbles,
     ) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
         let entry = self.seek_inner(key, false)?;
@@ -178,7 +151,6 @@ impl<'a, C: TrieCursor> TrieCursor for InMemoryAccountTrieCursor<'a, C> {
             Some(key) => Ok(Some(key.clone())),
             None => self.cursor.current(),
         }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }
 
@@ -217,14 +189,6 @@ impl<'a, C> InMemoryStorageTrieCursor<'a, C> {
     }
 }
 
-<<<<<<< HEAD
-impl<'a, C: TrieCursor> TrieCursor for InMemoryStorageTrieCursor<'a, C> {
-    fn seek_exact(
-        &mut self,
-        _key: Nibbles,
-    ) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
-        unimplemented!()
-=======
 impl<'a, C: TrieCursor> InMemoryStorageTrieCursor<'a, C> {
     fn seek_inner(
         &mut self,
@@ -279,20 +243,10 @@ impl<'a, C: TrieCursor> TrieCursor for InMemoryStorageTrieCursor<'a, C> {
         let entry = self.seek_inner(key, true)?;
         self.last_key = entry.as_ref().map(|(nibbles, _)| nibbles.clone());
         Ok(entry)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     fn seek(
         &mut self,
-<<<<<<< HEAD
-        _key: Nibbles,
-    ) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
-        unimplemented!()
-    }
-
-    fn current(&mut self) -> Result<Option<Nibbles>, DatabaseError> {
-        unimplemented!()
-=======
         key: Nibbles,
     ) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
         let entry = self.seek_inner(key, false)?;
@@ -340,6 +294,5 @@ fn compare_trie_node_entries(
     } else {
         // Return either non-empty entry
         db_item.or(in_memory_item)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }

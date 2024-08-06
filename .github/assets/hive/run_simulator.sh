@@ -22,13 +22,8 @@ while [ $attempt -lt $max_attempts ]; do
 
     # Check if no tests were run. sed removes ansi colors
     if check_log | grep -q "suites=0"; then
-<<<<<<< HEAD
-        echo "no tests were run, retrying in 5 seconds"
-        sleep 5
-=======
         echo "no tests were run, retrying in 10 seconds"
         sleep 10
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         attempt=$((attempt + 1))
         continue
     fi
@@ -40,8 +35,4 @@ while [ $attempt -lt $max_attempts ]; do
         exit 1
     fi
 done
-<<<<<<< HEAD
 exit 1
-=======
-exit 1
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1

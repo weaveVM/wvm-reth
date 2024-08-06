@@ -1,16 +1,7 @@
 //! Network config support
 
-<<<<<<< HEAD
-use crate::{
-    error::NetworkError,
-    import::{BlockImport, ProofOfStakeBlockImport},
-    transactions::TransactionsManagerConfig,
-    NetworkHandle, NetworkManager,
-};
-=======
 use std::{collections::HashSet, net::SocketAddr, sync::Arc};
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_chainspec::{ChainSpec, MAINNET};
 use reth_discv4::{Discv4Config, Discv4ConfigBuilder, NatResolver, DEFAULT_DISCOVERY_ADDRESS};
 use reth_discv5::NetworkStackId;
@@ -132,17 +123,10 @@ impl<C> NetworkConfig<C> {
 
 impl<C> NetworkConfig<C>
 where
-<<<<<<< HEAD
-    C: BlockNumReader,
-{
-    /// Convenience method for calling [`NetworkManager::new`].
-    pub async fn manager(self) -> Result<NetworkManager<C>, NetworkError> {
-=======
     C: BlockNumReader + 'static,
 {
     /// Convenience method for calling [`NetworkManager::new`].
     pub async fn manager(self) -> Result<NetworkManager, NetworkError> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         NetworkManager::new(self).await
     }
 }

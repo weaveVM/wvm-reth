@@ -2,11 +2,7 @@ use alloy_primitives::Bytes;
 use async_trait::async_trait;
 use futures::future::BoxFuture;
 use jsonrpsee::core::RpcResult;
-<<<<<<< HEAD
-use reth_primitives::{Address, BlockId, BlockNumberOrTag, TxHash, B256};
-=======
 use reth_primitives::{Address, BlockNumberOrTag, TxHash, B256, U256};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_rpc_api::{EthApiServer, OtterscanServer};
 use reth_rpc_eth_api::helpers::TraceExt;
 use reth_rpc_eth_types::EthApiError;
@@ -19,21 +15,14 @@ use reth_rpc_types::{
         },
         parity::{Action, CreateAction, CreateOutput, TraceOutput},
     },
-<<<<<<< HEAD
-    BlockTransactions, Header,
-=======
     AnyTransactionReceipt, BlockTransactions, Header, RichBlock,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use revm_inspectors::{
     tracing::{types::CallTraceNode, TracingInspectorConfig},
     transfer::{TransferInspector, TransferKind},
 };
 use revm_primitives::ExecutionResult;
-<<<<<<< HEAD
-=======
 use std::future::Future;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 const API_LEVEL: u64 = 8;
 
@@ -177,12 +166,8 @@ where
                 TracingInspectorConfig::default_parity(),
                 move |_tx_info, inspector, _, _| Ok(inspector.into_traces().into_nodes()),
             )
-<<<<<<< HEAD
-            .await?
-=======
             .await
             .map_err(Into::into)?
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             .map(|traces| {
                 traces
                     .into_iter()
@@ -205,17 +190,11 @@ where
     }
 
     /// Handler for `ots_getBlockDetails`
-<<<<<<< HEAD
-    async fn get_block_details(&self, block_number: u64) -> RpcResult<Option<BlockDetails>> {
-        let block = self.eth.block_by_number(BlockNumberOrTag::Number(block_number), true).await?;
-        Ok(block.map(Into::into))
-=======
     async fn get_block_details(&self, block_number: u64) -> RpcResult<BlockDetails> {
         let block = self.eth.block_by_number(block_number.into(), true);
         let receipts = self.eth.block_receipts(block_number.into());
         let (block, receipts) = futures::try_join!(block, receipts)?;
         self.block_details(block, receipts)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Handler for `getBlockDetailsByHash`
@@ -234,14 +213,8 @@ where
         page_size: usize,
     ) -> RpcResult<OtsBlockTransactions> {
         // retrieve full block and its receipts
-<<<<<<< HEAD
-        let block_number = BlockNumberOrTag::Number(block_number);
-        let block = self.eth.block_by_number(block_number, true);
-        let receipts = self.eth.block_receipts(BlockId::Number(block_number));
-=======
         let block = self.eth.block_by_number(block_number.into(), true);
         let receipts = self.eth.block_receipts(block_number.into());
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         let (block, receipts) = futures::try_join!(block, receipts)?;
 
         let mut block = block.ok_or_else(|| EthApiError::UnknownBlockNumber)?;
@@ -327,11 +300,7 @@ where
     ) -> RpcResult<Option<TxHash>> {
         // Check if the sender is a contract
         if self.has_code(sender, None).await? {
-<<<<<<< HEAD
-            return Ok(None);
-=======
             return Ok(None)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         let highest =
@@ -340,21 +309,13 @@ where
         // If the nonce is higher or equal to the highest nonce, the transaction is pending or not
         // exists.
         if nonce >= highest {
-<<<<<<< HEAD
-            return Ok(None);
-=======
             return Ok(None)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         // perform a binary search over the block range to find the block in which the sender's
         // nonce reached the requested nonce.
         let num = binary_search(1, self.eth.block_number()?.saturating_to(), |mid| {
-<<<<<<< HEAD
-            Box::pin(async move {
-=======
             async move {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 let mid_nonce =
                     EthApiServer::transaction_count(&self.eth, sender, Some(mid.into()))
                         .await?
@@ -365,11 +326,7 @@ where
                 // the transaction whose nonce is the pre-state, so need to compare with `nonce`(no
                 // equal).
                 Ok(mid_nonce > nonce)
-<<<<<<< HEAD
-            })
-=======
             }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         })
         .await?;
 
@@ -407,12 +364,8 @@ where
                     Ok(inspector.into_parity_builder().into_localized_transaction_traces(tx_info))
                 },
             )
-<<<<<<< HEAD
-            .await?
-=======
             .await
             .map_err(Into::into)?
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             .map(|traces| {
                 traces
                     .into_iter()
@@ -447,8 +400,6 @@ where
     }
 }
 
-<<<<<<< HEAD
-=======
 /// Performs a binary search within a given block range to find the desired block number.
 ///
 /// The binary search is performed by calling the provided asynchronous `check` closure on the
@@ -485,7 +436,6 @@ where
     Ok(num)
 }
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 #[cfg(test)]
 mod tests {
     use super::*;

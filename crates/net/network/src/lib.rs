@@ -154,24 +154,9 @@ pub use builder::NetworkBuilder;
 pub use config::{NetworkConfig, NetworkConfigBuilder};
 pub use discovery::Discovery;
 pub use fetch::FetchClient;
-<<<<<<< HEAD
-pub use manager::{NetworkEvent, NetworkManager};
-pub use message::PeerRequest;
-pub use network::{NetworkEvents, NetworkHandle, NetworkProtocols};
-pub use session::{
-    ActiveSessionHandle, ActiveSessionMessage, Direction, PeerInfo, PendingSessionEvent,
-    PendingSessionHandle, PendingSessionHandshakeError, SessionCommand, SessionEvent, SessionId,
-    SessionManager,
-};
-pub use transactions::{FilterAnnouncement, MessageFilter, ValidateTx68};
-
-pub use reth_eth_wire::{DisconnectReason, HelloMessageWithProtocols};
-pub use reth_network_types::{PeersConfig, SessionsConfig};
-=======
 pub use flattened_response::FlattenedResponse;
 pub use manager::NetworkManager;
 pub use metrics::TxTypesCounter;
 pub use network::{NetworkHandle, NetworkProtocols};
 pub use swarm::NetworkConnectionState;
 pub use transactions::{FilterAnnouncement, MessageFilter, ValidateTx68};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1

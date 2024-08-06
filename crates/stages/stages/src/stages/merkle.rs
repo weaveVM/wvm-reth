@@ -218,11 +218,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
                 })?;
             match progress {
                 StateRootProgress::Progress(state, hashed_entries_walked, updates) => {
-<<<<<<< HEAD
-                    updates.write_to_database(tx)?;
-=======
                     provider.write_trie_updates(&updates)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
                     let checkpoint = MerkleCheckpoint::new(
                         to_block,
@@ -242,11 +238,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
                     });
                 }
                 StateRootProgress::Complete(root, hashed_entries_walked, updates) => {
-<<<<<<< HEAD
-                    updates.write_to_database(tx)?;
-=======
                     provider.write_trie_updates(&updates)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
                     entities_checkpoint.processed += hashed_entries_walked as u64;
 
@@ -261,12 +253,8 @@ impl<DB: Database> Stage<DB> for MerkleStage {
                         error!(target: "sync::stages::merkle", %e, ?current_block_number, ?to_block, "Incremental state root failed! {INVALID_STATE_ROOT_ERROR_MESSAGE}");
                         StageError::Fatal(Box::new(e))
                     })?;
-<<<<<<< HEAD
-            updates.write_to_database(provider.tx_ref())?;
-=======
 
             provider.write_trie_updates(&updates)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
             let total_hashed_entries = (provider.count_entries::<tables::HashedAccounts>()? +
                 provider.count_entries::<tables::HashedStorages>()?)
@@ -339,11 +327,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
             validate_state_root(block_root, target.seal_slow(), input.unwind_to)?;
 
             // Validation passed, apply unwind changes to the database.
-<<<<<<< HEAD
-            updates.write_to_database(provider.tx_ref())?;
-=======
             provider.write_trie_updates(&updates)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
             // TODO(alexey): update entities checkpoint
         } else {

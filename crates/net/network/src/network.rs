@@ -1,30 +1,3 @@
-<<<<<<< HEAD
-use crate::{
-    config::NetworkMode,
-    discovery::DiscoveryEvent,
-    manager::NetworkEvent,
-    message::PeerRequest,
-    peers::{PeerAddr, PeersHandle},
-    protocol::RlpxSubProtocol,
-    swarm::NetworkConnectionState,
-    transactions::TransactionsHandle,
-    FetchClient,
-};
-use enr::Enr;
-use parking_lot::Mutex;
-use reth_discv4::Discv4;
-use reth_eth_wire::{DisconnectReason, NewBlock, NewPooledTransactionHashes, SharedTransactions};
-use reth_network_api::{
-    NetworkError, NetworkInfo, NetworkStatus, PeerInfo, PeerKind, Peers, PeersInfo, Reputation,
-    ReputationChangeKind,
-};
-use reth_network_p2p::sync::{NetworkSyncUpdater, SyncState, SyncStateProvider};
-use reth_network_peers::{NodeRecord, PeerId};
-use reth_primitives::{Head, TransactionSigned, B256};
-use reth_tokio_util::{EventSender, EventStream};
-use secp256k1::SecretKey;
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     net::SocketAddr,
     sync::{

@@ -17,10 +17,7 @@
 pub mod block;
 pub mod blocking_task;
 pub mod call;
-<<<<<<< HEAD
-=======
 pub mod error;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 pub mod fee;
 pub mod pending_block;
 pub mod receipt;
@@ -29,10 +26,7 @@ pub mod spec;
 pub mod state;
 pub mod trace;
 pub mod transaction;
-<<<<<<< HEAD
-=======
 pub mod types;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 pub use block::{EthBlocks, LoadBlock};
 pub use blocking_task::SpawnBlocking;
@@ -40,21 +34,14 @@ pub use call::{Call, EthCall};
 pub use fee::{EthFees, LoadFee};
 pub use pending_block::LoadPendingBlock;
 pub use receipt::LoadReceipt;
-<<<<<<< HEAD
-pub use signer::EthSigner;
-=======
 pub use signer::{AddDevSigners, EthSigner};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 pub use spec::EthApiSpec;
 pub use state::{EthState, LoadState};
 pub use trace::Trace;
 pub use transaction::{EthTransactions, LoadTransaction, UpdateRawTxForwarder};
 
-<<<<<<< HEAD
-=======
 use crate::EthApiTypes;
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// Extension trait that bundles traits needed for tracing transactions.
 pub trait TraceExt:
     LoadTransaction + LoadBlock + LoadPendingBlock + SpawnBlocking + Trace + Call
@@ -67,9 +54,6 @@ impl<T> TraceExt for T where T: LoadTransaction + LoadBlock + LoadPendingBlock +
 ///
 /// This trait is automatically implemented for any type that implements all the `Eth` traits.
 pub trait FullEthApi:
-<<<<<<< HEAD
-    EthApiSpec + EthTransactions + EthBlocks + EthState + EthCall + EthFees + Trace + LoadReceipt
-=======
     EthApiTypes
     + EthApiSpec
     + EthTransactions
@@ -79,17 +63,12 @@ pub trait FullEthApi:
     + EthFees
     + Trace
     + LoadReceipt
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 {
 }
 
 impl<T> FullEthApi for T where
-<<<<<<< HEAD
-    T: EthApiSpec
-=======
     T: EthApiTypes
         + EthApiSpec
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         + EthTransactions
         + EthBlocks
         + EthState

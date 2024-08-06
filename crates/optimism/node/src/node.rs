@@ -16,10 +16,7 @@ use reth_node_builder::{
     BuilderContext, Node, PayloadBuilderConfig,
 };
 use reth_optimism_consensus::OptimismBeaconConsensus;
-<<<<<<< HEAD
-=======
 use reth_optimism_rpc::OpEthApi;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_payload_builder::{PayloadBuilderHandle, PayloadBuilderService};
 use reth_provider::CanonStateSubscriptions;
 use reth_tracing::tracing::{debug, info};
@@ -303,14 +300,6 @@ where
             // apply discovery settings
             .apply(|mut builder| {
                 let rlpx_socket = (args.addr, args.port).into();
-<<<<<<< HEAD
-
-                if !args.discovery.disable_discovery {
-                    builder = builder.discovery_v5(args.discovery.discovery_v5_builder(
-                        rlpx_socket,
-                        ctx.chain_spec().bootnodes().unwrap_or_default(),
-                    ));
-=======
                 if disable_discovery_v4 || args.discovery.disable_discovery {
                     builder = builder.disable_discv4_discovery();
                 }
@@ -325,7 +314,6 @@ where
                                 .unwrap_or_default(),
                         ),
                     );
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 }
 
                 builder

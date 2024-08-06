@@ -22,14 +22,10 @@ use reth_chainspec::{Chain, ChainSpec, Head};
 use reth_evm_ethereum::EthEvmConfig;
 use reth_node_api::{ConfigureEvm, ConfigureEvmEnv, FullNodeTypes};
 use reth_node_core::{args::RpcServerArgs, node_config::NodeConfig};
-<<<<<<< HEAD
-use reth_node_ethereum::{EthExecutorProvider, EthereumNode};
-=======
 use reth_node_ethereum::{
     node::{EthereumAddOns, EthereumPayloadBuilder},
     EthExecutorProvider, EthereumNode,
 };
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_primitives::{
     revm_primitives::{AnalysisKind, CfgEnvWithHandlerCfg, TxEnv},
     Address, Header, TransactionSigned, U256,

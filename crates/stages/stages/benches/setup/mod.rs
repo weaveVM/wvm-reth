@@ -142,16 +142,8 @@ pub(crate) fn txs_testdata(num_blocks: u64) -> TestStageDB {
 
         let provider_rw = db.factory.provider_rw().unwrap();
         db.insert_changesets(transitions, None).unwrap();
-<<<<<<< HEAD
-        db.commit(|tx| {
-            updates.write_to_database(tx)?;
-            Ok(())
-        })
-        .unwrap();
-=======
         provider_rw.write_trie_updates(&updates).unwrap();
         provider_rw.commit().unwrap();
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         let (transitions, final_state) = random_changeset_range(
             &mut rng,

@@ -2,15 +2,9 @@ use alloy_consensus::TxEnvelope;
 use alloy_network::eip2718::Decodable2718;
 use reth::{
     builder::{rpc::RpcRegistry, FullNodeComponents},
-<<<<<<< HEAD
-    rpc::{
-        api::{eth::helpers::EthTransactions, DebugApiServer},
-        server_types::eth::EthResult,
-=======
     rpc::api::{
         eth::helpers::{EthApiSpec, EthTransactions, TraceExt},
         DebugApiServer,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     },
 };
 use reth_primitives::{Bytes, B256};

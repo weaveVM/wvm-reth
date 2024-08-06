@@ -1,7 +1,5 @@
 //! System contract call functions.
 
-<<<<<<< HEAD
-=======
 #[cfg(feature = "std")]
 use std::fmt::Display;
 #[cfg(not(feature = "std"))]
@@ -10,7 +8,6 @@ use {
     core::fmt::Display,
 };
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use crate::ConfigureEvm;
 use alloy_eips::{
     eip4788::BEACON_ROOTS_ADDRESS,
@@ -46,11 +43,7 @@ pub fn pre_block_beacon_root_contract_call<EvmConfig, DB>(
 ) -> Result<(), BlockExecutionError>
 where
     DB: Database + DatabaseCommit,
-<<<<<<< HEAD
-    DB::Error: std::fmt::Display,
-=======
     DB::Error: Display,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     EvmConfig: ConfigureEvm,
 {
     // apply pre-block EIP-4788 contract call
@@ -96,11 +89,7 @@ where
     EvmConfig: ConfigureEvm,
 {
     if !chain_spec.is_cancun_active_at_timestamp(block_timestamp) {
-<<<<<<< HEAD
-        return Ok(());
-=======
         return Ok(())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     let parent_beacon_block_root =
@@ -109,15 +98,6 @@ where
     // if the block number is zero (genesis block) then the parent beacon block root must
     // be 0x0 and no system transaction may occur as per EIP-4788
     if block_number == 0 {
-<<<<<<< HEAD
-        if parent_beacon_block_root != B256::ZERO {
-            return Err(BlockValidationError::CancunGenesisParentBeaconBlockRootNotZero {
-                parent_beacon_block_root,
-            }
-            .into());
-        }
-        return Ok(());
-=======
         if !parent_beacon_block_root.is_zero() {
             return Err(BlockValidationError::CancunGenesisParentBeaconBlockRootNotZero {
                 parent_beacon_block_root,
@@ -125,7 +105,6 @@ where
             .into())
         }
         return Ok(())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     // get previous env
@@ -147,11 +126,7 @@ where
                 parent_beacon_block_root: Box::new(parent_beacon_block_root),
                 message: e.to_string(),
             }
-<<<<<<< HEAD
-            .into());
-=======
             .into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
     };
 
@@ -181,11 +156,7 @@ pub fn post_block_withdrawal_requests_contract_call<EvmConfig, DB>(
 ) -> Result<Vec<Request>, BlockExecutionError>
 where
     DB: Database + DatabaseCommit,
-<<<<<<< HEAD
-    DB::Error: std::fmt::Display,
-=======
     DB::Error: Display,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     EvmConfig: ConfigureEvm,
 {
     // apply post-block EIP-7002 contract call
@@ -199,11 +170,7 @@ where
         .build();
 
     // initialize a block from the env, because the post block call needs the block itself
-<<<<<<< HEAD
-    apply_withdrawal_requests_contract_call::<EvmConfig, _, _>(evm_config, &mut evm_post_block)
-=======
     apply_withdrawal_requests_contract_call(evm_config, &mut evm_post_block)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 /// Applies the post-block call to the EIP-7002 withdrawal requests contract.
@@ -245,11 +212,7 @@ where
             return Err(BlockValidationError::WithdrawalRequestsContractCall {
                 message: format!("execution failed: {e}"),
             }
-<<<<<<< HEAD
-            .into());
-=======
             .into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
     };
 
@@ -290,11 +253,7 @@ where
             return Err(BlockValidationError::WithdrawalRequestsContractCall {
                 message: "invalid withdrawal request length".to_string(),
             }
-<<<<<<< HEAD
-            .into());
-=======
             .into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         let mut source_address = Address::ZERO;
@@ -305,16 +264,8 @@ where
 
         let amount = data.get_u64();
 
-<<<<<<< HEAD
-        withdrawal_requests.push(Request::WithdrawalRequest(WithdrawalRequest {
-            source_address,
-            validator_pubkey,
-            amount,
-        }));
-=======
         withdrawal_requests
             .push(WithdrawalRequest { source_address, validator_pubkey, amount }.into());
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     Ok(withdrawal_requests)
@@ -335,11 +286,7 @@ pub fn post_block_consolidation_requests_contract_call<EvmConfig, DB>(
 ) -> Result<Vec<Request>, BlockExecutionError>
 where
     DB: Database + DatabaseCommit,
-<<<<<<< HEAD
-    DB::Error: std::fmt::Display,
-=======
     DB::Error: Display,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     EvmConfig: ConfigureEvm,
 {
     // apply post-block EIP-7251 contract call
@@ -353,11 +300,7 @@ where
         .build();
 
     // initialize a block from the env, because the post block call needs the block itself
-<<<<<<< HEAD
-    apply_consolidation_requests_contract_call::<EvmConfig, _, _>(evm_config, &mut evm_post_block)
-=======
     apply_consolidation_requests_contract_call(evm_config, &mut evm_post_block)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 /// Applies the post-block call to the EIP-7251 consolidation requests contract.
@@ -400,11 +343,7 @@ where
             return Err(BlockValidationError::ConsolidationRequestsContractCall {
                 message: format!("execution failed: {e}"),
             }
-<<<<<<< HEAD
-            .into());
-=======
             .into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
     };
 
@@ -445,11 +384,7 @@ where
             return Err(BlockValidationError::ConsolidationRequestsContractCall {
                 message: "invalid consolidation request length".to_string(),
             }
-<<<<<<< HEAD
-            .into());
-=======
             .into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         let mut source_address = Address::ZERO;

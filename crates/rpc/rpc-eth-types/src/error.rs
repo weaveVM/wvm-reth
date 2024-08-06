@@ -17,10 +17,7 @@ use reth_transaction_pool::error::{
 };
 use revm::primitives::{EVMError, ExecutionResult, HaltReason, OutOfGasError};
 use revm_inspectors::tracing::{js::JsInspectorError, MuxError};
-<<<<<<< HEAD
-=======
 use tracing::error;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// Result alias
 pub type EthResult<T> = Result<T, EthApiError>;
@@ -378,16 +375,9 @@ pub enum RpcInvalidTransactionError {
     /// EIP-7702 transaction has invalid fields set.
     #[error("EIP-7702 authorization list has invalid fields")]
     AuthorizationListInvalidFields,
-<<<<<<< HEAD
-    /// Optimism related error
-    #[error(transparent)]
-    #[cfg(feature = "optimism")]
-    Optimism(#[from] OptimismInvalidTransactionError),
-=======
     /// Any other error
     #[error("{0}")]
     Other(Box<dyn ToRpcError>),
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 impl RpcInvalidTransactionError {
@@ -477,16 +467,6 @@ impl From<revm::primitives::InvalidTransaction> for RpcInvalidTransactionError {
             InvalidTransaction::EofCrateShouldHaveToAddress => Self::EofCrateShouldHaveToAddress,
             InvalidTransaction::AuthorizationListNotSupported => {
                 Self::AuthorizationListNotSupported
-<<<<<<< HEAD
-            }
-            InvalidTransaction::AuthorizationListInvalidFields => {
-                Self::AuthorizationListInvalidFields
-            }
-            #[cfg(feature = "optimism")]
-            InvalidTransaction::DepositSystemTxPostRegolith => {
-                Self::Optimism(OptimismInvalidTransactionError::DepositSystemTxPostRegolith)
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             }
             InvalidTransaction::AuthorizationListInvalidFields => {
                 Self::AuthorizationListInvalidFields

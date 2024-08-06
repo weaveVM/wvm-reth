@@ -49,11 +49,7 @@ use reth_network_p2p::{bodies::downloader::BodyDownloader, headers::downloader::
 use reth_primitives::B256;
 use reth_provider::HeaderSyncGapProvider;
 use reth_prune_types::PruneModes;
-<<<<<<< HEAD
-use std::sync::Arc;
-=======
 use std::{ops::Not, sync::Arc};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use tokio::sync::watch;
 
 /// A set containing all stages to run a fully syncing instance of reth.

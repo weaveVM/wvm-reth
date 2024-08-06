@@ -1,11 +1,8 @@
 //! Command that imports OP mainnet receipts from Bedrock datadir, exported via
 //! <https://github.com/testinprod-io/op-geth/pull/1>.
 
-<<<<<<< HEAD
-=======
 use std::path::{Path, PathBuf};
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use clap::Parser;
 use reth_cli_commands::common::{AccessRights, Environment, EnvironmentArgs};
 use reth_db::tables;
@@ -20,20 +17,11 @@ use reth_node_core::version::SHORT_VERSION;
 use reth_optimism_primitives::bedrock_import::is_dup_tx;
 use reth_primitives::Receipts;
 use reth_provider::{
-<<<<<<< HEAD
-    OriginalValuesKnown, ProviderFactory, StageCheckpointReader, StateWriter,
-    StaticFileProviderFactory, StaticFileWriter, StatsReader,
-};
-use reth_stages::StageId;
-use reth_static_file_types::StaticFileSegment;
-use std::path::{Path, PathBuf};
-=======
     writer::UnifiedStorageWriter, DatabaseProviderFactory, OriginalValuesKnown, ProviderFactory,
     StageCheckpointReader, StateWriter, StaticFileProviderFactory, StaticFileWriter, StatsReader,
 };
 use reth_stages::StageId;
 use reth_static_file_types::StaticFileSegment;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use tracing::{debug, error, info, trace};
 
 use crate::file_codec_ovm_receipt::HackReceiptFileCodec;
@@ -121,55 +109,9 @@ where
     // open file
     let reader = ChunkedFileReader::new(&path, chunk_len).await?;
 
-<<<<<<< HEAD
-    while let Some(file_client) =
-        reader.next_chunk::<ReceiptFileClient<HackReceiptFileCodec>>().await?
-    {
-        // create a new file client from chunk read from file
-        let ReceiptFileClient {
-            mut receipts,
-            first_block,
-            total_receipts: total_receipts_chunk,
-            ..
-        } = file_client;
-
-        // mark these as decoded
-        total_decoded_receipts += total_receipts_chunk;
-
-        total_filtered_out_dup_txns += filter(first_block, &mut receipts);
-
-        info!(target: "reth::cli",
-            first_receipts_block=?first_block,
-            total_receipts_chunk,
-            "Importing receipt file chunk"
-        );
-
-        // We're reusing receipt writing code internal to
-        // `ExecutionOutcome::write_to_storage`, so we just use a default empty
-        // `BundleState`.
-        let execution_outcome =
-            ExecutionOutcome::new(Default::default(), receipts, first_block, Default::default());
-
-        let static_file_producer =
-            static_file_provider.get_writer(first_block, StaticFileSegment::Receipts)?;
-
-        // finally, write the receipts
-        execution_outcome.write_to_storage::<DB::TXMut>(
-            &tx,
-            Some(static_file_producer),
-            OriginalValuesKnown::Yes,
-        )?;
-    }
-
-    tx.commit()?;
-    // as static files works in file ranges, internally it will be committing when creating the
-    // next file range already, so we only need to call explicitly at the end.
-    static_file_provider.commit()?;
-=======
     // import receipts
     let ImportReceiptsResult { total_decoded_receipts, total_filtered_out_dup_txns } =
         import_receipts_from_reader(&provider_factory, reader, filter).await?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
     if total_decoded_receipts == 0 {
         error!(target: "reth::cli", "No receipts were imported, ensure the receipt file is valid and not empty");

@@ -44,11 +44,7 @@ impl<DB: Database> Segment<DB> for SenderRecovery {
             Some(range) => range,
             None => {
                 trace!(target: "pruner", "No transaction senders to prune");
-<<<<<<< HEAD:crates/prune/prune/src/segments/sender_recovery.rs
-                return Ok(PruneOutput::done());
-=======
                 return Ok(SegmentOutput::done())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/user/sender_recovery.rs
             }
         };
         let tx_range_end = *tx_range.end();
@@ -86,11 +82,7 @@ impl<DB: Database> Segment<DB> for SenderRecovery {
 
 #[cfg(test)]
 mod tests {
-<<<<<<< HEAD:crates/prune/prune/src/segments/sender_recovery.rs
-    use crate::segments::{PruneInput, PruneOutput, Segment, SenderRecovery};
-=======
     use crate::segments::{PruneInput, Segment, SegmentOutput, SenderRecovery};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/user/sender_recovery.rs
     use alloy_primitives::{BlockNumber, TxNumber, B256};
     use assert_matches::assert_matches;
     use itertools::{

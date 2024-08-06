@@ -36,11 +36,7 @@ use reth_primitives::{
 use reth_primitives_traits::IntegerList;
 use reth_prune_types::{PruneCheckpoint, PruneSegment};
 use reth_stages_types::StageCheckpoint;
-<<<<<<< HEAD
-use reth_trie_common::{StorageTrieEntry, StoredBranchNode, StoredNibbles, StoredNibblesSubKey};
-=======
 use reth_trie_common::{BranchNodeCompact, StorageTrieEntry, StoredNibbles, StoredNibblesSubKey};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use serde::{Deserialize, Serialize};
 use std::fmt;
 

@@ -1,9 +1,5 @@
 //! Contains connection-oriented interfaces.
 
-<<<<<<< HEAD
-use futures::{ready, Stream};
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     io,
     net::SocketAddr,

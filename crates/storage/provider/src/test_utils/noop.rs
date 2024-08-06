@@ -1,63 +1,35 @@
 use std::{
-<<<<<<< HEAD
-=======
     collections::HashMap,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     ops::{RangeBounds, RangeInclusive},
     sync::Arc,
 };
 
-<<<<<<< HEAD
-=======
 use reth_chain_state::{CanonStateNotifications, CanonStateSubscriptions};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_chainspec::{ChainInfo, ChainSpec, MAINNET};
 use reth_db_api::models::{AccountBeforeTx, StoredBlockBodyIndices};
 use reth_evm::ConfigureEvmEnv;
 use reth_primitives::{
     Account, Address, Block, BlockHash, BlockHashOrNumber, BlockId, BlockNumber, BlockWithSenders,
-<<<<<<< HEAD
-    Bytecode, Header, Receipt, SealedBlock, SealedBlockWithSenders, SealedHeader, StorageKey,
-    StorageValue, TransactionMeta, TransactionSigned, TransactionSignedNoHash, TxHash, TxNumber,
-    Withdrawal, Withdrawals, B256, U256,
-=======
     Bytecode, Bytes, Header, Receipt, SealedBlock, SealedBlockWithSenders, SealedHeader,
     StorageKey, StorageValue, TransactionMeta, TransactionSigned, TransactionSignedNoHash, TxHash,
     TxNumber, Withdrawal, Withdrawals, B256, U256,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_prune_types::{PruneCheckpoint, PruneSegment};
 use reth_stages_types::{StageCheckpoint, StageId};
 use reth_storage_api::StateProofProvider;
 use reth_storage_errors::provider::ProviderResult;
-<<<<<<< HEAD
-use reth_trie::{updates::TrieUpdates, AccountProof};
-use revm::{
-    db::BundleState,
-    primitives::{BlockEnv, CfgEnvWithHandlerCfg},
-};
-=======
 use reth_trie::{updates::TrieUpdates, AccountProof, HashedPostState};
 use revm::primitives::{BlockEnv, CfgEnvWithHandlerCfg};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use tokio::sync::broadcast;
 
 use crate::{
     providers::StaticFileProvider,
     traits::{BlockSource, ReceiptProvider},
     AccountReader, BlockHashReader, BlockIdReader, BlockNumReader, BlockReader, BlockReaderIdExt,
-<<<<<<< HEAD
-    CanonStateNotifications, CanonStateSubscriptions, ChainSpecProvider, ChangeSetReader,
-    EvmEnvProvider, HeaderProvider, PruneCheckpointReader, ReceiptProviderIdExt, RequestsProvider,
-    StageCheckpointReader, StateProvider, StateProviderBox, StateProviderFactory,
-    StateRootProvider, StaticFileProviderFactory, TransactionVariant, TransactionsProvider,
-    WithdrawalsProvider,
-=======
     ChainSpecProvider, ChangeSetReader, EvmEnvProvider, HeaderProvider, PruneCheckpointReader,
     ReceiptProviderIdExt, RequestsProvider, StageCheckpointReader, StateProvider, StateProviderBox,
     StateProviderFactory, StateRootProvider, StaticFileProviderFactory, TransactionVariant,
     TransactionsProvider, WithdrawalsProvider,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 
 /// Supports various api interfaces for testing purposes.
@@ -380,17 +352,6 @@ impl StateProofProvider for NoopProvider {
     }
 }
 
-impl StateProofProvider for NoopProvider {
-    fn proof(
-        &self,
-        _state: &BundleState,
-        address: Address,
-        _slots: &[B256],
-    ) -> ProviderResult<AccountProof> {
-        Ok(AccountProof::new(address))
-    }
-}
-
 impl StateProvider for NoopProvider {
     fn storage(
         &self,
@@ -530,18 +491,6 @@ impl PruneCheckpointReader for NoopProvider {
 
     fn get_prune_checkpoints(&self) -> ProviderResult<Vec<(PruneSegment, PruneCheckpoint)>> {
         Ok(Vec::new())
-    }
-}
-
-impl StaticFileProviderFactory for NoopProvider {
-    fn static_file_provider(&self) -> StaticFileProvider {
-        StaticFileProvider::default()
-    }
-}
-
-impl CanonStateSubscriptions for NoopProvider {
-    fn subscribe_to_canonical_state(&self) -> CanonStateNotifications {
-        broadcast::channel(1).1
     }
 }
 

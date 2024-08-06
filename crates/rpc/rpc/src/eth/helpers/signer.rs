@@ -6,18 +6,12 @@ use alloy_dyn_abi::TypedData;
 use reth_primitives::{
     eip191_hash_message, sign_message, Address, Signature, TransactionSigned, B256,
 };
-<<<<<<< HEAD
-use reth_rpc_eth_api::helpers::{signer::Result, EthSigner};
-=======
 use reth_rpc_eth_api::helpers::{signer::Result, AddDevSigners, EthSigner};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_rpc_eth_types::SignError;
 use reth_rpc_types::TypedTransactionRequest;
 use reth_rpc_types_compat::transaction::to_primitive_transaction;
 use secp256k1::SecretKey;
 
-<<<<<<< HEAD
-=======
 use crate::EthApi;
 
 impl<Provider, Pool, Network, EvmConfig> AddDevSigners
@@ -28,7 +22,6 @@ impl<Provider, Pool, Network, EvmConfig> AddDevSigners
     }
 }
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// Holds developer keys
 #[derive(Debug, Clone)]
 pub struct DevSigner {

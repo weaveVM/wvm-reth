@@ -1,9 +1,5 @@
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-<<<<<<< HEAD
-use reth_primitives::{Address, BlockId, Bytes, TxHash, B256};
-=======
 use reth_primitives::{Address, Bytes, TxHash, B256};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_rpc_types::{
     trace::otterscan::{
         BlockDetails, ContractCreator, InternalOperation, OtsBlockTransactions, TraceEntry,
@@ -52,11 +48,7 @@ pub trait Otterscan {
     /// Tailor-made and expanded version of eth_getBlockByNumber for block details page in
     /// Otterscan.
     #[method(name = "getBlockDetails")]
-<<<<<<< HEAD
-    async fn get_block_details(&self, block_number: u64) -> RpcResult<Option<BlockDetails>>;
-=======
     async fn get_block_details(&self, block_number: u64) -> RpcResult<BlockDetails>;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
     /// Tailor-made and expanded version of eth_getBlockByHash for block details page in Otterscan.
     #[method(name = "getBlockDetailsByHash")]

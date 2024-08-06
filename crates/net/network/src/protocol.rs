@@ -2,15 +2,6 @@
 //!
 //! See also <https://github.com/ethereum/devp2p/blob/master/README.md>
 
-<<<<<<< HEAD
-use futures::Stream;
-use reth_eth_wire::{
-    capability::SharedCapabilities, multiplex::ProtocolConnection, protocol::Protocol,
-};
-use reth_network_api::{Direction, PeerId};
-use reth_primitives::BytesMut;
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     fmt,
     net::SocketAddr,

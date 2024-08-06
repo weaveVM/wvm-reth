@@ -7,29 +7,19 @@
 //! ```
 //!
 //! This launch a regular reth node with a custom rlpx subprotocol.
-<<<<<<< HEAD
-=======
 
 mod subprotocol;
 
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth::builder::NodeHandle;
 use reth_network::{
     config::SecretKey, protocol::IntoRlpxSubProtocol, NetworkConfig, NetworkManager,
     NetworkProtocols,
 };
-<<<<<<< HEAD
-use reth_network_api::NetworkInfo;
-use reth_node_ethereum::EthereumNode;
-use reth_provider::test_utils::NoopProvider;
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
-=======
 use reth_network_api::{test_utils::PeersHandleProvider, NetworkInfo};
 use reth_node_ethereum::EthereumNode;
 use reth_provider::test_utils::NoopProvider;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use subprotocol::{
     connection::CustomCommand,
     protocol::{
@@ -40,11 +30,6 @@ use subprotocol::{
 use tokio::sync::{mpsc, oneshot};
 use tracing::info;
 
-<<<<<<< HEAD
-mod subprotocol;
-
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _args| async move {
         // launch the node

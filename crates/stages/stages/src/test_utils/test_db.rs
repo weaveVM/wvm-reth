@@ -349,11 +349,7 @@ impl TestStageDB {
                 let provider = self.factory.static_file_provider();
                 let mut writer = provider.latest_writer(StaticFileSegment::Receipts)?;
                 let res = receipts.into_iter().try_for_each(|(block_num, receipts)| {
-<<<<<<< HEAD
-                    writer.increment_block(StaticFileSegment::Receipts, block_num)?;
-=======
                     writer.increment_block(block_num)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                     writer.append_receipts(receipts.into_iter().map(Ok))?;
                     Ok(())
                 });

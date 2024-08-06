@@ -10,10 +10,7 @@ use reth_primitives::{BlockNumber, Header, StaticFileSegment};
 use reth_primitives_traits::format_gas_throughput;
 use reth_provider::{
     providers::{StaticFileProvider, StaticFileProviderRWRefMut, StaticFileWriter},
-<<<<<<< HEAD
-=======
     writer::UnifiedStorageWriter,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     BlockReader, DatabaseProviderRW, HeaderProvider, LatestStateProviderRef, OriginalValuesKnown,
     ProviderError, StateWriter, StatsReader, TransactionVariant,
 };

@@ -31,11 +31,7 @@ pub fn calculate_state_root(c: &mut Criterion) {
             provider_rw.write_hashed_state(&db_state.into_sorted()).unwrap();
             let (_, updates) =
                 StateRoot::from_tx(provider_rw.tx_ref()).root_with_updates().unwrap();
-<<<<<<< HEAD
-            updates.write_to_database(provider_rw.tx_ref()).unwrap();
-=======
             provider_rw.write_trie_updates(&updates).unwrap();
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             provider_rw.commit().unwrap();
         }
 

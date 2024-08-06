@@ -4,10 +4,7 @@ use crate::{
     BranchNodeCompact, Nibbles,
 };
 use reth_primitives::B256;
-<<<<<<< HEAD
-=======
 use reth_storage_errors::db::DatabaseError;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::collections::HashSet;
 
 /// `TrieWalker` is a structure that enables traversal of a Merkle trie.

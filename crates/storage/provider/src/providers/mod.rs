@@ -12,10 +12,7 @@ use reth_blockchain_tree_api::{
     BlockValidationKind, BlockchainTreeEngine, BlockchainTreeViewer, CanonicalOutcome,
     InsertPayloadOk,
 };
-<<<<<<< HEAD
-=======
 use reth_chain_state::ChainInfoTracker;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_chainspec::{ChainInfo, ChainSpec};
 use reth_db_api::{
     database::Database,
@@ -670,7 +667,7 @@ where
 
         if let Some(block) = self.tree.pending_block_num_hash() {
             if let Ok(pending) = self.tree.pending_state_provider(block.hash) {
-                return self.pending_with_provider(pending);
+                return self.pending_with_provider(pending)
             }
         }
 
@@ -680,7 +677,7 @@ where
 
     fn pending_state_by_hash(&self, block_hash: B256) -> ProviderResult<Option<StateProviderBox>> {
         if let Some(state) = self.tree.find_pending_state_provider(block_hash) {
-            return Ok(Some(self.pending_with_provider(state)?));
+            return Ok(Some(self.pending_with_provider(state)?))
         }
         Ok(None)
     }

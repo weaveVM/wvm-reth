@@ -43,12 +43,6 @@ macro_rules! delegate_provider_impls {
             }
             StateRootProvider $(where [$($generics)*])? {
                 fn state_root(&self, state: &revm::db::BundleState) -> reth_storage_errors::provider::ProviderResult<reth_primitives::B256>;
-<<<<<<< HEAD
-                fn state_root_with_updates(&self, state: &revm::db::BundleState) -> reth_storage_errors::provider::ProviderResult<(reth_primitives::B256, reth_trie::updates::TrieUpdates)>;
-            }
-            StateProofProvider $(where [$($generics)*])? {
-                fn proof(&self, state: &revm::db::BundleState, address: reth_primitives::Address, slots: &[reth_primitives::B256]) -> reth_storage_errors::provider::ProviderResult<reth_trie::AccountProof>;
-=======
                 fn hashed_state_root(&self, state: reth_trie::HashedPostState) -> reth_storage_errors::provider::ProviderResult<reth_primitives::B256>;
                 fn state_root_with_updates(&self, state: &revm::db::BundleState) -> reth_storage_errors::provider::ProviderResult<(reth_primitives::B256, reth_trie::updates::TrieUpdates)>;
                 fn hashed_state_root_with_updates(&self, state: reth_trie::HashedPostState) -> reth_storage_errors::provider::ProviderResult<(reth_primitives::B256, reth_trie::updates::TrieUpdates)>;
@@ -58,7 +52,6 @@ macro_rules! delegate_provider_impls {
                 fn proof(&self, state: &revm::db::BundleState, address: reth_primitives::Address, slots: &[reth_primitives::B256]) -> reth_storage_errors::provider::ProviderResult<reth_trie::AccountProof>;
                 fn hashed_proof(&self, state: reth_trie::HashedPostState, address: reth_primitives::Address, slots: &[reth_primitives::B256]) -> reth_storage_errors::provider::ProviderResult<reth_trie::AccountProof>;
                 fn witness(&self, state: reth_trie::HashedPostState, target: reth_trie::HashedPostState) -> reth_storage_errors::provider::ProviderResult<std::collections::HashMap<reth_primitives::B256, reth_primitives::Bytes>>;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             }
         );
     }

@@ -9,10 +9,7 @@ use reth_primitives::{Address, B256, *};
 use reth_prune_types::{PruneCheckpoint, PruneSegment};
 use reth_stages_types::StageCheckpoint;
 use reth_trie_common::{StoredNibbles, StoredNibblesSubKey, *};
-<<<<<<< HEAD
-=======
 use serde::{Deserialize, Serialize};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 pub mod accounts;
 pub mod blocks;

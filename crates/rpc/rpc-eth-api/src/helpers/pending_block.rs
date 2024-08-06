@@ -19,46 +19,29 @@ use reth_primitives::{
     EMPTY_OMMER_ROOT_HASH, U256,
 };
 use reth_provider::{
-<<<<<<< HEAD
-    BlockReader, BlockReaderIdExt, ChainSpecProvider, EvmEnvProvider, StateProviderFactory,
-=======
     BlockReader, BlockReaderIdExt, ChainSpecProvider, EvmEnvProvider, ProviderError,
     StateProviderFactory,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_revm::{
     database::StateProviderDatabase, state_change::post_block_withdrawals_balance_increments,
 };
 use reth_rpc_eth_types::{
-<<<<<<< HEAD
-    pending_block::pre_block_blockhashes_update, EthApiError, EthResult, PendingBlock,
-    PendingBlockEnv, PendingBlockEnvOrigin,
-=======
     pending_block::pre_block_blockhashes_update, EthApiError, PendingBlock, PendingBlockEnv,
     PendingBlockEnvOrigin,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_transaction_pool::{BestTransactionsAttributes, TransactionPool};
 use revm::{db::states::bundle_state::BundleRetention, DatabaseCommit, State};
 use tokio::sync::Mutex;
 use tracing::debug;
 
-<<<<<<< HEAD
-=======
 use crate::{EthApiTypes, FromEthApiError, FromEvmError};
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use super::SpawnBlocking;
 
 /// Loads a pending block from database.
 ///
 /// Behaviour shared by several `eth_` RPC methods, not exclusive to `eth_` blocks RPC methods.
-<<<<<<< HEAD
-#[auto_impl::auto_impl(&, Arc)]
-pub trait LoadPendingBlock {
-=======
 pub trait LoadPendingBlock: EthApiTypes {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Returns a handle for reading data from disk.
     ///
     /// Data access in default (L1) trait method implementations.
@@ -84,30 +67,19 @@ pub trait LoadPendingBlock: EthApiTypes {
     /// Configures the [`CfgEnvWithHandlerCfg`] and [`BlockEnv`] for the pending block
     ///
     /// If no pending block is available, this will derive it from the `latest` block
-<<<<<<< HEAD
-    fn pending_block_env_and_cfg(&self) -> EthResult<PendingBlockEnv> {
-        let origin: PendingBlockEnvOrigin = if let Some(pending) =
-            self.provider().pending_block_with_senders()?
-=======
     fn pending_block_env_and_cfg(&self) -> Result<PendingBlockEnv, Self::Error> {
         let origin: PendingBlockEnvOrigin = if let Some(pending) =
             self.provider().pending_block_with_senders().map_err(Self::Error::from_eth_err)?
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         {
             PendingBlockEnvOrigin::ActualPending(pending)
         } else {
             // no pending block from the CL yet, so we use the latest block and modify the env
             // values that we can
-<<<<<<< HEAD
-            let latest =
-                self.provider().latest_header()?.ok_or_else(|| EthApiError::UnknownBlockNumber)?;
-=======
             let latest = self
                 .provider()
                 .latest_header()
                 .map_err(Self::Error::from_eth_err)?
                 .ok_or_else(|| EthApiError::UnknownBlockNumber)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
             let (mut latest_header, block_hash) = latest.split();
             // child block
@@ -135,14 +107,6 @@ pub trait LoadPendingBlock: EthApiTypes {
         let mut block_env = BlockEnv::default();
         // Note: for the PENDING block we assume it is past the known merge block and thus this will
         // not fail when looking up the total difficulty value for the blockenv.
-<<<<<<< HEAD
-        self.provider().fill_env_with_header(
-            &mut cfg,
-            &mut block_env,
-            origin.header(),
-            self.evm_config().clone(),
-        )?;
-=======
         self.provider()
             .fill_env_with_header(
                 &mut cfg,
@@ -151,7 +115,6 @@ pub trait LoadPendingBlock: EthApiTypes {
                 self.evm_config().clone(),
             )
             .map_err(Self::Error::from_eth_err)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         Ok(PendingBlockEnv::new(cfg, block_env, origin))
     }
@@ -159,22 +122,14 @@ pub trait LoadPendingBlock: EthApiTypes {
     /// Returns the locally built pending block
     fn local_pending_block(
         &self,
-<<<<<<< HEAD
-    ) -> impl Future<Output = EthResult<Option<SealedBlockWithSenders>>> + Send
-=======
     ) -> impl Future<Output = Result<Option<SealedBlockWithSenders>, Self::Error>> + Send
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     where
         Self: SpawnBlocking,
     {
         async move {
             let pending = self.pending_block_env_and_cfg()?;
             if pending.origin.is_actual_pending() {
-<<<<<<< HEAD
-                return Ok(pending.origin.into_actual_pending());
-=======
                 return Ok(pending.origin.into_actual_pending())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             }
 
             let mut lock = self.pending_block().lock().await;
@@ -188,11 +143,7 @@ pub trait LoadPendingBlock: EthApiTypes {
                     pending.origin.header().hash() == pending_block.block.parent_hash &&
                     now <= pending_block.expires_at
                 {
-<<<<<<< HEAD
-                    return Ok(Some(pending_block.block.clone()));
-=======
                     return Ok(Some(pending_block.block.clone()))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 }
             }
 
@@ -207,11 +158,7 @@ pub trait LoadPendingBlock: EthApiTypes {
                 Ok(block) => block,
                 Err(err) => {
                     debug!(target: "rpc", "Failed to build pending block: {:?}", err);
-<<<<<<< HEAD
-                    return Ok(None);
-=======
                     return Ok(None)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 }
             };
 
@@ -229,23 +176,13 @@ pub trait LoadPendingBlock: EthApiTypes {
         result: ExecutionResult,
         cumulative_gas_used: u64,
     ) -> Receipt {
-<<<<<<< HEAD
-=======
         #[allow(clippy::needless_update)]
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         Receipt {
             tx_type: tx.tx_type(),
             success: result.is_success(),
             cumulative_gas_used,
             logs: result.into_logs().into_iter().map(Into::into).collect(),
-<<<<<<< HEAD
-            #[cfg(feature = "optimism")]
-            deposit_nonce: None,
-            #[cfg(feature = "optimism")]
-            deposit_receipt_version: None,
-=======
             ..Default::default()
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
     }
 
@@ -267,13 +204,6 @@ pub trait LoadPendingBlock: EthApiTypes {
     ///
     /// After Cancun, if the origin is the actual pending block, the block includes the EIP-4788 pre
     /// block contract call using the parent beacon block root received from the CL.
-<<<<<<< HEAD
-    fn build_block(&self, env: PendingBlockEnv) -> EthResult<SealedBlockWithSenders> {
-        let PendingBlockEnv { cfg, block_env, origin } = env;
-
-        let parent_hash = origin.build_target_hash();
-        let state_provider = self.provider().history_by_block_hash(parent_hash)?;
-=======
     fn build_block(&self, env: PendingBlockEnv) -> Result<SealedBlockWithSenders, Self::Error>
     where
         EthApiError: From<ProviderError>,
@@ -285,7 +215,6 @@ pub trait LoadPendingBlock: EthApiTypes {
             .provider()
             .history_by_block_hash(parent_hash)
             .map_err(Self::Error::from_eth_err)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         let state = StateProviderDatabase::new(state_provider);
         let mut db = State::builder().with_database(state).with_bundle_update().build();
 
@@ -347,11 +276,7 @@ pub trait LoadPendingBlock: EthApiTypes {
                 // which also removes all dependent transaction from the iterator before we can
                 // continue
                 best_txs.mark_invalid(&pool_tx);
-<<<<<<< HEAD
-                continue;
-=======
                 continue
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             }
 
             if pool_tx.origin.is_private() {
@@ -359,11 +284,7 @@ pub trait LoadPendingBlock: EthApiTypes {
                 // them as invalid here which removes all dependent transactions from the iterator
                 // before we can continue
                 best_txs.mark_invalid(&pool_tx);
-<<<<<<< HEAD
-                continue;
-=======
                 continue
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             }
 
             // convert tx to a signed transaction
@@ -379,11 +300,7 @@ pub trait LoadPendingBlock: EthApiTypes {
                     // the iterator. This is similar to the gas limit condition
                     // for regular transactions above.
                     best_txs.mark_invalid(&pool_tx);
-<<<<<<< HEAD
-                    continue;
-=======
                     continue
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 }
             }
 
@@ -408,19 +325,11 @@ pub trait LoadPendingBlock: EthApiTypes {
                                 // descendants
                                 best_txs.mark_invalid(&pool_tx);
                             }
-<<<<<<< HEAD
-                            continue;
-                        }
-                        err => {
-                            // this is an error that we should treat as fatal for this attempt
-                            return Err(err.into());
-=======
                             continue
                         }
                         err => {
                             // this is an error that we should treat as fatal for this attempt
                             return Err(Self::Error::from_evm_err(err))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                         }
                     }
                 }
@@ -463,11 +372,7 @@ pub trait LoadPendingBlock: EthApiTypes {
         );
 
         // increment account balances for withdrawals
-<<<<<<< HEAD
-        db.increment_balances(balance_increments)?;
-=======
         db.increment_balances(balance_increments).map_err(Self::Error::from_eth_err)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         // merge all transitions into bundle state.
         db.merge_transitions(BundleRetention::PlainState);
@@ -486,13 +391,9 @@ pub trait LoadPendingBlock: EthApiTypes {
 
         // calculate the state root
         let state_provider = &db.database;
-<<<<<<< HEAD
-        let state_root = state_provider.state_root(execution_outcome.state())?;
-=======
         let state_root = state_provider
             .state_root(execution_outcome.state())
             .map_err(Self::Error::from_eth_err)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         // create the block header
         let transactions_root = calculate_transaction_root(&executed_txs);

@@ -1,40 +1,22 @@
 //! Abstraction for launching a node.
 
-<<<<<<< HEAD
-use crate::{
-    builder::{NodeAdapter, NodeAddOns, NodeTypesAdapter},
-    components::{NodeComponents, NodeComponentsBuilder},
-    hooks::NodeHooks,
-    node::FullNode,
-    NodeBuilderWithComponents, NodeHandle,
-};
-=======
 pub mod common;
 mod exex;
 
 pub use common::LaunchContext;
 pub use exex::ExExLauncher;
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use futures::{future::Either, stream, stream_select, StreamExt};
 use reth_beacon_consensus::{
     hooks::{EngineHooks, PruneHook, StaticFileHook},
     BeaconConsensusEngine,
 };
-<<<<<<< HEAD
-use reth_consensus_debug_client::{DebugConsensusClient, EtherscanBlockProvider, RpcBlockProvider};
-use reth_engine_util::EngineMessageStreamExt;
-use reth_exex::ExExManagerHandle;
-use reth_network::NetworkEvents;
-use reth_node_api::FullNodeTypes;
-=======
 use reth_blockchain_tree::{noop::NoopBlockchainTree, BlockchainTreeConfig};
 use reth_consensus_debug_client::{DebugConsensusClient, EtherscanBlockProvider, RpcBlockProvider};
 use reth_engine_util::EngineMessageStreamExt;
 use reth_exex::ExExManagerHandle;
 use reth_network::{BlockDownloaderProvider, NetworkEventListenerProvider};
 use reth_node_api::{FullNodeComponents, FullNodeTypes, NodeAddOns};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_node_core::{
     dirs::{ChainPath, DataDirPath},
     exit::NodeExitFuture,
@@ -136,8 +118,6 @@ where
             config,
         } = target;
         let NodeHooks { on_component_initialized, on_node_started, .. } = hooks;
-<<<<<<< HEAD
-=======
 
         // TODO: remove tree and move tree_config and canon_state_notification_sender
         // initialization to with_blockchain_db once the engine revamp is done
@@ -151,7 +131,6 @@ where
         let tree = Arc::new(NoopBlockchainTree::with_canon_state_notifications(
             canon_state_notification_sender.clone(),
         ));
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         // setup the launch context
         let ctx = ctx
@@ -177,19 +156,12 @@ where
             .inspect(|this| {
                 info!(target: "reth::cli", "\n{}", this.chain_spec().display_hardforks());
             })
-<<<<<<< HEAD
-            .with_metrics()
-            // passing FullNodeTypes as type parameter here so that we can build
-            // later the components.
-            .with_blockchain_db::<T>()?
-=======
             .with_metrics_task()
             // passing FullNodeTypes as type parameter here so that we can build
             // later the components.
             .with_blockchain_db::<T, _>(move |provider_factory| {
                 Ok(BlockchainProvider::new(provider_factory, tree)?)
             }, tree_config, canon_state_notification_sender)?
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             .with_components(components_builder, on_component_initialized).await?;
 
         // spawn exexs
@@ -293,12 +265,7 @@ where
 
         let initial_target = ctx.node_config().debug.tip;
 
-<<<<<<< HEAD
-        let mut pruner_builder =
-            ctx.pruner_builder().max_reorg_depth(ctx.tree_config().max_reorg_depth() as usize);
-=======
         let mut pruner_builder = ctx.pruner_builder();
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         if let Some(exex_manager_handle) = &exex_manager_handle {
             pruner_builder =
                 pruner_builder.finished_exex_height(exex_manager_handle.finished_height());

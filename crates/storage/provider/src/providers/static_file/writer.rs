@@ -139,7 +139,7 @@ impl StaticFileProviderRW {
 
         self.writer.ensure_file_consistency(check_mode).map_err(|error| {
             if matches!(error, NippyJarError::InconsistentState) {
-                return inconsistent_error();
+                return inconsistent_error()
             }
             ProviderError::NippyJar(error.to_string())
         })?;
@@ -153,7 +153,7 @@ impl StaticFileProviderRW {
         let pruned_rows = expected_rows - self.writer.rows() as u64;
         if pruned_rows > 0 {
             if read_only {
-                return Err(inconsistent_error());
+                return Err(inconsistent_error())
             }
             self.user_header_mut().prune(pruned_rows);
         }
@@ -328,7 +328,7 @@ impl StaticFileProviderRW {
                 segment,
                 expected_block_number,
                 next_static_file_block,
-            ));
+            ))
         }
         Ok(())
     }
@@ -370,7 +370,7 @@ impl StaticFileProviderRW {
                     self.writer
                         .prune_rows(len as usize)
                         .map_err(|e| ProviderError::NippyJar(e.to_string()))?;
-                    break;
+                    break
                 }
 
                 remaining_rows -= len;
@@ -551,16 +551,10 @@ impl StaticFileProviderRW {
     /// Appends multiple receipts to the static file.
     ///
     /// Returns the current [`TxNumber`] as seen in the static file, if any.
-<<<<<<< HEAD
-    pub fn append_receipts<I>(&mut self, receipts: I) -> ProviderResult<Option<TxNumber>>
-    where
-        I: IntoIterator<Item = Result<(TxNumber, Receipt), ProviderError>>,
-=======
     pub fn append_receipts<I, R>(&mut self, receipts: I) -> ProviderResult<Option<TxNumber>>
     where
         I: Iterator<Item = Result<(TxNumber, R), ProviderError>>,
         R: Borrow<Receipt>,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     {
         let mut receipts_iter = receipts.into_iter().peekable();
         // If receipts are empty, we can simply return None
@@ -577,12 +571,8 @@ impl StaticFileProviderRW {
 
         for receipt_result in receipts_iter {
             let (tx_num, receipt) = receipt_result?;
-<<<<<<< HEAD
-            tx_number = self.append_with_tx_number(StaticFileSegment::Receipts, tx_num, receipt)?;
-=======
             tx_number =
                 self.append_with_tx_number(StaticFileSegment::Receipts, tx_num, receipt.borrow())?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             count += 1;
         }
 
@@ -647,7 +637,7 @@ impl StaticFileProviderRW {
         if self.prune_on_commit.is_some() {
             return Err(ProviderError::NippyJar(
                 "Pruning should be committed before appending or pruning more data".to_string(),
-            ));
+            ))
         }
         Ok(())
     }

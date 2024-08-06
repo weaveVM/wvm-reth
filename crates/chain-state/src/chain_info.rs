@@ -17,19 +17,12 @@ pub struct ChainInfoTracker {
 }
 
 impl ChainInfoTracker {
-<<<<<<< HEAD:crates/storage/provider/src/providers/chain_info.rs
-    /// Create a new chain info container for the given canonical head.
-    pub(crate) fn new(head: SealedHeader) -> Self {
-        let (finalized_block, _) = watch::channel(None);
-        let (safe_block, _) = watch::channel(None);
-=======
     /// Create a new chain info container for the given canonical head and finalized header if it
     /// exists.
     pub fn new(head: SealedHeader, finalized: Option<SealedHeader>) -> Self {
         let (finalized_block, _) = watch::channel(finalized.clone());
         let (safe_block, _) = watch::channel(finalized);
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/chain-state/src/chain_info.rs
         Self {
             inner: Arc::new(ChainInfoInner {
                 last_forkchoice_update: RwLock::new(None),
@@ -74,20 +67,12 @@ impl ChainInfoTracker {
     }
 
     /// Returns the safe header of the chain.
-<<<<<<< HEAD:crates/storage/provider/src/providers/chain_info.rs
-    pub(crate) fn get_safe_header(&self) -> Option<SealedHeader> {
-=======
     pub fn get_safe_header(&self) -> Option<SealedHeader> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/chain-state/src/chain_info.rs
         self.inner.safe_block.borrow().clone()
     }
 
     /// Returns the finalized header of the chain.
-<<<<<<< HEAD:crates/storage/provider/src/providers/chain_info.rs
-    pub(crate) fn get_finalized_header(&self) -> Option<SealedHeader> {
-=======
     pub fn get_finalized_header(&self) -> Option<SealedHeader> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/chain-state/src/chain_info.rs
         self.inner.finalized_block.borrow().clone()
     }
 
@@ -104,22 +89,14 @@ impl ChainInfoTracker {
 
     /// Returns the safe header of the chain.
     #[allow(dead_code)]
-<<<<<<< HEAD:crates/storage/provider/src/providers/chain_info.rs
-    pub(crate) fn get_safe_num_hash(&self) -> Option<BlockNumHash> {
-=======
     pub fn get_safe_num_hash(&self) -> Option<BlockNumHash> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/chain-state/src/chain_info.rs
         let h = self.inner.safe_block.borrow();
         h.as_ref().map(|h| h.num_hash())
     }
 
     /// Returns the finalized header of the chain.
     #[allow(dead_code)]
-<<<<<<< HEAD:crates/storage/provider/src/providers/chain_info.rs
-    pub(crate) fn get_finalized_num_hash(&self) -> Option<BlockNumHash> {
-=======
     pub fn get_finalized_num_hash(&self) -> Option<BlockNumHash> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/chain-state/src/chain_info.rs
         let h = self.inner.finalized_block.borrow();
         h.as_ref().map(|h| h.num_hash())
     }
@@ -134,22 +111,14 @@ impl ChainInfoTracker {
     }
 
     /// Sets the safe header of the chain.
-<<<<<<< HEAD:crates/storage/provider/src/providers/chain_info.rs
-    pub(crate) fn set_safe(&self, header: SealedHeader) {
-=======
     pub fn set_safe(&self, header: SealedHeader) {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/chain-state/src/chain_info.rs
         self.inner.safe_block.send_modify(|h| {
             let _ = h.replace(header);
         });
     }
 
     /// Sets the finalized header of the chain.
-<<<<<<< HEAD:crates/storage/provider/src/providers/chain_info.rs
-    pub(crate) fn set_finalized(&self, header: SealedHeader) {
-=======
     pub fn set_finalized(&self, header: SealedHeader) {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/chain-state/src/chain_info.rs
         self.inner.finalized_block.send_modify(|h| {
             let _ = h.replace(header);
         });

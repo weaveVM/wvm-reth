@@ -3,11 +3,7 @@ use reth_chainspec::MAINNET;
 use reth_config::PruneConfig;
 use reth_db_api::database::Database;
 use reth_exex_types::FinishedExExHeight;
-<<<<<<< HEAD
-use reth_provider::ProviderFactory;
-=======
 use reth_provider::{providers::StaticFileProvider, ProviderFactory, StaticFileProviderFactory};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_prune_types::PruneModes;
 use std::time::Duration;
 use tokio::sync::watch;

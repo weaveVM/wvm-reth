@@ -17,11 +17,7 @@ use reth_provider::{BlockIdReader, BlockReader, EvmEnvProvider, ProviderError};
 use reth_rpc_eth_api::EthFilterApiServer;
 use reth_rpc_eth_types::{
     logs_utils::{self, append_matching_block_logs},
-<<<<<<< HEAD
-    EthApiError, EthFilterError, EthStateCache, EthSubscriptionIdProvider,
-=======
     EthApiError, EthFilterConfig, EthFilterError, EthStateCache, EthSubscriptionIdProvider,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_rpc_server_types::ToRpcResult;
 use reth_rpc_types::{
@@ -214,11 +210,7 @@ where
                 *filter.clone()
             } else {
                 // Not a log filter
-<<<<<<< HEAD
-                return Err(EthFilterError::FilterNotFound(id));
-=======
                 return Err(EthFilterError::FilterNotFound(id))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             }
         };
 
@@ -438,19 +430,11 @@ where
         let best_number = chain_info.best_number;
 
         if to_block < from_block {
-<<<<<<< HEAD
-            return Err(EthFilterError::InvalidBlockRangeParams);
-        }
-
-        if to_block - from_block > self.max_blocks_per_filter {
-            return Err(EthFilterError::QueryExceedsMaxBlocks(self.max_blocks_per_filter));
-=======
             return Err(EthFilterError::InvalidBlockRangeParams)
         }
 
         if to_block - from_block > self.max_blocks_per_filter {
             return Err(EthFilterError::QueryExceedsMaxBlocks(self.max_blocks_per_filter))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         let mut all_logs = Vec::new();

@@ -14,16 +14,6 @@
 
 /// Types related to peering.
 pub mod peers;
-<<<<<<< HEAD
-pub use peers::{ConnectionsConfig, PeersConfig, ReputationChangeWeights};
-
-pub mod session;
-pub use session::{SessionLimits, SessionsConfig};
-
-/// [`BackoffKind`] definition.
-mod backoff;
-pub use backoff::BackoffKind;
-=======
 pub mod session;
 
 /// [`BackoffKind`] definition.
@@ -40,4 +30,3 @@ pub use peers::{
     ConnectionsConfig, Peer, PeersConfig,
 };
 pub use session::{SessionLimits, SessionsConfig};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1

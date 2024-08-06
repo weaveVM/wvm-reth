@@ -738,11 +738,7 @@ mod tests {
                         body.tx_num_range().try_for_each(|tx_num| {
                             let transaction = random_signed_tx(&mut rng);
                             static_file_producer
-<<<<<<< HEAD
-                                .append_transaction(tx_num, transaction.into())
-=======
                                 .append_transaction(tx_num, &transaction.into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                                 .map(drop)
                         })?;
 

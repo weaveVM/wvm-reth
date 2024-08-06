@@ -5,21 +5,12 @@ use crate::{
     hooks::OnComponentInitializedHook,
     BuilderContext, NodeAdapter,
 };
-<<<<<<< HEAD
-use backon::{ConstantBuilder, Retryable};
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use eyre::Context;
 use rayon::ThreadPoolBuilder;
 use reth_auto_seal_consensus::MiningMode;
 use reth_beacon_consensus::EthBeaconConsensus;
 use reth_blockchain_tree::{
-<<<<<<< HEAD
-    noop::NoopBlockchainTree, BlockchainTree, BlockchainTreeConfig, ShareableBlockchainTree,
-    TreeExternals,
-=======
     BlockchainTree, BlockchainTreeConfig, ShareableBlockchainTree, TreeExternals,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_chainspec::{Chain, ChainSpec};
 use reth_config::{config::EtlConfig, PruneConfig};
@@ -38,12 +29,6 @@ use reth_node_core::{
         VERGEN_CARGO_TARGET_TRIPLE, VERGEN_GIT_SHA,
     },
 };
-<<<<<<< HEAD
-use reth_primitives::{BlockNumber, Head, B256};
-use reth_provider::{
-    providers::{BlockchainProvider, StaticFileProvider},
-    CanonStateNotificationSender, ProviderFactory, StaticFileProviderFactory,
-=======
 use reth_node_metrics::{
     hooks::Hooks,
     server::{MetricServer, MetricServerConfig},
@@ -54,16 +39,11 @@ use reth_provider::{
     providers::{BlockchainProvider, BlockchainProvider2, StaticFileProvider},
     BlockHashReader, CanonStateNotificationSender, FullProvider, ProviderFactory, ProviderResult,
     StageCheckpointReader, StaticFileProviderFactory, TreeViewer,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_prune::{PruneModes, PrunerBuilder};
 use reth_rpc_builder::config::RethRpcServerConfig;
 use reth_rpc_layer::JwtSecret;
-<<<<<<< HEAD
-use reth_stages::{sets::DefaultStages, MetricEvent, Pipeline, PipelineTarget};
-=======
 use reth_stages::{sets::DefaultStages, MetricEvent, Pipeline, PipelineTarget, StageId};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_static_file::StaticFileProducer;
 use reth_tasks::TaskExecutor;
 use reth_tracing::tracing::{debug, error, info, warn};
@@ -72,8 +52,6 @@ use tokio::sync::{
     mpsc::{unbounded_channel, Receiver, UnboundedSender},
     oneshot, watch,
 };
-<<<<<<< HEAD
-=======
 
 /// Allows to set a tree viewer for a configured blockchain provider.
 // TODO: remove this helper trait once the engine revamp is done, the new
@@ -95,7 +73,6 @@ impl<DB: Database> WithTree for BlockchainProvider2<DB> {
         self
     }
 }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// Reusable setup for launching a node.
 ///
@@ -261,25 +238,11 @@ impl LaunchContextWith<WithConfigs> {
         if !self.attachment.config.network.trusted_peers.is_empty() {
             info!(target: "reth::cli", "Adding trusted nodes");
 
-<<<<<<< HEAD
-            // resolve trusted peers if they use a domain instead of dns
-            let resolved = futures::future::try_join_all(
-            self.attachment.config.network.trusted_peers.iter().map(|peer| async move {
-                let backoff = ConstantBuilder::default()
-                    .with_max_times(self.attachment.config.network.dns_retries);
-                (move || { peer.resolve() })
-                    .retry(&backoff)
-                    .notify(|err, _| warn!(target: "reth::cli", "Error resolving peer domain: {err}. Retrying..."))
-                    .await
-            })).await?;
-            self.attachment.toml_config.peers.trusted_nodes.extend(resolved);
-=======
             self.attachment
                 .toml_config
                 .peers
                 .trusted_nodes
                 .extend(self.attachment.config.network.trusted_peers.clone());
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
         Ok(self)
     }
@@ -513,32 +476,16 @@ where
         self.right().static_file_provider()
     }
 
-<<<<<<< HEAD
-    /// Convenience function to [`Self::start_prometheus_endpoint`]
-    pub async fn with_prometheus(self) -> eyre::Result<Self> {
-=======
     /// This launches the prometheus endpoint.
     ///
     /// Convenience function to [`Self::start_prometheus_endpoint`]
     pub async fn with_prometheus_server(self) -> eyre::Result<Self> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         self.start_prometheus_endpoint().await?;
         Ok(self)
     }
 
     /// Starts the prometheus endpoint.
     pub async fn start_prometheus_endpoint(&self) -> eyre::Result<()> {
-<<<<<<< HEAD
-        let prometheus_handle = self.node_config().install_prometheus_recorder()?;
-        self.node_config()
-            .start_metrics_endpoint(
-                prometheus_handle,
-                self.database().clone(),
-                self.static_file_provider(),
-                self.task_executor().clone(),
-            )
-            .await
-=======
         let listen_addr = self.node_config().metrics;
         if let Some(addr) = listen_addr {
             info!(target: "reth::cli", "Starting metrics endpoint at {}", addr);
@@ -660,7 +607,6 @@ where
     /// Returns the configured `ProviderFactory`.
     pub const fn provider_factory(&self) -> &ProviderFactory<DB> {
         &self.right().db_provider_container.provider_factory
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Convenience function to [`Self::init_genesis`]
@@ -777,13 +723,8 @@ where
         self.right().db_provider_container.metrics_sender.clone()
     }
 
-<<<<<<< HEAD
-    /// Returns a reference to the `BlockchainProvider`.
-    pub const fn blockchain_db(&self) -> &BlockchainProvider<DB> {
-=======
     /// Returns a reference to the blockchain provider.
     pub const fn blockchain_db(&self) -> &T::Provider {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         &self.right().blockchain_db
     }
 
@@ -838,11 +779,7 @@ where
         let blockchain_tree = Arc::new(ShareableBlockchainTree::new(tree));
 
         // Replace the tree component with the actual tree
-<<<<<<< HEAD
-        let blockchain_db = self.blockchain_db().clone().with_tree(blockchain_tree);
-=======
         let blockchain_db = self.blockchain_db().clone().set_tree(blockchain_tree);
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         debug!(target: "reth::cli", "configured blockchain tree");
 
@@ -879,12 +816,8 @@ where
 impl<DB, T, CB> LaunchContextWith<Attached<WithConfigs, WithComponents<DB, T, CB>>>
 where
     DB: Database + DatabaseMetrics + Send + Sync + Clone + 'static,
-<<<<<<< HEAD
-    T: FullNodeTypes<Provider = BlockchainProvider<DB>>,
-=======
     T: FullNodeTypes,
     T::Provider: FullProvider<DB> + WithTree,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     CB: NodeComponentsBuilder<T>,
 {
     /// Returns the configured `ProviderFactory`.
@@ -921,13 +854,6 @@ where
         &self.right().node_adapter
     }
 
-<<<<<<< HEAD
-    /// Returns a reference to the `BlockchainProvider`.
-    pub const fn blockchain_db(&self) -> &BlockchainProvider<DB> {
-        &self.right().blockchain_db
-    }
-
-=======
     /// Returns a reference to the blockchain provider.
     pub const fn blockchain_db(&self) -> &T::Provider {
         &self.right().blockchain_db
@@ -994,7 +920,6 @@ where
         Ok(None)
     }
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Returns the configured `Consensus`.
     pub fn consensus(&self) -> Arc<dyn Consensus> {
         self.right().consensus.clone()
@@ -1087,11 +1012,6 @@ pub struct WithMeteredProvider<DB> {
 /// Helper container to bundle the [`ProviderFactory`], [`BlockchainProvider`]
 /// and a metrics sender.
 #[allow(missing_debug_implementations)]
-<<<<<<< HEAD
-pub struct WithMeteredProviders<DB, T> {
-    db_provider_container: WithMeteredProvider<DB>,
-    blockchain_db: BlockchainProvider<DB>,
-=======
 pub struct WithMeteredProviders<DB, T>
 where
     DB: Database,
@@ -1100,7 +1020,6 @@ where
 {
     db_provider_container: WithMeteredProvider<DB>,
     blockchain_db: T::Provider,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     canon_state_notification_sender: CanonStateNotificationSender,
     tree_config: BlockchainTreeConfig,
     // this field is used to store a reference to the FullNodeTypes so that we
@@ -1112,22 +1031,14 @@ where
 #[allow(missing_debug_implementations)]
 pub struct WithComponents<DB, T, CB>
 where
-<<<<<<< HEAD
-    T: FullNodeTypes<Provider = BlockchainProvider<DB>>,
-=======
     DB: Database,
     T: FullNodeTypes,
     T::Provider: FullProvider<DB>,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     CB: NodeComponentsBuilder<T>,
 {
     db_provider_container: WithMeteredProvider<DB>,
     tree_config: BlockchainTreeConfig,
-<<<<<<< HEAD
-    blockchain_db: BlockchainProvider<DB>,
-=======
     blockchain_db: T::Provider,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     node_adapter: NodeAdapter<T, CB::Components>,
     head: Head,
     consensus: Arc<dyn Consensus>,

@@ -619,17 +619,10 @@ where
                 Poll::Ready(Err(err)) => break Poll::Ready(Err(err.into())),
                 Poll::Ready(Ok(())) => {
                     let Some(message) = this.outgoing_messages.pop_front() else {
-<<<<<<< HEAD
-                        return Poll::Ready(Ok(()));
-                    };
-                    if let Err(err) = this.inner.as_mut().start_send(message) {
-                        return Poll::Ready(Err(err.into()));
-=======
                         break Poll::Ready(Ok(()))
                     };
                     if let Err(err) = this.inner.as_mut().start_send(message) {
                         break Poll::Ready(Err(err.into()))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                     }
                 }
             }

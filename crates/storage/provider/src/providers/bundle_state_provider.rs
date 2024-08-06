@@ -3,17 +3,10 @@ use std::collections::HashMap;
 use crate::{
     AccountReader, BlockHashReader, ExecutionDataProvider, StateProvider, StateRootProvider,
 };
-<<<<<<< HEAD
-use reth_primitives::{Account, Address, BlockNumber, Bytecode, B256};
-use reth_storage_api::StateProofProvider;
-use reth_storage_errors::provider::ProviderResult;
-use reth_trie::{updates::TrieUpdates, AccountProof};
-=======
 use reth_primitives::{Account, Address, BlockNumber, Bytecode, Bytes, B256};
 use reth_storage_api::StateProofProvider;
 use reth_storage_errors::provider::ProviderResult;
 use reth_trie::{updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use revm::db::BundleState;
 
 /// A state provider that resolves to data from either a wrapped [`crate::ExecutionOutcome`]
@@ -45,7 +38,7 @@ impl<SP: StateProvider, EDP: ExecutionDataProvider> BlockHashReader
     fn block_hash(&self, block_number: BlockNumber) -> ProviderResult<Option<B256>> {
         let block_hash = self.block_execution_data_provider.block_hash(block_number);
         if block_hash.is_some() {
-            return Ok(block_hash);
+            return Ok(block_hash)
         }
         self.state_provider.block_hash(block_number)
     }
@@ -148,21 +141,6 @@ impl<SP: StateProvider, EDP: ExecutionDataProvider> StateProofProvider
     }
 }
 
-impl<SP: StateProvider, EDP: ExecutionDataProvider> StateProofProvider
-    for BundleStateProvider<SP, EDP>
-{
-    fn proof(
-        &self,
-        bundle_state: &BundleState,
-        address: Address,
-        slots: &[B256],
-    ) -> ProviderResult<AccountProof> {
-        let mut state = self.block_execution_data_provider.execution_outcome().state().clone();
-        state.extend(bundle_state.clone());
-        self.state_provider.proof(&state, address, slots)
-    }
-}
-
 impl<SP: StateProvider, EDP: ExecutionDataProvider> StateProvider for BundleStateProvider<SP, EDP> {
     fn storage(
         &self,
@@ -175,7 +153,7 @@ impl<SP: StateProvider, EDP: ExecutionDataProvider> StateProvider for BundleStat
             .execution_outcome()
             .storage(&account, u256_storage_key)
         {
-            return Ok(Some(value));
+            return Ok(Some(value))
         }
 
         self.state_provider.storage(account, storage_key)
@@ -185,7 +163,7 @@ impl<SP: StateProvider, EDP: ExecutionDataProvider> StateProvider for BundleStat
         if let Some(bytecode) =
             self.block_execution_data_provider.execution_outcome().bytecode(&code_hash)
         {
-            return Ok(Some(bytecode));
+            return Ok(Some(bytecode))
         }
 
         self.state_provider.bytecode_by_hash(code_hash)

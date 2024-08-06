@@ -14,11 +14,7 @@ where
     Self: SpawnBlocking,
     Provider: BlockReaderIdExt + EvmEnvProvider + ChainSpecProvider + StateProviderFactory,
     Pool: TransactionPool,
-<<<<<<< HEAD
-    EvmConfig: reth_evm::ConfigureEvm,
-=======
     EvmConfig: ConfigureEvm,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 {
     #[inline]
     fn provider(

@@ -55,26 +55,18 @@ impl<DB: Database> SegmentSet<DB> {
         } = prune_modes;
 
         Self::default()
-<<<<<<< HEAD
-=======
             // Static file headers
             .segment(StaticFileHeaders::new(static_file_provider.clone()))
             // Static file transactions
             .segment(StaticFileTransactions::new(static_file_provider.clone()))
             // Static file receipts
             .segment(StaticFileReceipts::new(static_file_provider))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             // Account history
             .segment_opt(account_history.map(AccountHistory::new))
             // Storage history
             .segment_opt(storage_history.map(StorageHistory::new))
-<<<<<<< HEAD
-            // Receipts
-            .segment_opt(receipts.map(Receipts::new))
-=======
             // User receipts
             .segment_opt(receipts.map(UserReceipts::new))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             // Receipts by logs
             .segment_opt(
                 (!receipts_log_filter.is_empty())

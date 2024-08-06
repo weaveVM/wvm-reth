@@ -1,30 +1,6 @@
 //! Represents an established session.
 
-<<<<<<< HEAD
-use crate::{
-    message::{NewBlockMessage, PeerMessage, PeerRequest, PeerResponse, PeerResponseResult},
-    session::{
-        conn::EthRlpxConnection,
-        handle::{ActiveSessionMessage, SessionCommand},
-        SessionId,
-    },
-};
 use core::sync::atomic::Ordering;
-use futures::{stream::Fuse, SinkExt, StreamExt};
-use reth_eth_wire::{
-    capability::Capabilities,
-    errors::{EthHandshakeError, EthStreamError, P2PStreamError},
-    message::{EthBroadcastMessage, RequestPair},
-    DisconnectP2P, DisconnectReason, EthMessage,
-};
-use reth_metrics::common::mpsc::MeteredPollSender;
-use reth_network_p2p::error::RequestError;
-use reth_network_peers::PeerId;
-use reth_network_types::session::config::INITIAL_REQUEST_TIMEOUT;
-use rustc_hash::FxHashMap;
-=======
-use core::sync::atomic::Ordering;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     collections::VecDeque,
     future::Future,

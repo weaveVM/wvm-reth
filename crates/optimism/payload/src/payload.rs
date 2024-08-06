@@ -9,10 +9,7 @@ use reth_payload_builder::EthPayloadBuilderAttributes;
 use reth_payload_primitives::{BuiltPayload, PayloadBuilderAttributes};
 use reth_primitives::{
     revm_primitives::{BlobExcessGasAndPrice, BlockEnv, CfgEnv, CfgEnvWithHandlerCfg, SpecId},
-<<<<<<< HEAD
-=======
     transaction::WithEncoded,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     Address, BlobTransactionSidecar, Header, SealedBlock, TransactionSigned, Withdrawals, B256,
     U256,
 };

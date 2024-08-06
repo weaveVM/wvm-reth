@@ -220,25 +220,9 @@ pub struct ReceiptWithBlockNumber {
 
 #[cfg(test)]
 mod test {
-<<<<<<< HEAD
-    use reth_primitives::hex;
-    use reth_tracing::init_test_tracing;
-
-    use crate::file_codec_ovm_receipt::{
-        test::{
-            receipt_block_1 as op_mainnet_receipt_block_1,
-            receipt_block_2 as op_mainnet_receipt_block_2,
-            receipt_block_3 as op_mainnet_receipt_block_3,
-            HACK_RECEIPT_ENCODED_BLOCK_1 as HACK_RECEIPT_ENCODED_BLOCK_1_OP_MAINNET,
-            HACK_RECEIPT_ENCODED_BLOCK_2 as HACK_RECEIPT_ENCODED_BLOCK_2_OP_MAINNET,
-            HACK_RECEIPT_ENCODED_BLOCK_3 as HACK_RECEIPT_ENCODED_BLOCK_3_OP_MAINNET,
-        },
-        HackReceiptFileCodec,
-=======
     use crate::{
         file_client::{FileClientError, FromReader},
         receipt_file_client::{ReceiptFileClient, ReceiptWithBlockNumber},
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     };
     use alloy_rlp::{Decodable, RlpDecodable};
     use reth_primitives::{
@@ -597,11 +581,7 @@ mod test {
         let (
             ReceiptFileClient { receipts, first_block, total_receipts, _marker },
             _remaining_bytes,
-<<<<<<< HEAD
-        ) = ReceiptFileClient::<HackReceiptFileCodec>::from_reader(reader, encoded_byte_len)
-=======
         ) = ReceiptFileClient::<MockReceiptFileCodec>::from_reader(reader, encoded_byte_len)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             .await
             .unwrap();
 
@@ -633,11 +613,7 @@ mod test {
         let (
             ReceiptFileClient { receipts, first_block, total_receipts, _marker },
             _remaining_bytes,
-<<<<<<< HEAD
-        ) = ReceiptFileClient::<HackReceiptFileCodec>::from_reader(reader, encoded_byte_len)
-=======
         ) = ReceiptFileClient::<MockReceiptFileCodec>::from_reader(reader, encoded_byte_len)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             .await
             .unwrap();
 
@@ -670,11 +646,7 @@ mod test {
         let (
             ReceiptFileClient { receipts, first_block, total_receipts, _marker },
             _remaining_bytes,
-<<<<<<< HEAD
-        ) = ReceiptFileClient::<HackReceiptFileCodec>::from_reader(reader, encoded_byte_len)
-=======
         ) = ReceiptFileClient::<MockReceiptFileCodec>::from_reader(reader, encoded_byte_len)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             .await
             .unwrap();
 

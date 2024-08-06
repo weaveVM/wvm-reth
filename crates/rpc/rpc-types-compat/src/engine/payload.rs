@@ -19,11 +19,7 @@ pub fn try_payload_v1_to_block(payload: ExecutionPayloadV1) -> Result<Block, Pay
     }
 
     if payload.base_fee_per_gas.is_zero() {
-<<<<<<< HEAD
-        return Err(PayloadError::BaseFee(payload.base_fee_per_gas));
-=======
         return Err(PayloadError::BaseFee(payload.base_fee_per_gas))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     let transactions = payload
@@ -242,11 +238,7 @@ pub fn block_to_payload_v4(mut value: SealedBlock) -> ExecutionPayloadV4 {
         deposit_requests,
         withdrawal_requests,
         consolidation_requests,
-<<<<<<< HEAD
-        payload_inner: block_to_payload_v3(value).0,
-=======
         payload_inner: block_to_payload_v3(value),
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }
 

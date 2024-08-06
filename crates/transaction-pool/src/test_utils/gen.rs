@@ -3,12 +3,7 @@ use rand::Rng;
 use reth_chainspec::MAINNET;
 use reth_primitives::{
     constants::MIN_PROTOCOL_BASE_FEE, sign_message, AccessList, Address, Bytes, Transaction,
-<<<<<<< HEAD
-    TransactionSigned, TryFromRecoveredTransaction, TxEip1559, TxEip4844, TxKind, TxLegacy, B256,
-    U256,
-=======
     TransactionSigned, TxEip1559, TxEip4844, TxKind, TxLegacy, B256, U256,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 
 /// A generator for transactions for testing purposes.

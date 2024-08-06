@@ -3,11 +3,7 @@ use std::sync::Arc;
 use alloy_genesis::Genesis;
 use alloy_primitives::{b256, hex};
 use futures::StreamExt;
-<<<<<<< HEAD
-use reth::rpc::api::eth::helpers::EthTransactions;
-=======
 use reth::core::rpc::eth::helpers::EthTransactions;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_chainspec::ChainSpec;
 use reth_e2e_test_utils::setup;
 use reth_provider::CanonStateSubscriptions;

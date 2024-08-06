@@ -7,16 +7,8 @@ use crate::{
 use alloy_primitives::BlockNumber;
 use reth_db_api::database::Database;
 use reth_exex_types::FinishedExExHeight;
-<<<<<<< HEAD
-use reth_provider::{
-    DatabaseProviderRW, ProviderFactory, PruneCheckpointReader, StaticFileProviderFactory,
-};
-use reth_prune_types::{PruneLimiter, PruneMode, PruneProgress, PrunePurpose, PruneSegment};
-use reth_static_file_types::StaticFileSegment;
-=======
 use reth_provider::{DatabaseProviderRW, ProviderFactory, PruneCheckpointReader};
 use reth_prune_types::{PruneLimiter, PruneProgress, PruneSegment, PrunerOutput};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_tokio_util::{EventSender, EventStream};
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
@@ -107,18 +99,6 @@ impl<DB: Database, S> Pruner<DB, S> {
         self.event_sender.new_listener()
     }
 
-<<<<<<< HEAD
-    /// Run the pruner. This will only prune data up to the highest finished `ExEx` height, if there
-    /// are no `ExEx`s, .
-    ///
-    /// Returns a [`PruneProgress`], indicating whether pruning is finished, or there is more data
-    /// to prune.
-    pub fn run(&mut self, tip_block_number: BlockNumber) -> PrunerResult {
-        let Some(tip_block_number) =
-            self.adjust_tip_block_number_to_finished_exex_height(tip_block_number)
-        else {
-            return Ok(PruneProgress::Finished);
-=======
     fn run_with_provider(
         &mut self,
         provider: &DatabaseProviderRW<DB>,
@@ -128,17 +108,12 @@ impl<DB: Database, S> Pruner<DB, S> {
             self.adjust_tip_block_number_to_finished_exex_height(tip_block_number)
         else {
             return Ok(PruneProgress::Finished.into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         };
         if tip_block_number == 0 {
             self.previous_tip_block_number = Some(tip_block_number);
 
             debug!(target: "pruner", %tip_block_number, "Nothing to prune yet");
-<<<<<<< HEAD
-            return Ok(PruneProgress::Finished);
-=======
             return Ok(PruneProgress::Finished.into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         self.event_sender.notify(PrunerEvent::Started { tip_block_number });
@@ -256,17 +231,10 @@ impl<DB: Database, S> Pruner<DB, S> {
                     "Segment pruning finished"
                 );
 
-<<<<<<< HEAD
-                if output.pruned > 0 {
-                    limiter.increment_deleted_entries_count_by(output.pruned);
-                    pruned += output.pruned;
-                    stats.push((segment.segment(), output.pruned, output.progress));
-=======
                 if segment_output.pruned > 0 {
                     limiter.increment_deleted_entries_count_by(segment_output.pruned);
                     pruned += segment_output.pruned;
                     stats.push((segment.segment(), segment_output.pruned, segment_output.progress));
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 }
             } else {
                 debug!(target: "pruner", segment = ?segment.segment(), purpose = ?segment.purpose(), "Nothing to prune for the segment");
@@ -362,15 +330,8 @@ impl<DB: Database> Pruner<DB, ProviderFactory<DB>> {
 #[cfg(test)]
 mod tests {
     use crate::Pruner;
-<<<<<<< HEAD
-    use reth_chainspec::MAINNET;
-    use reth_db::test_utils::{create_test_rw_db, create_test_static_files_dir};
-    use reth_exex_types::FinishedExExHeight;
-    use reth_provider::{providers::StaticFileProvider, ProviderFactory};
-=======
     use reth_exex_types::FinishedExExHeight;
     use reth_provider::{test_utils::create_test_provider_factory, ProviderFactory};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
     #[test]
     fn is_pruning_needed() {

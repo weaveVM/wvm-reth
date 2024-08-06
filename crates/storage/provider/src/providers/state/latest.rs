@@ -10,14 +10,6 @@ use reth_db_api::{
     transaction::DbTx,
 };
 use reth_primitives::{
-<<<<<<< HEAD
-    Account, Address, BlockNumber, Bytecode, StaticFileSegment, StorageKey, StorageValue, B256,
-};
-use reth_storage_api::StateProofProvider;
-use reth_storage_errors::provider::{ProviderError, ProviderResult};
-use reth_trie::{updates::TrieUpdates, AccountProof, HashedPostState};
-use revm::db::BundleState;
-=======
     Account, Address, BlockNumber, Bytecode, Bytes, StaticFileSegment, StorageKey, StorageValue,
     B256,
 };
@@ -28,7 +20,6 @@ use reth_trie::{
     HashedStorage, StateRoot, StorageRoot,
 };
 use reth_trie_db::{DatabaseProof, DatabaseStateRoot, DatabaseStorageRoot, DatabaseTrieWitness};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// State provider over latest state that takes tx reference.
 #[derive(Debug)]
@@ -133,19 +124,6 @@ impl<'b, TX: DbTx> StateProofProvider for LatestStateProviderRef<'b, TX> {
     }
 }
 
-impl<'b, TX: DbTx> StateProofProvider for LatestStateProviderRef<'b, TX> {
-    fn proof(
-        &self,
-        bundle_state: &BundleState,
-        address: Address,
-        slots: &[B256],
-    ) -> ProviderResult<AccountProof> {
-        Ok(HashedPostState::from_bundle_state(&bundle_state.state)
-            .account_proof(self.tx, address, slots)
-            .map_err(Into::<reth_db::DatabaseError>::into)?)
-    }
-}
-
 impl<'b, TX: DbTx> StateProvider for LatestStateProviderRef<'b, TX> {
     /// Get storage.
     fn storage(
@@ -156,7 +134,7 @@ impl<'b, TX: DbTx> StateProvider for LatestStateProviderRef<'b, TX> {
         let mut cursor = self.tx.cursor_dup_read::<tables::PlainStorageState>()?;
         if let Some(entry) = cursor.seek_by_key_subkey(account, storage_key)? {
             if entry.key == storage_key {
-                return Ok(Some(entry.value));
+                return Ok(Some(entry.value))
             }
         }
         Ok(None)

@@ -72,8 +72,6 @@ impl<DB> NodeState<DB> {
 
     fn num_connected_peers(&self) -> usize {
         self.peers_info.as_ref().map(|info| info.num_connected_peers()).unwrap_or_default()
-<<<<<<< HEAD
-=======
     }
 
     fn build_current_stage(
@@ -92,7 +90,6 @@ impl<DB> NodeState<DB> {
             );
 
         CurrentStage { stage_id, eta, checkpoint, entities_checkpoint, target }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Processes an event emitted by the pipeline

@@ -1,13 +1,8 @@
 use alloy_primitives::{Address, BlockNumber, B256};
 use bytes::Buf;
-<<<<<<< HEAD
-use reth_codecs::{main_codec, Compact};
-use reth_trie_common::{hash_builder::HashBuilderState, StoredSubNode};
-=======
 use reth_codecs::{reth_codec, Compact};
 use reth_trie_common::{hash_builder::HashBuilderState, StoredSubNode};
 use serde::{Deserialize, Serialize};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::ops::RangeInclusive;
 
 use super::StageId;

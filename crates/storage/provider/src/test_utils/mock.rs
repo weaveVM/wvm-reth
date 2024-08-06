@@ -15,21 +15,11 @@ use reth_primitives::{
     SealedHeader, StorageKey, StorageValue, TransactionMeta, TransactionSigned,
     TransactionSignedNoHash, TxHash, TxNumber, Withdrawal, Withdrawals, B256, U256,
 };
-<<<<<<< HEAD
-use reth_storage_api::StateProofProvider;
-use reth_storage_errors::provider::{ProviderError, ProviderResult};
-use reth_trie::{updates::TrieUpdates, AccountProof};
-use revm::{
-    db::BundleState,
-    primitives::{BlockEnv, CfgEnvWithHandlerCfg},
-};
-=======
 use reth_stages_types::{StageCheckpoint, StageId};
 use reth_storage_api::{StageCheckpointReader, StateProofProvider};
 use reth_storage_errors::provider::{ProviderError, ProviderResult};
 use reth_trie::{updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage};
 use revm::primitives::{BlockEnv, CfgEnvWithHandlerCfg};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     collections::{BTreeMap, HashMap},
     ops::{RangeBounds, RangeInclusive},
@@ -58,10 +48,7 @@ impl Default for MockEthProvider {
             headers: Default::default(),
             accounts: Default::default(),
             chain_spec: Arc::new(reth_chainspec::ChainSpecBuilder::mainnet().build()),
-<<<<<<< HEAD
-=======
             state_roots: Default::default(),
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
     }
 }
@@ -269,7 +256,7 @@ impl TransactionsProvider for MockEthProvider {
                         excess_blob_gas: block.header.excess_blob_gas,
                         timestamp: block.header.timestamp,
                     };
-                    return Ok(Some((tx.clone(), meta)));
+                    return Ok(Some((tx.clone(), meta)))
                 }
             }
         }
@@ -281,7 +268,7 @@ impl TransactionsProvider for MockEthProvider {
         let mut current_tx_number: TxNumber = 0;
         for block in lock.values() {
             if current_tx_number + (block.body.len() as TxNumber) > id {
-                return Ok(Some(block.header.number));
+                return Ok(Some(block.header.number))
             }
             current_tx_number += block.body.len() as TxNumber;
         }
@@ -613,17 +600,6 @@ impl StateProofProvider for MockEthProvider {
         _target: HashedPostState,
     ) -> ProviderResult<HashMap<B256, Bytes>> {
         Ok(HashMap::default())
-    }
-}
-
-impl StateProofProvider for MockEthProvider {
-    fn proof(
-        &self,
-        _state: &BundleState,
-        address: Address,
-        _slots: &[B256],
-    ) -> ProviderResult<AccountProof> {
-        Ok(AccountProof::new(address))
     }
 }
 

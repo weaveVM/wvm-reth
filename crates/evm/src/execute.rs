@@ -1,19 +1,6 @@
 //! Traits for execution.
 
-<<<<<<< HEAD
-use reth_execution_types::ExecutionOutcome;
-use reth_primitives::{BlockNumber, BlockWithSenders, Receipt, Request, U256};
-use reth_prune_types::PruneModes;
-use revm::db::BundleState;
-use revm_primitives::db::Database;
-use std::fmt::Display;
-
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
-=======
 // Re-export execution types
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 pub use reth_execution_errors::{BlockExecutionError, BlockValidationError};
 pub use reth_execution_types::{BlockExecutionInput, BlockExecutionOutput, ExecutionOutcome};
 pub use reth_storage_errors::provider::ProviderError;
@@ -107,48 +94,6 @@ pub trait BatchExecutor<DB> {
     fn size_hint(&self) -> Option<usize>;
 }
 
-<<<<<<< HEAD
-/// The output of an ethereum block.
-///
-/// Contains the state changes, transaction receipts, and total gas used in the block.
-///
-/// TODO(mattsse): combine with `ExecutionOutcome`
-#[derive(Debug, PartialEq, Eq)]
-pub struct BlockExecutionOutput<T> {
-    /// The changed state of the block after execution.
-    pub state: BundleState,
-    /// All the receipts of the transactions in the block.
-    pub receipts: Vec<T>,
-    /// All the EIP-7685 requests of the transactions in the block.
-    pub requests: Vec<Request>,
-    /// The total gas used by the block.
-    pub gas_used: u64,
-}
-
-/// A helper type for ethereum block inputs that consists of a block and the total difficulty.
-#[derive(Debug)]
-pub struct BlockExecutionInput<'a, Block> {
-    /// The block to execute.
-    pub block: &'a Block,
-    /// The total difficulty of the block.
-    pub total_difficulty: U256,
-}
-
-impl<'a, Block> BlockExecutionInput<'a, Block> {
-    /// Creates a new input.
-    pub const fn new(block: &'a Block, total_difficulty: U256) -> Self {
-        Self { block, total_difficulty }
-    }
-}
-
-impl<'a, Block> From<(&'a Block, U256)> for BlockExecutionInput<'a, Block> {
-    fn from((block, total_difficulty): (&'a Block, U256)) -> Self {
-        Self::new(block, total_difficulty)
-    }
-}
-
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// A type that can create a new executor for block execution.
 pub trait BlockExecutorProvider: Send + Sync + Clone + Unpin + 'static {
     /// An executor that can execute a single block given a database.

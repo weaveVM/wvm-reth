@@ -1,30 +1,12 @@
-<<<<<<< HEAD
-use std::sync::Arc;
-
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use alloy_rlp::{Decodable, Encodable};
 use async_trait::async_trait;
 use jsonrpsee::core::RpcResult;
 use reth_chainspec::EthereumHardforks;
-<<<<<<< HEAD
-use reth_evm::ConfigureEvmEnv;
-=======
 use reth_evm::{system_calls::pre_block_beacon_root_contract_call, ConfigureEvmEnv};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_primitives::{
     Address, Block, BlockId, BlockNumberOrTag, Bytes, TransactionSignedEcRecovered, B256, U256,
 };
 use reth_provider::{
-<<<<<<< HEAD
-    BlockReaderIdExt, ChainSpecProvider, EvmEnvProvider, HeaderProvider, StateProviderFactory,
-    TransactionVariant,
-};
-use reth_revm::database::StateProviderDatabase;
-use reth_rpc_api::DebugApiServer;
-use reth_rpc_eth_api::helpers::{Call, EthApiSpec, EthTransactions, TraceExt};
-use reth_rpc_eth_types::{revm_utils::prepare_call_env, EthApiError, EthResult, StateCacheDb};
-=======
     BlockReaderIdExt, ChainSpecProvider, EvmEnvProvider, HeaderProvider, StateProofProvider,
     StateProviderFactory, TransactionVariant,
 };
@@ -35,7 +17,6 @@ use reth_rpc_eth_api::{
     EthApiTypes, FromEthApiError,
 };
 use reth_rpc_eth_types::{EthApiError, StateCacheDb};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_rpc_server_types::{result::internal_rpc_err, ToRpcResult};
 use reth_rpc_types::{
     state::EvmOverrides,
@@ -56,11 +37,8 @@ use revm_inspectors::tracing::{
     js::{JsInspector, TransactionContext},
     FourByteInspector, MuxInspector, TracingInspector, TracingInspectorConfig,
 };
-<<<<<<< HEAD
-=======
 use revm_primitives::{keccak256, HashMap};
 use std::sync::Arc;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use tokio::sync::{AcquireError, OwnedSemaphorePermit};
 
 /// `debug` API implementation.
@@ -95,11 +73,7 @@ where
         + StateProviderFactory
         + EvmEnvProvider
         + 'static,
-<<<<<<< HEAD
-    Eth: TraceExt + 'static,
-=======
     Eth: EthApiTypes + TraceExt + 'static,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 {
     /// Acquires a permit to execute a tracing call.
     async fn acquire_trace_permit(&self) -> Result<OwnedSemaphorePermit, AcquireError> {
@@ -366,25 +340,6 @@ where
                             TracingInspectorConfig::from_geth_prestate_config(&prestate_config),
                         );
 
-<<<<<<< HEAD
-                        let frame =
-                            self.inner
-                                .eth_api
-                                .spawn_with_call_at(call, at, overrides, move |db, env| {
-                                    // wrapper is hack to get around 'higher-ranked lifetime error',
-                                    // see <https://github.com/rust-lang/rust/issues/100013>
-                                    let db = db.0;
-
-                                    let (res, _) =
-                                        this.eth_api().inspect(&mut *db, env, &mut inspector)?;
-                                    let frame = inspector
-                                        .into_geth_builder()
-                                        .geth_prestate_traces(&res, prestate_config, db)?;
-                                    Ok(frame)
-                                })
-                                .await?;
-                        return Ok(frame.into());
-=======
                         let frame = self
                             .inner
                             .eth_api
@@ -404,7 +359,6 @@ where
                             })
                             .await?;
                         return Ok(frame.into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                     }
                     GethDebugBuiltInTracerType::NoopTracer => Ok(NoopFrame::default().into()),
                     GethDebugBuiltInTracerType::MuxTracer => {
@@ -447,12 +401,8 @@ where
                             // <https://github.com/rust-lang/rust/issues/100013>
                             let db = db.0;
 
-<<<<<<< HEAD
-                            let mut inspector = JsInspector::new(code, config)?;
-=======
                             let mut inspector =
                                 JsInspector::new(code, config).map_err(Eth::Error::from_eth_err)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                             let (res, _) =
                                 this.eth_api().inspect(&mut *db, env.clone(), &mut inspector)?;
                             inspector.json_result(res, &env, db).map_err(Eth::Error::from_eth_err)
@@ -497,11 +447,7 @@ where
         opts: Option<GethDebugTracingCallOptions>,
     ) -> Result<Vec<Vec<GethTrace>>, Eth::Error> {
         if bundles.is_empty() {
-<<<<<<< HEAD
-            return Err(EthApiError::InvalidParams(String::from("bundles are empty.")));
-=======
             return Err(EthApiError::InvalidParams(String::from("bundles are empty.")).into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         let StateContext { transaction_index, block_number } = state_context.unwrap_or_default();
@@ -776,15 +722,10 @@ where
                             .map_err(Eth::Error::from_eth_err)?;
 
                         let (res, _) = self.eth_api().inspect(&mut *db, env, &mut inspector)?;
-<<<<<<< HEAD
-                        let frame = inspector.try_into_mux_frame(&res, db)?;
-                        return Ok((frame.into(), res.state));
-=======
                         let frame = inspector
                             .try_into_mux_frame(&res, db)
                             .map_err(Eth::Error::from_eth_err)?;
                         return Ok((frame.into(), res.state))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                     }
                 },
                 GethDebugTracerType::JsTracer(code) => {

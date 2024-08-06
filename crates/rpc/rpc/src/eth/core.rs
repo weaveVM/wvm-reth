@@ -1,26 +1,6 @@
 //! Implementation of the [`jsonrpsee`] generated [`EthApiServer`](crate::EthApi) trait
 //! Handles RPC requests for the `eth_` namespace.
 
-<<<<<<< HEAD
-use futures::Future;
-use std::sync::Arc;
-
-use derive_more::Deref;
-use reth_primitives::{BlockNumberOrTag, U256};
-use reth_provider::BlockReaderIdExt;
-use reth_rpc_eth_api::{
-    helpers::{transaction::UpdateRawTxForwarder, EthSigner, SpawnBlocking},
-    RawTransactionForwarder,
-};
-use reth_rpc_eth_types::{EthStateCache, FeeHistoryCache, GasCap, GasPriceOracle, PendingBlock};
-use reth_tasks::{
-    pool::{BlockingTaskGuard, BlockingTaskPool},
-    TaskSpawner, TokioTaskExecutor,
-};
-use tokio::sync::{AcquireError, Mutex, OwnedSemaphorePermit};
-
-use crate::eth::DevSigner;
-=======
 use std::sync::Arc;
 
 use derive_more::Deref;
@@ -40,7 +20,6 @@ use reth_tasks::{
     TaskExecutor, TaskSpawner, TokioTaskExecutor,
 };
 use tokio::sync::Mutex;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// `Eth` API implementation.
 ///
@@ -77,72 +56,12 @@ where
         raw_transaction_forwarder: Option<Arc<dyn RawTransactionForwarder>>,
         proof_permits: usize,
     ) -> Self {
-<<<<<<< HEAD
-        Self::with_spawner(
-=======
         let inner = EthApiInner::new(
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             provider,
             pool,
             network,
             eth_cache,
             gas_oracle,
-<<<<<<< HEAD
-            gas_cap.into().into(),
-            eth_proof_window,
-            Box::<TokioTaskExecutor>::default(),
-            blocking_task_pool,
-            fee_history_cache,
-            evm_config,
-            raw_transaction_forwarder,
-            proof_permits,
-        )
-    }
-
-    /// Creates a new, shareable instance.
-    #[allow(clippy::too_many_arguments)]
-    pub fn with_spawner(
-        provider: Provider,
-        pool: Pool,
-        network: Network,
-        eth_cache: EthStateCache,
-        gas_oracle: GasPriceOracle<Provider>,
-        gas_cap: u64,
-        eth_proof_window: u64,
-        task_spawner: Box<dyn TaskSpawner>,
-        blocking_task_pool: BlockingTaskPool,
-        fee_history_cache: FeeHistoryCache,
-        evm_config: EvmConfig,
-        raw_transaction_forwarder: Option<Arc<dyn RawTransactionForwarder>>,
-        proof_permits: usize,
-    ) -> Self {
-        // get the block number of the latest block
-        let latest_block = provider
-            .header_by_number_or_tag(BlockNumberOrTag::Latest)
-            .ok()
-            .flatten()
-            .map(|header| header.number)
-            .unwrap_or_default();
-
-        let inner = EthApiInner {
-            provider,
-            pool,
-            network,
-            signers: parking_lot::RwLock::new(Default::default()),
-            eth_cache,
-            gas_oracle,
-            gas_cap,
-            eth_proof_window,
-            starting_block: U256::from(latest_block),
-            task_spawner,
-            pending_block: Default::default(),
-            blocking_task_pool,
-            fee_history_cache,
-            evm_config,
-            raw_transaction_forwarder: parking_lot::RwLock::new(raw_transaction_forwarder),
-            blocking_task_guard: BlockingTaskGuard::new(proof_permits),
-        };
-=======
             gas_cap,
             eth_proof_window,
             blocking_task_pool,
@@ -152,14 +71,11 @@ where
             raw_transaction_forwarder,
             proof_permits,
         );
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         Self { inner: Arc::new(inner) }
     }
 }
 
-<<<<<<< HEAD
-=======
 impl<Provider, Pool, EvmConfig, Network> EthApi<Provider, Pool, Network, EvmConfig>
 where
     Provider: ChainSpecProvider + BlockReaderIdExt + Clone + 'static,
@@ -205,7 +121,6 @@ where
     type Error = EthApiError;
 }
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 impl<Provider, Pool, Network, EvmConfig> std::fmt::Debug
     for EthApi<Provider, Pool, Network, EvmConfig>
 {
@@ -226,41 +141,11 @@ where
     Self: Clone + Send + Sync + 'static,
 {
     #[inline]
-<<<<<<< HEAD
-    fn io_task_spawner(&self) -> impl reth_tasks::TaskSpawner {
-=======
     fn io_task_spawner(&self) -> impl TaskSpawner {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         self.inner.task_spawner()
     }
 
     #[inline]
-<<<<<<< HEAD
-    fn tracing_task_pool(&self) -> &reth_tasks::pool::BlockingTaskPool {
-        self.inner.blocking_task_pool()
-    }
-
-    fn acquire_owned(
-        &self,
-    ) -> impl Future<Output = Result<OwnedSemaphorePermit, AcquireError>> + Send {
-        self.blocking_task_guard.clone().acquire_owned()
-    }
-
-    fn acquire_many_owned(
-        &self,
-        n: u32,
-    ) -> impl Future<Output = Result<OwnedSemaphorePermit, AcquireError>> + Send {
-        self.blocking_task_guard.clone().acquire_many_owned(n)
-    }
-}
-
-impl<Provider, Pool, Network, EvmConfig> EthApi<Provider, Pool, Network, EvmConfig> {
-    /// Generates 20 random developer accounts.
-    /// Used in DEV mode.
-    pub fn with_dev_accounts(&self) {
-        let mut signers = self.inner.signers.write();
-        *signers = DevSigner::random_signers(20);
-=======
     fn tracing_task_pool(&self) -> &BlockingTaskPool {
         self.inner.blocking_task_pool()
     }
@@ -281,7 +166,6 @@ where
 
     fn builder() -> Box<dyn for<'a> Fn(Self::Ctx<'a>) -> Self + Send> {
         Box::new(|ctx| Self::with_spawner(ctx))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }
 
@@ -322,8 +206,6 @@ pub struct EthApiInner<Provider, Pool, Network, EvmConfig> {
     blocking_task_guard: BlockingTaskGuard,
 }
 
-<<<<<<< HEAD
-=======
 impl<Provider, Pool, Network, EvmConfig> EthApiInner<Provider, Pool, Network, EvmConfig>
 where
     Provider: BlockReaderIdExt,
@@ -377,7 +259,6 @@ where
     }
 }
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 impl<Provider, Pool, Network, EvmConfig> EthApiInner<Provider, Pool, Network, EvmConfig> {
     /// Returns a handle to data on disk.
     #[inline]
@@ -468,15 +349,12 @@ impl<Provider, Pool, Network, EvmConfig> EthApiInner<Provider, Pool, Network, Ev
     pub const fn eth_proof_window(&self) -> u64 {
         self.eth_proof_window
     }
-<<<<<<< HEAD
-=======
 
     /// Returns reference to [`BlockingTaskGuard`].
     #[inline]
     pub const fn blocking_task_guard(&self) -> &BlockingTaskGuard {
         &self.blocking_task_guard
     }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 impl<Provider, Pool, Network, EvmConfig> UpdateRawTxForwarder
@@ -493,14 +371,7 @@ mod tests {
     use reth_chainspec::BaseFeeParams;
     use reth_evm_ethereum::EthEvmConfig;
     use reth_network_api::noop::NoopNetwork;
-<<<<<<< HEAD
-    use reth_primitives::{
-        constants::ETHEREUM_BLOCK_GAS_LIMIT, Block, BlockNumberOrTag, Header, TransactionSigned,
-        B256, U64,
-    };
-=======
     use reth_primitives::{Block, BlockNumberOrTag, Header, TransactionSigned, B256, U64};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     use reth_provider::{
         test_utils::{MockEthProvider, NoopProvider},
         BlockReader, BlockReaderIdExt, ChainSpecProvider, EvmEnvProvider, StateProviderFactory,
@@ -534,21 +405,14 @@ mod tests {
         let fee_history_cache =
             FeeHistoryCache::new(cache.clone(), FeeHistoryCacheConfig::default());
 
-<<<<<<< HEAD
-=======
         let gas_cap = provider.chain_spec().max_gas_limit;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         EthApi::new(
             provider.clone(),
             testing_pool(),
             NoopNetwork::default(),
             cache.clone(),
             GasPriceOracle::new(provider, Default::default(), cache),
-<<<<<<< HEAD
-            ETHEREUM_BLOCK_GAS_LIMIT,
-=======
             gas_cap,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             DEFAULT_ETH_PROOF_WINDOW,
             BlockingTaskPool::build().expect("failed to build tracing pool"),
             fee_history_cache,

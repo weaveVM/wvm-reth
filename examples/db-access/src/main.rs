@@ -1,8 +1,4 @@
 use reth_chainspec::ChainSpecBuilder;
-<<<<<<< HEAD
-use reth_db::open_db_read_only;
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_primitives::{Address, B256};
 use reth_provider::{
     providers::StaticFileProvider, AccountReader, BlockReader, BlockSource, HeaderProvider,

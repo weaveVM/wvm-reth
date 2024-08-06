@@ -10,10 +10,7 @@ use reth_primitives::{
     PooledTransactionsElement, U256,
 };
 use reth_revm::database::StateProviderDatabase;
-<<<<<<< HEAD
-=======
 use reth_rpc_eth_api::{FromEthApiError, FromEvmError};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_rpc_types::mev::{EthCallBundle, EthCallBundleResponse, EthCallBundleTransactionResult};
 use reth_tasks::pool::BlockingTaskGuard;
 use revm::{
@@ -27,13 +24,7 @@ use reth_rpc_eth_api::{
     helpers::{Call, EthTransactions, LoadPendingBlock},
     EthCallBundleApiServer,
 };
-<<<<<<< HEAD
-use reth_rpc_eth_types::{
-    utils::recover_raw_transaction, EthApiError, EthResult, RpcInvalidTransactionError,
-};
-=======
 use reth_rpc_eth_types::{utils::recover_raw_transaction, EthApiError, RpcInvalidTransactionError};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// `Eth` bundle implementation.
 pub struct EthBundle<Eth> {
@@ -56,14 +47,10 @@ where
     /// another (or the same) block. This can be used to simulate future blocks with the current
     /// state, or it can be used to simulate a past block. The sender is responsible for signing the
     /// transactions and using the correct nonce and ensuring validity
-<<<<<<< HEAD
-    pub async fn call_bundle(&self, bundle: EthCallBundle) -> EthResult<EthCallBundleResponse> {
-=======
     pub async fn call_bundle(
         &self,
         bundle: EthCallBundle,
     ) -> Result<EthCallBundleResponse, Eth::Error> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         let EthCallBundle {
             txs,
             block_number,
@@ -76,22 +63,14 @@ where
         if txs.is_empty() {
             return Err(EthApiError::InvalidParams(
                 EthBundleError::EmptyBundleTransactions.to_string(),
-<<<<<<< HEAD
-            ));
-=======
             )
             .into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
         if block_number == 0 {
             return Err(EthApiError::InvalidParams(
                 EthBundleError::BundleMissingBlockNumber.to_string(),
-<<<<<<< HEAD
-            ));
-=======
             )
             .into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         let transactions = txs
@@ -118,12 +97,8 @@ where
         {
             return Err(EthApiError::InvalidParams(
                 EthBundleError::Eip4844BlobGasExceeded.to_string(),
-<<<<<<< HEAD
-            ));
-=======
             )
             .into())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         let block_id: reth_rpc_types::BlockId = state_block_number.into();
@@ -222,14 +197,9 @@ where
                     // Verify that the given blob data, commitments, and proofs are all valid for
                     // this transaction.
                     if let PooledTransactionsElement::BlobTransaction(ref tx) = tx {
-<<<<<<< HEAD
-                        tx.validate(EnvKzgSettings::Default.get())
-                            .map_err(|e| EthApiError::InvalidParams(e.to_string()))?;
-=======
                         tx.validate(EnvKzgSettings::Default.get()).map_err(|e| {
                             Eth::Error::from_eth_err(EthApiError::InvalidParams(e.to_string()))
                         })?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                     }
 
                     let tx = tx.into_transaction();
@@ -237,17 +207,11 @@ where
                     hash_bytes.extend_from_slice(tx.hash().as_slice());
                     let gas_price = tx
                         .effective_tip_per_gas(basefee)
-<<<<<<< HEAD
-                        .ok_or_else(|| RpcInvalidTransactionError::FeeCapTooLow)?;
-                    Call::evm_config(&eth_api).fill_tx_env(evm.tx_mut(), &tx, signer);
-                    let ResultAndState { result, state } = evm.transact()?;
-=======
                         .ok_or_else(|| RpcInvalidTransactionError::FeeCapTooLow)
                         .map_err(Eth::Error::from_eth_err)?;
                     Call::evm_config(&eth_api).fill_tx_env(evm.tx_mut(), &tx, signer);
                     let ResultAndState { result, state } =
                         evm.transact().map_err(Eth::Error::from_evm_err)?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
                     let gas_used = result.gas_used();
                     total_gas_used += gas_used;

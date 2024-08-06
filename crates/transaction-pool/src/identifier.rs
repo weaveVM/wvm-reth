@@ -90,16 +90,8 @@ impl TransactionId {
     /// This returns `transaction_nonce - 1` if `transaction_nonce` is higher than the
     /// `on_chain_nonce`
     pub fn ancestor(transaction_nonce: u64, on_chain_nonce: u64, sender: SenderId) -> Option<Self> {
-<<<<<<< HEAD
-        if transaction_nonce == on_chain_nonce {
-            return None;
-        }
-        let prev_nonce = transaction_nonce.saturating_sub(1);
-        (on_chain_nonce <= prev_nonce).then(|| Self::new(sender, prev_nonce))
-=======
         (transaction_nonce > on_chain_nonce)
             .then(|| Self::new(sender, transaction_nonce.saturating_sub(1)))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Returns the [`TransactionId`] that would come before this transaction.

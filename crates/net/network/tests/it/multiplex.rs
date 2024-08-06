@@ -18,14 +18,6 @@ use reth_network::{
 use reth_network_api::{Direction, PeerId};
 use reth_primitives::BytesMut;
 use reth_provider::test_utils::MockEthProvider;
-<<<<<<< HEAD
-use std::{
-    net::SocketAddr,
-    pin::Pin,
-    task::{ready, Context, Poll},
-};
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use tokio::sync::{mpsc, oneshot};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 

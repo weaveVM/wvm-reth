@@ -1,36 +1,18 @@
 //! utilities for working with revm
 
-<<<<<<< HEAD
-use std::cmp::min;
-
-use reth_primitives::{Address, TxKind, B256, U256};
-use reth_rpc_types::{
-    state::{AccountOverride, EvmOverrides, StateOverride},
-    BlockOverrides, TransactionRequest,
-=======
 use reth_primitives::{Address, B256, U256};
 use reth_rpc_types::{
     state::{AccountOverride, StateOverride},
     BlockOverrides,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use revm::{
     db::CacheDB,
     precompile::{PrecompileSpecId, Precompiles},
-<<<<<<< HEAD
-    primitives::{
-        db::DatabaseRef, BlockEnv, Bytecode, CfgEnvWithHandlerCfg, EnvWithHandlerCfg, SpecId, TxEnv,
-    },
-    Database,
-};
-use tracing::trace;
-=======
     primitives::{db::DatabaseRef, Bytecode, SpecId, TxEnv},
     Database,
 };
 use revm_primitives::BlockEnv;
 use std::cmp::min;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 use super::{EthApiError, EthResult, RpcInvalidTransactionError};
 
@@ -41,158 +23,6 @@ pub fn get_precompiles(spec_id: SpecId) -> impl IntoIterator<Item = Address> {
     Precompiles::new(spec).addresses().copied().map(Address::from)
 }
 
-<<<<<<< HEAD
-/// Prepares the [`EnvWithHandlerCfg`] for execution.
-///
-/// Does not commit any changes to the underlying database.
-///
-/// EVM settings:
-///  - `disable_block_gas_limit` is set to `true`
-///  - `disable_eip3607` is set to `true`
-///  - `disable_base_fee` is set to `true`
-///  - `nonce` is set to `None`
-pub fn prepare_call_env<DB>(
-    mut cfg: CfgEnvWithHandlerCfg,
-    mut block: BlockEnv,
-    request: TransactionRequest,
-    gas_limit: u64,
-    db: &mut CacheDB<DB>,
-    overrides: EvmOverrides,
-) -> EthResult<EnvWithHandlerCfg>
-where
-    DB: DatabaseRef,
-    EthApiError: From<<DB as DatabaseRef>::Error>,
-{
-    // we want to disable this in eth_call, since this is common practice used by other node
-    // impls and providers <https://github.com/foundry-rs/foundry/issues/4388>
-    cfg.disable_block_gas_limit = true;
-
-    // Disabled because eth_call is sometimes used with eoa senders
-    // See <https://github.com/paradigmxyz/reth/issues/1959>
-    cfg.disable_eip3607 = true;
-
-    // The basefee should be ignored for eth_call
-    // See:
-    // <https://github.com/ethereum/go-ethereum/blob/ee8e83fa5f6cb261dad2ed0a7bbcde4930c41e6c/internal/ethapi/api.go#L985>
-    cfg.disable_base_fee = true;
-
-    // apply block overrides, we need to apply them first so that they take effect when we we create
-    // the evm env via `build_call_evm_env`, e.g. basefee
-    if let Some(mut block_overrides) = overrides.block {
-        if let Some(block_hashes) = block_overrides.block_hash.take() {
-            // override block hashes
-            db.block_hashes
-                .extend(block_hashes.into_iter().map(|(num, hash)| (U256::from(num), hash)))
-        }
-        apply_block_overrides(*block_overrides, &mut block);
-    }
-
-    let request_gas = request.gas;
-    let mut env = build_call_evm_env(cfg, block, request)?;
-    // set nonce to None so that the next nonce is used when transacting the call
-    env.tx.nonce = None;
-
-    // apply state overrides
-    if let Some(state_overrides) = overrides.state {
-        apply_state_overrides(state_overrides, db)?;
-    }
-
-    if request_gas.is_none() {
-        // No gas limit was provided in the request, so we need to cap the transaction gas limit
-        if env.tx.gas_price > U256::ZERO {
-            // If gas price is specified, cap transaction gas limit with caller allowance
-            trace!(target: "rpc::eth::call", ?env, "Applying gas limit cap with caller allowance");
-            cap_tx_gas_limit_with_caller_allowance(db, &mut env.tx)?;
-        } else {
-            // If no gas price is specified, use maximum allowed gas limit. The reason for this is
-            // that both Erigon and Geth use pre-configured gas cap even if it's possible
-            // to derive the gas limit from the block:
-            // <https://github.com/ledgerwatch/erigon/blob/eae2d9a79cb70dbe30b3a6b79c436872e4605458/cmd/rpcdaemon/commands/trace_adhoc.go#L956
-            // https://github.com/ledgerwatch/erigon/blob/eae2d9a79cb70dbe30b3a6b79c436872e4605458/eth/ethconfig/config.go#L94>
-            trace!(target: "rpc::eth::call", ?env, "Applying gas limit cap as the maximum gas limit");
-            env.tx.gas_limit = gas_limit;
-        }
-    }
-
-    Ok(env)
-}
-
-/// Creates a new [`EnvWithHandlerCfg`] to be used for executing the [`TransactionRequest`] in
-/// `eth_call`.
-///
-/// Note: this does _not_ access the Database to check the sender.
-pub fn build_call_evm_env(
-    cfg: CfgEnvWithHandlerCfg,
-    block: BlockEnv,
-    request: TransactionRequest,
-) -> EthResult<EnvWithHandlerCfg> {
-    let tx = create_txn_env(&block, request)?;
-    Ok(EnvWithHandlerCfg::new_with_cfg_env(cfg, block, tx))
-}
-
-/// Configures a new [`TxEnv`]  for the [`TransactionRequest`]
-///
-/// All [`TxEnv`] fields are derived from the given [`TransactionRequest`], if fields are `None`,
-/// they fall back to the [`BlockEnv`]'s settings.
-pub fn create_txn_env(block_env: &BlockEnv, request: TransactionRequest) -> EthResult<TxEnv> {
-    // Ensure that if versioned hashes are set, they're not empty
-    if request.blob_versioned_hashes.as_ref().map_or(false, |hashes| hashes.is_empty()) {
-        return Err(RpcInvalidTransactionError::BlobTransactionMissingBlobHashes.into());
-    }
-
-    let TransactionRequest {
-        from,
-        to,
-        gas_price,
-        max_fee_per_gas,
-        max_priority_fee_per_gas,
-        gas,
-        value,
-        input,
-        nonce,
-        access_list,
-        chain_id,
-        blob_versioned_hashes,
-        max_fee_per_blob_gas,
-        ..
-    } = request;
-
-    let CallFees { max_priority_fee_per_gas, gas_price, max_fee_per_blob_gas } =
-        CallFees::ensure_fees(
-            gas_price.map(U256::from),
-            max_fee_per_gas.map(U256::from),
-            max_priority_fee_per_gas.map(U256::from),
-            block_env.basefee,
-            blob_versioned_hashes.as_deref(),
-            max_fee_per_blob_gas.map(U256::from),
-            block_env.get_blob_gasprice().map(U256::from),
-        )?;
-
-    let gas_limit = gas.unwrap_or_else(|| block_env.gas_limit.min(U256::from(u64::MAX)).to());
-    let env = TxEnv {
-        gas_limit: gas_limit.try_into().map_err(|_| RpcInvalidTransactionError::GasUintOverflow)?,
-        nonce,
-        caller: from.unwrap_or_default(),
-        gas_price,
-        gas_priority_fee: max_priority_fee_per_gas,
-        transact_to: to.unwrap_or(TxKind::Create),
-        value: value.unwrap_or_default(),
-        data: input.try_into_unique_input()?.unwrap_or_default(),
-        chain_id,
-        access_list: access_list.unwrap_or_default().into(),
-        // EIP-4844 fields
-        blob_hashes: blob_versioned_hashes.unwrap_or_default(),
-        max_fee_per_blob_gas,
-        authorization_list: None,
-        #[cfg(feature = "optimism")]
-        optimism: OptimismFields { enveloped_tx: Some(Bytes::new()), ..Default::default() },
-    };
-
-    Ok(env)
-}
-
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// Caps the configured [`TxEnv`] `gas_limit` with the allowance of the caller.
 pub fn cap_tx_gas_limit_with_caller_allowance<DB>(db: &mut DB, env: &mut TxEnv) -> EthResult<()>
 where
@@ -233,11 +63,7 @@ where
         .unwrap_or_default())
 }
 
-<<<<<<< HEAD
-/// Helper type for representing the fees of a [`TransactionRequest`]
-=======
 /// Helper type for representing the fees of a [`reth_rpc_types::TransactionRequest`]
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 #[derive(Debug)]
 pub struct CallFees {
     /// EIP-1559 priority fee

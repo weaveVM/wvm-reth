@@ -5,11 +5,7 @@ use crate::{
     payload::{OptimismBuiltPayload, OptimismPayloadBuilderAttributes},
 };
 use reth_basic_payload_builder::*;
-<<<<<<< HEAD
-use reth_chainspec::{ChainSpec, EthereumHardforks, OptimismHardfork};
-=======
 use reth_chainspec::{EthereumHardforks, OptimismHardfork};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_evm::{system_calls::pre_block_beacon_root_contract_call, ConfigureEvm};
 use reth_execution_types::ExecutionOutcome;
 use reth_payload_builder::error::PayloadBuilderError;

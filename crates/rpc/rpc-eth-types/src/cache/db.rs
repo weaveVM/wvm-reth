@@ -2,17 +2,11 @@
 //! <https://github.com/rust-lang/rust/issues/100013> in default implementation of
 //! `reth_rpc_eth_api::helpers::Call`.
 
-<<<<<<< HEAD
-use reth_primitives::{B256, U256};
-use reth_provider::StateProvider;
-use reth_revm::{database::StateProviderDatabase, db::CacheDB, DatabaseRef};
-=======
 use reth_errors::ProviderResult;
 use reth_primitives::{Address, B256, U256};
 use reth_provider::StateProvider;
 use reth_revm::{database::StateProviderDatabase, db::CacheDB, DatabaseRef};
 use reth_trie::HashedStorage;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use revm::Database;
 
 /// Helper alias type for the state's [`CacheDB`]
@@ -24,20 +18,6 @@ pub type StateCacheDb<'a> = CacheDB<StateProviderDatabase<StateProviderTraitObjW
 pub struct StateProviderTraitObjWrapper<'a>(pub &'a dyn StateProvider);
 
 impl<'a> reth_provider::StateRootProvider for StateProviderTraitObjWrapper<'a> {
-<<<<<<< HEAD
-    fn state_root(
-        &self,
-        bundle_state: &revm::db::BundleState,
-    ) -> reth_errors::ProviderResult<B256> {
-        self.0.state_root(bundle_state)
-    }
-
-    fn state_root_with_updates(
-        &self,
-        bundle_state: &revm::db::BundleState,
-    ) -> reth_errors::ProviderResult<(B256, reth_trie::updates::TrieUpdates)> {
-        self.0.state_root_with_updates(bundle_state)
-=======
     fn hashed_state_root(
         &self,
         hashed_state: reth_trie::HashedPostState,
@@ -58,20 +38,10 @@ impl<'a> reth_provider::StateRootProvider for StateProviderTraitObjWrapper<'a> {
         hashed_storage: HashedStorage,
     ) -> ProviderResult<B256> {
         self.0.hashed_storage_root(address, hashed_storage)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }
 
 impl<'a> reth_provider::StateProofProvider for StateProviderTraitObjWrapper<'a> {
-<<<<<<< HEAD
-    fn proof(
-        &self,
-        state: &revm::db::BundleState,
-        address: revm_primitives::Address,
-        slots: &[B256],
-    ) -> reth_errors::ProviderResult<reth_trie::AccountProof> {
-        self.0.proof(state, address, slots)
-=======
     fn hashed_proof(
         &self,
         hashed_state: reth_trie::HashedPostState,
@@ -87,7 +57,6 @@ impl<'a> reth_provider::StateProofProvider for StateProviderTraitObjWrapper<'a> 
         target: reth_trie::HashedPostState,
     ) -> reth_errors::ProviderResult<std::collections::HashMap<B256, reth_primitives::Bytes>> {
         self.0.witness(overlay, target)
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }
 

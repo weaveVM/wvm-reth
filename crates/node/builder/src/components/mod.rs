@@ -7,22 +7,6 @@
 //!
 //! Components depend on a fully type configured node: [FullNodeTypes](crate::node::FullNodeTypes).
 
-<<<<<<< HEAD
-use crate::{ConfigureEvm, FullNodeTypes};
-pub use builder::*;
-pub use consensus::*;
-pub use execute::*;
-pub use network::*;
-pub use payload::*;
-pub use pool::*;
-use reth_consensus::Consensus;
-use reth_evm::execute::BlockExecutorProvider;
-use reth_network::NetworkHandle;
-use reth_payload_builder::PayloadBuilderHandle;
-use reth_transaction_pool::TransactionPool;
-
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 mod builder;
 mod consensus;
 mod execute;
@@ -64,12 +48,9 @@ pub trait NodeComponents<NodeTypes: FullNodeTypes>: Clone + Unpin + Send + Sync 
     /// The consensus type of the node.
     type Consensus: Consensus + Clone + Unpin + 'static;
 
-<<<<<<< HEAD
-=======
     /// Network API.
     type Network: FullNetwork;
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Returns the transaction pool of the node.
     fn pool(&self) -> &Self::Pool;
 
@@ -121,10 +102,7 @@ where
     type Evm = EVM;
     type Executor = Executor;
     type Consensus = Cons;
-<<<<<<< HEAD
-=======
     type Network = NetworkHandle;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
     fn pool(&self) -> &Self::Pool {
         &self.transaction_pool
@@ -142,11 +120,7 @@ where
         &self.consensus
     }
 
-<<<<<<< HEAD
-    fn network(&self) -> &NetworkHandle {
-=======
     fn network(&self) -> &Self::Network {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         &self.network
     }
 

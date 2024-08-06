@@ -1,37 +1,12 @@
 use crate::{
-<<<<<<< HEAD
-    hashed_cursor::HashedPostStateCursorFactory,
-    prefix_set::{PrefixSetMut, TriePrefixSetsMut},
-    proof::Proof,
-    updates::TrieUpdates,
-    Nibbles, StateRoot,
-=======
     prefix_set::{PrefixSetMut, TriePrefixSetsMut},
     Nibbles,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use itertools::Itertools;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-<<<<<<< HEAD
-use reth_db::{tables, DatabaseError};
-use reth_db_api::{
-    cursor::DbCursorRO,
-    models::{AccountBeforeTx, BlockNumberAddress},
-    transaction::DbTx,
-};
-use reth_execution_errors::StateRootError;
-use reth_primitives::{keccak256, Account, Address, BlockNumber, B256, U256};
-use reth_trie_common::AccountProof;
-use revm::db::BundleAccount;
-use std::{
-    collections::{hash_map, HashMap, HashSet},
-    ops::RangeInclusive,
-};
-=======
 use reth_primitives::{keccak256, Account, Address, B256, U256};
 use revm::db::{states::StorageSlot, AccountStatus, BundleAccount};
 use std::collections::{hash_map, HashMap, HashSet};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// Representation of in-memory hashed state.
 #[derive(PartialEq, Eq, Clone, Default, Debug)]
@@ -54,17 +29,8 @@ impl HashedPostState {
             .map(|(address, account)| {
                 let hashed_address = keccak256(address);
                 let hashed_account = account.info.clone().map(Into::into);
-<<<<<<< HEAD
-                let hashed_storage = HashedStorage::from_iter(
-                    account.status.was_destroyed(),
-                    account.storage.iter().map(|(key, value)| {
-                        (keccak256(B256::new(key.to_be_bytes())), value.present_value)
-                    }),
-                );
-=======
                 let hashed_storage =
                     HashedStorage::from_bundle_state(account.status, &account.storage);
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 (hashed_address, (hashed_account, hashed_storage))
             })
             .collect::<Vec<(B256, (Option<Account>, HashedStorage))>>();
@@ -162,75 +128,10 @@ impl HashedPostState {
         let mut storage_prefix_sets = HashMap::with_capacity(self.storages.len());
         for (hashed_address, hashed_storage) in &self.storages {
             account_prefix_set.insert(Nibbles::unpack(hashed_address));
-<<<<<<< HEAD
-
-            let mut prefix_set = PrefixSetMut::with_capacity(hashed_storage.storage.len());
-            for hashed_slot in hashed_storage.storage.keys() {
-                prefix_set.insert(Nibbles::unpack(hashed_slot));
-            }
-            storage_prefix_sets.insert(*hashed_address, prefix_set);
-        }
-
-        TriePrefixSetsMut { account_prefix_set, storage_prefix_sets, destroyed_accounts }
-    }
-
-    /// Calculate the state root for this [`HashedPostState`].
-    /// Internally, this method retrieves prefixsets and uses them
-    /// to calculate incremental state root.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use reth_db::test_utils::create_test_rw_db;
-    /// use reth_db_api::database::Database;
-    /// use reth_primitives::{Account, U256};
-    /// use reth_trie::HashedPostState;
-    ///
-    /// // Initialize the database
-    /// let db = create_test_rw_db();
-    ///
-    /// // Initialize hashed post state
-    /// let mut hashed_state = HashedPostState::default();
-    /// hashed_state.accounts.insert(
-    ///     [0x11; 32].into(),
-    ///     Some(Account { nonce: 1, balance: U256::from(10), bytecode_hash: None }),
-    /// );
-    ///
-    /// // Calculate the state root
-    /// let tx = db.tx().expect("failed to create transaction");
-    /// let state_root = hashed_state.state_root(&tx);
-    /// ```
-    ///
-    /// # Returns
-    ///
-    /// The state root for this [`HashedPostState`].
-    pub fn state_root<TX: DbTx>(&self, tx: &TX) -> Result<B256, StateRootError> {
-        let sorted = self.clone().into_sorted();
-        let prefix_sets = self.construct_prefix_sets().freeze();
-        StateRoot::from_tx(tx)
-            .with_hashed_cursor_factory(HashedPostStateCursorFactory::new(tx, &sorted))
-            .with_prefix_sets(prefix_sets)
-            .root()
-    }
-
-    /// Calculates the state root for this [`HashedPostState`] and returns it alongside trie
-    /// updates. See [`Self::state_root`] for more info.
-    pub fn state_root_with_updates<TX: DbTx>(
-        &self,
-        tx: &TX,
-    ) -> Result<(B256, TrieUpdates), StateRootError> {
-        let sorted = self.clone().into_sorted();
-        let prefix_sets = self.construct_prefix_sets().freeze();
-        StateRoot::from_tx(tx)
-            .with_hashed_cursor_factory(HashedPostStateCursorFactory::new(tx, &sorted))
-            .with_prefix_sets(prefix_sets)
-            .root_with_updates()
-=======
             storage_prefix_sets.insert(*hashed_address, hashed_storage.construct_prefix_set());
         }
 
         TriePrefixSetsMut { account_prefix_set, storage_prefix_sets, destroyed_accounts }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Generates the state proof for target account and slots on top of this [`HashedPostState`].
@@ -325,10 +226,6 @@ pub struct HashedPostStateSorted {
     pub(crate) storages: HashMap<B256, HashedStorageSorted>,
 }
 
-<<<<<<< HEAD
-/// Sorted account state optimized for iterating during state trie calculation.
-#[derive(Clone, Eq, PartialEq, Debug)]
-=======
 impl HashedPostStateSorted {
     /// Create new instance of [`HashedPostStateSorted`]
     pub const fn new(
@@ -351,14 +248,11 @@ impl HashedPostStateSorted {
 
 /// Sorted account state optimized for iterating during state trie calculation.
 #[derive(Clone, Eq, PartialEq, Default, Debug)]
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 pub struct HashedAccountsSorted {
     /// Sorted collection of hashed addresses and their account info.
     pub(crate) accounts: Vec<(B256, Account)>,
     /// Set of destroyed account keys.
     pub(crate) destroyed_accounts: HashSet<B256>,
-<<<<<<< HEAD
-=======
 }
 
 impl HashedAccountsSorted {
@@ -370,7 +264,6 @@ impl HashedAccountsSorted {
             .chain(self.destroyed_accounts.iter().map(|address| (*address, None)))
             .sorted_by_key(|entry| *entry.0)
     }
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 /// Sorted hashed storage optimized for iterating during state trie calculation.

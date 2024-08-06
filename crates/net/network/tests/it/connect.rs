@@ -18,11 +18,7 @@ use reth_network_p2p::{
     headers::client::{HeadersClient, HeadersRequest},
     sync::{NetworkSyncUpdater, SyncState},
 };
-<<<<<<< HEAD
-use reth_network_peers::{mainnet_nodes, NodeRecord};
-=======
 use reth_network_peers::{mainnet_nodes, NodeRecord, TrustedPeer};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_provider::test_utils::NoopProvider;
 use reth_transaction_pool::test_utils::testing_pool;
 use secp256k1::SecretKey;

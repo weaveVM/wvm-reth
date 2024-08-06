@@ -9,14 +9,10 @@ use reth_db_api::{
     models::{storage_sharded_key::StorageShardedKey, BlockNumberAddress},
 };
 use reth_provider::DatabaseProviderRW;
-<<<<<<< HEAD:crates/prune/prune/src/segments/storage_history.rs
-use reth_prune_types::{PruneInterruptReason, PruneMode, PruneProgress, PruneSegment};
-=======
 use reth_prune_types::{
     PruneInterruptReason, PruneMode, PruneProgress, PrunePurpose, PruneSegment,
     SegmentOutputCheckpoint,
 };
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/user/storage_history.rs
 use rustc_hash::FxHashMap;
 use tracing::{instrument, trace};
 
@@ -60,11 +56,7 @@ impl<DB: Database> Segment<DB> for StorageHistory {
             Some(range) => range,
             None => {
                 trace!(target: "pruner", "No storage history to prune");
-<<<<<<< HEAD:crates/prune/prune/src/segments/storage_history.rs
-                return Ok(PruneOutput::done());
-=======
                 return Ok(SegmentOutput::done())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/user/storage_history.rs
             }
         };
         let range_end = *range.end();
@@ -77,13 +69,8 @@ impl<DB: Database> Segment<DB> for StorageHistory {
         if limiter.is_limit_reached() {
             return Ok(SegmentOutput::not_done(
                 PruneInterruptReason::new(&limiter),
-<<<<<<< HEAD:crates/prune/prune/src/segments/storage_history.rs
-                input.previous_checkpoint.map(|checkpoint| checkpoint.into()),
-            ));
-=======
                 input.previous_checkpoint.map(SegmentOutputCheckpoint::from_prune_checkpoint),
             ))
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/user/storage_history.rs
         }
 
         let mut last_changeset_pruned_block = None;
@@ -139,11 +126,7 @@ impl<DB: Database> Segment<DB> for StorageHistory {
         Ok(SegmentOutput {
             progress,
             pruned: pruned_changesets + outcomes.deleted,
-<<<<<<< HEAD:crates/prune/prune/src/segments/storage_history.rs
-            checkpoint: Some(PruneOutputCheckpoint {
-=======
             checkpoint: Some(SegmentOutputCheckpoint {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/user/storage_history.rs
                 block_number: Some(last_changeset_pruned_block),
                 tx_number: None,
             }),

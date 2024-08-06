@@ -12,14 +12,10 @@ use futures::{FutureExt, StreamExt};
 use pin_project::pin_project;
 use reth_chainspec::MAINNET;
 use reth_eth_wire::{protocol::Protocol, DisconnectReason, HelloMessageWithProtocols};
-<<<<<<< HEAD
-use reth_network_api::{NetworkInfo, Peers};
-=======
 use reth_network_api::{
     test_utils::{PeersHandle, PeersHandleProvider},
     NetworkEvent, NetworkEventListenerProvider, NetworkInfo, Peers,
 };
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_network_peers::PeerId;
 use reth_provider::test_utils::NoopProvider;
 use reth_storage_api::{BlockReader, BlockReaderIdExt, HeaderProvider, StateProviderFactory};

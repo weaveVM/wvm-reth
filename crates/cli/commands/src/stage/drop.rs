@@ -9,11 +9,7 @@ use reth_db_common::{
     DbTool,
 };
 use reth_node_core::args::StageEnum;
-<<<<<<< HEAD
-use reth_provider::{providers::StaticFileWriter, StaticFileProviderFactory};
-=======
 use reth_provider::{writer::UnifiedStorageWriter, StaticFileProviderFactory};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_stages::StageId;
 use reth_static_file_types::{find_fixed_range, StaticFileSegment};
 

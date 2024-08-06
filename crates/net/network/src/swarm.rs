@@ -1,22 +1,3 @@
-<<<<<<< HEAD
-use crate::{
-    listener::{ConnectionListener, ListenerEvent},
-    message::{PeerMessage, PeerRequestSender},
-    peers::InboundConnectionError,
-    protocol::IntoRlpxSubProtocol,
-    session::{Direction, PendingSessionHandshakeError, SessionEvent, SessionId, SessionManager},
-    state::{NetworkState, StateAction},
-};
-use futures::Stream;
-use reth_eth_wire::{
-    capability::{Capabilities, CapabilityMessage},
-    errors::EthStreamError,
-    EthVersion, Status,
-};
-use reth_network_peers::PeerId;
-use reth_storage_api::BlockNumReader;
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     io,
     net::SocketAddr,
@@ -300,14 +281,7 @@ impl Swarm {
     }
 }
 
-<<<<<<< HEAD
-impl<C> Stream for Swarm<C>
-where
-    C: BlockNumReader + Unpin,
-{
-=======
 impl Stream for Swarm {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     type Item = SwarmEvent;
 
     /// This advances all components.

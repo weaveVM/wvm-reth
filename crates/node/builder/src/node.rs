@@ -1,15 +1,9 @@
-<<<<<<< HEAD
-use crate::rpc::{RethRpcServerHandles, RpcRegistry};
-use reth_chainspec::ChainSpec;
-use reth_network::NetworkHandle;
-=======
 // re-export the node api types
 pub use reth_node_api::{FullNodeTypes, NodeTypes};
 
 use std::{marker::PhantomData, sync::Arc};
 
 use reth_chainspec::ChainSpec;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_node_api::FullNodeComponents;
 use reth_node_core::{
     dirs::{ChainPath, DataDirPath},
@@ -20,10 +14,6 @@ use reth_payload_builder::PayloadBuilderHandle;
 use reth_provider::ChainSpecProvider;
 use reth_rpc_builder::{auth::AuthServerHandle, RpcServerHandle};
 use reth_tasks::TaskExecutor;
-<<<<<<< HEAD
-use std::{marker::PhantomData, sync::Arc};
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 use crate::{
     components::NodeComponentsBuilder,
@@ -130,11 +120,7 @@ where
 ///
 /// This can be used to interact with the launched node.
 #[derive(Debug, Clone)]
-<<<<<<< HEAD
-pub struct FullNode<Node: FullNodeComponents> {
-=======
 pub struct FullNode<Node: FullNodeComponents, AddOns: NodeAddOns<Node>> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// The evm configuration.
     pub evm_config: Node::Evm,
     /// The executor of the node.

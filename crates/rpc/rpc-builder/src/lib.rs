@@ -19,10 +19,7 @@
 //! use reth_evm::ConfigureEvm;
 //! use reth_network_api::{NetworkInfo, Peers};
 //! use reth_provider::{AccountReader, CanonStateSubscriptions, ChangeSetReader, FullRpcProvider};
-<<<<<<< HEAD
-=======
 //! use reth_rpc::EthApi;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 //! use reth_rpc_builder::{
 //!     EthApiBuild, RethRpcModule, RpcModuleBuilder, RpcServerConfig, ServerBuilder,
 //!     TransportRpcModuleConfig,
@@ -59,11 +56,7 @@
 //!         events,
 //!         evm_config,
 //!     )
-<<<<<<< HEAD
-//!     .build(transports, EthApiBuild::build);
-=======
 //!     .build(transports, Box::new(EthApi::with_spawner));
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 //!     let handle = RpcServerConfig::default()
 //!         .with_http(ServerBuilder::default())
 //!         .start(&transport_modules)
@@ -79,10 +72,7 @@
 //! use reth_evm::ConfigureEvm;
 //! use reth_network_api::{NetworkInfo, Peers};
 //! use reth_provider::{AccountReader, CanonStateSubscriptions, ChangeSetReader, FullRpcProvider};
-<<<<<<< HEAD
-=======
 //! use reth_rpc::EthApi;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 //! use reth_rpc_api::EngineApiServer;
 //! use reth_rpc_builder::{
 //!     auth::AuthServerConfig, EthApiBuild, RethRpcModule, RpcModuleBuilder, RpcServerConfig,
@@ -105,11 +95,7 @@
 //!     Network: NetworkInfo + Peers + Clone + 'static,
 //!     Events: CanonStateSubscriptions + Clone + 'static,
 //!     EngineApi: EngineApiServer<EngineT>,
-<<<<<<< HEAD
-//!     EngineT: EngineTypes + 'static,
-=======
 //!     EngineT: EngineTypes,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 //!     EvmConfig: ConfigureEvm,
 //! {
 //!     // configure the rpc module per transport
@@ -130,11 +116,7 @@
 //!
 //!     // configure the server modules
 //!     let (modules, auth_module, _registry) =
-<<<<<<< HEAD
-//!         builder.build_with_auth_server(transports, engine_api, EthApiBuild::build);
-=======
 //!         builder.build_with_auth_server(transports, engine_api, Box::new(EthApi::with_spawner));
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 //!
 //!     // start the servers
 //!     let auth_config = AuthServerConfig::builder(JwtSecret::random()).build();
@@ -161,12 +143,6 @@ use std::{
 };
 
 use error::{ConflictingModules, RpcError, ServerKind};
-<<<<<<< HEAD
-use http::{header::AUTHORIZATION, HeaderMap};
-use jsonrpsee::{
-    core::RegisterMethodError,
-    server::{AlreadyStoppedError, IdProvider, RpcServiceBuilder, ServerHandle},
-=======
 use eth::DynEthApiBuilder;
 use http::{header::AUTHORIZATION, HeaderMap};
 use jsonrpsee::{
@@ -175,7 +151,6 @@ use jsonrpsee::{
         middleware::rpc::{RpcService, RpcServiceT},
         AlreadyStoppedError, IdProvider, RpcServiceBuilder, ServerHandle,
     },
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     Methods, RpcModule,
 };
 use reth_engine_primitives::EngineTypes;
@@ -196,30 +171,17 @@ use reth_rpc_eth_api::{
     },
     EthApiServer, FullEthApiServer, RawTransactionForwarder,
 };
-<<<<<<< HEAD
-use reth_rpc_eth_types::{EthStateCache, EthSubscriptionIdProvider};
-=======
 use reth_rpc_eth_types::{EthConfig, EthStateCache, EthSubscriptionIdProvider};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_rpc_layer::{AuthLayer, Claims, JwtAuthValidator, JwtSecret};
 use reth_tasks::{pool::BlockingTaskGuard, TaskSpawner, TokioTaskExecutor};
 use reth_transaction_pool::{noop::NoopTransactionPool, TransactionPool};
 use serde::{Deserialize, Serialize};
-<<<<<<< HEAD
-use tower_http::cors::CorsLayer;
-
-use crate::{
-    auth::AuthRpcModule, cors::CorsDomainError, error::WsHttpSamePortError,
-    metrics::RpcRequestMetrics,
-};
-=======
 use tower::Layer;
 use tower_http::cors::CorsLayer;
 
 use crate::{auth::AuthRpcModule, error::WsHttpSamePortError, metrics::RpcRequestMetrics};
 
 pub use cors::CorsDomainError;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 // re-export for convenience
 pub use jsonrpsee::server::ServerBuilder;
@@ -243,14 +205,7 @@ pub mod error;
 
 /// Eth utils
 pub mod eth;
-<<<<<<< HEAD
-pub use eth::{
-    EthApiBuild, EthApiBuilderCtx, EthConfig, EthHandlers, FeeHistoryCacheBuilder,
-    GasPriceOracleBuilder,
-};
-=======
 pub use eth::EthHandlers;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 // Rpc server metrics
 mod metrics;
@@ -258,11 +213,7 @@ pub use metrics::{MeteredRequestFuture, RpcRequestMetricsService};
 
 /// Convenience function for starting a server in one step.
 #[allow(clippy::too_many_arguments)]
-<<<<<<< HEAD
-pub async fn launch<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi, EthApiB>(
-=======
 pub async fn launch<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi>(
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     provider: Provider,
     pool: Pool,
     network: Network,
@@ -271,11 +222,7 @@ pub async fn launch<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi>(
     executor: Tasks,
     events: Events,
     evm_config: EvmConfig,
-<<<<<<< HEAD
-    eth: EthApiB,
-=======
     eth: DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi>,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 ) -> Result<RpcServerHandle, RpcError>
 where
     Provider: FullRpcProvider + AccountReader + ChangeSetReader,
@@ -284,11 +231,6 @@ where
     Tasks: TaskSpawner + Clone + 'static,
     Events: CanonStateSubscriptions + Clone + 'static,
     EvmConfig: ConfigureEvm,
-<<<<<<< HEAD
-    EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
-        + 'static,
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     EthApi: FullEthApiServer,
 {
     let module_config = module_config.into();
@@ -483,19 +425,11 @@ where
     /// also configures the auth (engine api) server, which exposes a subset of the `eth_`
     /// namespace.
     #[allow(clippy::type_complexity)]
-<<<<<<< HEAD
-    pub fn build_with_auth_server<EngineApi, EngineT, EthApi, EthApiB>(
-        self,
-        module_config: TransportRpcModuleConfig,
-        engine: EngineApi,
-        eth: EthApiB,
-=======
     pub fn build_with_auth_server<EngineApi, EngineT, EthApi>(
         self,
         module_config: TransportRpcModuleConfig,
         engine: EngineApi,
         eth: DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi>,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     ) -> (
         TransportRpcModules,
         AuthRpcModule,
@@ -504,11 +438,6 @@ where
     where
         EngineT: EngineTypes,
         EngineApi: EngineApiServer<EngineT>,
-<<<<<<< HEAD
-        EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
-            + 'static,
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         EthApi: FullEthApiServer,
     {
         let Self { provider, pool, network, executor, events, evm_config } = self;
@@ -537,12 +466,8 @@ where
     /// use reth_evm::ConfigureEvm;
     /// use reth_network_api::noop::NoopNetwork;
     /// use reth_provider::test_utils::{NoopProvider, TestCanonStateSubscriptions};
-<<<<<<< HEAD
-    /// use reth_rpc_builder::{EthApiBuild, RpcModuleBuilder};
-=======
     /// use reth_rpc::EthApi;
     /// use reth_rpc_builder::RpcModuleBuilder;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// use reth_tasks::TokioTaskExecutor;
     /// use reth_transaction_pool::noop::NoopTransactionPool;
     ///
@@ -554,25 +479,11 @@ where
     ///         .with_executor(TokioTaskExecutor::default())
     ///         .with_events(TestCanonStateSubscriptions::default())
     ///         .with_evm_config(evm)
-<<<<<<< HEAD
-    ///         .into_registry(Default::default(), EthApiBuild::build);
-=======
     ///         .into_registry(Default::default(), Box::new(EthApi::with_spawner));
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     ///
     ///     let eth_api = registry.eth_api();
     /// }
     /// ```
-<<<<<<< HEAD
-    pub fn into_registry<EthApi, EthApiB>(
-        self,
-        config: RpcModuleConfig,
-        eth: EthApiB,
-    ) -> RpcRegistryInner<Provider, Pool, Network, Tasks, Events, EthApi>
-    where
-        EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
-            + 'static,
-=======
     pub fn into_registry<EthApi>(
         self,
         config: RpcModuleConfig,
@@ -580,7 +491,6 @@ where
     ) -> RpcRegistryInner<Provider, Pool, Network, Tasks, Events, EthApi>
     where
         EthApi: 'static,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     {
         let Self { provider, pool, network, executor, events, evm_config } = self;
         RpcRegistryInner::new(provider, pool, network, executor, events, config, evm_config, eth)
@@ -588,23 +498,12 @@ where
 
     /// Configures all [`RpcModule`]s specific to the given [`TransportRpcModuleConfig`] which can
     /// be used to start the transport server(s).
-<<<<<<< HEAD
-    pub fn build<EthApi, EthApiB>(
-        self,
-        module_config: TransportRpcModuleConfig,
-        eth: EthApiB,
-    ) -> TransportRpcModules<()>
-    where
-        EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
-            + 'static,
-=======
     pub fn build<EthApi>(
         self,
         module_config: TransportRpcModuleConfig,
         eth: DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi>,
     ) -> TransportRpcModules<()>
     where
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         EthApi: FullEthApiServer,
     {
         let mut modules = TransportRpcModules::default();
@@ -732,15 +631,6 @@ impl<Provider, Pool, Network, Tasks, Events, EthApi>
 where
     Provider: StateProviderFactory + BlockReader + EvmEnvProvider + Clone + Unpin + 'static,
     Pool: Send + Sync + Clone + 'static,
-<<<<<<< HEAD
-    Network: Clone,
-    Events: CanonStateSubscriptions + Clone,
-    Tasks: TaskSpawner + Clone + 'static,
-{
-    /// Creates a new, empty instance.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new<EvmConfig, EthApiB>(
-=======
     Network: Clone + 'static,
     Events: CanonStateSubscriptions + Clone + 'static,
     Tasks: TaskSpawner + Clone + 'static,
@@ -749,7 +639,6 @@ where
     /// Creates a new, empty instance.
     #[allow(clippy::too_many_arguments)]
     pub fn new<EvmConfig>(
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         provider: Provider,
         pool: Pool,
         network: Network,
@@ -757,14 +646,6 @@ where
         events: Events,
         config: RpcModuleConfig,
         evm_config: EvmConfig,
-<<<<<<< HEAD
-        eth_api_builder: EthApiB,
-    ) -> Self
-    where
-        EvmConfig: ConfigureEvm,
-        EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
-            + 'static,
-=======
         eth_api_builder: DynEthApiBuilder<
             Provider,
             Pool,
@@ -777,7 +658,6 @@ where
     ) -> Self
     where
         EvmConfig: ConfigureEvm,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     {
         let blocking_pool_guard = BlockingTaskGuard::new(config.eth.max_tracing_requests);
 
@@ -1096,11 +976,7 @@ where
     /// Note: This does _not_ register the `engine_` in this registry.
     pub fn create_auth_module<EngineApi, EngineT>(&self, engine_api: EngineApi) -> AuthRpcModule
     where
-<<<<<<< HEAD
-        EngineT: EngineTypes + 'static,
-=======
         EngineT: EngineTypes,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         EngineApi: EngineApiServer<EngineT>,
     {
         let mut module = RpcModule::new(());
@@ -1460,16 +1336,12 @@ impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
     /// If both http and ws are on the same port, they are combined into one server.
     ///
     /// Returns the [`RpcServerHandle`] with the handle to the started servers.
-<<<<<<< HEAD
-    pub async fn start(self, modules: &TransportRpcModules) -> Result<RpcServerHandle, RpcError> {
-=======
     pub async fn start(self, modules: &TransportRpcModules) -> Result<RpcServerHandle, RpcError>
     where
         RpcMiddleware: Layer<RpcRequestMetricsService<RpcService>> + Clone + Send + 'static,
         for<'a> <RpcMiddleware as Layer<RpcRequestMetricsService<RpcService>>>::Service:
             Send + Sync + 'static + RpcServiceT<'a>,
     {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         let mut http_handle = None;
         let mut ws_handle = None;
         let mut ipc_handle = None;
@@ -1526,11 +1398,7 @@ impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
                             .option_layer(Self::maybe_jwt_layer(self.jwt_secret)),
                     )
                     .set_rpc_middleware(
-<<<<<<< HEAD
-                        RpcServiceBuilder::new().layer(
-=======
                         self.rpc_middleware.clone().layer(
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                             modules
                                 .http
                                 .as_ref()

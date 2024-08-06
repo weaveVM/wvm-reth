@@ -117,8 +117,4 @@ engine-cancun:
 
 # https://github.com/paradigmxyz/reth/issues/8579
 sync:
-<<<<<<< HEAD
   - sync reth -> reth
-=======
-  - sync reth -> reth
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1

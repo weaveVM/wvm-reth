@@ -5,10 +5,7 @@ use reth_errors::{BlockExecutionError, DatabaseError, RethError};
 use reth_network_p2p::error::DownloadError;
 use reth_primitives_traits::SealedHeader;
 use reth_provider::ProviderError;
-<<<<<<< HEAD
-=======
 use reth_prune::{PruneSegment, PruneSegmentError, PrunerError};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_static_file_types::StaticFileSegment;
 use thiserror::Error;
 use tokio::sync::broadcast::error::SendError;

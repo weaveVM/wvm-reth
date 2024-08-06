@@ -1,14 +1,6 @@
 use std::sync::Arc;
 
 use alloy_genesis::ChainConfig;
-<<<<<<< HEAD
-use alloy_primitives::B256;
-use async_trait::async_trait;
-use jsonrpsee::core::RpcResult;
-use reth_chainspec::ChainSpec;
-use reth_network_api::{NetworkInfo, PeerKind, Peers};
-use reth_network_peers::{id2pk, AnyNode, NodeRecord};
-=======
 use async_trait::async_trait;
 use jsonrpsee::core::RpcResult;
 use reth_chainspec::ChainSpec;
@@ -16,7 +8,6 @@ use reth_network_api::{NetworkInfo, Peers};
 use reth_network_peers::{id2pk, AnyNode, NodeRecord};
 use reth_network_types::PeerKind;
 use reth_primitives::EthereumHardfork;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_rpc_api::AdminApiServer;
 use reth_rpc_server_types::ToRpcResult;
 use reth_rpc_types::admin::{
@@ -116,24 +107,17 @@ where
     async fn node_info(&self) -> RpcResult<NodeInfo> {
         let enode = self.network.local_node_record();
         let status = self.network.network_status().await.to_rpc_result()?;
-<<<<<<< HEAD
-        let config = ChainConfig {
-=======
         let mut config = ChainConfig {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             chain_id: self.chain_spec.chain.id(),
             terminal_total_difficulty_passed: self
                 .chain_spec
                 .get_final_paris_total_difficulty()
                 .is_some(),
-<<<<<<< HEAD
-=======
             terminal_total_difficulty: self
                 .chain_spec
                 .hardforks
                 .fork(EthereumHardfork::Paris)
                 .ttd(),
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             ..self.chain_spec.genesis().config.clone()
         };
 

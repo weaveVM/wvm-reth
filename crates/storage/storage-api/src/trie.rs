@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-use reth_primitives::{Address, B256};
-use reth_storage_errors::provider::ProviderResult;
-use reth_trie::{updates::TrieUpdates, AccountProof};
-=======
 use reth_primitives::{Address, Bytes, B256};
 use reth_storage_errors::provider::ProviderResult;
 use reth_trie::{updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use revm::db::BundleState;
 use std::collections::HashMap;
 

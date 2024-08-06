@@ -1,24 +1,5 @@
 //! Support for handling peer sessions.
 
-<<<<<<< HEAD
-use crate::{message::PeerMessage, metrics::SessionManagerMetrics, session::active::ActiveSession};
-use counter::SessionCounter;
-use futures::{future::Either, io, FutureExt, StreamExt};
-use reth_ecies::{stream::ECIESStream, ECIESError};
-use reth_eth_wire::{
-    capability::{Capabilities, CapabilityMessage},
-    errors::EthStreamError,
-    DisconnectReason, EthVersion, HelloMessageWithProtocols, Status, UnauthedEthStream,
-    UnauthedP2PStream,
-};
-use reth_metrics::common::mpsc::MeteredPollSender;
-use reth_network_peers::PeerId;
-use reth_network_types::SessionsConfig;
-use reth_primitives::{ForkFilter, ForkId, ForkTransition, Head};
-use reth_tasks::TaskSpawner;
-use rustc_hash::FxHashMap;
-use secp256k1::SecretKey;
-=======
 mod active;
 mod conn;
 mod counter;
@@ -32,7 +13,6 @@ pub use handle::{
 
 pub use reth_network_api::{Direction, PeerInfo};
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     collections::HashMap,
     future::Future,
@@ -67,23 +47,11 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::PollSender;
 use tracing::{debug, instrument, trace};
 
-<<<<<<< HEAD
-mod active;
-mod conn;
-mod counter;
-mod handle;
-pub use crate::message::PeerRequestSender;
-use crate::protocol::{IntoRlpxSubProtocol, RlpxSubProtocolHandlers, RlpxSubProtocols};
-pub use handle::{
-    ActiveSessionHandle, ActiveSessionMessage, PendingSessionEvent, PendingSessionHandle,
-    SessionCommand,
-=======
 use crate::{
     message::PeerMessage,
     metrics::SessionManagerMetrics,
     protocol::{IntoRlpxSubProtocol, RlpxSubProtocolHandlers, RlpxSubProtocols},
     session::active::ActiveSession,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 
 /// Internal identifier for active sessions.

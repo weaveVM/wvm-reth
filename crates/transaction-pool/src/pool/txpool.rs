@@ -1357,21 +1357,13 @@ impl<T: PoolTransaction> AllTransactions<T> {
             let Some(ancestor_tx) = self.txs.get(&ancestor) else {
                 // ancestor tx is missing, so we can't insert the new blob
                 self.metrics.blob_transactions_nonce_gaps.increment(1);
-<<<<<<< HEAD
-                return Err(InsertErr::BlobTxHasNonceGap { transaction: Arc::new(new_blob_tx) });
-=======
                 return Err(InsertErr::BlobTxHasNonceGap { transaction: Arc::new(new_blob_tx) })
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             };
             if ancestor_tx.state.has_nonce_gap() {
                 // the ancestor transaction already has a nonce gap, so we can't insert the new
                 // blob
                 self.metrics.blob_transactions_nonce_gaps.increment(1);
-<<<<<<< HEAD
-                return Err(InsertErr::BlobTxHasNonceGap { transaction: Arc::new(new_blob_tx) });
-=======
                 return Err(InsertErr::BlobTxHasNonceGap { transaction: Arc::new(new_blob_tx) })
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             }
 
             // the max cost executing this transaction requires

@@ -144,18 +144,7 @@ impl NetworkArgs {
         default_peers_file: PathBuf,
     ) -> NetworkConfigBuilder {
         let chain_bootnodes = self
-<<<<<<< HEAD
-            .bootnodes
-            .clone()
-            .map(|bootnodes| {
-                bootnodes
-                    .into_iter()
-                    .filter_map(|trusted_peer| trusted_peer.resolve_blocking().ok())
-                    .collect()
-            })
-=======
             .resolved_bootnodes()
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             .unwrap_or_else(|| chain_spec.bootnodes().unwrap_or_else(mainnet_nodes));
         let peers_file = self.peers_file.clone().unwrap_or(default_peers_file);
 

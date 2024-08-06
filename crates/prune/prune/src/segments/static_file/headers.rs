@@ -58,11 +58,7 @@ impl<DB: Database> Segment<DB> for Headers {
             Some(range) => (*range.start(), *range.end()),
             None => {
                 trace!(target: "pruner", "No headers to prune");
-<<<<<<< HEAD:crates/prune/prune/src/segments/headers.rs
-                return Ok(PruneOutput::done());
-=======
                 return Ok(SegmentOutput::done())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/static_file/headers.rs
             }
         };
 
@@ -199,21 +195,14 @@ where
 
 #[cfg(test)]
 mod tests {
-<<<<<<< HEAD:crates/prune/prune/src/segments/headers.rs
-=======
     use crate::segments::{
         static_file::headers::HEADER_TABLES_TO_PRUNE, PruneInput, Segment, SegmentOutput,
     };
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/static_file/headers.rs
     use alloy_primitives::{BlockNumber, B256, U256};
     use assert_matches::assert_matches;
     use reth_db::tables;
     use reth_db_api::transaction::DbTx;
-<<<<<<< HEAD:crates/prune/prune/src/segments/headers.rs
-    use reth_provider::PruneCheckpointReader;
-=======
     use reth_provider::{PruneCheckpointReader, PruneCheckpointWriter, StaticFileProviderFactory};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/static_file/headers.rs
     use reth_prune_types::{
         PruneCheckpoint, PruneInterruptReason, PruneLimiter, PruneMode, PruneProgress,
         PruneSegment, SegmentOutputCheckpoint,

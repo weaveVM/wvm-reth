@@ -6,10 +6,7 @@ use futures_util::Future;
 use reth::{
     api::{BuiltPayload, EngineTypes, FullNodeComponents, PayloadBuilderAttributes},
     builder::FullNode,
-<<<<<<< HEAD
-=======
     network::PeersHandleProvider,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     payload::PayloadTypes,
     providers::{BlockReader, BlockReaderIdExt, CanonStateSubscriptions, StageCheckpointReader},
     rpc::{
@@ -70,11 +67,7 @@ where
     }
 
     /// Establish a connection to the node
-<<<<<<< HEAD
-    pub async fn connect(&mut self, node: &mut NodeTestContext<Node>) {
-=======
     pub async fn connect(&mut self, node: &mut Self) {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         self.network.add_peer(node.network.record()).await;
         node.network.next_session_established().await;
         self.network.next_session_established().await;
@@ -98,10 +91,7 @@ where
     where
         <Node::Engine as EngineTypes>::ExecutionPayloadV3:
             From<<Node::Engine as PayloadTypes>::BuiltPayload> + PayloadEnvelopeExt,
-<<<<<<< HEAD
-=======
         AddOns::EthApi: EthApiSpec + EthTransactions + TraceExt,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     {
         let mut chain = Vec::with_capacity(length as usize);
         for i in 0..length {

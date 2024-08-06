@@ -46,11 +46,7 @@ impl<DB: Database> Segment<DB> for Transactions {
             Some(range) => range,
             None => {
                 trace!(target: "pruner", "No transactions to prune");
-<<<<<<< HEAD:crates/prune/prune/src/segments/transactions.rs
-                return Ok(PruneOutput::done());
-=======
                 return Ok(SegmentOutput::done())
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/static_file/transactions.rs
             }
         };
 
@@ -87,11 +83,7 @@ impl<DB: Database> Segment<DB> for Transactions {
 
 #[cfg(test)]
 mod tests {
-<<<<<<< HEAD:crates/prune/prune/src/segments/transactions.rs
-    use crate::segments::{PruneInput, PruneOutput, Segment, Transactions};
-=======
     use crate::segments::{PruneInput, Segment};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/static_file/transactions.rs
     use alloy_primitives::{BlockNumber, TxNumber, B256};
     use assert_matches::assert_matches;
     use itertools::{
@@ -99,11 +91,7 @@ mod tests {
         Itertools,
     };
     use reth_db::tables;
-<<<<<<< HEAD:crates/prune/prune/src/segments/transactions.rs
-    use reth_provider::PruneCheckpointReader;
-=======
     use reth_provider::{PruneCheckpointReader, PruneCheckpointWriter, StaticFileProviderFactory};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/prune/prune/src/segments/static_file/transactions.rs
     use reth_prune_types::{
         PruneCheckpoint, PruneInterruptReason, PruneLimiter, PruneMode, PruneProgress,
         PruneSegment, SegmentOutput,

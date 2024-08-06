@@ -1,9 +1,5 @@
 //! Compatibility functions for rpc proof related types.
 
-<<<<<<< HEAD
-use reth_primitives::U64;
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_rpc_types::{
     serde_helpers::JsonStorageKey, EIP1186AccountProofResponse, EIP1186StorageProof,
 };

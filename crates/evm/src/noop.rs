@@ -1,10 +1,6 @@
 //! A no operation block executor implementation.
 
-<<<<<<< HEAD
-use std::fmt::Display;
-=======
 use core::fmt::Display;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 use reth_execution_errors::BlockExecutionError;
 use reth_execution_types::{BlockExecutionInput, BlockExecutionOutput, ExecutionOutcome};

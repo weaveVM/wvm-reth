@@ -4,24 +4,6 @@ use std::{
     fmt,
     ops::{Deref, DerefMut},
 };
-<<<<<<< HEAD
-
-use futures::TryFutureExt;
-use reth_network::NetworkHandle;
-use reth_node_api::FullNodeComponents;
-use reth_node_core::{node_config::NodeConfig, rpc::api::EngineApiServer};
-use reth_payload_builder::PayloadBuilderHandle;
-use reth_rpc::eth::EthApi;
-use reth_rpc_builder::{
-    auth::{AuthRpcModule, AuthServerHandle},
-    config::RethRpcServerConfig,
-    EthApiBuild, RpcModuleBuilder, RpcRegistryInner, RpcServerHandle, TransportRpcModules,
-};
-use reth_rpc_layer::JwtSecret;
-use reth_tasks::TaskExecutor;
-use reth_tracing::tracing::{debug, info};
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 use futures::TryFutureExt;
 use reth_node_api::{BuilderProvider, FullNodeComponents};
@@ -172,45 +154,27 @@ impl<Node: FullNodeComponents, EthApi> ExtendRpcModules<Node, EthApi> for () {
 }
 
 /// Helper wrapper type to encapsulate the [`RpcRegistryInner`] over components trait.
-<<<<<<< HEAD
-#[derive(Debug)]
-#[allow(clippy::type_complexity)]
-pub struct RpcRegistry<Node: FullNodeComponents> {
-=======
 #[derive(Debug, Clone)]
 #[allow(clippy::type_complexity)]
 pub struct RpcRegistry<Node: FullNodeComponents, EthApi> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     pub(crate) registry: RpcRegistryInner<
         Node::Provider,
         Node::Pool,
         Node::Network,
         TaskExecutor,
         Node::Provider,
-<<<<<<< HEAD
-        EthApi<Node::Provider, Node::Pool, NetworkHandle, Node::Evm>,
-    >,
-}
-
-impl<Node: FullNodeComponents> Deref for RpcRegistry<Node> {
-=======
         EthApi,
     >,
 }
 
 impl<Node: FullNodeComponents, EthApi> Deref for RpcRegistry<Node, EthApi> {
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     type Target = RpcRegistryInner<
         Node::Provider,
         Node::Pool,
         Node::Network,
         TaskExecutor,
         Node::Provider,
-<<<<<<< HEAD
-        EthApi<Node::Provider, Node::Pool, NetworkHandle, Node::Evm>,
-=======
         EthApi,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     >;
 
     fn deref(&self) -> &Self::Target {
@@ -224,15 +188,6 @@ impl<Node: FullNodeComponents, EthApi> DerefMut for RpcRegistry<Node, EthApi> {
     }
 }
 
-<<<<<<< HEAD
-impl<Node: FullNodeComponents> Clone for RpcRegistry<Node> {
-    fn clone(&self) -> Self {
-        Self { registry: self.registry.clone() }
-    }
-}
-
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// Helper container to encapsulate [`RpcRegistryInner`], [`TransportRpcModules`] and
 /// [`AuthRpcModule`].
 ///
@@ -251,11 +206,7 @@ pub struct RpcContext<'a, Node: FullNodeComponents, EthApi> {
     /// A Helper type the holds instances of the configured modules.
     ///
     /// This provides easy access to rpc handlers, such as [`RpcRegistryInner::eth_api`].
-<<<<<<< HEAD
-    pub registry: &'a mut RpcRegistry<Node>,
-=======
     pub registry: &'a mut RpcRegistry<Node, EthApi>,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Holds installed modules per transport type.
     ///
     /// This can be used to merge additional modules into the configured transports (http, ipc,
@@ -323,11 +274,7 @@ where
         .with_events(node.provider().clone())
         .with_executor(node.task_executor().clone())
         .with_evm_config(node.evm_config().clone())
-<<<<<<< HEAD
-        .build_with_auth_server(module_config, engine_api, EthApiBuild::build);
-=======
         .build_with_auth_server(module_config, engine_api, EthApi::eth_api_builder());
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
     let mut registry = RpcRegistry { registry };
     let ctx = RpcContext {

@@ -26,11 +26,7 @@ use tokio::sync::watch;
 ///
 /// If configured to execute, all stages will run. Otherwise, only stages that don't require state
 /// will run.
-<<<<<<< HEAD
-pub async fn build_import_pipeline<DB, C>(
-=======
 pub(crate) async fn build_import_pipeline<DB, C>(
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     config: &Config,
     provider_factory: ProviderFactory<DB>,
     consensus: &Arc<C>,

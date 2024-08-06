@@ -2,15 +2,6 @@
 
 #![allow(clippy::type_complexity, missing_debug_implementations)]
 
-<<<<<<< HEAD
-use crate::{
-    common::WithConfigs,
-    components::NodeComponentsBuilder,
-    node::FullNode,
-    rpc::{RethRpcServerHandles, RpcContext},
-    DefaultNodeLauncher, Node, NodeHandle,
-};
-=======
 pub mod add_ons;
 mod states;
 
@@ -18,7 +9,6 @@ pub use states::*;
 
 use std::sync::Arc;
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use futures::Future;
 use reth_chainspec::ChainSpec;
 use reth_cli_util::get_secret_key;
@@ -36,16 +26,6 @@ use reth_node_core::{
     dirs::{ChainPath, DataDirPath},
     node_config::NodeConfig,
     primitives::Head,
-<<<<<<< HEAD
-};
-use reth_primitives::revm_primitives::EnvKzgSettings;
-use reth_provider::{providers::BlockchainProvider, ChainSpecProvider};
-use reth_tasks::TaskExecutor;
-use reth_transaction_pool::{PoolConfig, TransactionPool};
-use secp256k1::SecretKey;
-pub use states::*;
-use std::sync::Arc;
-=======
     rpc::eth::{helpers::AddDevSigners, FullEthApiServer},
 };
 use reth_primitives::revm_primitives::EnvKzgSettings;
@@ -53,7 +33,6 @@ use reth_provider::{providers::BlockchainProvider, ChainSpecProvider, FullProvid
 use reth_tasks::TaskExecutor;
 use reth_transaction_pool::{PoolConfig, TransactionPool};
 use secp256k1::SecretKey;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use tracing::{info, trace, warn};
 
 use crate::{

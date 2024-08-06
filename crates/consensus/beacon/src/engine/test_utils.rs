@@ -23,11 +23,7 @@ use reth_payload_builder::test_utils::spawn_test_payload_service;
 use reth_primitives::{BlockNumber, B256};
 use reth_provider::{
     providers::BlockchainProvider, test_utils::create_test_provider_factory_with_chain_spec,
-<<<<<<< HEAD
-    ExecutionOutcome,
-=======
     ExecutionOutcome, ProviderFactory,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_prune::Pruner;
 use reth_prune_types::PruneModes;
@@ -393,17 +389,12 @@ where
         // Setup blockchain tree
         let externals = TreeExternals::new(provider_factory.clone(), consensus, executor_factory);
         let tree = Arc::new(ShareableBlockchainTree::new(
-<<<<<<< HEAD
-            BlockchainTree::new(externals, config, PruneModes::default())
-                .expect("failed to create tree"),
-=======
             BlockchainTree::new(
                 externals,
                 BlockchainTreeConfig::new(1, 2, 3, 2),
                 PruneModes::default(),
             )
             .expect("failed to create tree"),
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         ));
         let genesis_block = self.base_config.chain_spec.genesis_header().seal_slow();
 

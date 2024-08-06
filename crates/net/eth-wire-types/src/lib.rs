@@ -6,10 +6,6 @@
     issue_tracker_base_url = "https://github.com/paradigmxyz/reth/issues/"
 )]
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
-<<<<<<< HEAD
-#![allow(clippy::needless_lifetimes)] // side effect of optimism fields
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 mod status;

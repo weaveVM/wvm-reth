@@ -4,13 +4,9 @@ use alloy_signer_local::{coins_bip39::English, MnemonicBuilder, PrivateKeySigner
 /// One of the accounts of the genesis allocations.
 #[derive(Debug)]
 pub struct Wallet {
-<<<<<<< HEAD
-    pub inner: PrivateKeySigner,
-=======
     /// The signer
     pub inner: PrivateKeySigner,
     /// The nonce
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     pub inner_nonce: u64,
     /// The chain id
     pub chain_id: u64,
@@ -35,10 +31,7 @@ impl Wallet {
         self.derivation_path.as_deref().unwrap_or("m/44'/60'/0'/0/")
     }
 
-<<<<<<< HEAD
-=======
     /// Generates a list of wallets
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     pub fn gen(&self) -> Vec<PrivateKeySigner> {
         let builder = MnemonicBuilder::<English>::default().phrase(TEST_MNEMONIC);
 

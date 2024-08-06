@@ -22,10 +22,7 @@ pub(crate) fn bsc_chain_spec() -> Arc<ChainSpec> {
         )]),
         deposit_contract: None,
         base_fee_params: reth_chainspec::BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
-<<<<<<< HEAD
-=======
         max_gas_limit: 140_000_000,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         prune_delete_limit: 0,
     }
     .into()

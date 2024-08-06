@@ -13,12 +13,6 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
-<<<<<<< HEAD
-pub use alloy_rpc_types_admin::EthProtocolInfo;
-pub use error::NetworkError;
-pub use reputation::{Reputation, ReputationChangeKind};
-use reth_eth_wire::{capability::Capabilities, DisconnectReason, EthVersion, Status};
-=======
 pub mod downloaders;
 /// Network Error
 pub mod error;
@@ -42,7 +36,6 @@ pub use events::{
 use std::{future::Future, net::SocketAddr, sync::Arc, time::Instant};
 
 use reth_eth_wire_types::{capability::Capabilities, DisconnectReason, EthVersion, Status};
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_network_peers::NodeRecord;
 use serde::{Deserialize, Serialize};
 use std::{future::Future, net::SocketAddr, sync::Arc, time::Instant};
@@ -112,11 +105,7 @@ pub trait PeersInfo: Send + Sync {
 /// Provides an API for managing the peers of the network.
 #[auto_impl::auto_impl(&, Arc)]
 pub trait Peers: PeersInfo {
-<<<<<<< HEAD
-    /// Adds a peer to the peer set with UDP `SocketAddr`.
-=======
     /// Adds a peer to the peer set with TCP `SocketAddr`.
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     fn add_peer(&self, peer: PeerId, tcp_addr: SocketAddr) {
         self.add_peer_kind(peer, PeerKind::Static, tcp_addr, None);
     }
@@ -131,11 +120,7 @@ pub trait Peers: PeersInfo {
     /// This allows marking a peer as trusted without having to know the peer's address.
     fn add_trusted_peer_id(&self, peer: PeerId);
 
-<<<<<<< HEAD
-    /// Adds a trusted peer to the peer set with UDP `SocketAddr`.
-=======
     /// Adds a trusted peer to the peer set with TCP `SocketAddr`.
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     fn add_trusted_peer(&self, peer: PeerId, tcp_addr: SocketAddr) {
         self.add_peer_kind(peer, PeerKind::Trusted, tcp_addr, None);
     }
@@ -211,38 +196,6 @@ pub trait Peers: PeersInfo {
     ) -> impl Future<Output = Result<Option<Reputation>, NetworkError>> + Send;
 }
 
-<<<<<<< HEAD
-/// Represents the kind of peer
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
-pub enum PeerKind {
-    /// Basic peer kind.
-    #[default]
-    Basic,
-    /// Static peer, added via JSON-RPC.
-    Static,
-    /// Trusted peer.
-    Trusted,
-}
-
-impl PeerKind {
-    /// Returns `true` if the peer is trusted.
-    pub const fn is_trusted(&self) -> bool {
-        matches!(self, Self::Trusted)
-    }
-
-    /// Returns `true` if the peer is static.
-    pub const fn is_static(&self) -> bool {
-        matches!(self, Self::Static)
-    }
-
-    /// Returns `true` if the peer is basic.
-    pub const fn is_basic(&self) -> bool {
-        matches!(self, Self::Basic)
-    }
-}
-
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// Info about an active peer session.
 #[derive(Debug, Clone)]
 pub struct PeerInfo {
@@ -303,12 +256,8 @@ impl std::fmt::Display for Direction {
 }
 
 /// The status of the network being ran by the local node.
-<<<<<<< HEAD
-#[derive(Clone, Debug, Serialize, Deserialize)]
-=======
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 pub struct NetworkStatus {
     /// The local node client version.
     pub client_version: String,

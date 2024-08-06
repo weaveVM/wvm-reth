@@ -53,25 +53,6 @@ impl<'a, TX, SF> UnifiedStorageWriter<'a, TX, SF> {
         Self { database, static_file }
     }
 
-<<<<<<<< HEAD:crates/storage/provider/src/bundle_state/execution_outcome.rs
-            if let Some(static_file_producer) = &mut static_file_producer {
-                // Increment block on static file header.
-                static_file_producer.increment_block(StaticFileSegment::Receipts, block_number)?;
-                let receipts = receipts.into_iter().enumerate().map(|(tx_idx, receipt)| {
-                    Ok((
-                        first_tx_index + tx_idx as u64,
-                        receipt
-                            .expect("receipt should not be filtered when saving to static files."),
-                    ))
-                });
-                static_file_producer.append_receipts(receipts)?;
-            } else if !receipts.is_empty() {
-                for (tx_idx, receipt) in receipts.into_iter().enumerate() {
-                    if let Some(receipt) = receipt {
-                        receipts_cursor.append(first_tx_index + tx_idx as u64, receipt)?;
-                    }
-                }
-========
     /// Creates a new instance of [`UnifiedStorageWriter`] from a database provider and a static
     /// file instance.
     pub const fn from(database: &'a DatabaseProvider<TX>, static_file: SF) -> Self {
@@ -217,7 +198,6 @@ where
                 let hashed_state = block.hashed_state();
                 self.database().write_hashed_state(&hashed_state.clone().into_sorted())?;
                 self.database().write_trie_updates(&trie_updates)?;
->>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/storage/provider/src/writer/mod.rs
             }
         }
 
@@ -1422,15 +1402,8 @@ mod tests {
             }
         }
 
-<<<<<<<< HEAD:crates/storage/provider/src/bundle_state/execution_outcome.rs
-            let (_, updates) = StateRoot::from_tx(tx).root_with_updates().unwrap();
-            updates.write_to_database(tx).unwrap();
-        })
-        .unwrap();
-========
         let (_, updates) = StateRoot::from_tx(tx).root_with_updates().unwrap();
         provider_rw.write_trie_updates(&updates).unwrap();
->>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1:crates/storage/provider/src/writer/mod.rs
 
         let mut state = State::builder().with_bundle_update().build();
 

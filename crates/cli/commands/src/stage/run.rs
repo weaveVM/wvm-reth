@@ -1,13 +1,9 @@
 //! Main `stage` command
 //!
 //! Stage debugging tool
-<<<<<<< HEAD
-use crate::common::{AccessRights, Environment, EnvironmentArgs};
-=======
 
 use std::{any::Any, net::SocketAddr, sync::Arc, time::Instant};
 
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use clap::Parser;
 use reth_beacon_consensus::EthBeaconConsensus;
 use reth_chainspec::ChainSpec;
@@ -17,15 +13,6 @@ use reth_config::config::{HashingConfig, SenderRecoveryConfig, TransactionLookup
 use reth_downloaders::bodies::bodies::BodiesDownloaderBuilder;
 use reth_evm::execute::BlockExecutorProvider;
 use reth_exex::ExExManagerHandle;
-<<<<<<< HEAD
-use reth_node_core::{
-    args::{NetworkArgs, StageEnum},
-    prometheus_exporter,
-};
-use reth_provider::{
-    ChainSpecProvider, StageCheckpointReader, StageCheckpointWriter, StaticFileProviderFactory,
-    StaticFileWriter,
-=======
 use reth_network::BlockDownloaderProvider;
 use reth_node_core::{
     args::{NetworkArgs, StageEnum},
@@ -42,7 +29,6 @@ use reth_node_metrics::{
 use reth_provider::{
     writer::UnifiedStorageWriter, ChainSpecProvider, StageCheckpointReader, StageCheckpointWriter,
     StaticFileProviderFactory,
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_stages::{
     stages::{
@@ -158,11 +144,7 @@ impl Command {
 
                     let mut config = config;
                     config.peers.trusted_nodes_only = self.network.trusted_only;
-<<<<<<< HEAD
-                    config.peers.trusted_nodes.extend(self.network.resolve_trusted_peers().await?);
-=======
                     config.peers.trusted_nodes.extend(self.network.trusted_peers.clone());
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
                     let network_secret_path = self
                         .network
@@ -290,19 +272,10 @@ impl Command {
                 }
 
                 if self.commit {
-<<<<<<< HEAD
-                    // For unwinding it makes more sense to commit the database first, since if
-                    // this function is interrupted before the static files commit, we can just
-                    // truncate the static files according to the
-                    // checkpoints on the next start-up.
-                    provider_rw.commit()?;
-                    provider_factory.static_file_provider().commit()?;
-=======
                     UnifiedStorageWriter::commit_unwind(
                         provider_rw,
                         provider_factory.static_file_provider(),
                     )?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                     provider_rw = provider_factory.provider_rw()?;
                 }
             }
@@ -325,12 +298,7 @@ impl Command {
                 provider_rw.save_stage_checkpoint(exec_stage.id(), checkpoint)?;
             }
             if self.commit {
-<<<<<<< HEAD
-                provider_factory.static_file_provider().commit()?;
-                provider_rw.commit()?;
-=======
                 UnifiedStorageWriter::commit(provider_rw, provider_factory.static_file_provider())?;
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 provider_rw = provider_factory.provider_rw()?;
             }
 

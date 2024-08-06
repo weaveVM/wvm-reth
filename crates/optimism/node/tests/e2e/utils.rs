@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-use alloy_genesis::Genesis;
-use reth::{rpc::types::engine::PayloadAttributes, tasks::TaskManager};
-use reth_chainspec::{ChainSpecBuilder, BASE_MAINNET};
-use reth_e2e_test_utils::{transaction::TransactionTestContext, wallet::Wallet, NodeHelperType};
-use reth_node_optimism::{OptimismBuiltPayload, OptimismNode, OptimismPayloadBuilderAttributes};
-use reth_payload_builder::EthPayloadBuilderAttributes;
-use reth_primitives::{Address, B256};
-=======
->>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::sync::Arc;
 
 use alloy_genesis::Genesis;
