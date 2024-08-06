@@ -88,7 +88,7 @@ where
     ) -> EthResult<Vec<EthCallResponse>> {
         let Bundle { transactions, block_override } = bundle;
         if transactions.is_empty() {
-            return Err(EthApiError::InvalidParams(String::from("transactions are empty.")));
+            return Err(EthApiError::InvalidParams(String::from("transactions are empty.")))
         }
 
         let StateContext { transaction_index, block_number } = state_context.unwrap_or_default();
@@ -102,7 +102,7 @@ where
             self.block_with_senders(target_block)
         )?;
 
-        let Some(block) = block else { return Err(EthApiError::UnknownBlockNumber) };
+        let Some(block) = block else { return Err(EthApiError::UnknownBlockNumber) }
         let gas_limit = self.inner.gas_cap;
 
         // we're essentially replaying the transactions in the block here, hence we need the state
@@ -233,7 +233,7 @@ where
                         env.tx.gas_limit = MIN_TRANSACTION_GAS;
                         if let Ok((res, _)) = self.transact(&mut db, env) {
                             if res.result.is_success() {
-                                return Ok(U256::from(MIN_TRANSACTION_GAS));
+                                return Ok(U256::from(MIN_TRANSACTION_GAS))
                             }
                         }
                     }
@@ -277,7 +277,7 @@ where
             ExecutionResult::Halt { reason, gas_used } => {
                 // here we don't check for invalid opcode because already executed with highest gas
                 // limit
-                return Err(RpcInvalidTransactionError::halt(reason, gas_used).into());
+                return Err(RpcInvalidTransactionError::halt(reason, gas_used).into())
             }
             ExecutionResult::Revert { output, .. } => {
                 // if price or limit was included in the request then we can execute the request
@@ -524,7 +524,7 @@ fn update_estimated_gas_range(
                 err => {
                     // These cases should be unreachable because we know the transaction succeeds,
                     // but if they occur, treat them as an error.
-                    return Err(RpcInvalidTransactionError::EvmHalt(err).into());
+                    return Err(RpcInvalidTransactionError::EvmHalt(err).into())
                 }
             }
         }

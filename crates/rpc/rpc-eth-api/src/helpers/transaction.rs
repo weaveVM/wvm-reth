@@ -289,7 +289,7 @@ pub trait EthTransactions: LoadTransaction {
             };
 
             if self.find_signer(&from).is_err() {
-                return Err(SignError::NoAccount.into_eth_err());
+                return Err(SignError::NoAccount.into_eth_err())
             }
 
             // set nonce if not already set before

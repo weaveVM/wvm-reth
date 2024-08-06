@@ -1034,7 +1034,7 @@ impl Future for NetworkManager {
         if maybe_more_handle_messages || maybe_more_swarm_events {
             // make sure we're woken up again
             cx.waker().wake_by_ref();
-            return Poll::Pending;
+            return Poll::Pending
         }
 
         this.update_poll_metrics(start, poll_durations);

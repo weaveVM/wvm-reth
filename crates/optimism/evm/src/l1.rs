@@ -188,7 +188,7 @@ impl RethL1BlockInfo for L1BlockInfo {
         is_deposit: bool,
     ) -> Result<U256, BlockExecutionError> {
         if is_deposit {
-            return Ok(U256::ZERO);
+            return Ok(U256::ZERO)
         }
 
         let spec_id = if chain_spec.is_fork_active_at_timestamp(OptimismHardfork::Fjord, timestamp)
@@ -266,7 +266,7 @@ where
 
         // Commit the create2 deployer account to the database.
         db.commit(HashMap::from([(CREATE_2_DEPLOYER_ADDR, revm_acc)]));
-        return Ok(());
+        return Ok(())
     }
 
     Ok(())

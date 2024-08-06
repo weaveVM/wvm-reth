@@ -731,7 +731,7 @@ where
         if let Some(tx) =
             self.pool().get_pooled_transaction_element(hash).map(|tx| tx.envelope_encoded())
         {
-            return Ok(Some(tx));
+            return Ok(Some(tx))
         }
 
         self.on_blocking_task(|this| async move {
@@ -1291,11 +1291,11 @@ where
         let ((cfg, block_env, _), block) =
             futures::try_join!(self.evm_env_at(block_id), self.block_with_senders(block_id))?;
 
-        let Some(block) = block else { return Ok(None) };
+        let Some(block) = block else { return Ok(None) }
 
         if block.body.is_empty() {
             // nothing to trace
-            return Ok(Some(Vec::new()));
+            return Ok(Some(Vec::new()))
         }
 
         // replay all transactions of the block
@@ -1491,7 +1491,7 @@ where
     ) -> EthResult<Option<Bytes>> {
         if let Some(block) = self.block_with_senders(block_id.into()).await? {
             if let Some(tx) = block.transactions().nth(index.into()) {
-                return Ok(Some(tx.envelope_encoded()));
+                return Ok(Some(tx.envelope_encoded()))
             }
         }
 
@@ -1563,7 +1563,7 @@ where
         use crate::eth::{api::optimism::OptimismTxMeta, optimism::OptimismEthApiError};
         use reth_evm_optimism::RethL1BlockInfo;
 
-        let Some(l1_block_info) = l1_block_info else { return Ok(OptimismTxMeta::default()) };
+        let Some(l1_block_info) = l1_block_info else { return Ok(OptimismTxMeta::default()) }
 
         let (l1_fee, l1_data_gas) = if !tx.is_deposit() {
             let envelope_buf = tx.envelope_encoded();

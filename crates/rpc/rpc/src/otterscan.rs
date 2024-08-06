@@ -230,7 +230,7 @@ where
 
         // make sure the block is full
         let BlockTransactions::Full(transactions) = &mut block.inner.transactions else {
-            return Err(internal_rpc_err("block is not full"));
+            return Err(internal_rpc_err("block is not full"))
         };
 
         // Crop page
@@ -333,7 +333,7 @@ where
         let Some(BlockTransactions::Full(transactions)) =
             self.eth.block_by_number(num.into(), true).await?.map(|block| block.inner.transactions)
         else {
-            return Err(EthApiError::UnknownBlockNumber.into());
+            return Err(EthApiError::UnknownBlockNumber.into())
         };
 
         Ok(transactions
@@ -345,7 +345,7 @@ where
     /// Handler for `getContractCreator`
     async fn get_contract_creator(&self, address: Address) -> RpcResult<Option<ContractCreator>> {
         if !self.has_code(address, None).await? {
-            return Ok(None);
+            return Ok(None)
         }
 
         let num = binary_search(1, self.eth.block_number()?.saturating_to(), |mid| {

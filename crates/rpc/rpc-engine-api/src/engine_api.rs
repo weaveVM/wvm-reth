@@ -465,7 +465,7 @@ where
     {
         let len = hashes.len() as u64;
         if len > MAX_PAYLOAD_BODIES_LIMIT {
-            return Err(EngineApiError::PayloadRequestTooLarge { len });
+            return Err(EngineApiError::PayloadRequestTooLarge { len })
         }
 
         let mut result = Vec::with_capacity(hashes.len());
@@ -598,9 +598,9 @@ where
                 // TODO: decide if we want this branch - the FCU INVALID response might be more
                 // useful than the payload attributes INVALID response
                 if fcu_res.is_invalid() {
-                    return Ok(fcu_res);
+                    return Ok(fcu_res)
                 }
-                return Err(err.into());
+                return Err(err.into())
             }
         }
 

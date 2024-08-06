@@ -106,7 +106,7 @@ impl MerkleStage {
             provider.get_stage_checkpoint_progress(StageId::MerkleExecute)?.unwrap_or_default();
 
         if buf.is_empty() {
-            return Ok(None);
+            return Ok(None)
         }
 
         let (checkpoint, _) = MerkleCheckpoint::from_compact(&buf, buf.len());
@@ -152,7 +152,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
         let threshold = match self {
             Self::Unwind => {
                 info!(target: "sync::stages::merkle::unwind", "Stage is always skipped");
-                return Ok(ExecOutput::done(StageCheckpoint::new(input.target())));
+                return Ok(ExecOutput::done(StageCheckpoint::new(input.target())))
             }
             Self::Execution { clean_threshold } => *clean_threshold,
             #[cfg(any(test, feature = "test-utils"))]
@@ -293,7 +293,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
         let range = input.unwind_block_range();
         if matches!(self, Self::Execution { .. }) {
             info!(target: "sync::stages::merkle::unwind", "Stage is always skipped");
-            return Ok(UnwindOutput { checkpoint: StageCheckpoint::new(input.unwind_to) });
+            return Ok(UnwindOutput { checkpoint: StageCheckpoint::new(input.unwind_to) })
         }
 
         let mut entities_checkpoint =

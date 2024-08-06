@@ -33,14 +33,14 @@ pub fn validate_block_post_execution(
             verify_receipts(block.header.receipts_root, block.header.logs_bloom, receipts)
         {
             tracing::debug!(%error, ?receipts, "receipts verification failed");
-            return Err(error);
+            return Err(error)
         }
     }
 
     // Validate that the header requests root matches the calculated requests root
     if chain_spec.is_prague_active_at_timestamp(block.timestamp) {
         let Some(header_requests_root) = block.header.requests_root else {
-            return Err(ConsensusError::RequestsRootMissing);
+            return Err(ConsensusError::RequestsRootMissing)
         };
         let requests_root = reth_primitives::proofs::calculate_requests_root(requests);
         if requests_root != header_requests_root {

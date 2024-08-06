@@ -110,7 +110,7 @@ where
 
     /// Registers progress metrics for each registered stage
     pub fn register_metrics(&mut self) -> Result<(), PipelineError> {
-        let Some(metrics_tx) = &mut self.metrics_tx else { return Ok(()) };
+        let Some(metrics_tx) = &mut self.metrics_tx else { return Ok(()) }
         let provider = self.provider_factory.provider()?;
 
         for stage in &self.stages {
@@ -138,14 +138,14 @@ where
                     PipelineTarget::Sync(tip) => self.set_tip(tip),
                     PipelineTarget::Unwind(target) => {
                         if let Err(err) = self.move_to_static_files() {
-                            return (self, Err(err.into()));
+                            return (self, Err(err.into()))
                         }
                         if let Err(err) = self.unwind(target, None) {
-                            return (self, Err(err));
+                            return (self, Err(err))
                         }
                         self.progress.update(target);
 
-                        return (self, Ok(ControlFlow::Continue { block_number: target }));
+                        return (self, Ok(ControlFlow::Continue { block_number: target }))
                     }
                 }
             }
@@ -179,7 +179,7 @@ where
                     max_block = ?self.max_block,
                     "Terminating pipeline."
                 );
-                return Ok(());
+                return Ok(())
             }
         }
     }
@@ -217,7 +217,7 @@ where
                 ControlFlow::Continue { block_number } => self.progress.update(block_number),
                 ControlFlow::Unwind { target, bad_block } => {
                     self.unwind(target, Some(bad_block.number))?;
-                    return Ok(ControlFlow::Unwind { target, bad_block });
+                    return Ok(ControlFlow::Unwind { target, bad_block })
                 }
             }
 
@@ -354,7 +354,7 @@ where
                     Err(err) => {
                         self.event_sender.notify(PipelineEvent::Error { stage_id });
 
-                        return Err(PipelineError::Stage(StageError::Fatal(Box::new(err))));
+                        return Err(PipelineError::Stage(StageError::Fatal(Box::new(err))))
                     }
                 }
             }
@@ -474,7 +474,7 @@ where
                     if let Some(ctrl) =
                         on_stage_error(&self.provider_factory, stage_id, prev_checkpoint, err)?
                     {
-                        return Ok(ctrl);
+                        return Ok(ctrl)
                     }
                 }
             }

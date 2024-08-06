@@ -139,12 +139,12 @@ impl PrefixSetMut {
         for (idx, key) in self.keys[self.index..].iter().enumerate() {
             if key.has_prefix(prefix) {
                 self.index += idx;
-                return true;
+                return true
             }
 
             if *key > *prefix {
                 self.index += idx;
-                return false;
+                return false
             }
         }
 
@@ -213,12 +213,12 @@ impl PrefixSet {
         for (idx, key) in self.keys[self.index..].iter().enumerate() {
             if key.has_prefix(prefix) {
                 self.index += idx;
-                return true;
+                return true
             }
 
             if key > prefix {
                 self.index += idx;
-                return false;
+                return false
             }
         }
 

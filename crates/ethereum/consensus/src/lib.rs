@@ -162,11 +162,11 @@ impl Consensus for EthBeaconConsensus {
             }
 
             if header.nonce != 0 {
-                return Err(ConsensusError::TheMergeNonceIsNotZero);
+                return Err(ConsensusError::TheMergeNonceIsNotZero)
             }
 
             if header.ommers_hash != EMPTY_OMMER_ROOT_HASH {
-                return Err(ConsensusError::TheMergeOmmerRootIsNotEmpty);
+                return Err(ConsensusError::TheMergeOmmerRootIsNotEmpty)
             }
 
             // Post-merge, the consensus layer is expected to perform checks such that the block

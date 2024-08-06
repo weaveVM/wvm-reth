@@ -125,7 +125,7 @@ pub fn calculate_receipt_root_no_memo_optimism(
 pub fn calculate_ommers_root(ommers: &[Header]) -> B256 {
     // Check if `ommers` list is empty
     if ommers.is_empty() {
-        return EMPTY_OMMER_ROOT_HASH;
+        return EMPTY_OMMER_ROOT_HASH
     }
     // RLP Encode
     let mut ommers_rlp = Vec::new();

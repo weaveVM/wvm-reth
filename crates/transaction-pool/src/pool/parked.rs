@@ -190,7 +190,7 @@ impl<T: ParkedOrd> ParkedPool<T> {
     ) -> Vec<Arc<ValidPoolTransaction<T::Transaction>>> {
         if !self.exceeds(&limit) {
             // if we are below the limits, we don't need to drop anything
-            return Vec::new();
+            return Vec::new()
         }
 
         let mut removed = Vec::new();

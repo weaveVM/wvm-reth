@@ -28,7 +28,7 @@ impl PerfectHashingFunction for Fmph {
 
     fn get_index(&self, key: &[u8]) -> Result<Option<u64>, NippyJarError> {
         if let Some(f) = &self.function {
-            return Ok(f.get(key));
+            return Ok(f.get(key))
         }
         Err(NippyJarError::PHFMissingKeys)
     }

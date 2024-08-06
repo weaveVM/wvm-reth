@@ -75,7 +75,7 @@ impl<R: Resolver, K: EnrKeyUnambiguous> QueryPool<R, K> {
         loop {
             // drain buffered events first
             if let Some(event) = self.queued_outcomes.pop_front() {
-                return Poll::Ready(event);
+                return Poll::Ready(event)
             }
 
             // queue in new queries if we have capacity
@@ -102,7 +102,7 @@ impl<R: Resolver, K: EnrKeyUnambiguous> QueryPool<R, K> {
             }
 
             if self.queued_outcomes.is_empty() {
-                return Poll::Pending;
+                return Poll::Pending
             }
         }
     }

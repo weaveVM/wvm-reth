@@ -141,7 +141,7 @@ impl Decodable for EnrForkIdEntry {
         let b = &mut &**buf;
         let rlp_head = Header::decode(b)?;
         if !rlp_head.list {
-            return Err(RlpError::UnexpectedString);
+            return Err(RlpError::UnexpectedString)
         }
         let started_len = b.len();
 
@@ -324,7 +324,7 @@ impl ForkFilter {
         if self.current().hash == fork_id.hash {
             if fork_id.next == 0 {
                 // 1b) No remotely announced fork, connect.
-                return Ok(());
+                return Ok(())
             }
 
             let is_incompatible = if self.head.number < TIMESTAMP_BEFORE_ETHEREUM_MAINNET {
@@ -380,7 +380,7 @@ impl ForkFilter {
         // with locally known future forks, connect.
         for future_fork_hash in &self.cache.future {
             if *future_fork_hash == fork_id.hash {
-                return Ok(());
+                return Ok(())
             }
         }
 

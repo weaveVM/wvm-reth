@@ -156,7 +156,7 @@ where
 
         // If only a few peers are connected we keep it low
         if num_peers < self.min_concurrent_requests {
-            return max_dynamic;
+            return max_dynamic
         }
 
         max_dynamic.min(self.max_concurrent_requests)
@@ -179,7 +179,7 @@ where
                 // headers so follow-up requests will use that as start.
                 self.next_request_block_number -= request.limit;
 
-                return Some(request);
+                return Some(request)
             }
         }
 
@@ -550,7 +550,7 @@ where
                     self.metrics.buffered_responses.decrement(1.);
 
                     if let Err(err) = self.process_next_headers(request, headers, peer_id) {
-                        return Some(err);
+                        return Some(err)
                     }
                 }
                 Ordering::Greater => {
@@ -749,7 +749,7 @@ where
                 sync_target=?this.sync_target,
                 "The downloader sync boundaries have not been set"
             );
-            return Poll::Pending;
+            return Poll::Pending
         }
 
         // If we have a new tip request we need to complete that first before we send batched
@@ -763,7 +763,7 @@ where
                             trace!(target: "downloaders::headers", %error, "invalid sync target response");
                             if error.is_channel_closed() {
                                 // download channel closed which means the network was dropped
-                                return Poll::Ready(None);
+                                return Poll::Ready(None)
                             }
 
                             this.penalize_peer(error.peer_id, &error.error);
@@ -773,13 +773,13 @@ where
                         }
                         Err(ReverseHeadersDownloaderError::Downloader(error)) => {
                             this.clear();
-                            return Poll::Ready(Some(Err(error)));
+                            return Poll::Ready(Some(Err(error)))
                         }
                     };
                 }
                 Poll::Pending => {
                     this.sync_target_request = Some(req);
-                    return Poll::Pending;
+                    return Poll::Pending
                 }
             }
         }
@@ -805,13 +805,13 @@ where
                     Err(ReverseHeadersDownloaderError::Response(error)) => {
                         if error.is_channel_closed() {
                             // download channel closed which means the network was dropped
-                            return Poll::Ready(None);
+                            return Poll::Ready(None)
                         }
                         this.on_headers_error(error);
                     }
                     Err(ReverseHeadersDownloaderError::Downloader(error)) => {
                         this.clear();
-                        return Poll::Ready(Some(Err(error)));
+                        return Poll::Ready(Some(Err(error)))
                     }
                 };
             }
@@ -853,7 +853,7 @@ where
                 trace!(target: "downloaders::headers", batch=%next_batch.len(), "Returning validated batch");
 
                 this.metrics.total_flushed.increment(next_batch.len() as u64);
-                return Poll::Ready(Some(Ok(next_batch)));
+                return Poll::Ready(Some(Ok(next_batch)))
             }
 
             if !progress {
@@ -866,10 +866,10 @@ where
             let next_batch = this.split_next_batch();
             if next_batch.is_empty() {
                 this.clear();
-                return Poll::Ready(None);
+                return Poll::Ready(None)
             }
             this.metrics.total_flushed.increment(next_batch.len() as u64);
-            return Poll::Ready(Some(Ok(next_batch)));
+            return Poll::Ready(Some(Ok(next_batch)))
         }
 
         Poll::Pending
@@ -962,7 +962,7 @@ impl HeadersResponseError {
     /// Returns true if the error was caused by a closed channel to the network.
     const fn is_channel_closed(&self) -> bool {
         if let DownloadError::RequestError(ref err) = self.error {
-            return err.is_channel_closed();
+            return err.is_channel_closed()
         }
         false
     }

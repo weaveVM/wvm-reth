@@ -169,7 +169,7 @@ where
                                             ForkchoiceStatus::Valid => break,
                                             ForkchoiceStatus::Invalid => {
                                                 error!(target: "consensus::auto", ?fcu_response, "Forkchoice update returned invalid response");
-                                                return None;
+                                                return None
                                             }
                                             ForkchoiceStatus::Syncing => {
                                                 debug!(target: "consensus::auto", ?fcu_response, "Forkchoice update returned SYNCING, waiting for VALID");
@@ -180,7 +180,7 @@ where
                                     }
                                     Err(err) => {
                                         error!(target: "consensus::auto", %err, "Autoseal fork choice update failed");
-                                        return None;
+                                        return None
                                     }
                                 }
                             }

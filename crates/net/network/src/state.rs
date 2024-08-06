@@ -412,7 +412,7 @@ impl NetworkState {
         loop {
             // drain buffered messages
             if let Some(message) = self.queued_messages.pop_front() {
-                return Poll::Ready(message);
+                return Poll::Ready(message)
             }
 
             while let Poll::Ready(discovery) = self.discovery.poll(cx) {
@@ -476,7 +476,7 @@ impl NetworkState {
             }
 
             if self.queued_messages.is_empty() {
-                return Poll::Pending;
+                return Poll::Pending
             }
         }
     }

@@ -38,7 +38,7 @@ pub trait BlockProvider: Send + Sync + 'static {
                 .checked_sub(offset)
                 .and_then(|index| previous_block_hashes.get(index));
             if let Some(hash) = stored_hash {
-                return Ok(*hash);
+                return Ok(*hash)
             }
 
             // Return zero hash if the chain isn't long enough to have the block at the offset.

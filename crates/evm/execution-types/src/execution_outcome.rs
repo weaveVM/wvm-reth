@@ -152,11 +152,11 @@ impl ExecutionOutcome {
     /// Transform block number to the index of block.
     fn block_number_to_index(&self, block_number: BlockNumber) -> Option<usize> {
         if self.first_block > block_number {
-            return None;
+            return None
         }
         let index = block_number - self.first_block;
         if index >= self.receipts.len() as u64 {
-            return None;
+            return None
         }
         Some(index as usize)
     }
@@ -211,7 +211,7 @@ impl ExecutionOutcome {
 
     /// Return all block receipts
     pub fn receipts_by_block(&self, block_number: BlockNumber) -> &[Option<Receipt>] {
-        let Some(index) = self.block_number_to_index(block_number) else { return &[] };
+        let Some(index) = self.block_number_to_index(block_number) else { return &[] }
         &self.receipts[index]
     }
 
@@ -238,7 +238,7 @@ impl ExecutionOutcome {
     ///
     /// The provided block number will stay inside the bundle state.
     pub fn revert_to(&mut self, block_number: BlockNumber) -> bool {
-        let Some(index) = self.block_number_to_index(block_number) else { return false };
+        let Some(index) = self.block_number_to_index(block_number) else { return false }
 
         // +1 is for number of blocks that we have as index is included.
         let new_len = index + 1;
@@ -264,7 +264,7 @@ impl ExecutionOutcome {
     /// If the target block number is not included in the state block range.
     pub fn split_at(self, at: BlockNumber) -> (Option<Self>, Self) {
         if at == self.first_block {
-            return (None, self);
+            return (None, self)
         }
 
         let (mut lower_state, mut higher_state) = (self.clone(), self);

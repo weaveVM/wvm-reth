@@ -112,7 +112,7 @@ impl TransactionsHandle {
         peer_id: PeerId,
         hashes: Vec<B256>,
     ) -> Result<Option<Vec<PooledTransactionsElement>>, RequestError> {
-        let Some(peer) = self.peer_handle(peer_id).await? else { return Ok(None) };
+        let Some(peer) = self.peer_handle(peer_id).await? else { return Ok(None) }
 
         let (tx, rx) = oneshot::channel();
         let request = PeerRequest::GetPooledTransactions { request: hashes.into(), response: tx };
@@ -416,7 +416,7 @@ where
     ) -> PropagatedTransactions {
         let mut propagated = PropagatedTransactions::default();
         if self.network.tx_gossip_disabled() {
-            return propagated;
+            return propagated
         }
 
         // send full transactions to a fraction of the connected peers (square root of the total
@@ -526,7 +526,7 @@ where
 
         if full_transactions.transactions.is_empty() {
             // nothing to propagate
-            return None;
+            return None
         }
 
         let new_full_transactions = full_transactions.build();
@@ -796,7 +796,7 @@ where
         // request the missing transactions
         //
         // get handle to peer's session again, at this point we know it exists
-        let Some(peer) = self.peers.get_mut(&peer_id) else { return };
+        let Some(peer) = self.peers.get_mut(&peer_id) else { return }
         if let Some(failed_to_request_hashes) =
             self.transaction_fetcher.request_transactions_from_peer(hashes_to_request, peer)
         {
@@ -948,7 +948,7 @@ where
             return;
         }
 
-        let Some(peer) = self.peers.get_mut(&peer_id) else { return };
+        let Some(peer) = self.peers.get_mut(&peer_id) else { return }
         let mut transactions = transactions.0;
 
         // mark the transactions as received
@@ -1354,7 +1354,7 @@ where
         {
             // make sure we're woken up again
             cx.waker().wake_by_ref();
-            return Poll::Pending;
+            return Poll::Pending
         }
 
         this.update_poll_metrics(start, poll_durations);

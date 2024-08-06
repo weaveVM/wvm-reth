@@ -56,7 +56,7 @@ impl<T: TransactionOrdering> Iterator for BestTransactionsWithFees<T> {
                     .max_fee_per_blob_gas()
                     .map_or(true, |fee| fee >= self.base_fee_per_blob_gas as u128)
             {
-                return Some(best);
+                return Some(best)
             } else {
                 crate::traits::BestTransactions::mark_invalid(self, &best);
             }
@@ -192,7 +192,7 @@ impl<T: TransactionOrdering> Iterator for BestTransactions<T> {
                 // transactions are returned
                 self.mark_invalid(&best.transaction)
             } else {
-                return Some(best.transaction);
+                return Some(best.transaction)
             }
         }
     }
@@ -226,7 +226,7 @@ where
         loop {
             let best = self.best.next()?;
             if (self.predicate)(&best) {
-                return Some(best);
+                return Some(best)
             } else {
                 self.best.mark_invalid(&best);
             }

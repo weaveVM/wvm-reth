@@ -846,7 +846,7 @@ impl Discv4Service {
     fn has_bond(&self, remote_id: PeerId, remote_ip: IpAddr) -> bool {
         if let Some(timestamp) = self.received_pongs.last_pong(remote_id, remote_ip) {
             if timestamp.elapsed() < self.config.bond_expiration {
-                return true;
+                return true
             }
         }
         false
@@ -1426,7 +1426,7 @@ impl Discv4Service {
         self.pending_pings.retain(|node_id, ping_request| {
             if now.duration_since(ping_request.sent_at) > self.config.ping_expiration {
                 failed_pings.push(*node_id);
-                return false;
+                return false
             }
             true
         });
@@ -1442,7 +1442,7 @@ impl Discv4Service {
         self.pending_lookup.retain(|node_id, (lookup_sent_at, _)| {
             if now.duration_since(*lookup_sent_at) > self.config.request_timeout {
                 failed_lookups.push(*node_id);
-                return false;
+                return false
             }
             true
         });
@@ -1466,7 +1466,7 @@ impl Discv4Service {
                     // treat this as an hard error since it responded.
                     failed_neighbours.push(*node_id);
                 }
-                return false;
+                return false
             }
             true
         });
@@ -1541,7 +1541,7 @@ impl Discv4Service {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
         if self.config.enforce_expiration_timestamps && timestamp < now {
             trace!(target: "discv4", "Expired packet");
-            return Err(());
+            return Err(())
         }
         Ok(())
     }
@@ -1585,7 +1585,7 @@ impl Discv4Service {
         loop {
             // drain buffered events first
             if let Some(event) = self.queued_events.pop_front() {
-                return Poll::Ready(event);
+                return Poll::Ready(event)
             }
 
             // trigger self lookup
@@ -1728,7 +1728,7 @@ impl Discv4Service {
             }
 
             if self.queued_events.is_empty() {
-                return Poll::Pending;
+                return Poll::Pending
             }
         }
     }
@@ -1999,7 +1999,7 @@ impl LookupTargetRotator {
         self.counter += 1;
         self.counter %= self.interval;
         if self.counter == 0 {
-            return *local;
+            return *local
         }
         PeerId::random()
     }

@@ -141,7 +141,7 @@ impl Message {
     /// Returns the decoded message and the public key of the sender.
     pub fn decode(packet: &[u8]) -> Result<Packet, DecodePacketError> {
         if packet.len() < MIN_PACKET_SIZE {
-            return Err(DecodePacketError::PacketTooShort);
+            return Err(DecodePacketError::PacketTooShort)
         }
 
         // parses the wire-protocol, every packet starts with a header:
@@ -152,7 +152,7 @@ impl Message {
         let header_hash = keccak256(&packet[32..]);
         let data_hash = B256::from_slice(&packet[..32]);
         if data_hash != header_hash {
-            return Err(DecodePacketError::HashMismatch);
+            return Err(DecodePacketError::HashMismatch)
         }
 
         let signature = &packet[32..96];
@@ -203,11 +203,11 @@ impl alloy_rlp::Decodable for PingNodeEndpoint {
     fn decode(b: &mut &[u8]) -> alloy_rlp::Result<Self> {
         let alloy_rlp::Header { list, payload_length } = alloy_rlp::Header::decode(b)?;
         if !list {
-            return Err(alloy_rlp::Error::UnexpectedString);
+            return Err(alloy_rlp::Error::UnexpectedString)
         }
         let started_len = b.len();
         if started_len < payload_length {
-            return Err(alloy_rlp::Error::InputTooShort);
+            return Err(alloy_rlp::Error::InputTooShort)
         }
 
         // Geth allows the ipaddr to be possibly empty:
@@ -282,7 +282,7 @@ impl Decodable for FindNode {
         let b = &mut &**buf;
         let rlp_head = Header::decode(b)?;
         if !rlp_head.list {
-            return Err(RlpError::UnexpectedString);
+            return Err(RlpError::UnexpectedString)
         }
         let started_len = b.len();
 
@@ -324,7 +324,7 @@ impl Decodable for Neighbours {
         let b = &mut &**buf;
         let rlp_head = Header::decode(b)?;
         if !rlp_head.list {
-            return Err(RlpError::UnexpectedString);
+            return Err(RlpError::UnexpectedString)
         }
         let started_len = b.len();
 
@@ -367,7 +367,7 @@ impl Decodable for EnrRequest {
         let b = &mut &**buf;
         let rlp_head = Header::decode(b)?;
         if !rlp_head.list {
-            return Err(RlpError::UnexpectedString);
+            return Err(RlpError::UnexpectedString)
         }
         let started_len = b.len();
 
@@ -475,7 +475,7 @@ impl Decodable for Ping {
         let b = &mut &**buf;
         let rlp_head = Header::decode(b)?;
         if !rlp_head.list {
-            return Err(RlpError::UnexpectedString);
+            return Err(RlpError::UnexpectedString)
         }
         let started_len = b.len();
 
@@ -554,7 +554,7 @@ impl Decodable for Pong {
         let b = &mut &**buf;
         let rlp_head = Header::decode(b)?;
         if !rlp_head.list {
-            return Err(RlpError::UnexpectedString);
+            return Err(RlpError::UnexpectedString)
         }
         let started_len = b.len();
         let mut this = Self {

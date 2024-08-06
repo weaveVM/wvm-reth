@@ -225,7 +225,7 @@ where
     ) -> Result<Option<LocalizedTransactionTrace>, Eth::Error> {
         if indices.len() != 1 {
             // The OG impl failed if it gets more than a single index
-            return Ok(None);
+            return Ok(None)
         }
         self.trace_get_index(hash, indices[0]).await
     }
@@ -464,9 +464,9 @@ where
             )
             .await?;
 
-        let Some(transactions) = res else { return Ok(None) };
+        let Some(transactions) = res else { return Ok(None) }
 
-        let Some(block) = self.inner.eth_api.block(block_id).await? else { return Ok(None) };
+        let Some(block) = self.inner.eth_api.block(block_id).await? else { return Ok(None) }
 
         Ok(Some(BlockOpcodeGas {
             block_hash: block.hash(),

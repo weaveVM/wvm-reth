@@ -51,7 +51,7 @@ impl EngineHooksController {
         cx: &mut Context<'_>,
         args: EngineHookContext,
     ) -> Poll<Result<PolledHook, EngineHookError>> {
-        let Some(mut hook) = self.active_db_write_hook.take() else { return Poll::Pending };
+        let Some(mut hook) = self.active_db_write_hook.take() else { return Poll::Pending }
 
         match hook.poll(cx, args)? {
             Poll::Ready(event) => {
@@ -74,7 +74,7 @@ impl EngineHooksController {
                     self.hooks.push_back(hook);
                 }
 
-                return Poll::Ready(Ok(result));
+                return Poll::Ready(Ok(result))
             }
             Poll::Pending => {
                 self.active_db_write_hook = Some(hook);
@@ -101,7 +101,7 @@ impl EngineHooksController {
         args: EngineHookContext,
         db_write_active: bool,
     ) -> Poll<Result<PolledHook, EngineHookError>> {
-        let Some(mut hook) = self.hooks.pop_front() else { return Poll::Pending };
+        let Some(mut hook) = self.hooks.pop_front() else { return Poll::Pending }
 
         let result = self.poll_next_hook_inner(cx, &mut hook, args, db_write_active);
 
@@ -141,7 +141,7 @@ impl EngineHooksController {
                 db_write_active ||
                 args.finalized_block_number.is_none())
         {
-            return Poll::Pending;
+            return Poll::Pending
         }
 
         if let Poll::Ready(event) = hook.poll(cx, args)? {
@@ -155,7 +155,7 @@ impl EngineHooksController {
                 "Polled next hook"
             );
 
-            return Poll::Ready(Ok(result));
+            return Poll::Ready(Ok(result))
         } else {
             debug!(target: "consensus::engine::hooks", hook = hook.name(), "Next hook is not ready");
         }

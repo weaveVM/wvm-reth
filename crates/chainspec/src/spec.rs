@@ -1153,7 +1153,7 @@ mod tests {
                             "Expected fork ID {expected_id:?}, computed fork ID {computed_id:?} for Shanghai hardfork"
                         );
                     } else {
-                        panic!("Expected ForkCondition to return Some for Hardfork::Shanghai");
+                        panic!("Expected ForkCondition to return Some for Hardfork::Shanghai")
                     }
                 }
             }

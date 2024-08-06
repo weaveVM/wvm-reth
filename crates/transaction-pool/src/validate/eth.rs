@@ -221,7 +221,7 @@ where
         // Check whether the init code size has been exceeded.
         if self.fork_tracker.is_shanghai_activated() {
             if let Err(err) = ensure_max_init_code_size(&transaction, MAX_INIT_CODE_BYTE_SIZE) {
-                return TransactionValidationOutcome::Invalid(transaction, err);
+                return TransactionValidationOutcome::Invalid(transaction, err)
             }
         }
 

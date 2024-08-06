@@ -128,7 +128,7 @@ where
         // next one exceed the soft response limit, if not then peer either does not have the next
         // block or deliberately sent a single block.
         if bodies.is_empty() {
-            return Err(DownloadError::EmptyResponse);
+            return Err(DownloadError::EmptyResponse)
         }
 
         if response_len > request_len {
@@ -215,7 +215,7 @@ where
 
         loop {
             if this.pending_headers.is_empty() {
-                return Poll::Ready(Ok(std::mem::take(&mut this.buffer)));
+                return Poll::Ready(Ok(std::mem::take(&mut this.buffer)))
             }
 
             // Check if there is a pending requests. It might not exist if all
@@ -230,7 +230,7 @@ where
                     }
                     Err(error) => {
                         if error.is_channel_closed() {
-                            return Poll::Ready(Err(error.into()));
+                            return Poll::Ready(Err(error.into()))
                         }
 
                         this.on_error(error.into(), None);

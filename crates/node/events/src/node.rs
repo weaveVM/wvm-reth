@@ -593,7 +593,7 @@ struct Eta {
 impl Eta {
     /// Update the ETA given the checkpoint, if possible.
     fn update(&mut self, stage: StageId, checkpoint: StageCheckpoint) {
-        let Some(current) = checkpoint.entities() else { return };
+        let Some(current) = checkpoint.entities() else { return }
 
         if let Some(last_checkpoint_time) = &self.last_checkpoint_time {
             let Some(processed_since_last) =

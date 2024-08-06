@@ -460,13 +460,13 @@ impl<T: TransactionOrdering> PendingPool<T> {
         let mut removed = Vec::new();
         // return early if the pool is already under the limits
         if !self.exceeds(&limit) {
-            return removed;
+            return removed
         }
 
         // first truncate only non-local transactions, returning if the pool end up under the limit
         self.remove_to_limit(&limit, false, &mut removed);
         if !self.exceeds(&limit) {
-            return removed;
+            return removed
         }
 
         // now repeat for local transactions, since local transactions must be removed now for the

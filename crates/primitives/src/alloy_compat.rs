@@ -98,7 +98,7 @@ impl TryFrom<alloy_rpc_types::Transaction> for Transaction {
                                 .map_err(|err| ConversionError::Eip2718Error(err.into()))?
                                 .1
                         } else {
-                            return Err(ConversionError::MissingChainId);
+                            return Err(ConversionError::MissingChainId)
                         }
                     }
                 };

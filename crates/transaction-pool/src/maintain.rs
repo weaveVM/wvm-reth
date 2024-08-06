@@ -572,14 +572,14 @@ where
     P: TransactionPool,
 {
     if !file_path.exists() {
-        return Ok(());
+        return Ok(())
     }
 
     debug!(target: "txpool", txs_file =?file_path, "Check local persistent storage for saved transactions");
     let data = reth_fs_util::read(file_path)?;
 
     if data.is_empty() {
-        return Ok(());
+        return Ok(())
     }
 
     let txs_signed: Vec<TransactionSigned> = alloy_rlp::Decodable::decode(&mut data.as_slice())?;

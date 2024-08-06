@@ -403,8 +403,8 @@ impl<TX: DbTx> DatabaseProvider<TX> {
             Option<Requests>,
         ) -> ProviderResult<Option<B>>,
     {
-        let Some(block_number) = self.convert_hash_or_number(id)? else { return Ok(None) };
-        let Some(header) = header_by_number(block_number)? else { return Ok(None) };
+        let Some(block_number) = self.convert_hash_or_number(id)? else { return Ok(None) }
+        let Some(header) = header_by_number(block_number)? else { return Ok(None) }
 
         let ommers = self.ommers(block_number.into())?.unwrap_or_default();
         let withdrawals =
@@ -417,7 +417,7 @@ impl<TX: DbTx> DatabaseProvider<TX> {
         // in the database yet, or they do exit but are not indexed. If they exist but are not
         // indexed, we don't have enough information to return the block anyways, so we return
         // `None`.
-        let Some(body) = self.block_body_indices(block_number)? else { return Ok(None) };
+        let Some(body) = self.block_body_indices(block_number)? else { return Ok(None) }
 
         let tx_range = body.tx_num_range();
 
@@ -1613,7 +1613,7 @@ impl<TX: DbTxMut + DbTx> DatabaseProvider<TX> {
         skip_filter: &mut impl FnMut(&TableRow<T>) -> bool,
         delete_callback: &mut impl FnMut(TableRow<T>),
     ) -> Result<bool, DatabaseError> {
-        let Some(res) = walker.next() else { return Ok(true) };
+        let Some(res) = walker.next() else { return Ok(true) }
 
         let row = res?;
 

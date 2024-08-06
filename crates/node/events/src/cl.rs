@@ -78,7 +78,7 @@ impl Stream for ConsensusLayerHealthEvents {
             }
 
             // We never had both FCU and transition config exchange.
-            return Poll::Ready(Some(ConsensusLayerHealthEvent::NeverSeen));
+            return Poll::Ready(Some(ConsensusLayerHealthEvent::NeverSeen))
         }
     }
 }

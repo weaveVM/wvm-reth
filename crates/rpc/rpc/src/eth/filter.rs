@@ -141,7 +141,7 @@ where
 
             if filter.block > best_number {
                 // no new blocks since the last poll
-                return Ok(FilterChanges::Empty);
+                return Ok(FilterChanges::Empty)
             }
 
             // update filter
@@ -458,7 +458,7 @@ where
                     block.header.timestamp,
                 )?;
             }
-            return Ok(all_logs);
+            return Ok(all_logs)
         }
 
         // derive bloom filters from filter input, so we can check headers for matching logs
@@ -650,7 +650,7 @@ impl Iterator for BlockRangeInclusiveIter {
         let start = self.iter.next()?;
         let end = (start + self.step).min(self.end);
         if start > end {
-            return None;
+            return None
         }
         Some((start, end))
     }

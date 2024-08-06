@@ -32,7 +32,7 @@ pub fn validate_header_base_fee(
     if chain_spec.is_fork_active_at_block(EthereumHardfork::London, header.number) &&
         header.base_fee_per_gas.is_none()
     {
-        return Err(ConsensusError::BaseFeeMissing);
+        return Err(ConsensusError::BaseFeeMissing)
     }
     Ok(())
 }
@@ -57,7 +57,7 @@ pub fn validate_block_pre_execution(
 
     // Check transaction root
     if let Err(error) = block.ensure_transaction_root_valid() {
-        return Err(ConsensusError::BodyTransactionRootDiff(error.into()));
+        return Err(ConsensusError::BodyTransactionRootDiff(error.into()))
     }
 
     // EIP-4895: Beacon chain push withdrawals as operations
@@ -117,7 +117,7 @@ pub fn validate_4844_header_standalone(header: &SealedHeader) -> Result<(), Cons
     let excess_blob_gas = header.excess_blob_gas.ok_or(ConsensusError::ExcessBlobGasMissing)?;
 
     if header.parent_beacon_block_root.is_none() {
-        return Err(ConsensusError::ParentBeaconBlockRootMissing);
+        return Err(ConsensusError::ParentBeaconBlockRootMissing)
     }
 
     if blob_gas_used > MAX_DATA_GAS_PER_BLOCK {

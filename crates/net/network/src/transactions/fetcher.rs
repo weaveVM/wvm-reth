@@ -156,7 +156,7 @@ impl TransactionFetcher {
             if let Some(inflight_count) = self.active_peers.get(peer_id) {
                 *inflight_count -= 1;
                 if *inflight_count == 0 {
-                    return true;
+                    return true
                 }
             }
             false
@@ -169,9 +169,9 @@ impl TransactionFetcher {
 
     /// Returns `true` if peer is idle with respect to `self.inflight_requests`.
     pub fn is_idle(&self, peer_id: &PeerId) -> bool {
-        let Some(inflight_count) = self.active_peers.peek(peer_id) else { return true };
+        let Some(inflight_count) = self.active_peers.peek(peer_id) else { return true }
         if *inflight_count < DEFAULT_MAX_COUNT_CONCURRENT_REQUESTS_PER_PEER {
-            return true;
+            return true
         }
         false
     }
@@ -187,7 +187,7 @@ impl TransactionFetcher {
 
         for peer_id in fallback_peers.iter() {
             if self.is_idle(peer_id) && is_session_active(peer_id) {
-                return Some(peer_id);
+                return Some(peer_id)
             }
         }
 
@@ -220,7 +220,7 @@ impl TransactionFetcher {
             if let Some(ref mut bud) = budget {
                 *bud = bud.saturating_sub(1);
                 if *bud == 0 {
-                    return None;
+                    return None
                 }
             }
         };
@@ -243,7 +243,7 @@ impl TransactionFetcher {
         hashes_from_announcement: ValidAnnouncementData,
     ) -> RequestTxHashes {
         if hashes_from_announcement.msg_version().is_eth68() {
-            return self.pack_request_eth68(hashes_to_request, hashes_from_announcement);
+            return self.pack_request_eth68(hashes_to_request, hashes_from_announcement)
         }
         self.pack_request_eth66(hashes_to_request, hashes_from_announcement)
     }
@@ -274,7 +274,7 @@ impl TransactionFetcher {
 
             // tx is really big, pack request with single tx
             if size >= self.info.soft_limit_byte_size_pooled_transactions_response_on_pack_request {
-                return hashes_from_announcement_iter.collect::<RequestTxHashes>();
+                return hashes_from_announcement_iter.collect::<RequestTxHashes>()
             } else {
                 acc_size_response = size;
             }
@@ -358,7 +358,7 @@ impl TransactionFetcher {
         hashes.retain(|hash| {
             if let Some(entry) = self.hashes_fetch_inflight_and_pending_fetch.get(hash) {
                 entry.fallback_peers_mut().remove(peer_failed_to_serve);
-                return true;
+                return true
             }
             // tx has been seen over broadcast in the time it took for the request to resolve
             false
@@ -447,7 +447,7 @@ impl TransactionFetcher {
         );
 
         // peer should always exist since `is_session_active` already checked
-        let Some(peer) = peers.get(&peer_id) else { return };
+        let Some(peer) = peers.get(&peer_id) else { return }
         let conn_eth_version = peer.version;
 
         // fill the request with more hashes pending fetch that have been announced by the peer.
@@ -633,7 +633,7 @@ impl TransactionFetcher {
                 max_inflight_transaction_requests=self.info.max_inflight_requests,
                 "limit for concurrent `GetPooledTransactions` requests reached, dropping request for hashes to peer"
             );
-            return Some(new_announced_hashes);
+            return Some(new_announced_hashes)
         }
 
         let Some(inflight_count) = self.active_peers.get_or_insert(peer_id, || 0) else {
@@ -643,7 +643,7 @@ impl TransactionFetcher {
                 conn_eth_version=%conn_eth_version,
                 "failed to cache active peer in schnellru::LruMap, dropping request to peer"
             );
-            return Some(new_announced_hashes);
+            return Some(new_announced_hashes)
         };
 
         if *inflight_count >= DEFAULT_MAX_COUNT_CONCURRENT_REQUESTS_PER_PEER {
@@ -654,7 +654,7 @@ impl TransactionFetcher {
                 max_concurrent_tx_reqs_per_peer=DEFAULT_MAX_COUNT_CONCURRENT_REQUESTS_PER_PEER,
                 "limit for concurrent `GetPooledTransactions` requests per peer reached"
             );
-            return Some(new_announced_hashes);
+            return Some(new_announced_hashes)
         }
 
         *inflight_count += 1;
@@ -729,7 +729,7 @@ impl TransactionFetcher {
         seen_hashes: &LruCache<TxHash>,
         mut budget_fill_request: Option<usize>, // check max `budget` lru pending hashes
     ) {
-        let Some(hash) = hashes_to_request.iter().next() else { return };
+        let Some(hash) = hashes_to_request.iter().next() else { return }
 
         let mut acc_size_response = self
             .hashes_fetch_inflight_and_pending_fetch
@@ -929,7 +929,7 @@ impl TransactionFetcher {
                         "received empty `PooledTransactions` response from peer, peer failed to serve hashes it announced"
                     );
 
-                    return FetchEvent::EmptyResponse { peer_id };
+                    return FetchEvent::EmptyResponse { peer_id }
                 }
 
                 //
@@ -956,7 +956,7 @@ impl TransactionFetcher {
                 }
                 // peer has only sent hashes that we didn't request
                 if verified_payload.is_empty() {
-                    return FetchEvent::FetchError { peer_id, error: RequestError::BadResponse };
+                    return FetchEvent::FetchError { peer_id, error: RequestError::BadResponse }
                 }
 
                 //
@@ -993,7 +993,7 @@ impl TransactionFetcher {
                     if valid_payload.contains_key(requested_hash) {
                         // hash is now known, stop tracking
                         fetched.push(*requested_hash);
-                        return false;
+                        return false
                     }
                     true
                 });
@@ -1040,11 +1040,11 @@ impl Stream for TransactionFetcher {
         // `FuturesUnordered` doesn't close when `None` is returned. so just return pending.
         // <https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=815be2b6c8003303757c3ced135f363e>
         if self.inflight_requests.is_empty() {
-            return Poll::Pending;
+            return Poll::Pending
         }
 
         if let Some(resp) = ready!(self.inflight_requests.poll_next_unpin(cx)) {
-            return Poll::Ready(Some(self.on_resolved_get_pooled_transactions_request_fut(resp)));
+            return Poll::Ready(Some(self.on_resolved_get_pooled_transactions_request_fut(resp)))
         }
 
         Poll::Pending
@@ -1248,7 +1248,7 @@ impl VerifyPooledTransactionsResponse for UnverifiedPooledTransactions {
                     tx_hashes_not_requested_count += 1;
                 }
 
-                return false;
+                return false
             }
             true
         });

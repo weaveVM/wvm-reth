@@ -198,7 +198,7 @@ where
         input: ExecInput,
     ) -> Result<ExecOutput, StageError> {
         if input.target_reached() {
-            return Ok(ExecOutput::done(input.checkpoint()));
+            return Ok(ExecOutput::done(input.checkpoint()))
         }
 
         let start_block = input.next_block();
@@ -383,7 +383,7 @@ where
     }
 
     fn post_execute_commit(&mut self) -> Result<(), StageError> {
-        let Some(chain) = self.post_execute_commit_input.take() else { return Ok(()) };
+        let Some(chain) = self.post_execute_commit_input.take() else { return Ok(()) }
 
         // NOTE: We can ignore the error here, since an error means that the channel is closed,
         // which means the manager has died, which then in turn means the node is shutting down.
@@ -468,7 +468,7 @@ where
     }
 
     fn post_unwind_commit(&mut self) -> Result<(), StageError> {
-        let Some(chain) = self.post_unwind_commit_input.take() else { return Ok(()) };
+        let Some(chain) = self.post_unwind_commit_input.take() else { return Ok(()) }
 
         // NOTE: We can ignore the error here, since an error means that the channel is closed,
         // which means the manager has died, which then in turn means the node is shutting down.

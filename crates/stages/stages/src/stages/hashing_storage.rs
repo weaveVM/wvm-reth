@@ -76,7 +76,7 @@ impl<DB: Database> Stage<DB> for StorageHashingStage {
     ) -> Result<ExecOutput, StageError> {
         let tx = provider.tx_ref();
         if input.target_reached() {
-            return Ok(ExecOutput::done(input.checkpoint()));
+            return Ok(ExecOutput::done(input.checkpoint()))
         }
 
         let (from_block, to_block) = input.next_block_range().into_inner();
@@ -423,7 +423,7 @@ mod tests {
                 let start_block = input.checkpoint().block_number + 1;
                 let end_block = output.checkpoint.block_number;
                 if start_block > end_block {
-                    return Ok(());
+                    return Ok(())
                 }
             }
             self.check_hashed_storage()

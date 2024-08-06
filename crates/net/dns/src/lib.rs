@@ -298,7 +298,7 @@ impl<R: Resolver> DnsDiscoveryService<R> {
         loop {
             // drain buffered events first
             if let Some(event) = self.queued_events.pop_front() {
-                return Poll::Ready(event);
+                return Poll::Ready(event)
             }
 
             // process all incoming commands
@@ -351,7 +351,7 @@ impl<R: Resolver> DnsDiscoveryService<R> {
             }
 
             if !progress && self.queued_events.is_empty() {
-                return Poll::Pending;
+                return Poll::Pending
             }
         }
     }

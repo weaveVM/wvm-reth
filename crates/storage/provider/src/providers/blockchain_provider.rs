@@ -176,7 +176,7 @@ where
 {
     fn header(&self, block_hash: &BlockHash) -> ProviderResult<Option<Header>> {
         if let Some(block_state) = self.canonical_in_memory_state.state_by_hash(*block_hash) {
-            return Ok(Some(block_state.block().block().header.header().clone()));
+            return Ok(Some(block_state.block().block().header.header().clone()))
         }
 
         self.database.header(block_hash)
@@ -184,7 +184,7 @@ where
 
     fn header_by_number(&self, num: BlockNumber) -> ProviderResult<Option<Header>> {
         if let Some(block_state) = self.canonical_in_memory_state.state_by_number(num) {
-            return Ok(Some(block_state.block().block().header.header().clone()));
+            return Ok(Some(block_state.block().block().header.header().clone()))
         }
 
         self.database.header_by_number(num)
@@ -236,7 +236,7 @@ where
 
     fn sealed_header(&self, number: BlockNumber) -> ProviderResult<Option<SealedHeader>> {
         if let Some(block_state) = self.canonical_in_memory_state.state_by_number(number) {
-            return Ok(Some(block_state.block().block().header.clone()));
+            return Ok(Some(block_state.block().block().header.clone()))
         }
 
         self.database.sealed_header(number)
@@ -302,7 +302,7 @@ where
 {
     fn block_hash(&self, number: u64) -> ProviderResult<Option<B256>> {
         if let Some(block_state) = self.canonical_in_memory_state.state_by_number(number) {
-            return Ok(Some(block_state.hash()));
+            return Ok(Some(block_state.hash()))
         }
 
         self.database.block_hash(number)
@@ -347,7 +347,7 @@ where
 
     fn block_number(&self, hash: B256) -> ProviderResult<Option<BlockNumber>> {
         if let Some(block_state) = self.canonical_in_memory_state.state_by_hash(hash) {
-            return Ok(Some(block_state.number()));
+            return Ok(Some(block_state.number()))
         }
 
         self.database.block_number(hash)
@@ -382,7 +382,7 @@ where
                 // Note: it's fine to return the unsealed block because the caller already has
                 // the hash
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_hash(hash) {
-                    return Ok(Some(block_state.block().block().clone().unseal()));
+                    return Ok(Some(block_state.block().block().clone().unseal()))
                 }
                 self.database.find_block_by_hash(hash, source)
             }
@@ -397,7 +397,7 @@ where
             BlockHashOrNumber::Hash(hash) => self.find_block_by_hash(hash, BlockSource::Any),
             BlockHashOrNumber::Number(num) => {
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_number(num) {
-                    return Ok(Some(block_state.block().block().clone().unseal()));
+                    return Ok(Some(block_state.block().block().clone().unseal()))
                 }
 
                 self.database.block_by_number(num)
@@ -444,14 +444,14 @@ where
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_hash(hash) {
                     let block = block_state.block().block().clone();
                     let senders = block_state.block().senders().clone();
-                    return Ok(Some(BlockWithSenders { block: block.unseal(), senders }));
+                    return Ok(Some(BlockWithSenders { block: block.unseal(), senders }))
                 }
             }
             BlockHashOrNumber::Number(num) => {
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_number(num) {
                     let block = block_state.block().block().clone();
                     let senders = block_state.block().senders().clone();
-                    return Ok(Some(BlockWithSenders { block: block.unseal(), senders }));
+                    return Ok(Some(BlockWithSenders { block: block.unseal(), senders }))
                 }
             }
         }
@@ -468,14 +468,14 @@ where
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_hash(hash) {
                     let block = block_state.block().block().clone();
                     let senders = block_state.block().senders().clone();
-                    return Ok(Some(SealedBlockWithSenders { block, senders }));
+                    return Ok(Some(SealedBlockWithSenders { block, senders }))
                 }
             }
             BlockHashOrNumber::Number(num) => {
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_number(num) {
                     let block = block_state.block().block().clone();
                     let senders = block_state.block().senders().clone();
-                    return Ok(Some(SealedBlockWithSenders { block, senders }));
+                    return Ok(Some(SealedBlockWithSenders { block, senders }))
                 }
             }
         }
@@ -599,12 +599,12 @@ where
         match id {
             BlockHashOrNumber::Hash(hash) => {
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_hash(hash) {
-                    return Ok(Some(block_state.block().block().body.clone()));
+                    return Ok(Some(block_state.block().block().body.clone()))
                 }
             }
             BlockHashOrNumber::Number(number) => {
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_number(number) {
-                    return Ok(Some(block_state.block().block().body.clone()));
+                    return Ok(Some(block_state.block().block().body.clone()))
                 }
             }
         }
@@ -688,7 +688,7 @@ where
 
             if let Some(tx_index) = block.body.iter().position(|tx| tx.hash() == hash) {
                 // safe to use tx_index for receipts due to 1:1 correspondence
-                return Ok(receipts.get(tx_index).cloned());
+                return Ok(receipts.get(tx_index).cloned())
             }
         }
 
@@ -699,12 +699,12 @@ where
         match block {
             BlockHashOrNumber::Hash(hash) => {
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_hash(hash) {
-                    return Ok(Some(block_state.executed_block_receipts()));
+                    return Ok(Some(block_state.executed_block_receipts()))
                 }
             }
             BlockHashOrNumber::Number(number) => {
                 if let Some(block_state) = self.canonical_in_memory_state.state_by_number(number) {
-                    return Ok(Some(block_state.executed_block_receipts()));
+                    return Ok(Some(block_state.executed_block_receipts()))
                 }
             }
         }
@@ -942,7 +942,7 @@ where
             let pending_provider =
                 self.canonical_in_memory_state.state_provider(block.hash, historical);
 
-            return Ok(Box::new(pending_provider));
+            return Ok(Box::new(pending_provider))
         }
 
         // fallback to latest state if the pending block is not available

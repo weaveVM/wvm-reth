@@ -27,7 +27,7 @@ pub fn validate_block_post_execution(
             block.timestamp,
         ) {
             tracing::debug!(%error, ?receipts, "receipts verification failed");
-            return Err(error);
+            return Err(error)
         }
     }
 

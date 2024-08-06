@@ -113,7 +113,7 @@ where
 
                 // Set the next hashed entry as a leaf node and return
                 self.current_hashed_entry = self.hashed_cursor.next()?;
-                return Ok(Some(TrieElement::Leaf(hashed_key, value)));
+                return Ok(Some(TrieElement::Leaf(hashed_key, value)))
             }
 
             // Handle seeking and advancing based on the previous hashed key

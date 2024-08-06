@@ -41,7 +41,7 @@ impl AutoSealClient {
                     hash.into()
                 } else {
                     warn!(target: "consensus::auto", num, "no matching block found");
-                    return headers;
+                    return headers
                 }
             }
         };

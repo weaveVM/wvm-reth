@@ -214,7 +214,7 @@ impl Environment {
         for result in cursor.iter_slices() {
             let (_key, value) = result?;
             if value.len() < size_of::<usize>() {
-                return Err(Error::Corrupted);
+                return Err(Error::Corrupted)
             }
 
             let s = &value[..size_of::<usize>()];
@@ -696,7 +696,7 @@ impl EnvironmentBuilder {
             })() {
                 ffi::mdbx_env_close_ex(env, false);
 
-                return Err(e);
+                return Err(e)
             }
         }
 

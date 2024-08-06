@@ -226,13 +226,13 @@ impl PeersManager {
         addr: IpAddr,
     ) -> Result<(), InboundConnectionError> {
         if self.ban_list.is_banned_ip(&addr) {
-            return Err(InboundConnectionError::IpBanned);
+            return Err(InboundConnectionError::IpBanned)
         }
 
         if !self.connection_info.has_in_capacity() && self.trusted_peer_ids.is_empty() {
             // if we don't have any inbound slots and no trusted peers, we don't accept any new
             // connections
-            return Err(InboundConnectionError::ExceedsCapacity);
+            return Err(InboundConnectionError::ExceedsCapacity)
         }
 
         self.connection_info.inc_pending_in();
@@ -704,7 +704,7 @@ impl PeersManager {
 
     /// Removes the tracked node from the set.
     pub(crate) fn remove_peer(&mut self, peer_id: PeerId) {
-        let Entry::Occupied(entry) = self.peers.entry(peer_id) else { return };
+        let Entry::Occupied(entry) = self.peers.entry(peer_id) else { return }
         if entry.get().is_trusted() {
             return;
         }
@@ -731,7 +731,7 @@ impl PeersManager {
 
     /// Removes the tracked node from the trusted set.
     pub(crate) fn remove_peer_from_trusted_set(&mut self, peer_id: PeerId) {
-        let Entry::Occupied(mut entry) = self.peers.entry(peer_id) else { return };
+        let Entry::Occupied(mut entry) = self.peers.entry(peer_id) else { return }
         if !entry.get().is_trusted() {
             return;
         }
@@ -836,7 +836,7 @@ impl PeersManager {
         loop {
             // drain buffered actions
             if let Some(action) = self.queued_actions.pop_front() {
-                return Poll::Ready(action);
+                return Poll::Ready(action)
             }
 
             while let Poll::Ready(Some(cmd)) = self.handle_rx.poll_next_unpin(cx) {
@@ -875,7 +875,7 @@ impl PeersManager {
                         if let Some(peer) = self.peers.get_mut(peer_id) {
                             peer.backed_off = false;
                         }
-                        return false;
+                        return false
                     }
                     true
                 })
@@ -886,7 +886,7 @@ impl PeersManager {
             }
 
             if self.queued_actions.is_empty() {
-                return Poll::Pending;
+                return Poll::Pending
             }
         }
     }

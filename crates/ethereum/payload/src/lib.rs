@@ -338,7 +338,7 @@ where
 
         // check if the job was cancelled, if so we can exit early
         if cancel.is_cancelled() {
-            return Ok(BuildOutcome::Cancelled);
+            return Ok(BuildOutcome::Cancelled)
         }
 
         // convert tx to a signed transaction
@@ -387,7 +387,7 @@ where
                     }
                     err => {
                         // this is an error that we should treat as fatal for this attempt
-                        return Err(PayloadBuilderError::EvmExecutionError(err));
+                        return Err(PayloadBuilderError::EvmExecutionError(err))
                     }
                 }
             }
@@ -436,7 +436,7 @@ where
     // check if we have a better block
     if !is_better_payload(best_payload.as_ref(), total_fees) {
         // can skip building the block
-        return Ok(BuildOutcome::Aborted { fees: total_fees, cached_reads });
+        return Ok(BuildOutcome::Aborted { fees: total_fees, cached_reads })
     }
 
     // calculate the requests and the requests root

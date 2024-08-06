@@ -220,7 +220,7 @@ where
         F: FnOnce() -> bool,
     {
         if f() {
-            return self.disable(stage_id);
+            return self.disable(stage_id)
         }
         self
     }
@@ -234,7 +234,7 @@ where
         F: FnOnce() -> bool,
     {
         if f() {
-            return self.disable_all(stages);
+            return self.disable_all(stages)
         }
         self
     }

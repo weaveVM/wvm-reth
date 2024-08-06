@@ -66,7 +66,7 @@ pub fn validate_payload_timestamp(
         //
         // 1. Client software **MUST** return `-38005: Unsupported fork` error if the `timestamp` of
         //    payload or payloadAttributes is greater or equal to the Cancun activation timestamp.
-        return Err(EngineObjectValidationError::UnsupportedFork);
+        return Err(EngineObjectValidationError::UnsupportedFork)
     }
 
     if version == EngineApiMessageVersion::V3 && !is_cancun {
@@ -88,7 +88,7 @@ pub fn validate_payload_timestamp(
         //
         // 2. Client software **MUST** return `-38005: Unsupported fork` error if the `timestamp` of
         //    the payload does not fall within the time frame of the Cancun fork.
-        return Err(EngineObjectValidationError::UnsupportedFork);
+        return Err(EngineObjectValidationError::UnsupportedFork)
     }
 
     let is_prague = chain_spec.is_prague_active_at_timestamp(timestamp);
@@ -111,7 +111,7 @@ pub fn validate_payload_timestamp(
         //
         // 2. Client software **MUST** return `-38005: Unsupported fork` error if the `timestamp` of
         //    the payload does not fall within the time frame of the Prague fork.
-        return Err(EngineObjectValidationError::UnsupportedFork);
+        return Err(EngineObjectValidationError::UnsupportedFork)
     }
     Ok(())
 }

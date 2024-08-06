@@ -99,7 +99,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let gas_used: u64 = (ARWEAVE_PC_READ_BASE as usize + data_size * 3) as u64;
 
     if gas_used > gas_limit {
-        return Err(PrecompileErrors::Error(PrecompileError::OutOfGas));
+        return Err(PrecompileErrors::Error(PrecompileError::OutOfGas))
     }
 
     if input.is_empty() {

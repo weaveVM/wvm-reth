@@ -93,7 +93,7 @@ pub fn init_genesis<DB: Database>(factory: ProviderFactory<DB>) -> Result<B256, 
         Ok(Some(block_hash)) => {
             if block_hash == hash {
                 debug!("Genesis already written, skipping.");
-                return Ok(hash);
+                return Ok(hash)
             }
 
             return Err(InitDatabaseError::GenesisHashMismatch {
@@ -502,7 +502,7 @@ fn compute_state_root<DB: Database>(provider: &DatabaseProviderRW<DB>) -> eyre::
                     "State root has been computed"
                 );
 
-                return Ok(root);
+                return Ok(root)
             }
         }
     }

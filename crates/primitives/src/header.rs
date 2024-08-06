@@ -158,7 +158,7 @@ impl Header {
     /// Returns an error if the extradata size is larger than 100 KB.
     pub fn ensure_extradata_valid(&self) -> Result<(), HeaderError> {
         if self.extra_data.len() > 100 * 1024 {
-            return Err(HeaderError::LargeExtraData);
+            return Err(HeaderError::LargeExtraData)
         }
         Ok(())
     }
@@ -170,7 +170,7 @@ impl Header {
     /// Returns an error if the block difficulty exceeds 80 bits.
     pub fn ensure_difficulty_valid(&self) -> Result<(), HeaderError> {
         if self.difficulty.bit_len() > 80 {
-            return Err(HeaderError::LargeDifficulty);
+            return Err(HeaderError::LargeDifficulty)
         }
         Ok(())
     }
@@ -438,7 +438,7 @@ impl Decodable for Header {
     fn decode(buf: &mut &[u8]) -> alloy_rlp::Result<Self> {
         let rlp_head = alloy_rlp::Header::decode(buf)?;
         if !rlp_head.list {
-            return Err(alloy_rlp::Error::UnexpectedString);
+            return Err(alloy_rlp::Error::UnexpectedString)
         }
         let started_len = buf.len();
         let mut this = Self {
@@ -838,7 +838,7 @@ impl SealedHeader {
         let parent_excess_blob_gas = parent.excess_blob_gas.unwrap_or(0);
 
         if self.blob_gas_used.is_none() {
-            return Err(HeaderValidationError::BlobGasUsedMissing);
+            return Err(HeaderValidationError::BlobGasUsedMissing)
         }
         let excess_blob_gas =
             self.excess_blob_gas.ok_or(HeaderValidationError::ExcessBlobGasMissing)?;

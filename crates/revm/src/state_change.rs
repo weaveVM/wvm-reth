@@ -70,7 +70,7 @@ where
 {
     // If Prague is not activated or this is the genesis block, no hashes are added.
     if !chain_spec.is_prague_active_at_timestamp(block_timestamp) || block_number == 0 {
-        return Ok(());
+        return Ok(())
     }
     assert!(block_number > 0);
 

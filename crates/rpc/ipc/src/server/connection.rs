@@ -102,7 +102,7 @@ where
             if budget == 0 {
                 // make sure we're woken up again
                 cx.waker().wake_by_ref();
-                return Poll::Pending;
+                return Poll::Pending
             }
 
             // write all responses to the sink
@@ -110,7 +110,7 @@ where
                 if let Some(item) = this.items.pop_front() {
                     if let Err(err) = this.conn.as_mut().start_send(item) {
                         tracing::warn!("IPC response failed: {:?}", err);
-                        return Poll::Ready(());
+                        return Poll::Ready(())
                     }
                 } else {
                     break;
@@ -156,14 +156,14 @@ where
                         }
                         Some(Err(err)) => {
                             tracing::warn!("IPC request failed: {:?}", err);
-                            return Poll::Ready(());
+                            return Poll::Ready(())
                         }
                         None => return Poll::Ready(()),
                     },
                     Poll::Pending => {
                         if drained || this.pending_calls.is_empty() {
                             // at this point all things are pending
-                            return Poll::Pending;
+                            return Poll::Pending
                         }
                     }
                 }

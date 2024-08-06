@@ -95,13 +95,13 @@ where
             Some(msg) => msg,
             None => {
                 self.inner.disconnect(DisconnectReason::DisconnectRequested).await?;
-                return Err(EthStreamError::EthHandshakeError(EthHandshakeError::NoResponse));
+                return Err(EthStreamError::EthHandshakeError(EthHandshakeError::NoResponse))
             }
         }?;
 
         if their_msg.len() > MAX_MESSAGE_SIZE {
             self.inner.disconnect(DisconnectReason::ProtocolBreach).await?;
-            return Err(EthStreamError::MessageTooBig(their_msg.len()));
+            return Err(EthStreamError::MessageTooBig(their_msg.len()))
         }
 
         let version = EthVersion::try_from(status.version)?;
@@ -110,7 +110,7 @@ where
             Err(err) => {
                 debug!("decode error in eth handshake: msg={their_msg:x}");
                 self.inner.disconnect(DisconnectReason::DisconnectRequested).await?;
-                return Err(EthStreamError::InvalidMessage(err));
+                return Err(EthStreamError::InvalidMessage(err))
             }
         };
 
@@ -163,7 +163,7 @@ where
                     fork_filter.validate(resp.forkid).map_err(EthHandshakeError::InvalidFork)
                 {
                     self.inner.disconnect(DisconnectReason::ProtocolBreach).await?;
-                    return Err(err.into());
+                    return Err(err.into())
                 }
 
                 // now we can create the `EthStream` because the peer has successfully completed
@@ -261,7 +261,7 @@ where
         };
 
         if bytes.len() > MAX_MESSAGE_SIZE {
-            return Poll::Ready(Some(Err(EthStreamError::MessageTooBig(bytes.len()))));
+            return Poll::Ready(Some(Err(EthStreamError::MessageTooBig(bytes.len()))))
         }
 
         let msg = match ProtocolMessage::decode_message(*this.version, &mut bytes.as_ref()) {
@@ -277,7 +277,7 @@ where
                     %msg,
                     "failed to decode protocol message"
                 );
-                return Poll::Ready(Some(Err(EthStreamError::InvalidMessage(err))));
+                return Poll::Ready(Some(Err(EthStreamError::InvalidMessage(err))))
             }
         };
 
@@ -313,7 +313,7 @@ where
             // allowing for its start_disconnect method to be called.
             //
             // self.project().inner.start_disconnect(DisconnectReason::ProtocolBreach);
-            return Err(EthStreamError::EthHandshakeError(EthHandshakeError::StatusNotInHandshake));
+            return Err(EthStreamError::EthHandshakeError(EthHandshakeError::StatusNotInHandshake))
         }
 
         self.project()

@@ -132,7 +132,7 @@ impl BlockBatchRecord {
         &mut self,
         receipts: &mut Vec<Option<Receipt>>,
     ) -> Result<(), PruneSegmentError> {
-        let (Some(first_block), Some(tip)) = (self.first_block, self.tip) else { return Ok(()) };
+        let (Some(first_block), Some(tip)) = (self.first_block, self.tip) else { return Ok(()) }
 
         let block_number = first_block + self.receipts.len() as u64;
 
@@ -142,7 +142,7 @@ impl BlockBatchRecord {
             self.prune_modes.receipts.map_or(false, |mode| mode.should_prune(block_number, tip))
         {
             receipts.clear();
-            return Ok(());
+            return Ok(())
         }
 
         // All receipts from the last 128 blocks are required for blockchain tree, even with
@@ -150,7 +150,7 @@ impl BlockBatchRecord {
         let prunable_receipts =
             PruneMode::Distance(MINIMUM_PRUNING_DISTANCE).should_prune(block_number, tip);
         if !prunable_receipts {
-            return Ok(());
+            return Ok(())
         }
 
         let contract_log_pruner = self.prune_modes.receipts_log_filter.group_by_block(tip, None)?;
