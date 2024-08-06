@@ -48,7 +48,7 @@ impl Stream for CustomRlpxConnection {
                 }
             }
 
-            let Some(msg) = ready!(this.conn.poll_next_unpin(cx)) else { return Poll::Ready(None) }
+            let Some(msg) = ready!(this.conn.poll_next_unpin(cx)) else { return Poll::Ready(None) };
 
             let Some(msg) = CustomRlpxProtoMessage::decode_message(&mut &msg[..]) else {
                 return Poll::Ready(None)
