@@ -155,7 +155,7 @@ impl Decodable for EnrForkIdEntry {
             return Err(RlpError::ListLengthMismatch {
                 expected: rlp_head.payload_length,
                 got: consumed,
-            });
+            })
         }
 
         let rem = rlp_head.payload_length - consumed;
@@ -355,7 +355,7 @@ impl ForkFilter {
             } else {
                 // 1b) Remotely announced fork not yet passed locally, connect.
                 Ok(())
-            };
+            }
         }
 
         // 2) If the remote FORK_HASH is a subset of the local past forks...
@@ -369,7 +369,7 @@ impl ForkFilter {
                         Ok(())
                     } else {
                         Err(ValidationError::RemoteStale { local: self.current(), remote: fork_id })
-                    };
+                    }
                 }
 
                 break

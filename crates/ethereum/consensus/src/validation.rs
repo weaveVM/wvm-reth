@@ -46,7 +46,7 @@ pub fn validate_block_post_execution(
         if requests_root != header_requests_root {
             return Err(ConsensusError::BodyRequestsRootDiff(
                 GotExpected::new(requests_root, header_requests_root).into(),
-            ));
+            ))
         }
     }
 
@@ -88,13 +88,13 @@ fn compare_receipts_root_and_logs_bloom(
     if calculated_receipts_root != expected_receipts_root {
         return Err(ConsensusError::BodyReceiptRootDiff(
             GotExpected { got: calculated_receipts_root, expected: expected_receipts_root }.into(),
-        ));
+        ))
     }
 
     if calculated_logs_bloom != expected_logs_bloom {
         return Err(ConsensusError::BodyBloomLogDiff(
             GotExpected { got: calculated_logs_bloom, expected: expected_logs_bloom }.into(),
-        ));
+        ))
     }
 
     Ok(())

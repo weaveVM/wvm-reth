@@ -195,7 +195,7 @@ impl Consensus for EthBeaconConsensus {
                 return Err(ConsensusError::TimestampIsInFuture {
                     timestamp: header.timestamp,
                     present_timestamp,
-                });
+                })
             }
 
             validate_header_extradata(header)?;

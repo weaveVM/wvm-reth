@@ -611,7 +611,7 @@ where
                         Poll::Ready(res)
                     }
                     Err(err) => Poll::Ready(Err(err.into())),
-                };
+                }
             }
         }
 

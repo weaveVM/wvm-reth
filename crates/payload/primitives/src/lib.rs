@@ -132,17 +132,17 @@ pub fn validate_withdrawals_presence(
         EngineApiMessageVersion::V1 => {
             if has_withdrawals {
                 return Err(message_validation_kind
-                    .to_error(VersionSpecificValidationError::WithdrawalsNotSupportedInV1));
+                    .to_error(VersionSpecificValidationError::WithdrawalsNotSupportedInV1))
             }
         }
         EngineApiMessageVersion::V2 | EngineApiMessageVersion::V3 | EngineApiMessageVersion::V4 => {
             if is_shanghai_active && !has_withdrawals {
                 return Err(message_validation_kind
-                    .to_error(VersionSpecificValidationError::NoWithdrawalsPostShanghai));
+                    .to_error(VersionSpecificValidationError::NoWithdrawalsPostShanghai))
             }
             if !is_shanghai_active && has_withdrawals {
                 return Err(message_validation_kind
-                    .to_error(VersionSpecificValidationError::HasWithdrawalsPreShanghai));
+                    .to_error(VersionSpecificValidationError::HasWithdrawalsPreShanghai))
             }
         }
     };
@@ -233,13 +233,13 @@ pub fn validate_parent_beacon_block_root_presence(
             if has_parent_beacon_block_root {
                 return Err(validation_kind.to_error(
                     VersionSpecificValidationError::ParentBeaconBlockRootNotSupportedBeforeV3,
-                ));
+                ))
             }
         }
         EngineApiMessageVersion::V3 | EngineApiMessageVersion::V4 => {
             if !has_parent_beacon_block_root {
                 return Err(validation_kind
-                    .to_error(VersionSpecificValidationError::NoParentBeaconBlockRootPostCancun));
+                    .to_error(VersionSpecificValidationError::NoParentBeaconBlockRootPostCancun))
             }
         }
     };

@@ -59,7 +59,7 @@ impl Stream for ConsensusLayerHealthEvents {
                         ConsensusLayerHealthEvent::HaveNotReceivedUpdatesForAWhile(
                             fork_choice.elapsed(),
                         ),
-                    ));
+                    ))
                 }
             }
 
@@ -74,7 +74,7 @@ impl Stream for ConsensusLayerHealthEvents {
                     Poll::Ready(Some(ConsensusLayerHealthEvent::HasNotBeenSeenForAWhile(
                         transition_config.elapsed(),
                     )))
-                };
+                }
             }
 
             // We never had both FCU and transition config exchange.
