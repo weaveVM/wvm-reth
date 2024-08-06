@@ -64,7 +64,7 @@ pub fn calculate_receipt_root_optimism(
 
         return ordered_trie_root_with_encoder(receipts.as_slice(), |r, buf| {
             r.encode_inner(buf, false)
-        });
+        })
     }
 
     ordered_trie_root_with_encoder(receipts, |r, buf| r.encode_inner(buf, false))
@@ -113,7 +113,7 @@ pub fn calculate_receipt_root_no_memo_optimism(
 
         return ordered_trie_root_with_encoder(&receipts, |r, buf| {
             ReceiptWithBloomRef::from(r).encode_inner(buf, false)
-        });
+        })
     }
 
     ordered_trie_root_with_encoder(receipts, |r, buf| {

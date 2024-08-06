@@ -398,6 +398,7 @@ pub trait EthTransactions: LoadTransaction {
                         gas_limit: U256::from(gas.unwrap_or_default()),
                         value: value.unwrap_or_default(),
                         input: data.into_input().unwrap_or_default(),
+                        #[allow(clippy::manual_unwrap_or_default)] // clippy is suggesting here unwrap_or_default
                         to: match to {
                             Some(TxKind::Call(to)) => to,
                             _ => Address::default(),

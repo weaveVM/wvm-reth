@@ -121,7 +121,7 @@ impl ProcessUID {
                     lines.next().map(str::trim).map(str::parse),
                     lines.next().map(str::trim).map(str::parse),
                 ) {
-                    return Ok(Some(Self { pid, start_time }))
+                    return Ok(Some(Self { pid, start_time }));
                 }
             }
         }

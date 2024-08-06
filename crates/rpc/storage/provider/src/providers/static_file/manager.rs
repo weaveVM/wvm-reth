@@ -542,7 +542,7 @@ impl StaticFileProvider {
             info!(target: "reth::cli",
                 "Skipping storage verification for OP mainnet, expected inconsistency in OVM chain"
             );
-            return Ok(None)
+            return Ok(None);
         }
 
         info!(target: "reth::cli", "Verifying storage consistency.");

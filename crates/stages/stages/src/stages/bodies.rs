@@ -213,7 +213,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
                                 segment: StaticFileSegment::Transactions,
                                 database: next_tx_num,
                                 static_file: appended_tx_number,
-                            });
+                            })
                         }
 
                         // Increment transaction id for each transaction.

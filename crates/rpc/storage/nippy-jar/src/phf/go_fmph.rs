@@ -1,27 +1,27 @@
 use crate::{NippyJarError, PHFKey, PerfectHashingFunction};
-use ph::fmph::{BuildConf, Function};
+use ph::fmph::{GOBuildConf, GOFunction};
 use serde::{
     de::Error as DeSerdeError, ser::Error as SerdeError, Deserialize, Deserializer, Serialize,
     Serializer,
 };
 
-/// Wrapper struct for [`Function`]. Implementation of the following [paper](https://dl.acm.org/doi/10.1145/3596453).
+/// Wrapper struct for [`GOFunction`]. Implementation of the following [paper](https://dl.acm.org/doi/10.1145/3596453).
 #[derive(Default)]
-pub struct Fmph {
-    function: Option<Function>,
+pub struct GoFmph {
+    function: Option<GOFunction>,
 }
 
-impl Fmph {
+impl GoFmph {
     pub const fn new() -> Self {
         Self { function: None }
     }
 }
 
-impl PerfectHashingFunction for Fmph {
+impl PerfectHashingFunction for GoFmph {
     fn set_keys<T: PHFKey>(&mut self, keys: &[T]) -> Result<(), NippyJarError> {
-        self.function = Some(Function::from_slice_with_conf(
+        self.function = Some(GOFunction::from_slice_with_conf(
             keys,
-            BuildConf { use_multiple_threads: true, ..Default::default() },
+            GOBuildConf { use_multiple_threads: true, ..Default::default() },
         ));
         Ok(())
     }
@@ -35,9 +35,9 @@ impl PerfectHashingFunction for Fmph {
 }
 
 #[cfg(test)]
-impl PartialEq for Fmph {
-    fn eq(&self, _other: &Self) -> bool {
-        match (&self.function, &_other.function) {
+impl PartialEq for GoFmph {
+    fn eq(&self, other: &Self) -> bool {
+        match (&self.function, &other.function) {
             (Some(func1), Some(func2)) => {
                 func1.level_sizes() == func2.level_sizes() &&
                     func1.write_bytes() == func2.write_bytes() &&
@@ -57,15 +57,15 @@ impl PartialEq for Fmph {
     }
 }
 
-impl std::fmt::Debug for Fmph {
+impl std::fmt::Debug for GoFmph {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Fmph")
+        f.debug_struct("GoFmph")
             .field("bytes_size", &self.function.as_ref().map(|f| f.write_bytes()))
             .finish_non_exhaustive()
     }
 }
 
-impl Serialize for Fmph {
+impl Serialize for GoFmph {
     /// Potentially expensive, but should be used only when creating the file.
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -82,7 +82,7 @@ impl Serialize for Fmph {
     }
 }
 
-impl<'de> Deserialize<'de> for Fmph {
+impl<'de> Deserialize<'de> for GoFmph {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -90,9 +90,10 @@ impl<'de> Deserialize<'de> for Fmph {
         if let Some(buffer) = <Option<Vec<u8>>>::deserialize(deserializer)? {
             return Ok(Self {
                 function: Some(
-                    Function::read(&mut std::io::Cursor::new(buffer)).map_err(D::Error::custom)?,
+                    GOFunction::read(&mut std::io::Cursor::new(buffer))
+                        .map_err(D::Error::custom)?,
                 ),
-            });
+            })
         }
         Ok(Self { function: None })
     }

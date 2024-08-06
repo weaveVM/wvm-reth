@@ -119,7 +119,7 @@ impl Environment {
                 continue
             }
 
-            break res;
+            break res
         }?;
         Ok(Transaction::new_from_ptr(self.clone(), txn.0))
     }

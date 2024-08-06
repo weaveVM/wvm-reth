@@ -372,7 +372,7 @@ impl<H: NippyJarHeader> NippyJarWriter<H> {
                     return Err(NippyJarError::InvalidPruning(
                         num_offsets,
                         remaining_to_prune as u64,
-                    ));
+                    ))
                 }
 
                 let new_num_offsets = num_offsets.saturating_sub(remaining_to_prune as u64);

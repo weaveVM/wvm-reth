@@ -99,7 +99,7 @@ pub fn init_genesis<DB: Database>(factory: ProviderFactory<DB>) -> Result<B256, 
             return Err(InitDatabaseError::GenesisHashMismatch {
                 chainspec_hash: hash,
                 database_hash: block_hash,
-            });
+            })
         }
         Err(e) => return Err(dbg!(e).into()),
     }

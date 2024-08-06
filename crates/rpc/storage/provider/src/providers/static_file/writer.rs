@@ -559,7 +559,7 @@ impl StaticFileProviderRW {
         let mut receipts_iter = receipts.into_iter().peekable();
         // If receipts are empty, we can simply return None
         if receipts_iter.peek().is_none() {
-            return Ok(None)
+            return Ok(None);
         }
 
         let start = Instant::now();
