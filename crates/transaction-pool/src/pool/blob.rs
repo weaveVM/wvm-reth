@@ -156,7 +156,7 @@ impl<T: PoolTransaction> BlobTransactions<T> {
                     // still parked in blob pool -> skip descendant transactions
                     'this: while let Some((peek, _)) = iter.peek() {
                         if peek.sender != id.sender {
-                            break 'this;
+                            break 'this
                         }
                         iter.next();
                     }

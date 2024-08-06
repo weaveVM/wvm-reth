@@ -1054,7 +1054,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
                 ($iter:ident) => {
                     'this: while let Some((peek, _)) = iter.peek() {
                         if peek.sender != id.sender {
-                            break 'this;
+                            break 'this
                         }
                         iter.next();
                     }
@@ -1073,7 +1073,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
                         current: tx.subpool,
                         destination: Destination::Discard,
                     });
-                    continue 'transactions;
+    
                 }
 
                 let ancestor = TransactionId::ancestor(id.nonce, info.state_nonce, id.sender);
@@ -1096,7 +1096,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
             // If there's a nonce gap, we can shortcircuit, because there's nothing to update yet.
             if tx.state.has_nonce_gap() {
                 next_sender!(iter);
-                continue 'transactions;
+                continue 'transactions
             }
 
             // Since this is the first transaction of the sender, it has no parked ancestors
@@ -1119,7 +1119,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
             while let Some((peek, ref mut tx)) = iter.peek_mut() {
                 if peek.sender != id.sender {
                     // Found the next sender we need to check
-                    continue 'transactions;
+    
                 }
 
                 if tx.transaction.nonce() == next_nonce_in_line {
@@ -1128,7 +1128,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
                 } else {
                     // can short circuit if there's still a nonce gap
                     next_sender!(iter);
-                    continue 'transactions;
+                    continue 'transactions
                 }
 
                 // update for next iteration of this sender's loop
@@ -1323,7 +1323,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
             if current_txs >= self.max_account_slots {
                 return Err(InsertErr::ExceededSenderTransactionsCapacity {
                     transaction: Arc::new(transaction),
-                });
+                })
             }
         }
         if transaction.gas_limit() > self.block_gas_limit {
@@ -1331,7 +1331,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
                 block_gas_limit: self.block_gas_limit,
                 tx_gas_limit: transaction.gas_limit(),
                 transaction: Arc::new(transaction),
-            });
+            })
         }
 
         if self.contains_conflicting_transaction(&transaction) {

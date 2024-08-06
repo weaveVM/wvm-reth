@@ -1178,7 +1178,7 @@ impl TryFrom<TransactionSignedEcRecovered> for EthPooledTransaction {
                 // unsupported transaction type
                 return Err(TryFromRecoveredTransactionError::UnsupportedTransactionType(
                     unsupported,
-                ));
+                ))
             }
         };
 

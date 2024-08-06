@@ -995,7 +995,7 @@ where
             return Some(NewTransactionEvent {
                 subpool: SubPool::Pending,
                 transaction: next.clone(),
-            });
+            })
         }
     }
 }
