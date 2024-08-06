@@ -314,7 +314,7 @@ impl ProtocolProxy {
 
         let offset = self.shared_cap.relative_message_id_offset();
         if offset == 0 {
-            return Ok(msg)
+            return Ok(msg);
         }
 
         let mut masked = Vec::from(msg);
@@ -534,7 +534,7 @@ where
                         let Some(offset) = msg.first().copied() else {
                             return Poll::Ready(Some(Err(
                                 P2PStreamError::EmptyProtocolMessage.into()
-                            )));
+                            )))
                         };
                         // delegate the multiplexed message to the correct protocol
                         if let Some(cap) =
@@ -553,9 +553,10 @@ where
                                 }
                             }
                         } else {
-                            return Poll::Ready(Some(Err(
-                                P2PStreamError::UnknownReservedMessageId(offset).into(),
-                            )));
+                            return Poll::Ready(Some(Err(P2PStreamError::UnknownReservedMessageId(
+                                offset,
+                            )
+                            .into())))
                         }
                     }
                     Poll::Ready(Some(Err(err))) => return Poll::Ready(Some(Err(err.into()))),

@@ -182,7 +182,7 @@ impl SessionError for EthStreamError {
                     // [`SessionError::is_fatal_protocol_error`]
                     Some(BackoffKind::High)
                 }
-            };
+            }
         }
 
         // This only checks for a subset of error variants, the counterpart of

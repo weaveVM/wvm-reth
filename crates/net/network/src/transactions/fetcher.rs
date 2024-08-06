@@ -169,7 +169,7 @@ impl TransactionFetcher {
 
     /// Returns `true` if peer is idle with respect to `self.inflight_requests`.
     pub fn is_idle(&self, peer_id: &PeerId) -> bool {
-        let Some(inflight_count) = self.active_peers.peek(peer_id) else { return true }
+        let Some(inflight_count) = self.active_peers.peek(peer_id) else { return true };
         if *inflight_count < DEFAULT_MAX_COUNT_CONCURRENT_REQUESTS_PER_PEER {
             return true
         }
@@ -214,7 +214,7 @@ impl TransactionFetcher {
 
             if idle_peer.is_some() {
                 hashes_to_request.insert(hash);
-                break idle_peer.copied();
+                break idle_peer.copied()
             }
 
             if let Some(ref mut bud) = budget {
@@ -447,7 +447,7 @@ impl TransactionFetcher {
         );
 
         // peer should always exist since `is_session_active` already checked
-        let Some(peer) = peers.get(&peer_id) else { return }
+        let Some(peer) = peers.get(&peer_id) else { return };
         let conn_eth_version = peer.version;
 
         // fill the request with more hashes pending fetch that have been announced by the peer.
@@ -691,7 +691,7 @@ impl TransactionFetcher {
                     self.metrics.egress_peer_channel_full.increment(1);
                     Some(new_announced_hashes)
                 }
-            };
+            }
         } else {
             // stores a new request future for the request
             self.inflight_requests.push(GetPooledTxRequestFut::new(
@@ -729,7 +729,7 @@ impl TransactionFetcher {
         seen_hashes: &LruCache<TxHash>,
         mut budget_fill_request: Option<usize>, // check max `budget` lru pending hashes
     ) {
-        let Some(hash) = hashes_to_request.iter().next() else { return }
+        let Some(hash) = hashes_to_request.iter().next() else { return };
 
         let mut acc_size_response = self
             .hashes_fetch_inflight_and_pending_fetch

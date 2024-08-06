@@ -302,14 +302,14 @@ fn ensure_valid_body_response(
     if header.ommers_hash != ommers_hash {
         return Err(ConsensusError::BodyOmmersHashDiff(
             GotExpected { got: ommers_hash, expected: header.ommers_hash }.into(),
-        ));
+        ))
     }
 
     let tx_root = block.calculate_tx_root();
     if header.transactions_root != tx_root {
         return Err(ConsensusError::BodyTransactionRootDiff(
             GotExpected { got: tx_root, expected: header.transactions_root }.into(),
-        ));
+        ))
     }
 
     match (header.withdrawals_root, &block.withdrawals) {
@@ -319,7 +319,7 @@ fn ensure_valid_body_response(
             if withdrawals_root != header_withdrawals_root {
                 return Err(ConsensusError::BodyWithdrawalsRootDiff(
                     GotExpected { got: withdrawals_root, expected: header_withdrawals_root }.into(),
-                ));
+                ))
             }
         }
         (None, None) => {
@@ -335,7 +335,7 @@ fn ensure_valid_body_response(
             if requests_root != header_requests_root {
                 return Err(ConsensusError::BodyRequestsRootDiff(
                     GotExpected { got: requests_root, expected: header_requests_root }.into(),
-                ));
+                ))
             }
         }
         (None, None) => {

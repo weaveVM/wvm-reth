@@ -127,7 +127,7 @@ where
                     return Err(EthHandshakeError::MismatchedGenesis(
                         GotExpected { expected: status.genesis, got: resp.genesis }.into(),
                     )
-                    .into());
+                    .into())
                 }
 
                 if status.version != resp.version {
@@ -136,7 +136,7 @@ where
                         got: resp.version,
                         expected: status.version,
                     })
-                    .into());
+                    .into())
                 }
 
                 if status.chain != resp.chain {
@@ -145,7 +145,7 @@ where
                         got: resp.chain,
                         expected: status.chain,
                     })
-                    .into());
+                    .into())
                 }
 
                 // TD at mainnet block #7753254 is 76 bits. If it becomes 100 million times
@@ -156,7 +156,7 @@ where
                         got: status.total_difficulty.bit_len(),
                         maximum: 100,
                     }
-                    .into());
+                    .into())
                 }
 
                 if let Err(err) =
@@ -284,7 +284,7 @@ where
         if matches!(msg.message, EthMessage::Status(_)) {
             return Poll::Ready(Some(Err(EthStreamError::EthHandshakeError(
                 EthHandshakeError::StatusNotInHandshake,
-            ))));
+            ))))
         }
 
         Poll::Ready(Some(Ok(msg.message)))

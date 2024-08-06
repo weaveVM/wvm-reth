@@ -133,7 +133,7 @@ impl Stream for MockDiscovery {
         let this = self.get_mut();
         // process all incoming commands
         while let Poll::Ready(maybe_cmd) = this.command_rx.poll_recv(cx) {
-            let Some(cmd) = maybe_cmd else { return Poll::Ready(None) }
+            let Some(cmd) = maybe_cmd else { return Poll::Ready(None) };
             match cmd {
                 MockCommand::MockPong { node_id } => {
                     this.queue_pong(node_id);
@@ -165,7 +165,7 @@ impl Stream for MockDiscovery {
                                 ping,
                                 pong,
                                 to: remote_addr,
-                            }));
+                            }))
                         }
                     }
                     Message::Pong(_) | Message::Neighbours(_) => {}
@@ -179,7 +179,7 @@ impl Stream for MockDiscovery {
                             return Poll::Ready(Some(MockEvent::Neighbours {
                                 nodes,
                                 to: remote_addr,
-                            }));
+                            }))
                         }
                     }
                     Message::EnrRequest(_) | Message::EnrResponse(_) => todo!(),

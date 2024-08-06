@@ -86,7 +86,7 @@ impl Discovery {
             NodeRecord::from_secret_key(discovery_v4_addr, &sk).with_tcp_port(tcp_addr.port());
 
         let discv4_future = async {
-            let Some(disc_config) = discv4_config else { return Ok((None, None, None)) }
+            let Some(disc_config) = discv4_config else { return Ok((None, None, None)) };
             let (discv4, mut discv4_service) =
                 Discv4::bind(discovery_v4_addr, local_enr, sk, disc_config).await.map_err(
                     |err| {
@@ -101,7 +101,7 @@ impl Discovery {
         };
 
         let discv5_future = async {
-            let Some(config) = discv5_config else { return Ok::<_, NetworkError>((None, None)) }
+            let Some(config) = discv5_config else { return Ok::<_, NetworkError>((None, None)) };
             let (discv5, discv5_updates, _local_enr_discv5) = Discv5::start(&sk, config).await?;
             Ok((Some(discv5), Some(discv5_updates.into())))
         };

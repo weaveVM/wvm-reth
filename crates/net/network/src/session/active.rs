@@ -199,7 +199,7 @@ impl ActiveSession {
                             sizes_len: msg.sizes.len(),
                         },
                         message: EthMessage::NewPooledTransactionHashes68(msg),
-                    };
+                    }
                 }
                 self.try_emit_broadcast(PeerMessage::PooledTransactions(msg.into())).into()
             }
@@ -304,7 +304,7 @@ impl ActiveSession {
     /// Returns the message if the bounded channel is currently unable to handle this message.
     #[allow(clippy::result_large_err)]
     fn try_emit_broadcast(&self, message: PeerMessage) -> Result<(), ActiveSessionMessage> {
-        let Some(sender) = self.to_session_manager.inner().get_ref() else { return Ok(()) }
+        let Some(sender) = self.to_session_manager.inner().get_ref() else { return Ok(()) };
 
         match sender
             .try_send(ActiveSessionMessage::ValidMessage { peer_id: self.remote_peer_id, message })
@@ -330,7 +330,7 @@ impl ActiveSession {
     /// Returns the message if the bounded channel is currently unable to handle this message.
     #[allow(clippy::result_large_err)]
     fn try_emit_request(&self, message: PeerMessage) -> Result<(), ActiveSessionMessage> {
-        let Some(sender) = self.to_session_manager.inner().get_ref() else { return Ok(()) }
+        let Some(sender) = self.to_session_manager.inner().get_ref() else { return Ok(()) };
 
         match sender
             .try_send(ActiveSessionMessage::ValidMessage { peer_id: self.remote_peer_id, message })
@@ -356,7 +356,7 @@ impl ActiveSession {
 
     /// Notify the manager that the peer sent a bad message
     fn on_bad_message(&self) {
-        let Some(sender) = self.to_session_manager.inner().get_ref() else { return }
+        let Some(sender) = self.to_session_manager.inner().get_ref() else { return };
         let _ = sender.try_send(ActiveSessionMessage::BadMessage { peer_id: self.remote_peer_id });
     }
 
@@ -575,7 +575,7 @@ impl Future for ActiveSession {
                 if budget == 0 {
                     // make sure we're woken up again
                     cx.waker().wake_by_ref();
-                    break 'main;
+                    break 'main
                 }
 
                 // try to resend the pending message that we could not send because the channel was
@@ -589,7 +589,7 @@ impl Future for ActiveSession {
                         Poll::Ready(Err(_)) => return Poll::Ready(()),
                         Poll::Pending => {
                             this.pending_message_to_session = Some(msg);
-                            break 'receive;
+                            break 'receive
                         }
                     };
                 }
@@ -621,7 +621,7 @@ impl Future for ActiveSession {
                                     OnIncomingMessageOutcome::NoCapacity(msg) => {
                                         // failed to send due to lack of capacity
                                         this.pending_message_to_session = Some(msg);
-                                        continue 'receive;
+                                        continue 'receive
                                     }
                                 }
                             }
@@ -635,7 +635,7 @@ impl Future for ActiveSession {
             }
 
             if !progress {
-                break 'main;
+                break 'main
             }
         }
 

@@ -366,7 +366,7 @@ impl Discv5 {
         &self,
         enr: &discv5::enr::Enr<K>,
     ) -> Result<ForkId, Error> {
-        let Some(key) = self.fork_key else { return Err(Error::NetworkStackIdNotConfigured) }
+        let Some(key) = self.fork_key else { return Err(Error::NetworkStackIdNotConfigured) };
         let fork_id = enr
             .get_decodable::<EnrForkIdEntry>(key)
             .ok_or(Error::ForkMissing(key))?

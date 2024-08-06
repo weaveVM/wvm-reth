@@ -704,7 +704,7 @@ impl PeersManager {
 
     /// Removes the tracked node from the set.
     pub(crate) fn remove_peer(&mut self, peer_id: PeerId) {
-        let Entry::Occupied(entry) = self.peers.entry(peer_id) else { return }
+        let Entry::Occupied(entry) = self.peers.entry(peer_id) else { return };
         if entry.get().is_trusted() {
             return
         }
@@ -731,7 +731,7 @@ impl PeersManager {
 
     /// Removes the tracked node from the trusted set.
     pub(crate) fn remove_peer_from_trusted_set(&mut self, peer_id: PeerId) {
-        let Entry::Occupied(mut entry) = self.peers.entry(peer_id) else { return }
+        let Entry::Occupied(mut entry) = self.peers.entry(peer_id) else { return };
         if !entry.get().is_trusted() {
             return
         }

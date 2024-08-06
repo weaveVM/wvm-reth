@@ -257,7 +257,7 @@ where
                     trace!(target: "downloaders::headers", %error ,"Failed to validate header");
                     return Err(
                         HeadersResponseError { request, peer_id: Some(peer_id), error }.into()
-                    );
+                    )
                 }
             } else {
                 self.validate_sync_target(&parent, request.clone(), peer_id)?;
@@ -284,7 +284,7 @@ where
                         error: Box::new(error),
                     },
                 }
-                .into());
+                .into())
             }
 
             // If the header is valid on its own, but not against its parent, we return it as
@@ -297,7 +297,7 @@ where
                     header: Box::new(last_header.clone()),
                     error: Box::new(error),
                 }
-                .into());
+                .into())
             }
         }
 
@@ -370,7 +370,7 @@ where
                         peer_id: Some(peer_id),
                         error: DownloadError::EmptyResponse,
                     }
-                    .into());
+                    .into())
                 }
 
                 let target = headers.remove(0).seal_slow();
@@ -385,7 +385,7 @@ where
                                     GotExpected { got: target.hash(), expected: hash }.into(),
                                 ),
                             }
-                            .into());
+                            .into())
                         }
                     }
                     SyncTargetBlock::Number(number) => {
@@ -398,7 +398,7 @@ where
                                     expected: number,
                                 }),
                             }
-                            .into());
+                            .into())
                         }
                     }
                 }
@@ -447,7 +447,7 @@ where
                         peer_id: Some(peer_id),
                         error: DownloadError::EmptyResponse,
                     }
-                    .into());
+                    .into())
                 }
 
                 if (headers.len() as u64) != request.limit {
@@ -459,7 +459,7 @@ where
                         }),
                         request,
                     }
-                    .into());
+                    .into())
                 }
 
                 // sort headers from highest to lowest block number
@@ -479,7 +479,7 @@ where
                             expected: requested_block_number,
                         }),
                     }
-                    .into());
+                    .into())
                 }
 
                 // check if the response is the next expected

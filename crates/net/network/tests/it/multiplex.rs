@@ -246,9 +246,9 @@ impl Stream for PingPongProtoConnection {
                         this.pending_pong = Some(response);
                         Poll::Ready(Some(PingPongProtoMessage::ping_message(msg).encoded()))
                     }
-                };
+                }
             }
-            let Some(msg) = ready!(this.conn.poll_next_unpin(cx)) else { return Poll::Ready(None) }
+            let Some(msg) = ready!(this.conn.poll_next_unpin(cx)) else { return Poll::Ready(None) };
 
             let Some(msg) = PingPongProtoMessage::decode_message(&mut &msg[..]) else {
                 return Poll::Ready(None)

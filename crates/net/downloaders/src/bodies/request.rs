@@ -135,7 +135,7 @@ where
             return Err(DownloadError::TooManyBodies(GotExpected {
                 got: response_len,
                 expected: request_len,
-            }));
+            }))
         }
 
         // Buffer block responses
@@ -189,7 +189,7 @@ where
                         hash,
                         number,
                         error: Box::new(error),
-                    });
+                    })
                 }
 
                 self.buffer.push(BlockResponse::Full(block));

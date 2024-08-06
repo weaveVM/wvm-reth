@@ -149,7 +149,7 @@ impl Stream for TestDownload {
                     hash: empty.hash(),
                     number: empty.number,
                     error: Box::new(error),
-                })));
+                })))
             }
 
             match ready!(this.get_or_init_fut().poll_unpin(cx)) {
@@ -167,7 +167,7 @@ impl Stream for TestDownload {
                     return Poll::Ready(Some(Err(match err {
                         RequestError::Timeout => DownloadError::Timeout,
                         _ => DownloadError::RequestError(err),
-                    })));
+                    })))
                 }
             }
         }

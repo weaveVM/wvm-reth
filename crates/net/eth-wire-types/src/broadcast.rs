@@ -427,13 +427,13 @@ impl Decodable for NewPooledTransactionHashes68 {
             return Err(alloy_rlp::Error::ListLengthMismatch {
                 expected: msg.hashes.len(),
                 got: msg.types.len(),
-            });
+            })
         }
         if msg.hashes.len() != msg.sizes.len() {
             return Err(alloy_rlp::Error::ListLengthMismatch {
                 expected: msg.hashes.len(),
                 got: msg.sizes.len(),
-            });
+            })
         }
 
         Ok(msg)

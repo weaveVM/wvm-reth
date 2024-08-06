@@ -271,7 +271,7 @@ impl PeersConfig {
         self,
         optional_file: Option<impl AsRef<Path>>,
     ) -> Result<Self, io::Error> {
-        let Some(file_path) = optional_file else { return Ok(self) }
+        let Some(file_path) = optional_file else { return Ok(self) };
         let reader = match std::fs::File::open(file_path.as_ref()) {
             Ok(file) => io::BufReader::new(file),
             Err(e) if e.kind() == ErrorKind::NotFound => return Ok(self),

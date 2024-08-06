@@ -203,11 +203,11 @@ impl alloy_rlp::Decodable for PingNodeEndpoint {
     fn decode(b: &mut &[u8]) -> alloy_rlp::Result<Self> {
         let alloy_rlp::Header { list, payload_length } = alloy_rlp::Header::decode(b)?;
         if !list {
-            return Err(alloy_rlp::Error::UnexpectedString)
+            return Err(alloy_rlp::Error::UnexpectedString);
         }
         let started_len = b.len();
         if started_len < payload_length {
-            return Err(alloy_rlp::Error::InputTooShort)
+            return Err(alloy_rlp::Error::InputTooShort);
         }
 
         // Geth allows the ipaddr to be possibly empty:
@@ -296,7 +296,7 @@ impl Decodable for FindNode {
             return Err(RlpError::ListLengthMismatch {
                 expected: rlp_head.payload_length,
                 got: consumed,
-            });
+            })
         }
 
         let rem = rlp_head.payload_length - consumed;
@@ -338,7 +338,7 @@ impl Decodable for Neighbours {
             return Err(RlpError::ListLengthMismatch {
                 expected: rlp_head.payload_length,
                 got: consumed,
-            });
+            })
         }
 
         let rem = rlp_head.payload_length - consumed;
@@ -381,7 +381,7 @@ impl Decodable for EnrRequest {
             return Err(RlpError::ListLengthMismatch {
                 expected: rlp_head.payload_length,
                 got: consumed,
-            });
+            })
         }
 
         let rem = rlp_head.payload_length - consumed;
@@ -499,7 +499,7 @@ impl Decodable for Ping {
             return Err(RlpError::ListLengthMismatch {
                 expected: rlp_head.payload_length,
                 got: consumed,
-            });
+            })
         }
         let rem = rlp_head.payload_length - consumed;
         b.advance(rem);
@@ -574,7 +574,7 @@ impl Decodable for Pong {
             return Err(RlpError::ListLengthMismatch {
                 expected: rlp_head.payload_length,
                 got: consumed,
-            });
+            })
         }
         let rem = rlp_head.payload_length - consumed;
         b.advance(rem);

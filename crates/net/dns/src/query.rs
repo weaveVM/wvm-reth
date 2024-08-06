@@ -84,7 +84,7 @@ impl<R: Resolver, K: EnrKeyUnambiguous> QueryPool<R, K> {
                     if let Some(query) = self.queued_queries.pop_front() {
                         self.rate_limit.tick();
                         self.active_queries.push(query);
-                        continue 'queries;
+                        continue 'queries
                     }
                 }
                 break

@@ -238,7 +238,7 @@ where
                         .skip_while(|b| b.block_number() < expected)
                         .take_while(|b| self.download_range.contains(&b.block_number()))
                         .collect()
-                });
+                })
             }
 
             // Drop buffered response since we passed that range

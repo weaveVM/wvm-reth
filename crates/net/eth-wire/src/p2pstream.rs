@@ -105,7 +105,7 @@ where
             return Err(P2PStreamError::MessageTooBig {
                 message_size: first_message_bytes.len(),
                 max_size: MAX_PAYLOAD_SIZE,
-            });
+            })
         }
 
         // The first message sent MUST be a hello OR disconnect message
@@ -147,7 +147,7 @@ where
             return Err(P2PStreamError::MismatchedProtocolVersion(GotExpected {
                 got: their_hello.protocol_version,
                 expected: hello.protocol_version,
-            }));
+            }))
         }
 
         // determine shared capabilities (currently returns only one capability)
@@ -435,7 +435,7 @@ where
                 return Poll::Ready(Some(Err(P2PStreamError::MessageTooBig {
                     message_size: decompressed_len,
                     max_size: MAX_PAYLOAD_SIZE,
-                })));
+                })))
             }
 
             // create a buffer to hold the decompressed message, adding a byte to the length for
@@ -466,7 +466,7 @@ where
                     // an error
                     return Poll::Ready(Some(Err(P2PStreamError::HandshakeError(
                         P2PHandshakeError::HelloNotInHandshake,
-                    ))));
+                    ))))
                 }
                 _ if id == P2PMessageID::Pong as u8 => {
                     // if we were waiting for a pong, this will reset the pinger state
@@ -572,7 +572,7 @@ where
             return Err(P2PStreamError::MessageTooBig {
                 message_size: item.len(),
                 max_size: MAX_PAYLOAD_SIZE,
-            });
+            })
         }
 
         if item.is_empty() {

@@ -112,7 +112,7 @@ impl TransactionsHandle {
         peer_id: PeerId,
         hashes: Vec<B256>,
     ) -> Result<Option<Vec<PooledTransactionsElement>>, RequestError> {
-        let Some(peer) = self.peer_handle(peer_id).await? else { return Ok(None) }
+        let Some(peer) = self.peer_handle(peer_id).await? else { return Ok(None) };
 
         let (tx, rx) = oneshot::channel();
         let request = PeerRequest::GetPooledTransactions { request: hashes.into(), response: tx };
@@ -796,7 +796,7 @@ where
         // request the missing transactions
         //
         // get handle to peer's session again, at this point we know it exists
-        let Some(peer) = self.peers.get_mut(&peer_id) else { return }
+        let Some(peer) = self.peers.get_mut(&peer_id) else { return };
         if let Some(failed_to_request_hashes) =
             self.transaction_fetcher.request_transactions_from_peer(hashes_to_request, peer)
         {
@@ -948,7 +948,7 @@ where
             return
         }
 
-        let Some(peer) = self.peers.get_mut(&peer_id) else { return }
+        let Some(peer) = self.peers.get_mut(&peer_id) else { return };
         let mut transactions = transactions.0;
 
         // mark the transactions as received
