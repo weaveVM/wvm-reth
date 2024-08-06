@@ -1,5 +1,5 @@
 consensus:
-  enabled: false
+  enabled: true
   url: "http://lighthouse:5052"
   name: "consensus-client"
 execution:
