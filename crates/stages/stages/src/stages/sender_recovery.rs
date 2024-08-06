@@ -81,7 +81,7 @@ impl<DB: Database> Stage<DB> for SenderRecoveryStage {
                 checkpoint: StageCheckpoint::new(end_block)
                     .with_entities_stage_checkpoint(stage_checkpoint(provider)?),
                 done: is_final_range,
-            });
+            })
         }
 
         // Acquire the cursor for inserting elements
@@ -212,7 +212,7 @@ where
                             })
                         }
                         SenderRecoveryStageError::StageError(err) => Err(err),
-                    };
+                    }
                 }
             };
             senders_cursor.append(tx_id, sender)?;

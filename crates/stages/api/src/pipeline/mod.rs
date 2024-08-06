@@ -394,7 +394,7 @@ where
                 // We reached the maximum block, so we skip the stage
                 return Ok(ControlFlow::NoProgress {
                     block_number: prev_checkpoint.map(|progress| progress.block_number),
-                });
+                })
             }
 
             let exec_input = ExecInput { target, checkpoint: prev_checkpoint };
@@ -464,7 +464,7 @@ where
                             ControlFlow::Continue { block_number }
                         } else {
                             ControlFlow::NoProgress { block_number: Some(block_number) }
-                        });
+                        })
                     }
                 }
                 Err(err) => {

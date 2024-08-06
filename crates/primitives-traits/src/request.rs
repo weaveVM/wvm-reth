@@ -11,9 +11,6 @@ use serde::{Deserialize, Serialize};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
 /// A list of EIP-7685 requests.
 #[reth_codec]
 #[derive(

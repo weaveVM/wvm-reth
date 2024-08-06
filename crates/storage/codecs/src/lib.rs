@@ -124,7 +124,7 @@ macro_rules! impl_uint_compact {
                 #[inline]
                 fn from_compact(mut buf: &[u8], len: usize) -> (Self, &[u8]) {
                     if len == 0 {
-                        return (0, buf)
+                        return (0, buf);
                     }
 
                     let mut arr = [0; core::mem::size_of::<$name>()];
@@ -273,7 +273,7 @@ where
     where
         B: bytes::BufMut + AsMut<[u8]>,
     {
-        let Some(element) = self else { return 0 }
+        let Some(element) = self else { return 0 };
 
         // We don't know the length of the element until we compact it.
         let mut tmp = Vec::with_capacity(64);

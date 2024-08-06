@@ -235,7 +235,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
                             .checkpoint()
                             .with_entities_stage_checkpoint(entities_checkpoint),
                         done: false,
-                    });
+                    })
                 }
                 StateRootProgress::Complete(root, hashed_entries_walked, updates) => {
                     provider.write_trie_updates(&updates)?;
@@ -312,7 +312,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
             return Ok(UnwindOutput {
                 checkpoint: StageCheckpoint::new(input.unwind_to)
                     .with_entities_stage_checkpoint(entities_checkpoint),
-            });
+            })
         }
 
         // Unwind trie only if there are transitions

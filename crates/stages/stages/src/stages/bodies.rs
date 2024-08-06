@@ -190,7 +190,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
                         segment: StaticFileSegment::Transactions,
                         database: block_number,
                         static_file: appended_block_number,
-                    });
+                    })
                 }
             }
 
@@ -329,7 +329,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
                 static_file_tx_num,
                 static_file_provider,
                 provider,
-            )?);
+            )?)
         }
 
         // Unwinds static file

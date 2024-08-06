@@ -383,7 +383,7 @@ where
     }
 
     fn post_execute_commit(&mut self) -> Result<(), StageError> {
-        let Some(chain) = self.post_execute_commit_input.take() else { return Ok(()) }
+        let Some(chain) = self.post_execute_commit_input.take() else { return Ok(()) };
 
         // NOTE: We can ignore the error here, since an error means that the channel is closed,
         // which means the manager has died, which then in turn means the node is shutting down.
@@ -405,7 +405,7 @@ where
         if range.is_empty() {
             return Ok(UnwindOutput {
                 checkpoint: input.checkpoint.with_block_number(input.unwind_to),
-            });
+            })
         }
 
         // Unwind account and storage changesets, as well as receipts.
@@ -642,7 +642,7 @@ where
             return Err(StageError::MissingStaticFileData {
                 block: missing_block,
                 segment: StaticFileSegment::Receipts,
-            });
+            })
         }
     }
 
