@@ -183,7 +183,7 @@ impl Command {
 
             if incremental_result.is_ok() {
                 debug!(target: "reth::cli", block_number, "Successfully computed incremental root");
-                continue;
+                continue
             }
 
             warn!(target: "reth::cli", block_number, "Incremental calculation failed, retrying from scratch");
@@ -203,7 +203,7 @@ impl Command {
                 let clean_result = merkle_stage.execute(&provider_rw, clean_input);
                 assert!(clean_result.is_ok(), "Clean state root calculation failed");
                 if clean_result.unwrap().done {
-                    break;
+                    break
                 }
             }
 
@@ -263,7 +263,7 @@ impl Command {
                             clean.1.nibbles.len() > self.skip_node_depth.unwrap_or_default()
                         {
                             first_mismatched_storage = Some((incremental, clean));
-                            break;
+                            break
                         }
                     }
                     (Some(incremental), None) => {
