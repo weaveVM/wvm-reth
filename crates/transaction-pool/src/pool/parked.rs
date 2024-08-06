@@ -208,7 +208,7 @@ impl<T: ParkedOrd> ParkedPool<T> {
                 }
 
                 if !self.exceeds(&limit) {
-                    break;
+                    break
                 }
             }
         }

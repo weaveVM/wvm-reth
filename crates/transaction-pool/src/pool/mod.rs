@@ -344,7 +344,7 @@ where
             elements.push(pooled);
 
             if limit.exceeds(size) {
-                break;
+                break
             }
         }
 

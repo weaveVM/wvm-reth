@@ -39,7 +39,7 @@ impl BlockProvider for RpcBlockProvider {
                 .expect("block not found");
             if tx.send(full_block.into()).await.is_err() {
                 // channel closed
-                break;
+                break
             }
         }
     }

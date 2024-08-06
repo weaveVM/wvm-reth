@@ -1609,7 +1609,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
 
                 // If there's a nonce gap, we can shortcircuit
                 if next_nonce != id.nonce {
-                    break;
+                    break
                 }
 
                 // close the nonce gap

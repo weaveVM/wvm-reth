@@ -173,7 +173,7 @@ where
                 cumulative_gas,
                 batch_start.elapsed(),
             ) {
-                break;
+                break
             }
         }
 

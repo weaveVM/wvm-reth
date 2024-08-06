@@ -53,7 +53,7 @@ impl<E: EngineTypes> PayloadTestContext<E> {
                 tokio::time::sleep(std::time::Duration::from_millis(20)).await;
                 continue;
             }
-            break;
+            break
         }
     }
 

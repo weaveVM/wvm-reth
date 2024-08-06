@@ -237,7 +237,7 @@ impl TreeState {
                 {
                     // we've found a fork point
                     fork_point = Some(current_block.block.parent_hash);
-                    break;
+                    break
                 }
             }
 
@@ -1069,7 +1069,7 @@ where
 
         while let Some(block) = self.state.tree_state.blocks_by_hash.get(&current_hash) {
             if block.block.number <= last_persisted_number {
-                break;
+                break
             }
 
             if block.block.number <= target_number {

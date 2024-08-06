@@ -215,7 +215,7 @@ pub async fn maintain_transaction_pool<Client, P, St, Tasks>(
             ev = events.next() =>  {
                  if ev.is_none() {
                     // the stream ended, we are done
-                    break;
+                    break
                 }
                 event = ev;
             }

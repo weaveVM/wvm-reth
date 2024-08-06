@@ -108,7 +108,7 @@ where
                         if let Some(next) = (header.number + 1).checked_add(skip) {
                             block = next.into()
                         } else {
-                            break;
+                            break
                         }
                     }
                     HeadersDirection::Falling => {
@@ -120,7 +120,7 @@ where
                             {
                                 block = next.into()
                             } else {
-                                break;
+                                break
                             }
                         } else {
                             block = header.parent_hash.into()
@@ -135,7 +135,7 @@ where
                     break
                 }
             } else {
-                break;
+                break
             }
         }
 

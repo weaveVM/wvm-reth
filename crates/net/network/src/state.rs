@@ -216,7 +216,7 @@ impl NetworkState {
             }
 
             if count >= num_propagate {
-                break;
+                break
             }
         }
     }

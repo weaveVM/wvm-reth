@@ -56,7 +56,7 @@ impl BlockProvider for EtherscanBlockProvider {
 
             if tx.send(block).await.is_err() {
                 // channel closed
-                break;
+                break
             }
 
             last_block_number = Some(block_number);

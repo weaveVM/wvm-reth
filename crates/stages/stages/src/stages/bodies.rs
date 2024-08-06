@@ -282,7 +282,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
         let mut rev_walker = body_cursor.walk_back(None)?;
         while let Some((number, block_meta)) = rev_walker.next().transpose()? {
             if number <= input.unwind_to {
-                break;
+                break
             }
 
             // Delete the ommers entry if any
@@ -357,11 +357,11 @@ fn missing_static_data_error<DB: Database>(
     loop {
         if let Some(indices) = provider.block_body_indices(last_block)? {
             if indices.last_tx_num() <= last_tx_num {
-                break;
+                break
             }
         }
         if last_block == 0 {
-            break;
+            break
         }
         last_block -= 1;
     }
@@ -947,7 +947,7 @@ mod tests {
                     }
 
                     if response.len() as u64 >= this.batch_size {
-                        break;
+                        break
                     }
                 }
 

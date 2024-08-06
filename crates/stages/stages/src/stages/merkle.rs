@@ -622,7 +622,7 @@ mod tests {
                         rev_changeset_walker.next().transpose().unwrap()
                     {
                         if bn_address.block_number() < target_block {
-                            break;
+                            break
                         }
 
                         tree.entry(keccak256(bn_address.address()))
@@ -653,7 +653,7 @@ mod tests {
                         rev_changeset_walker.next().transpose().unwrap()
                     {
                         if block_number < target_block {
-                            break;
+                            break
                         }
 
                         if let Some(acc) = account_before_tx.info {

@@ -409,7 +409,7 @@ where
             this.buffered_responses.shrink_to_fit();
 
             if !new_request_submitted {
-                break;
+                break
             }
         }
 

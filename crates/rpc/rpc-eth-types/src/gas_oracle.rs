@@ -169,7 +169,7 @@ where
 
             // break when we have enough populated blocks
             if populated_blocks >= self.oracle_config.blocks {
-                break;
+                break
             }
 
             current_hash = parent_hash;
@@ -251,7 +251,7 @@ where
 
             // we have enough entries
             if prices.len() >= limit {
-                break;
+                break
             }
         }
 

@@ -372,7 +372,7 @@ impl ForkFilter {
                     };
                 }
 
-                break;
+                break
             }
         }
 

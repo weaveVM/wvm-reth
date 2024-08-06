@@ -836,7 +836,7 @@ where
                     this.submit_request(request, Priority::Normal);
                 } else {
                     // no more requests
-                    break;
+                    break
                 }
             }
 
@@ -857,7 +857,7 @@ where
             }
 
             if !progress {
-                break;
+                break
             }
         }
 

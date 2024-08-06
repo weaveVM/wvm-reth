@@ -102,7 +102,7 @@ where
             if this.insert_task.is_none() {
                 if this.queued.is_empty() {
                     // nothing to insert
-                    break;
+                    break
                 }
 
                 // ready to queue in new insert task
@@ -206,7 +206,7 @@ where
                     }
                     Poll::Pending => {
                         this.insert_task = Some(fut);
-                        break;
+                        break
                     }
                 }
             }

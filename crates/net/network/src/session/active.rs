@@ -564,7 +564,7 @@ impl Future for ActiveSession {
                     }
                 } else {
                     // no more messages to send over the wire
-                    break;
+                    break
                 }
             }
 
@@ -598,7 +598,7 @@ impl Future for ActiveSession {
                     Poll::Pending => break,
                     Poll::Ready(None) => {
                         if this.is_disconnecting() {
-                            break;
+                            break
                         } else {
                             debug!(target: "net::session", remote_peer_id=?this.remote_peer_id, "eth stream completed");
                             return this.emit_disconnect(cx)
@@ -1109,7 +1109,7 @@ mod tests {
                 .try_send(ActiveSessionMessage::ProtocolBreach { peer_id: PeerId::random() })
                 .is_err()
             {
-                break;
+                break
             }
             num_fill_messages += 1;
         }

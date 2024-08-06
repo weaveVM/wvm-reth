@@ -164,7 +164,7 @@ impl<DB: Database> Stage<DB> for TransactionLookupStage {
                     "Transaction hashes inserted"
                 );
 
-                break;
+                break
             }
         }
 
@@ -191,7 +191,7 @@ impl<DB: Database> Stage<DB> for TransactionLookupStage {
         let mut rev_walker = body_cursor.walk_back(Some(*range.end()))?;
         while let Some((number, body)) = rev_walker.next().transpose()? {
             if number <= unwind_to {
-                break;
+                break
             }
 
             // Delete all transactions that belong to this block

@@ -235,7 +235,7 @@ impl<H: NippyJarHeader> NippyJarWriter<H> {
                         // Since we decrease the offset list, we need to check the consistency of
                         // `self.jar.rows` again
                         self.ensure_file_consistency(ConsistencyFailStrategy::Heal)?;
-                        break;
+                        break
                     }
                 }
             }

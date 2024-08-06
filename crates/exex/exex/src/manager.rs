@@ -293,7 +293,7 @@ impl Future for ExExManager {
                 self.push_notification(notification);
                 continue;
             }
-            break;
+            break
         }
 
         // update capacity

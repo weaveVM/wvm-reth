@@ -196,7 +196,7 @@ where
                     stopped = stop;
                 }
                 AcceptConnection::Shutdown => {
-                    break;
+                    break
                 }
                 AcceptConnection::Err((err, stop)) => {
                     tracing::error!(%err, "Failed accepting a new IPC connection");

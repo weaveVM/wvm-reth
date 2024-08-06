@@ -616,7 +616,7 @@ where
         for tx in transactions {
             if tx.hash() == target_tx_hash {
                 // reached the target transaction
-                break;
+                break
             }
 
             tx.try_fill_tx_env(evm.tx_mut())?;

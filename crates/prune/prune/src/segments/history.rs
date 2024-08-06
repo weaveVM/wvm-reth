@@ -51,7 +51,7 @@ where
             let Some((key, block_nums)) =
                 shard.map(|(k, v)| Result::<_, DatabaseError>::Ok((k.key()?, v))).transpose()?
             else {
-                break;
+                break
             };
 
             if key_matches(&key, &sharded_key) {

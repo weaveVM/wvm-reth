@@ -87,7 +87,7 @@ impl<R: Resolver, K: EnrKeyUnambiguous> QueryPool<R, K> {
                         continue 'queries;
                     }
                 }
-                break;
+                break
             }
 
             // advance all queries

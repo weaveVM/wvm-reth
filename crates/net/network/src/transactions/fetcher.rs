@@ -309,7 +309,7 @@ impl TransactionFetcher {
                     acc_size_response;
 
             if free_space < MEDIAN_BYTE_SIZE_SMALL_LEGACY_TX_ENCODED {
-                break;
+                break
             }
         }
 

@@ -89,7 +89,7 @@ where
                     tokio::task::spawn_blocking(move || job.next().expect("non-empty range"));
                 this.tasks.push_back(task);
             } else {
-                break;
+                break
             }
         }
 
@@ -132,7 +132,7 @@ where
                     tokio::task::spawn_blocking(move || job.next().expect("non-empty range"));
                 this.tasks.push_back(task);
             } else {
-                break;
+                break
             }
         }
 

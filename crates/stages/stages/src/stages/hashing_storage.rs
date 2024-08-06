@@ -290,7 +290,7 @@ mod tests {
                         "execution validation"
                     );
 
-                    break;
+                    break
                 }
             }
             panic!("Failed execution");
@@ -524,7 +524,7 @@ mod tests {
 
                 while let Some((bn_address, entry)) = rev_changeset_walker.next().transpose()? {
                     if bn_address.block_number() < target_block {
-                        break;
+                        break
                     }
 
                     if storage_cursor

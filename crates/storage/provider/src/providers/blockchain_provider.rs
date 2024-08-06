@@ -227,7 +227,7 @@ where
             } else {
                 let mut db_headers = self.database.headers_range(num..=end)?;
                 headers.append(&mut db_headers);
-                break;
+                break
             }
         }
 
@@ -259,7 +259,7 @@ where
             } else {
                 let mut db_headers = self.database.sealed_headers_range(num..=end)?;
                 sealed_headers.append(&mut db_headers);
-                break;
+                break
             }
         }
 
@@ -280,7 +280,7 @@ where
             if let Some(block_state) = self.canonical_in_memory_state.state_by_number(num) {
                 let header = block_state.block().block().header.clone();
                 if !predicate(&header) {
-                    break;
+                    break
                 }
                 headers.push(header);
             } else {
@@ -288,7 +288,7 @@ where
                 // TODO: there might be an update between loop iterations, we
                 // need to handle that situation.
                 headers.append(&mut db_headers);
-                break;
+                break
             }
         }
 
@@ -322,7 +322,7 @@ where
                 // TODO: there might be an update between loop iterations, we
                 // need to handle that situation.
                 hashes.append(&mut db_hashes);
-                break;
+                break
             }
         }
         Ok(hashes)
@@ -494,7 +494,7 @@ where
             } else {
                 let mut db_blocks = self.database.block_range(num..=*range.end())?;
                 blocks.append(&mut db_blocks);
-                break;
+                break
             }
         }
         Ok(blocks)
@@ -517,7 +517,7 @@ where
             } else {
                 let mut db_blocks = self.database.block_with_senders_range(num..=*range.end())?;
                 blocks.append(&mut db_blocks);
-                break;
+                break
             }
         }
         Ok(blocks)
@@ -541,7 +541,7 @@ where
                 let mut db_blocks =
                     self.database.sealed_block_with_senders_range(num..=*range.end())?;
                 blocks.append(&mut db_blocks);
-                break;
+                break
             }
         }
         Ok(blocks)
@@ -629,7 +629,7 @@ where
                 transactions.push(block_state.block().block().body.clone());
                 last_in_memory_block = Some(number);
             } else {
-                break;
+                break
             }
         }
 

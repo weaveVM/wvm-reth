@@ -113,7 +113,7 @@ where
                         return Poll::Ready(())
                     }
                 } else {
-                    break;
+                    break
                 }
             }
 

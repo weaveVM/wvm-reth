@@ -334,7 +334,7 @@ where
                 if peek.0 .0.hash() == block.0 .0.hash() {
                     PeekMut::pop(peek);
                 } else {
-                    break;
+                    break
                 }
             }
             return Poll::Ready(EngineSyncEvent::FetchedFullBlock(block.0 .0))

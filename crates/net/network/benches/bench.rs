@@ -75,7 +75,7 @@ pub fn broadcast_ingress_bench(c: &mut Criterion) {
                         _ = transactions_rx.recv() => {
                             count += 1;
                             if count == num_txs {
-                                break;
+                                break
                             }
                         },
                         _ = &mut peer0 => {

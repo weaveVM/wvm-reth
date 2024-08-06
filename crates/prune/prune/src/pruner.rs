@@ -175,7 +175,7 @@ impl<DB: Database, S> Pruner<DB, S> {
 
         for segment in &self.segments {
             if limiter.is_limit_reached() {
-                break;
+                break
             }
 
             if let Some((to_block, prune_mode)) = segment

@@ -91,7 +91,7 @@ async fn start_endpoint<F: Hook + 'static>(
             }
 
             if shutdown.is_terminated() {
-                break;
+                break
             }
         }
     });

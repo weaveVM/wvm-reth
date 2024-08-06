@@ -1882,7 +1882,7 @@ where
 
                 // Both running hook with db write access and engine messages are pending,
                 // proceed to other polls
-                break;
+                break
             }
 
             // process sync events if any
@@ -2069,7 +2069,7 @@ mod tests {
                         result,
                         Err(BeaconConsensusEngineError::Pipeline(n)) if matches!(*n.as_ref(), PipelineError::Stage(StageError::ChannelClosed))
                     );
-                    break;
+                    break
                 }
                 Err(TryRecvError::Empty) => {
                     let _ = env

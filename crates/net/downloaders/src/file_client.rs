@@ -217,7 +217,7 @@ impl FromReader for FileClient {
                             "partial block returned from decoding chunk"
                         );
                         remaining_bytes = bytes;
-                        break;
+                        break
                     }
                     Err(err) => return Err(err),
                 };

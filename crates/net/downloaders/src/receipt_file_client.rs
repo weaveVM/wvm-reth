@@ -118,7 +118,7 @@ where
 
                         remaining_bytes = bytes;
 
-                        break;
+                        break
                     }
                     Err(err) => return Err(err),
                 };

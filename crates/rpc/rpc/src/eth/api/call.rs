@@ -341,7 +341,7 @@ where
             if (highest_gas_limit - lowest_gas_limit) as f64 / (highest_gas_limit as f64) <
                 ESTIMATE_GAS_ERROR_RATIO
             {
-                break;
+                break
             };
 
             env.tx.gas_limit = mid_gas_limit;

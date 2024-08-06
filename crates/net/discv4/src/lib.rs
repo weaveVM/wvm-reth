@@ -1710,7 +1710,7 @@ impl Discv4Service {
                         // this will make sure we're woken up again
                         cx.waker().wake_by_ref();
                     }
-                    break;
+                    break
                 }
             }
 
@@ -2363,7 +2363,7 @@ mod tests {
                 assert!(service.pending_pings.contains_key(&node.id));
                 assert_eq!(service.pending_pings.len(), num_inserted);
                 if num_inserted == MAX_NODES_PING {
-                    break;
+                    break
                 }
             }
         }

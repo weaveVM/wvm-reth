@@ -548,7 +548,7 @@ where
             } else {
                 // if there is no fork block that point to other chains, break the loop.
                 // it means that this fork joins to canonical block.
-                break;
+                break
             }
         }
         hashes
@@ -571,7 +571,7 @@ where
                 chain_id = fork_chain_id;
                 continue;
             }
-            break;
+            break
         }
         (self.block_indices().canonical_hash(&fork.number) == Some(fork.hash)).then_some(fork)
     }

@@ -473,7 +473,7 @@ where
                                 return Poll::Ready(Some(Err(err.into())))
                             }
                         } else {
-                            break;
+                            break
                         }
                     }
                     Poll::Ready(Err(err)) => {
@@ -486,7 +486,7 @@ where
                     }
                     Poll::Pending => {
                         conn_ready = false;
-                        break;
+                        break
                     }
                 }
             }
@@ -519,7 +519,7 @@ where
                         Poll::Ready(None) => return Poll::Ready(None),
                         Poll::Pending => {
                             this.inner.protocols.push(proto);
-                            break;
+                            break
                         }
                     }
                 }
@@ -548,7 +548,7 @@ where
                                 for proto in &this.inner.protocols {
                                     if proto.shared_cap == *cap {
                                         proto.send_raw(msg);
-                                        break;
+                                        break
                                     }
                                 }
                             }
