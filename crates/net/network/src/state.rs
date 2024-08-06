@@ -196,7 +196,7 @@ impl NetworkState {
         for (peer_id, peer) in peers {
             if peer.blocks.contains(&msg.hash) {
                 // skip peers which already reported the block
-                continue;
+                continue
             }
 
             // Queue a `NewBlock` message for the peer
@@ -229,7 +229,7 @@ impl NetworkState {
         for (peer_id, peer) in &mut self.active_peers {
             if peer.blocks.contains(&msg.hash) {
                 // skip peers which already reported the block
-                continue;
+                continue
             }
 
             if self.state_fetcher.update_peer_block(peer_id, msg.hash, number) {

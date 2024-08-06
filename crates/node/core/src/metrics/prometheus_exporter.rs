@@ -72,7 +72,7 @@ async fn start_endpoint<F: Hook + 'static>(
                 Ok((stream, _remote_addr)) => stream,
                 Err(err) => {
                     tracing::error!(%err, "failed to accept connection");
-                    continue;
+                    continue
                 }
             };
 

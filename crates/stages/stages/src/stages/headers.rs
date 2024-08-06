@@ -122,7 +122,7 @@ where
             let (sealed_header, _) = SealedHeader::from_compact(&header_buf, header_buf.len());
             let (header, header_hash) = sealed_header.split();
             if header.number == 0 {
-                continue;
+                continue
             }
             last_header_number = header.number;
 

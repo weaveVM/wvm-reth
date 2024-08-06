@@ -272,7 +272,7 @@ mod tests {
 
                     // Continue from checkpoint
                     input.checkpoint = Some(checkpoint);
-                    continue;
+                    continue
                 } else {
                     assert_eq!(checkpoint.block_number, previous_stage);
                     assert_matches!(checkpoint.storage_hashing_stage_checkpoint(), Some(StorageHashingCheckpoint {

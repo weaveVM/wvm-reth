@@ -266,7 +266,7 @@ impl Stream for PingPongProtoConnection {
                     if let Some(sender) = this.pending_pong.take() {
                         sender.send(msg).ok();
                     }
-                    continue;
+                    continue
                 }
             }
 

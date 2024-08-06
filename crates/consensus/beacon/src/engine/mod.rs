@@ -1818,7 +1818,7 @@ where
                     this.hooks.poll_active_db_write_hook(cx, this.current_engine_hook_context()?)?
                 {
                     this.on_hook_result(result)?;
-                    continue;
+                    continue
                 }
 
                 // Process any blockchain tree action result as set forth during engine message
@@ -1834,7 +1834,7 @@ where
                     };
 
                     // Blockchain tree action handler might set next action to take.
-                    continue;
+                    continue
                 }
 
                 // If the db write hook is no longer active and we have a pending forkchoice update,
@@ -1844,7 +1844,7 @@ where
                         this.set_blockchain_tree_action(
                             BlockchainTreeAction::MakeForkchoiceHeadCanonical { state, attrs, tx },
                         );
-                        continue;
+                        continue
                     }
                 }
 
@@ -1877,7 +1877,7 @@ where
                             this.blockchain.on_transition_configuration_exchanged();
                         }
                     }
-                    continue;
+                    continue
                 }
 
                 // Both running hook with db write access and engine messages are pending,

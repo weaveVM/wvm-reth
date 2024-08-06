@@ -52,7 +52,7 @@ impl Stream for ConsensusLayerHealthEvents {
             if let Some(fork_choice) = this.canon_chain.last_received_update_timestamp() {
                 if fork_choice.elapsed() <= NO_FORKCHOICE_UPDATE_RECEIVED_PERIOD {
                     // We had an FCU, and it's recent. CL is healthy.
-                    continue;
+                    continue
                 } else {
                     // We had an FCU, but it's too old.
                     return Poll::Ready(Some(

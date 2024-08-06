@@ -364,7 +364,7 @@ where
                 match err {
                     EVMError::Transaction(err) => {
                         trace!(target: "payload_builder", %err, ?sequencer_tx, "Error in sequencer transaction, skipping.");
-                        continue;
+                        continue
                     }
                     err => {
                         // this is an error that we should treat as fatal for this attempt
@@ -414,7 +414,7 @@ where
                 // invalid which also removes all dependent transaction from
                 // the iterator before we can continue
                 best_txs.mark_invalid(&pool_tx);
-                continue;
+                continue
             }
 
             // A sequencer's block should never contain blob or deposit transactions from the pool.
@@ -454,7 +454,7 @@ where
                                 best_txs.mark_invalid(&pool_tx);
                             }
 
-                            continue;
+                            continue
                         }
                         err => {
                             // this is an error that we should treat as fatal for this attempt

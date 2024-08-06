@@ -230,14 +230,14 @@ where
                 let tip = tx.effective_tip_per_gas(base_fee_per_gas);
                 effective_gas_tip = Some(tip);
                 if tip < Some(ignore_under) {
-                    continue;
+                    continue
                 }
             }
 
             // check if the sender was the coinbase, if so, ignore
             if let Some(sender) = tx.recover_signer() {
                 if sender == block.beneficiary {
-                    continue;
+                    continue
                 }
             }
 

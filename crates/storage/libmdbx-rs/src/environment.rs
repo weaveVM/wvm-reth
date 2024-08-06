@@ -116,7 +116,7 @@ impl Environment {
                     warn!(target: "libmdbx", "Process stalled, awaiting read-write transaction lock.");
                 }
                 sleep(Duration::from_millis(250));
-                continue;
+                continue
             }
 
             break res;

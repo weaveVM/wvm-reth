@@ -333,7 +333,7 @@ where
             // which also removes all dependent transaction from the iterator before we can
             // continue
             best_txs.mark_invalid(&pool_tx);
-            continue;
+            continue
         }
 
         // check if the job was cancelled, if so we can exit early
@@ -355,7 +355,7 @@ where
                 // for regular transactions above.
                 trace!(target: "payload_builder", tx=?tx.hash, ?sum_blob_gas_used, ?tx_blob_gas, "skipping blob transaction because it would exceed the max data gas per block");
                 best_txs.mark_invalid(&pool_tx);
-                continue;
+                continue
             }
         }
 
@@ -383,7 +383,7 @@ where
                             best_txs.mark_invalid(&pool_tx);
                         }
 
-                        continue;
+                        continue
                     }
                     err => {
                         // this is an error that we should treat as fatal for this attempt

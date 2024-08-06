@@ -402,7 +402,7 @@ pub async fn maintain_transaction_pool<Client, P, St, Tasks>(
                     // keep track of mined blob transactions
                     blob_store_tracker.add_new_chain_blocks(&blocks);
 
-                    continue;
+                    continue
                 }
 
                 let mut changed_accounts = Vec::with_capacity(state.state().len());

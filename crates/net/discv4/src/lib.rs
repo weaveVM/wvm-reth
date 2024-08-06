@@ -1344,7 +1344,7 @@ impl Discv4Service {
             // prevent banned peers from being added to the context
             if self.config.ban_list.is_banned(&node.id, &node.address) {
                 trace!(target: "discv4", peer_id=?node.id, ip=?node.address, "ignoring banned record");
-                continue;
+                continue
             }
 
             ctx.add_node(node);
@@ -1494,7 +1494,7 @@ impl Discv4Service {
                 if let Some(bucket) = self.kbuckets.get_bucket(&key) {
                     if bucket.num_entries() < MAX_NODES_PER_BUCKET / 2 {
                         // skip half empty bucket
-                        continue;
+                        continue
                     }
                 }
                 self.remove_node(node_id);
@@ -1835,7 +1835,7 @@ pub(crate) async fn receive_loop(udp: Arc<UdpSocket>, tx: IngressSender, local_i
                 // rate limit incoming packets by IP
                 if cache.inc_ip(remote_addr.ip()) > MAX_INCOMING_PACKETS_PER_MINUTE_BY_IP {
                     trace!(target: "discv4", ?remote_addr, "Too many incoming packets from IP.");
-                    continue;
+                    continue
                 }
 
                 let packet = &buf[..read];
@@ -1844,13 +1844,13 @@ pub(crate) async fn receive_loop(udp: Arc<UdpSocket>, tx: IngressSender, local_i
                         if packet.node_id == local_id {
                             // received our own message
                             debug!(target: "discv4", ?remote_addr, "Received own packet.");
-                            continue;
+                            continue
                         }
 
                         // skip if we've already received the same packet
                         if cache.contains_packet(packet.hash) {
                             debug!(target: "discv4", ?remote_addr, "Received duplicate packet.");
-                            continue;
+                            continue
                         }
 
                         send(IngressEvent::Packet(remote_addr, packet)).await;

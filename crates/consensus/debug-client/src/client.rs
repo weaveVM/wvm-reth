@@ -129,7 +129,7 @@ impl<P: BlockProvider + Clone> DebugConsensusClient<P> {
                 }
                 (safe_block_hash, finalized_block_hash) => {
                     warn!(target: "consensus::debug-client", ?safe_block_hash, ?finalized_block_hash, "failed to fetch safe or finalized hash from etherscan");
-                    continue;
+                    continue
                 }
             };
             let state = reth_rpc_types::engine::ForkchoiceState {

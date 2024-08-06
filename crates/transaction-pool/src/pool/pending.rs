@@ -420,7 +420,7 @@ impl<T: TransactionOrdering> PendingPool<T> {
 
                 if !remove_locals && tx.transaction.is_local() {
                     non_local_senders -= 1;
-                    continue;
+                    continue
                 }
 
                 total_size += tx.transaction.size();

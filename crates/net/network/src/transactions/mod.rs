@@ -995,7 +995,7 @@ where
                             "failed ecrecovery for transaction"
                         );
                         has_bad_transactions = true;
-                        continue;
+                        continue
                     }
                 };
 

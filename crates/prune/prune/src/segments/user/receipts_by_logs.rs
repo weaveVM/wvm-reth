@@ -135,7 +135,7 @@ impl<DB: Database> Segment<DB> for ReceiptsByLogs {
                         ?block_range,
                         "No receipts to prune."
                     );
-                    continue;
+                    continue
                 }
             };
             let tx_range = from_tx_number..=tx_range_end;

@@ -293,7 +293,7 @@ where
                 );
                 self.event_sender.notify(PipelineEvent::Skipped { stage_id });
 
-                continue;
+                continue
             }
 
             info!(

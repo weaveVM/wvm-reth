@@ -143,7 +143,7 @@ impl StateFetcher {
             // replace best peer if our current best peer sent us a bad response last time
             if best_peer.1.last_response_likely_bad && !maybe_better.1.last_response_likely_bad {
                 best_peer = maybe_better;
-                continue;
+                continue
             }
 
             // replace best peer if this peer has better rtt

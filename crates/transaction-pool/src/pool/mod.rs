@@ -325,7 +325,7 @@ where
                 if let Some(blob) = self.get_blob_transaction(tx) {
                     PooledTransactionsElement::BlobTransaction(blob)
                 } else {
-                    continue;
+                    continue
                 }
             } else {
                 match PooledTransactionsElement::try_from(tx) {
@@ -335,7 +335,7 @@ where
                             target: "txpool", %err,
                             "failed to convert transaction to pooled element; skipping",
                         );
-                        continue;
+                        continue
                     }
                 }
             };
@@ -966,7 +966,7 @@ where
         loop {
             let next = self.iter.next()?;
             if self.kind.is_propagate_only() && !next.propagate {
-                continue;
+                continue
             }
             return Some(*next.hash())
         }
@@ -990,7 +990,7 @@ where
         loop {
             let next = self.iter.next()?;
             if self.kind.is_propagate_only() && !next.propagate {
-                continue;
+                continue
             }
             return Some(NewTransactionEvent {
                 subpool: SubPool::Pending,

@@ -450,7 +450,7 @@ where
                             // get body that doesn't match, put back into vecdeque, and retry it
                             self.pending_headers.push_back(header.clone());
                             needs_retry = true;
-                            continue;
+                            continue
                         }
 
                         resp.into_data()

@@ -108,7 +108,7 @@ where
                 // reset the checked status and continue
                 if self.walker.key().map_or(false, |key| key < &Nibbles::unpack(hashed_key)) {
                     self.current_walker_key_checked = false;
-                    continue;
+                    continue
                 }
 
                 // Set the next hashed entry as a leaf node and return

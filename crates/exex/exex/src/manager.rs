@@ -291,7 +291,7 @@ impl Future for ExExManager {
                     "Received new notification"
                 );
                 self.push_notification(notification);
-                continue;
+                continue
             }
             break
         }

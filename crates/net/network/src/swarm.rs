@@ -311,7 +311,7 @@ impl Stream for Swarm {
                     if let Some(event) = this.on_session_event(event) {
                         return Poll::Ready(Some(event))
                     }
-                    continue;
+                    continue
                 }
             }
 
@@ -322,7 +322,7 @@ impl Stream for Swarm {
                     if let Some(event) = this.on_connection(event) {
                         return Poll::Ready(Some(event))
                     }
-                    continue;
+                    continue
                 }
             }
 

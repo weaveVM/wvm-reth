@@ -569,7 +569,7 @@ where
             // get fork block chain
             if let Some(fork_chain_id) = self.block_indices().get_side_chain_id(&fork.hash) {
                 chain_id = fork_chain_id;
-                continue;
+                continue
             }
             break
         }

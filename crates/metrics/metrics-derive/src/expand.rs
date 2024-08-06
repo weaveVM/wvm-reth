@@ -341,7 +341,7 @@ fn parse_metric_fields(node: &DeriveInput) -> Result<Vec<MetricField<'_>>> {
 
         if skip {
             metrics.push(MetricField::Skipped(field));
-            continue;
+            continue
         }
 
         let description = match describe {
