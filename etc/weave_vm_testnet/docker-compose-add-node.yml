@@ -145,6 +145,14 @@ services:
       --disable-upnp
       --disable-enr-auto-update
       --import-all-attestations
+      --disable-backfill-rate-limiting
+      --slots-per-restore-point 256
+      --beacon-processor-max-workers 40
+      --beacon-processor-work-queue-len 32768
+      --beacon-processor-reprocess-queue-len 24576
+      --beacon-processor-attestation-batch-size 2048
+      --beacon-processor-aggregate-batch-size 2048
+      --disable-inbound-rate-limiter
     ulimits:
       nofile:
         soft: 65536
