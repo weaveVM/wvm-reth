@@ -9,6 +9,9 @@ use core::{
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+#[cfg(not(feature = "std"))]
+use alloc::{boxed::Box, format, string::String, vec};
+
 hardfork!(
     /// The name of an optimism hardfork.
     ///
@@ -31,10 +34,10 @@ impl OptimismHardfork {
     /// Retrieves the activation block for the specified hardfork on the given chain.
     pub fn activation_block<H: Hardfork>(self, fork: H, chain: Chain) -> Option<u64> {
         if chain == Chain::base_sepolia() {
-            return Self::base_sepolia_activation_block(fork);
+            return Self::base_sepolia_activation_block(fork)
         }
         if chain == Chain::base_mainnet() {
-            return Self::base_mainnet_activation_block(fork);
+            return Self::base_mainnet_activation_block(fork)
         }
 
         None
@@ -43,10 +46,10 @@ impl OptimismHardfork {
     /// Retrieves the activation timestamp for the specified hardfork on the given chain.
     pub fn activation_timestamp<H: Hardfork>(self, fork: H, chain: Chain) -> Option<u64> {
         if chain == Chain::base_sepolia() {
-            return Self::base_sepolia_activation_timestamp(fork);
+            return Self::base_sepolia_activation_timestamp(fork)
         }
         if chain == Chain::base_mainnet() {
-            return Self::base_mainnet_activation_timestamp(fork);
+            return Self::base_mainnet_activation_timestamp(fork)
         }
 
         None
@@ -314,7 +317,7 @@ where
 {
     let fork: &dyn Any = &fork;
     if let Some(fork) = fork.downcast_ref::<EthereumHardfork>() {
-        return hardfork_fn(fork);
+        return hardfork_fn(fork)
     }
     fork.downcast_ref::<OptimismHardfork>().and_then(optimism_hardfork_fn)
 }

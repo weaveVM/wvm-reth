@@ -6,6 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+<<<<<<< HEAD
 exclude.workspace = true
 
 [dependencies]
@@ -21,3 +22,26 @@ proptest.workspace = true
 
 [lints]
 workspace = true
+=======
+
+[lints]
+workspace = true
+
+[dependencies]
+# reth
+reth-fs-util.workspace = true
+
+# eth
+alloy-primitives.workspace = true
+alloy-eips.workspace = true
+
+secp256k1 = { workspace = true, features = ["rand"] }
+rand.workspace = true
+
+# misc
+thiserror.workspace = true
+eyre.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+>>>>>>> upstream/main

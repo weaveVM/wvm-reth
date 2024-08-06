@@ -7,7 +7,17 @@ mod optimism;
 pub use optimism::OptimismHardforks;
 
 use crate::{ForkCondition, Hardfork};
+<<<<<<< HEAD
 use rustc_hash::FxHashMap;
+=======
+#[cfg(feature = "std")]
+use rustc_hash::FxHashMap;
+#[cfg(feature = "std")]
+use std::collections::hash_map::Entry;
+
+#[cfg(not(feature = "std"))]
+use alloc::{boxed::Box, collections::btree_map::Entry, vec::Vec};
+>>>>>>> upstream/main
 
 /// Generic trait over a set of ordered hardforks
 pub trait Hardforks: Default + Clone {
@@ -33,7 +43,14 @@ pub trait Hardforks: Default + Clone {
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct ChainHardforks {
     forks: Vec<(Box<dyn Hardfork>, ForkCondition)>,
+<<<<<<< HEAD
     map: FxHashMap<&'static str, ForkCondition>,
+=======
+    #[cfg(feature = "std")]
+    map: FxHashMap<&'static str, ForkCondition>,
+    #[cfg(not(feature = "std"))]
+    map: alloc::collections::BTreeMap<&'static str, ForkCondition>,
+>>>>>>> upstream/main
 }
 
 impl ChainHardforks {
@@ -67,6 +84,19 @@ impl ChainHardforks {
         self.map.get(fork.name()).copied()
     }
 
+<<<<<<< HEAD
+=======
+    /// Retrieves the fork block number or timestamp from `fork` if it exists, otherwise `None`.
+    pub fn fork_block<H: Hardfork>(&self, fork: H) -> Option<u64> {
+        match self.fork(fork) {
+            ForkCondition::Block(block) => Some(block),
+            ForkCondition::TTD { fork_block, .. } => fork_block,
+            ForkCondition::Timestamp(ts) => Some(ts),
+            ForkCondition::Never => None,
+        }
+    }
+
+>>>>>>> upstream/main
     /// Get an iterator of all hardforks with their respective activation conditions.
     pub fn forks_iter(&self) -> impl Iterator<Item = (&dyn Hardfork, ForkCondition)> {
         self.forks.iter().map(|(f, b)| (&**f, *b))
@@ -90,7 +120,11 @@ impl ChainHardforks {
     /// Inserts `fork` into list, updating with a new [`ForkCondition`] if it already exists.
     pub fn insert<H: Hardfork>(&mut self, fork: H, condition: ForkCondition) {
         match self.map.entry(fork.name()) {
+<<<<<<< HEAD
             std::collections::hash_map::Entry::Occupied(mut entry) => {
+=======
+            Entry::Occupied(mut entry) => {
+>>>>>>> upstream/main
                 *entry.get_mut() = condition;
                 if let Some((_, inner)) =
                     self.forks.iter_mut().find(|(inner, _)| inner.name() == fork.name())
@@ -98,7 +132,11 @@ impl ChainHardforks {
                     *inner = condition;
                 }
             }
+<<<<<<< HEAD
             std::collections::hash_map::Entry::Vacant(entry) => {
+=======
+            Entry::Vacant(entry) => {
+>>>>>>> upstream/main
                 entry.insert(condition);
                 self.forks.push((Box::new(fork), condition));
             }

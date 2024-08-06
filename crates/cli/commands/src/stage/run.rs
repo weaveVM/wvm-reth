@@ -1,7 +1,13 @@
 //! Main `stage` command
 //!
 //! Stage debugging tool
+<<<<<<< HEAD
 use crate::common::{AccessRights, Environment, EnvironmentArgs};
+=======
+
+use std::{any::Any, net::SocketAddr, sync::Arc, time::Instant};
+
+>>>>>>> upstream/main
 use clap::Parser;
 use reth_beacon_consensus::EthBeaconConsensus;
 use reth_chainspec::ChainSpec;
@@ -11,6 +17,7 @@ use reth_config::config::{HashingConfig, SenderRecoveryConfig, TransactionLookup
 use reth_downloaders::bodies::bodies::BodiesDownloaderBuilder;
 use reth_evm::execute::BlockExecutorProvider;
 use reth_exex::ExExManagerHandle;
+<<<<<<< HEAD
 use reth_node_core::{
     args::{NetworkArgs, StageEnum},
     prometheus_exporter,
@@ -18,6 +25,24 @@ use reth_node_core::{
 use reth_provider::{
     ChainSpecProvider, StageCheckpointReader, StageCheckpointWriter, StaticFileProviderFactory,
     StaticFileWriter,
+=======
+use reth_network::BlockDownloaderProvider;
+use reth_node_core::{
+    args::{NetworkArgs, StageEnum},
+    version::{
+        BUILD_PROFILE_NAME, CARGO_PKG_VERSION, VERGEN_BUILD_TIMESTAMP, VERGEN_CARGO_FEATURES,
+        VERGEN_CARGO_TARGET_TRIPLE, VERGEN_GIT_SHA,
+    },
+};
+use reth_node_metrics::{
+    hooks::Hooks,
+    server::{MetricServer, MetricServerConfig},
+    version::VersionInfo,
+};
+use reth_provider::{
+    writer::UnifiedStorageWriter, ChainSpecProvider, StageCheckpointReader, StageCheckpointWriter,
+    StaticFileProviderFactory,
+>>>>>>> upstream/main
 };
 use reth_stages::{
     stages::{
@@ -27,8 +52,9 @@ use reth_stages::{
     },
     ExecInput, ExecOutput, ExecutionStageThresholds, Stage, StageExt, UnwindInput, UnwindOutput,
 };
-use std::{any::Any, net::SocketAddr, sync::Arc, time::Instant};
 use tracing::*;
+
+use crate::common::{AccessRights, Environment, EnvironmentArgs};
 
 /// `reth stage` command
 #[derive(Debug, Parser)]
@@ -99,15 +125,24 @@ impl Command {
 
         if let Some(listen_addr) = self.metrics {
             info!(target: "reth::cli", "Starting metrics endpoint at {}", listen_addr);
-            prometheus_exporter::serve(
+            let config = MetricServerConfig::new(
                 listen_addr,
-                prometheus_exporter::install_recorder()?,
-                provider_factory.db_ref().clone(),
-                provider_factory.static_file_provider(),
-                metrics_process::Collector::default(),
+                VersionInfo {
+                    version: CARGO_PKG_VERSION,
+                    build_timestamp: VERGEN_BUILD_TIMESTAMP,
+                    cargo_features: VERGEN_CARGO_FEATURES,
+                    git_sha: VERGEN_GIT_SHA,
+                    target_triple: VERGEN_CARGO_TARGET_TRIPLE,
+                    build_profile: BUILD_PROFILE_NAME,
+                },
                 ctx.task_executor,
-            )
-            .await?;
+                Hooks::new(
+                    provider_factory.db_ref().clone(),
+                    provider_factory.static_file_provider(),
+                ),
+            );
+
+            MetricServer::new(config).serve().await?;
         }
 
         let batch_size = self.batch_size.unwrap_or(self.to.saturating_sub(self.from) + 1);
@@ -123,7 +158,11 @@ impl Command {
 
                     let mut config = config;
                     config.peers.trusted_nodes_only = self.network.trusted_only;
+<<<<<<< HEAD
                     config.peers.trusted_nodes.extend(self.network.resolve_trusted_peers().await?);
+=======
+                    config.peers.trusted_nodes.extend(self.network.trusted_peers.clone());
+>>>>>>> upstream/main
 
                     let network_secret_path = self
                         .network
@@ -251,12 +290,19 @@ impl Command {
                 }
 
                 if self.commit {
+<<<<<<< HEAD
                     // For unwinding it makes more sense to commit the database first, since if
                     // this function is interrupted before the static files commit, we can just
                     // truncate the static files according to the
                     // checkpoints on the next start-up.
                     provider_rw.commit()?;
                     provider_factory.static_file_provider().commit()?;
+=======
+                    UnifiedStorageWriter::commit_unwind(
+                        provider_rw,
+                        provider_factory.static_file_provider(),
+                    )?;
+>>>>>>> upstream/main
                     provider_rw = provider_factory.provider_rw()?;
                 }
             }
@@ -279,8 +325,12 @@ impl Command {
                 provider_rw.save_stage_checkpoint(exec_stage.id(), checkpoint)?;
             }
             if self.commit {
+<<<<<<< HEAD
                 provider_factory.static_file_provider().commit()?;
                 provider_rw.commit()?;
+=======
+                UnifiedStorageWriter::commit(provider_rw, provider_factory.static_file_provider())?;
+>>>>>>> upstream/main
                 provider_rw = provider_factory.provider_rw()?;
             }
 

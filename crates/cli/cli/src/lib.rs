@@ -8,12 +8,20 @@
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
+<<<<<<< HEAD
 use std::{borrow::Cow, ffi::OsString};
 
 use reth_cli_runner::CliRunner;
 
 use clap::{Error, Parser};
 
+=======
+use clap::{Error, Parser};
+use reth_cli_runner::CliRunner;
+use std::{borrow::Cow, ffi::OsString};
+
+/// The chainspec module defines the different chainspecs that can be used by the node.
+>>>>>>> upstream/main
 pub mod chainspec;
 
 /// Reth based node cli.
@@ -32,7 +40,11 @@ pub trait RethCli: Sized {
     /// Parse args from iterator from [`std::env::args_os()`].
     fn parse_args() -> Result<Self, Error>
     where
+<<<<<<< HEAD
         Self: Parser + Sized,
+=======
+        Self: Parser,
+>>>>>>> upstream/main
     {
         <Self as RethCli>::try_parse_from(std::env::args_os())
     }
@@ -40,7 +52,11 @@ pub trait RethCli: Sized {
     /// Parse args from the given iterator.
     fn try_parse_from<I, T>(itr: I) -> Result<Self, Error>
     where
+<<<<<<< HEAD
         Self: Parser + Sized,
+=======
+        Self: Parser,
+>>>>>>> upstream/main
         I: IntoIterator<Item = T>,
         T: Into<OsString> + Clone,
     {
@@ -60,7 +76,11 @@ pub trait RethCli: Sized {
     /// Parses and executes a command.
     fn execute<F, R>(f: F) -> Result<R, Error>
     where
+<<<<<<< HEAD
         Self: Parser + Sized,
+=======
+        Self: Parser,
+>>>>>>> upstream/main
         F: FnOnce(Self, CliRunner) -> R,
     {
         let cli = Self::parse_args()?;

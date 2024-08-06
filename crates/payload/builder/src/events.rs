@@ -20,11 +20,19 @@ pub enum Events<Engine: PayloadTypes> {
 /// Represents a receiver for various payload events.
 #[derive(Debug)]
 pub struct PayloadEvents<Engine: PayloadTypes> {
+<<<<<<< HEAD
+=======
+    /// The receiver for the payload events.
+>>>>>>> upstream/main
     pub receiver: broadcast::Receiver<Events<Engine>>,
 }
 
 impl<Engine: PayloadTypes + 'static> PayloadEvents<Engine> {
+<<<<<<< HEAD
     // Convert this receiver into a stream of PayloadEvents.
+=======
+    /// Convert this receiver into a stream of `PayloadEvents`.
+>>>>>>> upstream/main
     pub fn into_stream(self) -> BroadcastStream<Events<Engine>> {
         BroadcastStream::new(self.receiver)
     }

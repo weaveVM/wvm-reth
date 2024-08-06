@@ -19,6 +19,10 @@
 //! use reth_evm::ConfigureEvm;
 //! use reth_network_api::{NetworkInfo, Peers};
 //! use reth_provider::{AccountReader, CanonStateSubscriptions, ChangeSetReader, FullRpcProvider};
+<<<<<<< HEAD
+=======
+//! use reth_rpc::EthApi;
+>>>>>>> upstream/main
 //! use reth_rpc_builder::{
 //!     EthApiBuild, RethRpcModule, RpcModuleBuilder, RpcServerConfig, ServerBuilder,
 //!     TransportRpcModuleConfig,
@@ -26,6 +30,7 @@
 //!
 //! use reth_tasks::TokioTaskExecutor;
 //! use reth_transaction_pool::TransactionPool;
+//!
 //! pub async fn launch<Provider, Pool, Network, Events, EvmConfig>(
 //!     provider: Provider,
 //!     pool: Pool,
@@ -54,7 +59,11 @@
 //!         events,
 //!         evm_config,
 //!     )
+<<<<<<< HEAD
 //!     .build(transports, EthApiBuild::build);
+=======
+//!     .build(transports, Box::new(EthApi::with_spawner));
+>>>>>>> upstream/main
 //!     let handle = RpcServerConfig::default()
 //!         .with_http(ServerBuilder::default())
 //!         .start(&transport_modules)
@@ -70,6 +79,10 @@
 //! use reth_evm::ConfigureEvm;
 //! use reth_network_api::{NetworkInfo, Peers};
 //! use reth_provider::{AccountReader, CanonStateSubscriptions, ChangeSetReader, FullRpcProvider};
+<<<<<<< HEAD
+=======
+//! use reth_rpc::EthApi;
+>>>>>>> upstream/main
 //! use reth_rpc_api::EngineApiServer;
 //! use reth_rpc_builder::{
 //!     auth::AuthServerConfig, EthApiBuild, RethRpcModule, RpcModuleBuilder, RpcServerConfig,
@@ -92,7 +105,11 @@
 //!     Network: NetworkInfo + Peers + Clone + 'static,
 //!     Events: CanonStateSubscriptions + Clone + 'static,
 //!     EngineApi: EngineApiServer<EngineT>,
+<<<<<<< HEAD
 //!     EngineT: EngineTypes + 'static,
+=======
+//!     EngineT: EngineTypes,
+>>>>>>> upstream/main
 //!     EvmConfig: ConfigureEvm,
 //! {
 //!     // configure the rpc module per transport
@@ -113,7 +130,11 @@
 //!
 //!     // configure the server modules
 //!     let (modules, auth_module, _registry) =
+<<<<<<< HEAD
 //!         builder.build_with_auth_server(transports, engine_api, EthApiBuild::build);
+=======
+//!         builder.build_with_auth_server(transports, engine_api, Box::new(EthApi::with_spawner));
+>>>>>>> upstream/main
 //!
 //!     // start the servers
 //!     let auth_config = AuthServerConfig::builder(JwtSecret::random()).build();
@@ -140,10 +161,21 @@ use std::{
 };
 
 use error::{ConflictingModules, RpcError, ServerKind};
+<<<<<<< HEAD
 use http::{header::AUTHORIZATION, HeaderMap};
 use jsonrpsee::{
     core::RegisterMethodError,
     server::{AlreadyStoppedError, IdProvider, RpcServiceBuilder, ServerHandle},
+=======
+use eth::DynEthApiBuilder;
+use http::{header::AUTHORIZATION, HeaderMap};
+use jsonrpsee::{
+    core::RegisterMethodError,
+    server::{
+        middleware::rpc::{RpcService, RpcServiceT},
+        AlreadyStoppedError, IdProvider, RpcServiceBuilder, ServerHandle,
+    },
+>>>>>>> upstream/main
     Methods, RpcModule,
 };
 use reth_engine_primitives::EngineTypes;
@@ -164,17 +196,30 @@ use reth_rpc_eth_api::{
     },
     EthApiServer, FullEthApiServer, RawTransactionForwarder,
 };
+<<<<<<< HEAD
 use reth_rpc_eth_types::{EthStateCache, EthSubscriptionIdProvider};
+=======
+use reth_rpc_eth_types::{EthConfig, EthStateCache, EthSubscriptionIdProvider};
+>>>>>>> upstream/main
 use reth_rpc_layer::{AuthLayer, Claims, JwtAuthValidator, JwtSecret};
 use reth_tasks::{pool::BlockingTaskGuard, TaskSpawner, TokioTaskExecutor};
 use reth_transaction_pool::{noop::NoopTransactionPool, TransactionPool};
 use serde::{Deserialize, Serialize};
+<<<<<<< HEAD
 use tower_http::cors::CorsLayer;
 
 use crate::{
     auth::AuthRpcModule, cors::CorsDomainError, error::WsHttpSamePortError,
     metrics::RpcRequestMetrics,
 };
+=======
+use tower::Layer;
+use tower_http::cors::CorsLayer;
+
+use crate::{auth::AuthRpcModule, error::WsHttpSamePortError, metrics::RpcRequestMetrics};
+
+pub use cors::CorsDomainError;
+>>>>>>> upstream/main
 
 // re-export for convenience
 pub use jsonrpsee::server::ServerBuilder;
@@ -198,17 +243,26 @@ pub mod error;
 
 /// Eth utils
 pub mod eth;
+<<<<<<< HEAD
 pub use eth::{
     EthApiBuild, EthApiBuilderCtx, EthConfig, EthHandlers, FeeHistoryCacheBuilder,
     GasPriceOracleBuilder,
 };
+=======
+pub use eth::EthHandlers;
+>>>>>>> upstream/main
 
 // Rpc server metrics
 mod metrics;
+pub use metrics::{MeteredRequestFuture, RpcRequestMetricsService};
 
 /// Convenience function for starting a server in one step.
 #[allow(clippy::too_many_arguments)]
+<<<<<<< HEAD
 pub async fn launch<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi, EthApiB>(
+=======
+pub async fn launch<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi>(
+>>>>>>> upstream/main
     provider: Provider,
     pool: Pool,
     network: Network,
@@ -217,7 +271,11 @@ pub async fn launch<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi, E
     executor: Tasks,
     events: Events,
     evm_config: EvmConfig,
+<<<<<<< HEAD
     eth: EthApiB,
+=======
+    eth: DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi>,
+>>>>>>> upstream/main
 ) -> Result<RpcServerHandle, RpcError>
 where
     Provider: FullRpcProvider + AccountReader + ChangeSetReader,
@@ -226,8 +284,11 @@ where
     Tasks: TaskSpawner + Clone + 'static,
     Events: CanonStateSubscriptions + Clone + 'static,
     EvmConfig: ConfigureEvm,
+<<<<<<< HEAD
     EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
         + 'static,
+=======
+>>>>>>> upstream/main
     EthApi: FullEthApiServer,
 {
     let module_config = module_config.into();
@@ -422,21 +483,32 @@ where
     /// also configures the auth (engine api) server, which exposes a subset of the `eth_`
     /// namespace.
     #[allow(clippy::type_complexity)]
+<<<<<<< HEAD
     pub fn build_with_auth_server<EngineApi, EngineT, EthApi, EthApiB>(
         self,
         module_config: TransportRpcModuleConfig,
         engine: EngineApi,
         eth: EthApiB,
+=======
+    pub fn build_with_auth_server<EngineApi, EngineT, EthApi>(
+        self,
+        module_config: TransportRpcModuleConfig,
+        engine: EngineApi,
+        eth: DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi>,
+>>>>>>> upstream/main
     ) -> (
         TransportRpcModules,
         AuthRpcModule,
         RpcRegistryInner<Provider, Pool, Network, Tasks, Events, EthApi>,
     )
     where
-        EngineT: EngineTypes + 'static,
+        EngineT: EngineTypes,
         EngineApi: EngineApiServer<EngineT>,
+<<<<<<< HEAD
         EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
             + 'static,
+=======
+>>>>>>> upstream/main
         EthApi: FullEthApiServer,
     {
         let Self { provider, pool, network, executor, events, evm_config } = self;
@@ -465,7 +537,12 @@ where
     /// use reth_evm::ConfigureEvm;
     /// use reth_network_api::noop::NoopNetwork;
     /// use reth_provider::test_utils::{NoopProvider, TestCanonStateSubscriptions};
+<<<<<<< HEAD
     /// use reth_rpc_builder::{EthApiBuild, RpcModuleBuilder};
+=======
+    /// use reth_rpc::EthApi;
+    /// use reth_rpc_builder::RpcModuleBuilder;
+>>>>>>> upstream/main
     /// use reth_tasks::TokioTaskExecutor;
     /// use reth_transaction_pool::noop::NoopTransactionPool;
     ///
@@ -477,11 +554,16 @@ where
     ///         .with_executor(TokioTaskExecutor::default())
     ///         .with_events(TestCanonStateSubscriptions::default())
     ///         .with_evm_config(evm)
+<<<<<<< HEAD
     ///         .into_registry(Default::default(), EthApiBuild::build);
+=======
+    ///         .into_registry(Default::default(), Box::new(EthApi::with_spawner));
+>>>>>>> upstream/main
     ///
     ///     let eth_api = registry.eth_api();
     /// }
     /// ```
+<<<<<<< HEAD
     pub fn into_registry<EthApi, EthApiB>(
         self,
         config: RpcModuleConfig,
@@ -490,6 +572,15 @@ where
     where
         EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
             + 'static,
+=======
+    pub fn into_registry<EthApi>(
+        self,
+        config: RpcModuleConfig,
+        eth: DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi>,
+    ) -> RpcRegistryInner<Provider, Pool, Network, Tasks, Events, EthApi>
+    where
+        EthApi: 'static,
+>>>>>>> upstream/main
     {
         let Self { provider, pool, network, executor, events, evm_config } = self;
         RpcRegistryInner::new(provider, pool, network, executor, events, config, evm_config, eth)
@@ -497,6 +588,7 @@ where
 
     /// Configures all [`RpcModule`]s specific to the given [`TransportRpcModuleConfig`] which can
     /// be used to start the transport server(s).
+<<<<<<< HEAD
     pub fn build<EthApi, EthApiB>(
         self,
         module_config: TransportRpcModuleConfig,
@@ -505,6 +597,14 @@ where
     where
         EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
             + 'static,
+=======
+    pub fn build<EthApi>(
+        self,
+        module_config: TransportRpcModuleConfig,
+        eth: DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi>,
+    ) -> TransportRpcModules<()>
+    where
+>>>>>>> upstream/main
         EthApi: FullEthApiServer,
     {
         let mut modules = TransportRpcModules::default();
@@ -632,6 +732,7 @@ impl<Provider, Pool, Network, Tasks, Events, EthApi>
 where
     Provider: StateProviderFactory + BlockReader + EvmEnvProvider + Clone + Unpin + 'static,
     Pool: Send + Sync + Clone + 'static,
+<<<<<<< HEAD
     Network: Clone,
     Events: CanonStateSubscriptions + Clone,
     Tasks: TaskSpawner + Clone + 'static,
@@ -639,6 +740,16 @@ where
     /// Creates a new, empty instance.
     #[allow(clippy::too_many_arguments)]
     pub fn new<EvmConfig, EthApiB>(
+=======
+    Network: Clone + 'static,
+    Events: CanonStateSubscriptions + Clone + 'static,
+    Tasks: TaskSpawner + Clone + 'static,
+    EthApi: 'static,
+{
+    /// Creates a new, empty instance.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new<EvmConfig>(
+>>>>>>> upstream/main
         provider: Provider,
         pool: Pool,
         network: Network,
@@ -646,12 +757,27 @@ where
         events: Events,
         config: RpcModuleConfig,
         evm_config: EvmConfig,
+<<<<<<< HEAD
         eth_api_builder: EthApiB,
     ) -> Self
     where
         EvmConfig: ConfigureEvm,
         EthApiB: FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi
             + 'static,
+=======
+        eth_api_builder: DynEthApiBuilder<
+            Provider,
+            Pool,
+            EvmConfig,
+            Network,
+            Tasks,
+            Events,
+            EthApi,
+        >,
+    ) -> Self
+    where
+        EvmConfig: ConfigureEvm,
+>>>>>>> upstream/main
     {
         let blocking_pool_guard = BlockingTaskGuard::new(config.eth.max_tracing_requests);
 
@@ -970,7 +1096,11 @@ where
     /// Note: This does _not_ register the `engine_` in this registry.
     pub fn create_auth_module<EngineApi, EngineT>(&self, engine_api: EngineApi) -> AuthRpcModule
     where
+<<<<<<< HEAD
         EngineT: EngineTypes + 'static,
+=======
+        EngineT: EngineTypes,
+>>>>>>> upstream/main
         EngineApi: EngineApiServer<EngineT>,
     {
         let mut module = RpcModule::new(());
@@ -1116,8 +1246,8 @@ where
 ///
 /// Once the [`RpcModule`] is built via [`RpcModuleBuilder`] the servers can be started, See also
 /// [`ServerBuilder::build`] and [`Server::start`](jsonrpsee::server::Server::start).
-#[derive(Default, Debug)]
-pub struct RpcServerConfig {
+#[derive(Debug)]
+pub struct RpcServerConfig<RpcMiddleware = Identity> {
     /// Configs for JSON-RPC Http.
     http_server_config: Option<ServerBuilder<Identity, Identity>>,
     /// Allowed CORS Domains for http
@@ -1136,9 +1266,29 @@ pub struct RpcServerConfig {
     ipc_endpoint: Option<String>,
     /// JWT secret for authentication
     jwt_secret: Option<JwtSecret>,
+    /// Configurable RPC middleware
+    rpc_middleware: RpcServiceBuilder<RpcMiddleware>,
 }
 
 // === impl RpcServerConfig ===
+
+impl Default for RpcServerConfig<Identity> {
+    /// Create a new config instance
+    fn default() -> Self {
+        Self {
+            http_server_config: None,
+            http_cors_domains: None,
+            http_addr: None,
+            ws_server_config: None,
+            ws_cors_domains: None,
+            ws_addr: None,
+            ipc_server_config: None,
+            ipc_endpoint: None,
+            jwt_secret: None,
+            rpc_middleware: RpcServiceBuilder::new(),
+        }
+    }
+}
 
 impl RpcServerConfig {
     /// Creates a new config with only http set
@@ -1166,15 +1316,45 @@ impl RpcServerConfig {
         self
     }
 
+    /// Configures the ws server
+    ///
+    /// Note: this always configures an [`EthSubscriptionIdProvider`] [`IdProvider`] for
+    /// convenience. To set a custom [`IdProvider`], please use [`Self::with_id_provider`].
+    pub fn with_ws(mut self, config: ServerBuilder<Identity, Identity>) -> Self {
+        self.ws_server_config = Some(config.set_id_provider(EthSubscriptionIdProvider::default()));
+        self
+    }
+
+    /// Configures the ipc server
+    ///
+    /// Note: this always configures an [`EthSubscriptionIdProvider`] [`IdProvider`] for
+    /// convenience. To set a custom [`IdProvider`], please use [`Self::with_id_provider`].
+    pub fn with_ipc(mut self, config: IpcServerBuilder<Identity, Identity>) -> Self {
+        self.ipc_server_config = Some(config.set_id_provider(EthSubscriptionIdProvider::default()));
+        self
+    }
+}
+
+impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
+    /// Configure rpc middleware
+    pub fn set_rpc_middleware<T>(self, rpc_middleware: RpcServiceBuilder<T>) -> RpcServerConfig<T> {
+        RpcServerConfig {
+            http_server_config: self.http_server_config,
+            http_cors_domains: self.http_cors_domains,
+            http_addr: self.http_addr,
+            ws_server_config: self.ws_server_config,
+            ws_cors_domains: self.ws_cors_domains,
+            ws_addr: self.ws_addr,
+            ipc_server_config: self.ipc_server_config,
+            ipc_endpoint: self.ipc_endpoint,
+            jwt_secret: self.jwt_secret,
+            rpc_middleware,
+        }
+    }
+
     /// Configure the cors domains for http _and_ ws
     pub fn with_cors(self, cors_domain: Option<String>) -> Self {
         self.with_http_cors(cors_domain.clone()).with_ws_cors(cors_domain)
-    }
-
-    /// Configure the cors domains for HTTP
-    pub fn with_http_cors(mut self, cors_domain: Option<String>) -> Self {
-        self.http_cors_domains = cors_domain;
-        self
     }
 
     /// Configure the cors domains for WS
@@ -1183,12 +1363,9 @@ impl RpcServerConfig {
         self
     }
 
-    /// Configures the ws server
-    ///
-    /// Note: this always configures an [`EthSubscriptionIdProvider`] [`IdProvider`] for
-    /// convenience. To set a custom [`IdProvider`], please use [`Self::with_id_provider`].
-    pub fn with_ws(mut self, config: ServerBuilder<Identity, Identity>) -> Self {
-        self.ws_server_config = Some(config.set_id_provider(EthSubscriptionIdProvider::default()));
+    /// Configure the cors domains for HTTP
+    pub fn with_http_cors(mut self, cors_domain: Option<String>) -> Self {
+        self.http_cors_domains = cors_domain;
         self
     }
 
@@ -1207,15 +1384,6 @@ impl RpcServerConfig {
     /// [`reth_rpc_server_types::constants::DEFAULT_WS_RPC_PORT`]
     pub const fn with_ws_address(mut self, addr: SocketAddr) -> Self {
         self.ws_addr = Some(addr);
-        self
-    }
-
-    /// Configures the ipc server
-    ///
-    /// Note: this always configures an [`EthSubscriptionIdProvider`] [`IdProvider`] for
-    /// convenience. To set a custom [`IdProvider`], please use [`Self::with_id_provider`].
-    pub fn with_ipc(mut self, config: IpcServerBuilder<Identity, Identity>) -> Self {
-        self.ipc_server_config = Some(config.set_id_provider(EthSubscriptionIdProvider::default()));
         self
     }
 
@@ -1292,7 +1460,16 @@ impl RpcServerConfig {
     /// If both http and ws are on the same port, they are combined into one server.
     ///
     /// Returns the [`RpcServerHandle`] with the handle to the started servers.
+<<<<<<< HEAD
     pub async fn start(self, modules: &TransportRpcModules) -> Result<RpcServerHandle, RpcError> {
+=======
+    pub async fn start(self, modules: &TransportRpcModules) -> Result<RpcServerHandle, RpcError>
+    where
+        RpcMiddleware: Layer<RpcRequestMetricsService<RpcService>> + Clone + Send + 'static,
+        for<'a> <RpcMiddleware as Layer<RpcRequestMetricsService<RpcService>>>::Service:
+            Send + Sync + 'static + RpcServiceT<'a>,
+    {
+>>>>>>> upstream/main
         let mut http_handle = None;
         let mut ws_handle = None;
         let mut ipc_handle = None;
@@ -1349,7 +1526,11 @@ impl RpcServerConfig {
                             .option_layer(Self::maybe_jwt_layer(self.jwt_secret)),
                     )
                     .set_rpc_middleware(
+<<<<<<< HEAD
                         RpcServiceBuilder::new().layer(
+=======
+                        self.rpc_middleware.clone().layer(
+>>>>>>> upstream/main
                             modules
                                 .http
                                 .as_ref()
@@ -1397,7 +1578,8 @@ impl RpcServerConfig {
                         .option_layer(Self::maybe_jwt_layer(self.jwt_secret)),
                 )
                 .set_rpc_middleware(
-                    RpcServiceBuilder::new()
+                    self.rpc_middleware
+                        .clone()
                         .layer(modules.ws.as_ref().map(RpcRequestMetrics::ws).unwrap_or_default()),
                 )
                 .build(ws_socket_addr)
@@ -1421,7 +1603,7 @@ impl RpcServerConfig {
                         .option_layer(Self::maybe_jwt_layer(self.jwt_secret)),
                 )
                 .set_rpc_middleware(
-                    RpcServiceBuilder::new().layer(
+                    self.rpc_middleware.clone().layer(
                         modules.http.as_ref().map(RpcRequestMetrics::http).unwrap_or_default(),
                     ),
                 )

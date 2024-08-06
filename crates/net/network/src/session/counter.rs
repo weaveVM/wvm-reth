@@ -83,7 +83,11 @@ impl SessionCounter {
     const fn ensure(current: u32, limit: Option<u32>) -> Result<(), ExceedsSessionLimit> {
         if let Some(limit) = limit {
             if current >= limit {
+<<<<<<< HEAD
                 return Err(ExceedsSessionLimit(limit));
+=======
+                return Err(ExceedsSessionLimit(limit))
+>>>>>>> upstream/main
             }
         }
         Ok(())

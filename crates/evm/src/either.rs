@@ -1,12 +1,18 @@
 //! Helper type that represents one of two possible executor types
 
+<<<<<<< HEAD
 use std::fmt::Display;
 
 use crate::execute::{
     BatchExecutor, BlockExecutionInput, BlockExecutionOutput, BlockExecutorProvider, Executor,
 };
+=======
+use core::fmt::Display;
+
+use crate::execute::{BatchExecutor, BlockExecutorProvider, Executor};
+>>>>>>> upstream/main
 use reth_execution_errors::BlockExecutionError;
-use reth_execution_types::ExecutionOutcome;
+use reth_execution_types::{BlockExecutionInput, BlockExecutionOutput, ExecutionOutcome};
 use reth_primitives::{BlockNumber, BlockWithSenders, Receipt};
 use reth_prune_types::PruneModes;
 use reth_storage_errors::provider::ProviderError;

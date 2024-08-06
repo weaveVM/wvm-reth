@@ -7,6 +7,7 @@
 //!
 //! Components depend on a fully type configured node: [FullNodeTypes](crate::node::FullNodeTypes).
 
+<<<<<<< HEAD
 use crate::{ConfigureEvm, FullNodeTypes};
 pub use builder::*;
 pub use consensus::*;
@@ -20,12 +21,30 @@ use reth_network::NetworkHandle;
 use reth_payload_builder::PayloadBuilderHandle;
 use reth_transaction_pool::TransactionPool;
 
+=======
+>>>>>>> upstream/main
 mod builder;
 mod consensus;
 mod execute;
 mod network;
 mod payload;
 mod pool;
+
+pub use builder::*;
+pub use consensus::*;
+pub use execute::*;
+pub use network::*;
+pub use payload::*;
+pub use pool::*;
+
+use reth_consensus::Consensus;
+use reth_evm::execute::BlockExecutorProvider;
+use reth_network::NetworkHandle;
+use reth_network_api::FullNetwork;
+use reth_payload_builder::PayloadBuilderHandle;
+use reth_transaction_pool::TransactionPool;
+
+use crate::{ConfigureEvm, FullNodeTypes};
 
 /// An abstraction over the components of a node, consisting of:
 ///  - evm and executor
@@ -45,6 +64,12 @@ pub trait NodeComponents<NodeTypes: FullNodeTypes>: Clone + Unpin + Send + Sync 
     /// The consensus type of the node.
     type Consensus: Consensus + Clone + Unpin + 'static;
 
+<<<<<<< HEAD
+=======
+    /// Network API.
+    type Network: FullNetwork;
+
+>>>>>>> upstream/main
     /// Returns the transaction pool of the node.
     fn pool(&self) -> &Self::Pool;
 
@@ -58,7 +83,7 @@ pub trait NodeComponents<NodeTypes: FullNodeTypes>: Clone + Unpin + Send + Sync 
     fn consensus(&self) -> &Self::Consensus;
 
     /// Returns the handle to the network
-    fn network(&self) -> &NetworkHandle;
+    fn network(&self) -> &Self::Network;
 
     /// Returns the handle to the payload builder service.
     fn payload_builder(&self) -> &PayloadBuilderHandle<NodeTypes::Engine>;
@@ -96,6 +121,10 @@ where
     type Evm = EVM;
     type Executor = Executor;
     type Consensus = Cons;
+<<<<<<< HEAD
+=======
+    type Network = NetworkHandle;
+>>>>>>> upstream/main
 
     fn pool(&self) -> &Self::Pool {
         &self.transaction_pool
@@ -113,7 +142,11 @@ where
         &self.consensus
     }
 
+<<<<<<< HEAD
     fn network(&self) -> &NetworkHandle {
+=======
+    fn network(&self) -> &Self::Network {
+>>>>>>> upstream/main
         &self.network
     }
 

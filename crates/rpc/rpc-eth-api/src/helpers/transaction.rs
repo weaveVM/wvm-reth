@@ -6,8 +6,13 @@ use std::{fmt, ops::Deref, sync::Arc};
 use alloy_dyn_abi::TypedData;
 use futures::Future;
 use reth_primitives::{
+<<<<<<< HEAD
     Address, BlockId, Bytes, FromRecoveredPooledTransaction, IntoRecoveredTransaction, Receipt,
     SealedBlockWithSenders, TransactionMeta, TransactionSigned, TxHash, TxKind, B256, U256,
+=======
+    Address, BlockId, Bytes, Receipt, SealedBlockWithSenders, TransactionMeta, TransactionSigned,
+    TxHash, TxKind, B256, U256,
+>>>>>>> upstream/main
 };
 use reth_provider::{BlockReaderIdExt, ReceiptProvider, TransactionsProvider};
 use reth_rpc_eth_types::{
@@ -22,11 +27,21 @@ use reth_rpc_types::{
     AnyTransactionReceipt, Transaction, TransactionRequest, TypedTransactionRequest,
 };
 use reth_rpc_types_compat::transaction::from_recovered_with_block_context;
+<<<<<<< HEAD
 use reth_transaction_pool::{TransactionOrigin, TransactionPool};
 
 use super::EthSigner;
 
 use super::{Call, EthApiSpec, LoadBlock, LoadFee, LoadPendingBlock, LoadReceipt, SpawnBlocking};
+=======
+use reth_transaction_pool::{PoolTransaction, TransactionOrigin, TransactionPool};
+
+use crate::{FromEthApiError, IntoEthApiError};
+
+use super::{
+    Call, EthApiSpec, EthSigner, LoadBlock, LoadFee, LoadPendingBlock, LoadReceipt, SpawnBlocking,
+};
+>>>>>>> upstream/main
 
 /// Transaction related functions for the [`EthApiServer`](crate::EthApiServer) trait in
 /// the `eth_` namespace.
@@ -75,7 +90,11 @@ pub trait EthTransactions: LoadTransaction {
     fn transaction_by_hash(
         &self,
         hash: B256,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<TransactionSource>>> + Send {
+=======
+    ) -> impl Future<Output = Result<Option<TransactionSource>, Self::Error>> + Send {
+>>>>>>> upstream/main
         LoadTransaction::transaction_by_hash(self, hash)
     }
 
@@ -85,8 +104,15 @@ pub trait EthTransactions: LoadTransaction {
     fn transactions_by_block(
         &self,
         block: B256,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<Vec<TransactionSigned>>>> + Send {
         async move { Ok(self.cache().get_block_transactions(block).await?) }
+=======
+    ) -> impl Future<Output = Result<Option<Vec<TransactionSigned>>, Self::Error>> + Send {
+        async move {
+            self.cache().get_block_transactions(block).await.map_err(Self::Error::from_eth_err)
+        }
+>>>>>>> upstream/main
     }
 
     /// Returns the EIP-2718 encoded transaction by hash.
@@ -99,18 +125,31 @@ pub trait EthTransactions: LoadTransaction {
     fn raw_transaction_by_hash(
         &self,
         hash: B256,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<Bytes>>> + Send {
+=======
+    ) -> impl Future<Output = Result<Option<Bytes>, Self::Error>> + Send {
+>>>>>>> upstream/main
         async move {
             // Note: this is mostly used to fetch pooled transactions so we check the pool first
             if let Some(tx) =
                 self.pool().get_pooled_transaction_element(hash).map(|tx| tx.envelope_encoded())
             {
+<<<<<<< HEAD
                 return Ok(Some(tx));
+=======
+                return Ok(Some(tx))
+>>>>>>> upstream/main
             }
 
             self.spawn_blocking_io(move |ref this| {
                 Ok(LoadTransaction::provider(this)
+<<<<<<< HEAD
                     .transaction_by_hash(hash)?
+=======
+                    .transaction_by_hash(hash)
+                    .map_err(Self::Error::from_eth_err)?
+>>>>>>> upstream/main
                     .map(|tx| tx.envelope_encoded()))
             })
             .await
@@ -121,7 +160,11 @@ pub trait EthTransactions: LoadTransaction {
     fn historical_transaction_by_hash_at(
         &self,
         hash: B256,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<(TransactionSource, B256)>>> + Send {
+=======
+    ) -> impl Future<Output = Result<Option<(TransactionSource, B256)>, Self::Error>> + Send {
+>>>>>>> upstream/main
         async move {
             match self.transaction_by_hash_at(hash).await? {
                 None => Ok(None),
@@ -137,11 +180,16 @@ pub trait EthTransactions: LoadTransaction {
     fn transaction_receipt(
         &self,
         hash: B256,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<AnyTransactionReceipt>>> + Send
+=======
+    ) -> impl Future<Output = Result<Option<AnyTransactionReceipt>, Self::Error>> + Send
+>>>>>>> upstream/main
     where
         Self: LoadReceipt + 'static,
     {
         async move {
+<<<<<<< HEAD
             let result = self.load_transaction_and_receipt(hash).await?;
 
             let (tx, meta, receipt) = match result {
@@ -150,6 +198,14 @@ pub trait EthTransactions: LoadTransaction {
             };
 
             self.build_transaction_receipt(tx, meta, receipt).await.map(Some)
+=======
+            match self.load_transaction_and_receipt(hash).await? {
+                Some((tx, meta, receipt)) => {
+                    self.build_transaction_receipt(tx, meta, receipt).await.map(Some)
+                }
+                None => Ok(None),
+            }
+>>>>>>> upstream/main
         }
     }
 
@@ -157,12 +213,19 @@ pub trait EthTransactions: LoadTransaction {
     fn load_transaction_and_receipt(
         &self,
         hash: TxHash,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<(TransactionSigned, TransactionMeta, Receipt)>>> + Send
+=======
+    ) -> impl Future<
+        Output = Result<Option<(TransactionSigned, TransactionMeta, Receipt)>, Self::Error>,
+    > + Send
+>>>>>>> upstream/main
     where
         Self: 'static,
     {
         let this = self.clone();
         self.spawn_blocking_io(move |_| {
+<<<<<<< HEAD
             let (tx, meta) =
                 match LoadTransaction::provider(&this).transaction_by_hash_with_meta(hash)? {
                     Some((tx, meta)) => (tx, meta),
@@ -170,6 +233,20 @@ pub trait EthTransactions: LoadTransaction {
                 };
 
             let receipt = match EthTransactions::provider(&this).receipt_by_hash(hash)? {
+=======
+            let (tx, meta) = match LoadTransaction::provider(&this)
+                .transaction_by_hash_with_meta(hash)
+                .map_err(Self::Error::from_eth_err)?
+            {
+                Some((tx, meta)) => (tx, meta),
+                None => return Ok(None),
+            };
+
+            let receipt = match EthTransactions::provider(&this)
+                .receipt_by_hash(hash)
+                .map_err(Self::Error::from_eth_err)?
+            {
+>>>>>>> upstream/main
                 Some(recpt) => recpt,
                 None => return Ok(None),
             };
@@ -185,7 +262,11 @@ pub trait EthTransactions: LoadTransaction {
         &self,
         block_id: BlockId,
         index: usize,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<Transaction>>> + Send
+=======
+    ) -> impl Future<Output = Result<Option<Transaction>, Self::Error>> + Send
+>>>>>>> upstream/main
     where
         Self: LoadBlock,
     {
@@ -201,7 +282,11 @@ pub trait EthTransactions: LoadTransaction {
                         block_number,
                         base_fee_per_gas,
                         index,
+<<<<<<< HEAD
                     )));
+=======
+                    )))
+>>>>>>> upstream/main
                 }
             }
 
@@ -216,14 +301,22 @@ pub trait EthTransactions: LoadTransaction {
         &self,
         block_id: BlockId,
         index: usize,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<Bytes>>> + Send
+=======
+    ) -> impl Future<Output = Result<Option<Bytes>, Self::Error>> + Send
+>>>>>>> upstream/main
     where
         Self: LoadBlock,
     {
         async move {
             if let Some(block) = self.block_with_senders(block_id).await? {
                 if let Some(tx) = block.transactions().nth(index) {
+<<<<<<< HEAD
                     return Ok(Some(tx.envelope_encoded()));
+=======
+                    return Ok(Some(tx.envelope_encoded()))
+>>>>>>> upstream/main
                 }
             }
 
@@ -234,12 +327,25 @@ pub trait EthTransactions: LoadTransaction {
     /// Decodes and recovers the transaction and submits it to the pool.
     ///
     /// Returns the hash of the transaction.
+<<<<<<< HEAD
     fn send_raw_transaction(&self, tx: Bytes) -> impl Future<Output = EthResult<B256>> + Send {
         async move {
+=======
+    fn send_raw_transaction(
+        &self,
+        tx: Bytes,
+    ) -> impl Future<Output = Result<B256, Self::Error>> + Send {
+        async move {
+            let recovered = recover_raw_transaction(tx.clone())?;
+            let pool_transaction =
+                <Self::Pool as TransactionPool>::Transaction::from_pooled(recovered);
+
+>>>>>>> upstream/main
             // On optimism, transactions are forwarded directly to the sequencer to be included in
             // blocks that it builds.
             if let Some(client) = self.raw_tx_forwarder().as_ref() {
                 tracing::debug!( target: "rpc::eth",  "forwarding raw transaction to");
+<<<<<<< HEAD
                 client.forward_raw_transaction(&tx).await?;
             }
 
@@ -252,6 +358,19 @@ pub trait EthTransactions: LoadTransaction {
             // submit the transaction to the pool with a `Local` origin
             let hash =
                 self.pool().add_transaction(TransactionOrigin::Local, pool_transaction).await?;
+=======
+                let _ = client.forward_raw_transaction(&tx).await.inspect_err(|err| {
+                    tracing::debug!(target: "rpc::eth", %err, hash=% *pool_transaction.hash(), "failed to forward raw transaction");
+                });
+            }
+
+            // submit the transaction to the pool with a `Local` origin
+            let hash = self
+                .pool()
+                .add_transaction(TransactionOrigin::Local, pool_transaction)
+                .await
+                .map_err(Self::Error::from_eth_err)?;
+>>>>>>> upstream/main
 
             Ok(hash)
         }
@@ -262,16 +381,30 @@ pub trait EthTransactions: LoadTransaction {
     fn send_transaction(
         &self,
         mut request: TransactionRequest,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<B256>> + Send
+=======
+    ) -> impl Future<Output = Result<B256, Self::Error>> + Send
+>>>>>>> upstream/main
     where
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + LoadFee + Call,
     {
         async move {
             let from = match request.from {
                 Some(from) => from,
+<<<<<<< HEAD
                 None => return Err(SignError::NoAccount.into()),
             };
 
+=======
+                None => return Err(SignError::NoAccount.into_eth_err()),
+            };
+
+            if self.find_signer(&from).is_err() {
+                return Err(SignError::NoAccount.into_eth_err());
+            }
+
+>>>>>>> upstream/main
             // set nonce if not already set before
             if request.nonce.is_none() {
                 let nonce = self.transaction_count(from, Some(BlockId::pending())).await?;
@@ -443,7 +576,11 @@ pub trait EthTransactions: LoadTransaction {
 
                     TypedTransactionRequest::EIP4844(req)
                 }
+<<<<<<< HEAD
                 None => return Err(EthApiError::ConflictingFeeFieldsInRequest),
+=======
+                None => return Err(EthApiError::ConflictingFeeFieldsInRequest.into()),
+>>>>>>> upstream/main
             };
 
             let signed_tx = self.sign_request(&from, transaction)?;
@@ -452,14 +589,24 @@ pub trait EthTransactions: LoadTransaction {
                 signed_tx.into_ecrecovered().ok_or(EthApiError::InvalidTransactionSignature)?;
 
             let pool_transaction = match recovered.try_into() {
+<<<<<<< HEAD
                 Ok(converted) => <<Self as LoadTransaction>::Pool as TransactionPool>::Transaction::from_recovered_pooled_transaction(converted),
                 Err(_) => return Err(EthApiError::TransactionConversionError),
+=======
+                Ok(converted) => converted,
+                Err(_) => return Err(EthApiError::TransactionConversionError.into()),
+>>>>>>> upstream/main
             };
 
             // submit the transaction to the pool with a `Local` origin
             let hash = LoadTransaction::pool(self)
                 .add_transaction(TransactionOrigin::Local, pool_transaction)
+<<<<<<< HEAD
                 .await?;
+=======
+                .await
+                .map_err(Self::Error::from_eth_err)?;
+>>>>>>> upstream/main
 
             Ok(hash)
         }
@@ -470,16 +617,28 @@ pub trait EthTransactions: LoadTransaction {
         &self,
         from: &Address,
         request: TypedTransactionRequest,
+<<<<<<< HEAD
     ) -> EthResult<TransactionSigned> {
+=======
+    ) -> Result<TransactionSigned, Self::Error> {
+>>>>>>> upstream/main
         for signer in self.signers().read().iter() {
             if signer.is_signer_for(from) {
                 return match signer.sign_transaction(request, from) {
                     Ok(tx) => Ok(tx),
+<<<<<<< HEAD
                     Err(e) => Err(e.into()),
                 };
             }
         }
         Err(EthApiError::InvalidTransactionSignature)
+=======
+                    Err(e) => Err(e.into_eth_err()),
+                }
+            }
+        }
+        Err(EthApiError::InvalidTransactionSignature.into())
+>>>>>>> upstream/main
     }
 
     /// Signs given message. Returns the signature.
@@ -487,6 +646,7 @@ pub trait EthTransactions: LoadTransaction {
         &self,
         account: Address,
         message: Bytes,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Bytes>> + Send {
         async move { Ok(self.find_signer(&account)?.sign(account, &message).await?.to_hex_bytes()) }
     }
@@ -498,12 +658,43 @@ pub trait EthTransactions: LoadTransaction {
 
     /// Returns the signer for the given account, if found in configured signers.
     fn find_signer(&self, account: &Address) -> Result<Box<(dyn EthSigner + 'static)>, SignError> {
+=======
+    ) -> impl Future<Output = Result<Bytes, Self::Error>> + Send {
+        async move {
+            Ok(self
+                .find_signer(&account)?
+                .sign(account, &message)
+                .await
+                .map_err(Self::Error::from_eth_err)?
+                .to_hex_bytes())
+        }
+    }
+
+    /// Encodes and signs the typed data according EIP-712. Payload must implement Eip712 trait.
+    fn sign_typed_data(&self, data: &TypedData, account: Address) -> Result<Bytes, Self::Error> {
+        Ok(self
+            .find_signer(&account)?
+            .sign_typed_data(account, data)
+            .map_err(Self::Error::from_eth_err)?
+            .to_hex_bytes())
+    }
+
+    /// Returns the signer for the given account, if found in configured signers.
+    fn find_signer(
+        &self,
+        account: &Address,
+    ) -> Result<Box<(dyn EthSigner + 'static)>, Self::Error> {
+>>>>>>> upstream/main
         self.signers()
             .read()
             .iter()
             .find(|signer| signer.is_signer_for(account))
             .map(|signer| dyn_clone::clone_box(&**signer))
+<<<<<<< HEAD
             .ok_or(SignError::NoAccount)
+=======
+            .ok_or_else(|| SignError::NoAccount.into_eth_err())
+>>>>>>> upstream/main
     }
 }
 
@@ -539,12 +730,24 @@ pub trait LoadTransaction: SpawnBlocking {
     fn transaction_by_hash(
         &self,
         hash: B256,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<TransactionSource>>> + Send {
+=======
+    ) -> impl Future<Output = Result<Option<TransactionSource>, Self::Error>> + Send {
+>>>>>>> upstream/main
         async move {
             // Try to find the transaction on disk
             let mut resp = self
                 .spawn_blocking_io(move |this| {
+<<<<<<< HEAD
                     match this.provider().transaction_by_hash_with_meta(hash)? {
+=======
+                    match this
+                        .provider()
+                        .transaction_by_hash_with_meta(hash)
+                        .map_err(Self::Error::from_eth_err)?
+                    {
+>>>>>>> upstream/main
                         None => Ok(None),
                         Some((tx, meta)) => {
                             // Note: we assume this transaction is valid, because it's mined (or
@@ -569,9 +772,13 @@ pub trait LoadTransaction: SpawnBlocking {
 
             if resp.is_none() {
                 // tx not found on disk, check pool
+<<<<<<< HEAD
                 if let Some(tx) =
                     self.pool().get(&hash).map(|tx| tx.transaction.to_recovered_transaction())
                 {
+=======
+                if let Some(tx) = self.pool().get(&hash).map(|tx| tx.transaction.clone().into()) {
+>>>>>>> upstream/main
                     resp = Some(TransactionSource::Pool(tx));
                 }
             }
@@ -586,6 +793,7 @@ pub trait LoadTransaction: SpawnBlocking {
     fn transaction_by_hash_at(
         &self,
         transaction_hash: B256,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<(TransactionSource, BlockId)>>> + Send {
         async move {
             match self.transaction_by_hash(transaction_hash).await? {
@@ -614,6 +822,17 @@ pub trait LoadTransaction: SpawnBlocking {
                     Ok(Some(res))
                 }
             }
+=======
+    ) -> impl Future<Output = Result<Option<(TransactionSource, BlockId)>, Self::Error>> + Send
+    {
+        async move {
+            Ok(self.transaction_by_hash(transaction_hash).await?.map(|tx| match tx {
+                tx @ TransactionSource::Pool(_) => (tx, BlockId::pending()),
+                tx @ TransactionSource::Block { block_hash, .. } => {
+                    (tx, BlockId::Hash(block_hash.into()))
+                }
+            }))
+>>>>>>> upstream/main
         }
     }
 
@@ -621,8 +840,13 @@ pub trait LoadTransaction: SpawnBlocking {
     fn transaction_and_block(
         &self,
         hash: B256,
+<<<<<<< HEAD
     ) -> impl Future<Output = EthResult<Option<(TransactionSource, SealedBlockWithSenders)>>> + Send
     {
+=======
+    ) -> impl Future<Output = Result<Option<(TransactionSource, SealedBlockWithSenders)>, Self::Error>>
+           + Send {
+>>>>>>> upstream/main
         async move {
             let (transaction, at) = match self.transaction_by_hash_at(hash).await? {
                 None => return Ok(None),
@@ -634,7 +858,15 @@ pub trait LoadTransaction: SpawnBlocking {
                 BlockId::Hash(hash) => hash.block_hash,
                 _ => return Ok(None),
             };
+<<<<<<< HEAD
             let block = self.cache().get_block_with_senders(block_hash).await?;
+=======
+            let block = self
+                .cache()
+                .get_block_with_senders(block_hash)
+                .await
+                .map_err(Self::Error::from_eth_err)?;
+>>>>>>> upstream/main
             Ok(block.map(|block| (transaction, block.seal(block_hash))))
         }
     }

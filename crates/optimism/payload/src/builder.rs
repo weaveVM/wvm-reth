@@ -5,7 +5,11 @@ use crate::{
     payload::{OptimismBuiltPayload, OptimismPayloadBuilderAttributes},
 };
 use reth_basic_payload_builder::*;
+<<<<<<< HEAD
 use reth_chainspec::{ChainSpec, EthereumHardforks, OptimismHardfork};
+=======
+use reth_chainspec::{EthereumHardforks, OptimismHardfork};
+>>>>>>> upstream/main
 use reth_evm::{system_calls::pre_block_beacon_root_contract_call, ConfigureEvm};
 use reth_execution_types::ExecutionOutcome;
 use reth_payload_builder::error::PayloadBuilderError;
@@ -22,7 +26,6 @@ use revm::{
     primitives::{EVMError, EnvWithHandlerCfg, InvalidTransaction, ResultAndState},
     DatabaseCommit, State,
 };
-use std::sync::Arc;
 use tracing::{debug, trace, warn};
 
 /// Optimism's payload builder
@@ -31,16 +34,14 @@ pub struct OptimismPayloadBuilder<EvmConfig> {
     /// The rollup's compute pending block configuration option.
     // TODO(clabby): Implement this feature.
     compute_pending_block: bool,
-    /// The rollup's chain spec.
-    chain_spec: Arc<ChainSpec>,
     /// The type responsible for creating the evm.
     evm_config: EvmConfig,
 }
 
 impl<EvmConfig> OptimismPayloadBuilder<EvmConfig> {
     /// `OptimismPayloadBuilder` constructor.
-    pub const fn new(chain_spec: Arc<ChainSpec>, evm_config: EvmConfig) -> Self {
-        Self { compute_pending_block: true, chain_spec, evm_config }
+    pub const fn new(evm_config: EvmConfig) -> Self {
+        Self { compute_pending_block: true, evm_config }
     }
 
     /// Sets the rollup's compute pending block configuration option.
@@ -57,12 +58,6 @@ impl<EvmConfig> OptimismPayloadBuilder<EvmConfig> {
     /// Returns the rollup's compute pending block configuration option.
     pub const fn is_compute_pending_block(&self) -> bool {
         self.compute_pending_block
-    }
-
-    /// Sets the rollup's chainspec.
-    pub fn set_chain_spec(mut self, chain_spec: Arc<ChainSpec>) -> Self {
-        self.chain_spec = chain_spec;
-        self
     }
 }
 
@@ -120,7 +115,8 @@ where
 
         let base_fee = initialized_block_env.basefee.to::<u64>();
         let block_number = initialized_block_env.number.to::<u64>();
-        let block_gas_limit: u64 = initialized_block_env.gas_limit.try_into().unwrap_or(u64::MAX);
+        let block_gas_limit: u64 =
+            initialized_block_env.gas_limit.try_into().unwrap_or(chain_spec.max_gas_limit);
 
         // apply eip-4788 pre block contract call
         pre_block_beacon_root_contract_call(
@@ -264,9 +260,9 @@ where
     debug!(target: "payload_builder", id=%attributes.payload_attributes.payload_id(), parent_hash = ?parent_block.hash(), parent_number = parent_block.number, "building new payload");
 
     let mut cumulative_gas_used = 0;
-    let block_gas_limit: u64 = attributes
-        .gas_limit
-        .unwrap_or_else(|| initialized_block_env.gas_limit.try_into().unwrap_or(u64::MAX));
+    let block_gas_limit: u64 = attributes.gas_limit.unwrap_or_else(|| {
+        initialized_block_env.gas_limit.try_into().unwrap_or(chain_spec.max_gas_limit)
+    });
     let base_fee = initialized_block_env.basefee.to::<u64>();
 
     let mut executed_txs = Vec::with_capacity(attributes.transactions.len());
@@ -327,7 +323,7 @@ where
         }
 
         // A sequencer's block should never contain blob transactions.
-        if sequencer_tx.is_eip4844() {
+        if sequencer_tx.value().is_eip4844() {
             return Err(PayloadBuilderError::other(
                 OptimismPayloadBuilderError::BlobTransactionRejected,
             ));
@@ -337,7 +333,7 @@ where
         // purely for the purposes of utilizing the `evm_config.tx_env`` function.
         // Deposit transactions do not have signatures, so if the tx is a deposit, this
         // will just pull in its `from` address.
-        let sequencer_tx = sequencer_tx.clone().try_into_ecrecovered().map_err(|_| {
+        let sequencer_tx = sequencer_tx.value().clone().try_into_ecrecovered().map_err(|_| {
             PayloadBuilderError::other(OptimismPayloadBuilderError::TransactionEcRecoverFailed)
         })?;
 
@@ -427,7 +423,8 @@ where
 
             // A sequencer's block should never contain blob or deposit transactions from the pool.
             if pool_tx.is_eip4844() || pool_tx.tx_type() == TxType::Deposit as u8 {
-                best_txs.mark_invalid(&pool_tx)
+                best_txs.mark_invalid(&pool_tx);
+                continue
             }
 
             // check if the job was cancelled, if so we can exit early

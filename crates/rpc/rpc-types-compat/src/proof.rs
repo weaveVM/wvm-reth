@@ -1,6 +1,9 @@
 //! Compatibility functions for rpc proof related types.
 
+<<<<<<< HEAD
 use reth_primitives::U64;
+=======
+>>>>>>> upstream/main
 use reth_rpc_types::{
     serde_helpers::JsonStorageKey, EIP1186AccountProofResponse, EIP1186StorageProof,
 };
@@ -18,7 +21,7 @@ pub fn from_primitive_account_proof(proof: AccountProof) -> EIP1186AccountProofR
         address: proof.address,
         balance: info.balance,
         code_hash: info.get_bytecode_hash(),
-        nonce: U64::from(info.nonce),
+        nonce: info.nonce,
         storage_hash: proof.storage_root,
         account_proof: proof.proof,
         storage_proof: proof.storage_proofs.into_iter().map(from_primitive_storage_proof).collect(),

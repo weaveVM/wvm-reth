@@ -13,10 +13,36 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
+<<<<<<< HEAD
 pub use alloy_rpc_types_admin::EthProtocolInfo;
 pub use error::NetworkError;
 pub use reputation::{Reputation, ReputationChangeKind};
 use reth_eth_wire::{capability::Capabilities, DisconnectReason, EthVersion, Status};
+=======
+pub mod downloaders;
+/// Network Error
+pub mod error;
+pub mod events;
+/// Implementation of network traits for that does nothing.
+pub mod noop;
+pub mod test_utils;
+
+pub use alloy_rpc_types_admin::EthProtocolInfo;
+use reth_network_p2p::sync::NetworkSyncUpdater;
+pub use reth_network_p2p::BlockClient;
+pub use reth_network_types::{PeerKind, Reputation, ReputationChangeKind};
+
+pub use downloaders::BlockDownloaderProvider;
+pub use error::NetworkError;
+pub use events::{
+    DiscoveredEvent, DiscoveryEvent, NetworkEvent, NetworkEventListenerProvider, PeerRequest,
+    PeerRequestSender,
+};
+
+use std::{future::Future, net::SocketAddr, sync::Arc, time::Instant};
+
+use reth_eth_wire_types::{capability::Capabilities, DisconnectReason, EthVersion, Status};
+>>>>>>> upstream/main
 use reth_network_peers::NodeRecord;
 use serde::{Deserialize, Serialize};
 use std::{future::Future, net::SocketAddr, sync::Arc, time::Instant};
@@ -24,15 +50,33 @@ use std::{future::Future, net::SocketAddr, sync::Arc, time::Instant};
 /// The `PeerId` type.
 pub type PeerId = alloy_primitives::B512;
 
-/// Network Error
-pub mod error;
-/// Reputation score
-pub mod reputation;
+/// Helper trait that unifies network API needed to launch node.
+pub trait FullNetwork:
+    BlockDownloaderProvider
+    + NetworkSyncUpdater
+    + NetworkInfo
+    + NetworkEventListenerProvider
+    + PeersInfo
+    + Peers
+    + Clone
+    + 'static
+{
+}
 
-/// Implementation of network traits for that does nothing.
-pub mod noop;
+impl<T> FullNetwork for T where
+    T: BlockDownloaderProvider
+        + NetworkSyncUpdater
+        + NetworkInfo
+        + NetworkEventListenerProvider
+        + PeersInfo
+        + Peers
+        + Clone
+        + 'static
+{
+}
 
 /// Provides general purpose information about the network.
+#[auto_impl::auto_impl(&, Arc)]
 pub trait NetworkInfo: Send + Sync {
     /// Returns the [`SocketAddr`] that listens for incoming connections.
     fn local_addr(&self) -> SocketAddr;
@@ -51,6 +95,7 @@ pub trait NetworkInfo: Send + Sync {
 }
 
 /// Provides general purpose information about Peers in the network.
+#[auto_impl::auto_impl(&, Arc)]
 pub trait PeersInfo: Send + Sync {
     /// Returns how many peers the network is currently connected to.
     ///
@@ -65,8 +110,13 @@ pub trait PeersInfo: Send + Sync {
 }
 
 /// Provides an API for managing the peers of the network.
+#[auto_impl::auto_impl(&, Arc)]
 pub trait Peers: PeersInfo {
+<<<<<<< HEAD
     /// Adds a peer to the peer set with UDP `SocketAddr`.
+=======
+    /// Adds a peer to the peer set with TCP `SocketAddr`.
+>>>>>>> upstream/main
     fn add_peer(&self, peer: PeerId, tcp_addr: SocketAddr) {
         self.add_peer_kind(peer, PeerKind::Static, tcp_addr, None);
     }
@@ -81,7 +131,11 @@ pub trait Peers: PeersInfo {
     /// This allows marking a peer as trusted without having to know the peer's address.
     fn add_trusted_peer_id(&self, peer: PeerId);
 
+<<<<<<< HEAD
     /// Adds a trusted peer to the peer set with UDP `SocketAddr`.
+=======
+    /// Adds a trusted peer to the peer set with TCP `SocketAddr`.
+>>>>>>> upstream/main
     fn add_trusted_peer(&self, peer: PeerId, tcp_addr: SocketAddr) {
         self.add_peer_kind(peer, PeerKind::Trusted, tcp_addr, None);
     }
@@ -157,6 +211,7 @@ pub trait Peers: PeersInfo {
     ) -> impl Future<Output = Result<Option<Reputation>, NetworkError>> + Send;
 }
 
+<<<<<<< HEAD
 /// Represents the kind of peer
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
 pub enum PeerKind {
@@ -186,6 +241,8 @@ impl PeerKind {
     }
 }
 
+=======
+>>>>>>> upstream/main
 /// Info about an active peer session.
 #[derive(Debug, Clone)]
 pub struct PeerInfo {
@@ -246,7 +303,12 @@ impl std::fmt::Display for Direction {
 }
 
 /// The status of the network being ran by the local node.
+<<<<<<< HEAD
 #[derive(Clone, Debug, Serialize, Deserialize)]
+=======
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+>>>>>>> upstream/main
 pub struct NetworkStatus {
     /// The local node client version.
     pub client_version: String,

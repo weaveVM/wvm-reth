@@ -8,9 +8,8 @@ use reth_db_api::database::Database;
 use reth_engine_primitives::EngineTypes;
 use reth_errors::{BlockValidationError, ProviderResult, RethError, RethResult};
 use reth_network_p2p::{
-    bodies::client::BodiesClient,
-    headers::client::HeadersClient,
     sync::{NetworkSyncUpdater, SyncState},
+    BlockClient,
 };
 use reth_payload_builder::PayloadBuilderHandle;
 use reth_payload_primitives::{PayloadAttributes, PayloadBuilderAttributes};
@@ -171,7 +170,7 @@ type PendingForkchoiceUpdate<PayloadAttributes> =
 pub struct BeaconConsensusEngine<DB, BT, Client, EngineT>
 where
     DB: Database,
-    Client: HeadersClient + BodiesClient,
+    Client: BlockClient,
     BT: BlockchainTreeEngine
         + BlockReader
         + BlockIdReader
@@ -234,8 +233,8 @@ where
         + StageCheckpointReader
         + ChainSpecProvider
         + 'static,
-    Client: HeadersClient + BodiesClient + Clone + Unpin + 'static,
-    EngineT: EngineTypes + Unpin + 'static,
+    Client: BlockClient + 'static,
+    EngineT: EngineTypes + Unpin,
 {
     /// Create a new instance of the [`BeaconConsensusEngine`].
     #[allow(clippy::too_many_arguments)]
@@ -1447,7 +1446,11 @@ where
             warn!(target: "consensus::engine", invalid_hash=?bad_block.hash(), invalid_number=?bad_block.number, "Bad block detected in unwind");
             // update the `invalid_headers` cache with the new invalid header
             self.invalid_headers.insert(*bad_block);
+<<<<<<< HEAD
             return Ok(());
+=======
+            return Ok(())
+>>>>>>> upstream/main
         }
 
         let sync_target_state = match self.forkchoice_state_tracker.sync_target_state() {
@@ -1792,7 +1795,7 @@ where
 impl<DB, BT, Client, EngineT> Future for BeaconConsensusEngine<DB, BT, Client, EngineT>
 where
     DB: Database + Unpin + 'static,
-    Client: HeadersClient + BodiesClient + Clone + Unpin + 'static,
+    Client: BlockClient + 'static,
     BT: BlockchainTreeEngine
         + BlockReader
         + BlockIdReader
@@ -1801,7 +1804,7 @@ where
         + ChainSpecProvider
         + Unpin
         + 'static,
-    EngineT: EngineTypes + Unpin + 'static,
+    EngineT: EngineTypes + Unpin,
 {
     type Output = Result<(), BeaconConsensusEngineError>;
 

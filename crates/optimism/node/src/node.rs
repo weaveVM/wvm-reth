@@ -1,14 +1,12 @@
 //! Optimism Node types config.
 
-use crate::{
-    args::RollupArgs,
-    txpool::{OpTransactionPool, OpTransactionValidator},
-    OptimismEngineTypes,
-};
+use std::sync::Arc;
+
 use reth_basic_payload_builder::{BasicPayloadJobGenerator, BasicPayloadJobGeneratorConfig};
 use reth_evm::ConfigureEvm;
 use reth_evm_optimism::{OpExecutorProvider, OptimismEvmConfig};
 use reth_network::{NetworkHandle, NetworkManager};
+use reth_node_api::{FullNodeComponents, NodeAddOns};
 use reth_node_builder::{
     components::{
         ComponentsBuilder, ConsensusBuilder, ExecutorBuilder, NetworkBuilder,
@@ -18,6 +16,7 @@ use reth_node_builder::{
     BuilderContext, Node, PayloadBuilderConfig,
 };
 use reth_optimism_consensus::OptimismBeaconConsensus;
+use reth_optimism_rpc::OpEthApi;
 use reth_payload_builder::{PayloadBuilderHandle, PayloadBuilderService};
 use reth_provider::CanonStateSubscriptions;
 use reth_tracing::tracing::{debug, info};
@@ -26,6 +25,12 @@ use reth_transaction_pool::{
     TransactionValidationTaskExecutor,
 };
 use std::sync::Arc;
+
+use crate::{
+    args::RollupArgs,
+    txpool::{OpTransactionPool, OpTransactionValidator},
+    OptimismEngineTypes,
+};
 
 /// Type configuration for a regular Optimism node.
 #[derive(Debug, Default, Clone)]
@@ -55,7 +60,7 @@ impl OptimismNode {
     where
         Node: FullNodeTypes<Engine = OptimismEngineTypes>,
     {
-        let RollupArgs { disable_txpool_gossip, compute_pending_block, .. } = args;
+        let RollupArgs { disable_txpool_gossip, compute_pending_block, discovery_v4, .. } = args;
         ComponentsBuilder::default()
             .node_types::<Node>()
             .pool(OptimismPoolBuilder::default())
@@ -63,7 +68,10 @@ impl OptimismNode {
                 compute_pending_block,
                 OptimismEvmConfig::default(),
             ))
-            .network(OptimismNetworkBuilder { disable_txpool_gossip })
+            .network(OptimismNetworkBuilder {
+                disable_txpool_gossip,
+                disable_discovery_v4: !discovery_v4,
+            })
             .executor(OptimismExecutorBuilder::default())
             .consensus(OptimismConsensusBuilder::default())
     }
@@ -82,15 +90,25 @@ where
         OptimismConsensusBuilder,
     >;
 
-    fn components_builder(self) -> Self::ComponentsBuilder {
+    type AddOns = OptimismAddOns;
+
+    fn components_builder(&self) -> Self::ComponentsBuilder {
         let Self { args } = self;
-        Self::components(args)
+        Self::components(args.clone())
     }
 }
 
 impl NodeTypes for OptimismNode {
     type Primitives = ();
     type Engine = OptimismEngineTypes;
+}
+
+/// Add-ons w.r.t. optimism.
+#[derive(Debug, Clone)]
+pub struct OptimismAddOns;
+
+impl<N: FullNodeComponents> NodeAddOns<N> for OptimismAddOns {
+    type EthApi = OpEthApi<N>;
 }
 
 /// A regular optimism evm and executor builder.
@@ -226,11 +244,9 @@ where
         ctx: &BuilderContext<Node>,
         pool: Pool,
     ) -> eyre::Result<PayloadBuilderHandle<Node::Engine>> {
-        let payload_builder = reth_optimism_payload_builder::OptimismPayloadBuilder::new(
-            ctx.chain_spec(),
-            self.evm_config,
-        )
-        .set_compute_pending_block(self.compute_pending_block);
+        let payload_builder =
+            reth_optimism_payload_builder::OptimismPayloadBuilder::new(self.evm_config)
+                .set_compute_pending_block(self.compute_pending_block);
         let conf = ctx.payload_builder_config();
 
         let payload_job_config = BasicPayloadJobGeneratorConfig::default()
@@ -262,6 +278,8 @@ where
 pub struct OptimismNetworkBuilder {
     /// Disable transaction pool gossip
     pub disable_txpool_gossip: bool,
+    /// Disable discovery v4
+    pub disable_discovery_v4: bool,
 }
 
 impl<Node, Pool> NetworkBuilder<Node, Pool> for OptimismNetworkBuilder
@@ -274,23 +292,28 @@ where
         ctx: &BuilderContext<Node>,
         pool: Pool,
     ) -> eyre::Result<NetworkHandle> {
-        let Self { disable_txpool_gossip } = self;
+        let Self { disable_txpool_gossip, disable_discovery_v4 } = self;
 
         let args = &ctx.config().network;
-
         let network_builder = ctx
             .network_config_builder()?
-            // purposefully disable discv4
-            .disable_discv4_discovery()
             // apply discovery settings
             .apply(|mut builder| {
                 let rlpx_socket = (args.addr, args.port).into();
-
+                if disable_discovery_v4 || args.discovery.disable_discovery {
+                    builder = builder.disable_discv4_discovery();
+                }
                 if !args.discovery.disable_discovery {
-                    builder = builder.discovery_v5(args.discovery.discovery_v5_builder(
-                        rlpx_socket,
-                        ctx.chain_spec().bootnodes().unwrap_or_default(),
-                    ));
+                    builder = builder.discovery_v5(
+                        args.discovery.discovery_v5_builder(
+                            rlpx_socket,
+                            ctx.config()
+                                .network
+                                .resolved_bootnodes()
+                                .or_else(|| ctx.chain_spec().bootnodes())
+                                .unwrap_or_default(),
+                        ),
+                    );
                 }
 
                 builder

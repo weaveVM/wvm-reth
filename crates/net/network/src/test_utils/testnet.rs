@@ -1,20 +1,25 @@
 //! A network implementation for testing purposes.
 
-use crate::{
-    builder::ETH_REQUEST_CHANNEL_CAPACITY,
-    error::NetworkError,
-    eth_requests::EthRequestHandler,
-    peers::PeersHandle,
-    protocol::IntoRlpxSubProtocol,
-    transactions::{TransactionsHandle, TransactionsManager, TransactionsManagerConfig},
-    NetworkConfig, NetworkConfigBuilder, NetworkEvent, NetworkEvents, NetworkHandle,
-    NetworkManager,
+use std::{
+    fmt,
+    future::Future,
+    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
+    pin::Pin,
+    task::{Context, Poll},
 };
+
 use futures::{FutureExt, StreamExt};
 use pin_project::pin_project;
 use reth_chainspec::MAINNET;
 use reth_eth_wire::{protocol::Protocol, DisconnectReason, HelloMessageWithProtocols};
+<<<<<<< HEAD
 use reth_network_api::{NetworkInfo, Peers};
+=======
+use reth_network_api::{
+    test_utils::{PeersHandle, PeersHandleProvider},
+    NetworkEvent, NetworkEventListenerProvider, NetworkInfo, Peers,
+};
+>>>>>>> upstream/main
 use reth_network_peers::PeerId;
 use reth_provider::test_utils::NoopProvider;
 use reth_storage_api::{BlockReader, BlockReaderIdExt, HeaderProvider, StateProviderFactory};
@@ -26,19 +31,21 @@ use reth_transaction_pool::{
     EthTransactionPool, TransactionPool, TransactionValidationTaskExecutor,
 };
 use secp256k1::SecretKey;
-use std::{
-    fmt,
-    future::Future,
-    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
-    pin::Pin,
-    task::{Context, Poll},
-};
 use tokio::{
     sync::{
         mpsc::{channel, unbounded_channel},
         oneshot,
     },
     task::JoinHandle,
+};
+
+use crate::{
+    builder::ETH_REQUEST_CHANNEL_CAPACITY,
+    error::NetworkError,
+    eth_requests::EthRequestHandler,
+    protocol::IntoRlpxSubProtocol,
+    transactions::{TransactionsHandle, TransactionsManager, TransactionsManagerConfig},
+    NetworkConfig, NetworkConfigBuilder, NetworkHandle, NetworkManager,
 };
 
 /// A test network consisting of multiple peers.
@@ -51,7 +58,7 @@ pub struct Testnet<C, Pool> {
 
 impl<C> Testnet<C, TestPool>
 where
-    C: BlockReader + HeaderProvider + Clone,
+    C: BlockReader + HeaderProvider + Clone + 'static,
 {
     /// Same as [`Self::try_create_with`] but panics on error
     pub async fn create_with(num_peers: usize, provider: C) -> Self {
@@ -85,7 +92,7 @@ where
 
 impl<C, Pool> Testnet<C, Pool>
 where
-    C: BlockReader + HeaderProvider + Clone,
+    C: BlockReader + HeaderProvider + Clone + 'static,
     Pool: TransactionPool,
 {
     /// Return a mutable slice of all peers.
@@ -252,7 +259,7 @@ impl<C, Pool> fmt::Debug for Testnet<C, Pool> {
 
 impl<C, Pool> Future for Testnet<C, Pool>
 where
-    C: BlockReader + HeaderProvider + Unpin,
+    C: BlockReader + HeaderProvider + Unpin + 'static,
     Pool: TransactionPool + Unpin + 'static,
 {
     type Output = ();
@@ -326,7 +333,7 @@ impl<C, Pool> TestnetHandle<C, Pool> {
 #[derive(Debug)]
 pub struct Peer<C, Pool = TestPool> {
     #[pin]
-    network: NetworkManager<C>,
+    network: NetworkManager,
     #[pin]
     request_handler: Option<EthRequestHandler<C>>,
     #[pin]
@@ -340,7 +347,7 @@ pub struct Peer<C, Pool = TestPool> {
 
 impl<C, Pool> Peer<C, Pool>
 where
-    C: BlockReader + HeaderProvider + Clone,
+    C: BlockReader + HeaderProvider + Clone + 'static,
     Pool: TransactionPool,
 {
     /// Returns the number of connected peers.
@@ -373,7 +380,7 @@ where
     }
 
     /// Returns mutable access to the network.
-    pub fn network_mut(&mut self) -> &mut NetworkManager<C> {
+    pub fn network_mut(&mut self) -> &mut NetworkManager {
         &mut self.network
     }
 
@@ -437,7 +444,7 @@ where
 
 impl<C> Peer<C>
 where
-    C: BlockReader + HeaderProvider + Clone,
+    C: BlockReader + HeaderProvider + Clone + 'static,
 {
     /// Installs a new [`TestPool`]
     pub fn install_test_pool(&mut self) {
@@ -447,7 +454,7 @@ where
 
 impl<C, Pool> Future for Peer<C, Pool>
 where
-    C: BlockReader + HeaderProvider + Unpin,
+    C: BlockReader + HeaderProvider + Unpin + 'static,
     Pool: TransactionPool + Unpin + 'static,
 {
     type Output = ();
@@ -526,7 +533,7 @@ impl<Pool> PeerHandle<Pool> {
 
 impl<C> PeerConfig<C>
 where
-    C: BlockReader + HeaderProvider + Clone,
+    C: BlockReader + HeaderProvider + Clone + 'static,
 {
     /// Launches the network and returns the [Peer] that manages it
     pub async fn launch(self) -> Result<Peer<C>, NetworkError> {

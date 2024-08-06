@@ -512,6 +512,9 @@ impl<DB: Database> StageCheckpointReader for ProviderFactory<DB> {
     fn get_stage_checkpoint_progress(&self, id: StageId) -> ProviderResult<Option<Vec<u8>>> {
         self.provider()?.get_stage_checkpoint_progress(id)
     }
+    fn get_all_checkpoints(&self) -> ProviderResult<Vec<(String, StageCheckpoint)>> {
+        self.provider()?.get_all_checkpoints()
+    }
 }
 
 impl<DB: Database> EvmEnvProvider for ProviderFactory<DB> {
@@ -581,6 +584,10 @@ impl<DB: Database> PruneCheckpointReader for ProviderFactory<DB> {
         segment: PruneSegment,
     ) -> ProviderResult<Option<PruneCheckpoint>> {
         self.provider()?.get_prune_checkpoint(segment)
+    }
+
+    fn get_prune_checkpoints(&self) -> ProviderResult<Vec<(PruneSegment, PruneCheckpoint)>> {
+        self.provider()?.get_prune_checkpoints()
     }
 }
 
@@ -703,7 +710,7 @@ mod tests {
     }
 
     #[test]
-    fn get_take_block_transaction_range_recover_senders() {
+    fn take_block_transaction_range_recover_senders() {
         let factory = create_test_provider_factory();
 
         let mut rng = generators::rng();
@@ -718,7 +725,7 @@ mod tests {
                 Ok(_)
             );
 
-            let senders = provider.get_or_take::<tables::TransactionSenders, true>(range.clone());
+            let senders = provider.take::<tables::TransactionSenders>(range.clone());
             assert_eq!(
                 senders,
                 Ok(range
@@ -733,7 +740,7 @@ mod tests {
             let db_senders = provider.senders_by_tx_range(range);
             assert_eq!(db_senders, Ok(vec![]));
 
-            let result = provider.get_take_block_transaction_range::<true>(0..=0);
+            let result = provider.take_block_transaction_range(0..=0);
             assert_eq!(
                 result,
                 Ok(vec![(
@@ -767,7 +774,7 @@ mod tests {
         // Checkpoint and no gap
         let mut static_file_writer =
             provider.static_file_provider().latest_writer(StaticFileSegment::Headers).unwrap();
-        static_file_writer.append_header(head.header().clone(), U256::ZERO, head.hash()).unwrap();
+        static_file_writer.append_header(head.header(), U256::ZERO, &head.hash()).unwrap();
         static_file_writer.commit().unwrap();
         drop(static_file_writer);
 

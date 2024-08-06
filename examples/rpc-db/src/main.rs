@@ -19,6 +19,10 @@ use reth::{
         providers::{BlockchainProvider, StaticFileProvider},
         ProviderFactory,
     },
+<<<<<<< HEAD
+=======
+    rpc::eth::EthApi,
+>>>>>>> upstream/main
     utils::open_db_read_only,
 };
 use reth_chainspec::ChainSpecBuilder;
@@ -70,7 +74,11 @@ async fn main() -> eyre::Result<()> {
 
     // Pick which namespaces to expose.
     let config = TransportRpcModuleConfig::default().with_http([RethRpcModule::Eth]);
+<<<<<<< HEAD
     let mut server = rpc_builder.build(config, EthApiBuild::build);
+=======
+    let mut server = rpc_builder.build(config, Box::new(EthApi::with_spawner));
+>>>>>>> upstream/main
 
     // Add a custom rpc namespace
     let custom_rpc = MyRpcExt { provider };

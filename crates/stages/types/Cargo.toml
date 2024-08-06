@@ -23,7 +23,10 @@ serde.workspace = true
 [dev-dependencies]
 arbitrary = { workspace = true, features = ["derive"] }
 proptest.workspace = true
+<<<<<<< HEAD
 proptest-derive.workspace = true
+=======
+>>>>>>> upstream/main
 proptest-arbitrary-interop.workspace = true
 test-fuzz.workspace = true
 rand.workspace = true

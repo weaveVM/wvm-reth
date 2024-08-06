@@ -518,9 +518,15 @@ impl DataReader {
 
         // Ensure that the size of an offset is at most 8 bytes.
         if offset_size > 8 {
+<<<<<<< HEAD
             return Err(NippyJarError::OffsetSizeTooBig { offset_size });
         } else if offset_size == 0 {
             return Err(NippyJarError::OffsetSizeTooSmall { offset_size });
+=======
+            return Err(NippyJarError::OffsetSizeTooBig { offset_size })
+        } else if offset_size == 0 {
+            return Err(NippyJarError::OffsetSizeTooSmall { offset_size })
+>>>>>>> upstream/main
         }
 
         Ok(Self { data_file, data_mmap, offset_file, offset_size, offset_mmap })

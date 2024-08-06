@@ -55,7 +55,11 @@ pub fn chain_value_parser(s: &str) -> eyre::Result<Arc<ChainSpec>, eyre::Error> 
                     if s.contains('{') {
                         s.to_string()
                     } else {
+<<<<<<< HEAD
                         return Err(io_err.into()); // assume invalid path
+=======
+                        return Err(io_err.into()) // assume invalid path
+>>>>>>> upstream/main
                     }
                 }
             };

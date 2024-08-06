@@ -107,7 +107,11 @@ mod tests {
             for header in headers.clone() {
                 td += header.header().difficulty;
                 let hash = header.hash();
+<<<<<<< HEAD
                 writer.append_header(header.unseal(), td, hash).unwrap();
+=======
+                writer.append_header(&header.unseal(), td, &hash).unwrap();
+>>>>>>> upstream/main
             }
             writer.commit().unwrap();
         }

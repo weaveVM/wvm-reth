@@ -15,6 +15,37 @@ use std::task::{ready, Context, Poll};
 use tokio::sync::oneshot;
 use tracing::trace;
 
+/// Represents the state of the backfill synchronization process.
+#[derive(Debug, PartialEq, Eq, Default)]
+pub enum BackfillSyncState {
+    /// The node is not performing any backfill synchronization.
+    /// This is the initial or default state.
+    #[default]
+    Idle,
+    /// A backfill synchronization has been requested or planned, but processing has not started
+    /// yet.
+    Pending,
+    /// The node is actively engaged in backfill synchronization.
+    Active,
+}
+
+impl BackfillSyncState {
+    /// Returns true if the state is idle.
+    pub const fn is_idle(&self) -> bool {
+        matches!(self, Self::Idle)
+    }
+
+    /// Returns true if the state is pending.
+    pub const fn is_pending(&self) -> bool {
+        matches!(self, Self::Pending)
+    }
+
+    /// Returns true if the state is active.
+    pub const fn is_active(&self) -> bool {
+        matches!(self, Self::Active)
+    }
+}
+
 /// Backfill sync mode functionality.
 pub trait BackfillSync: Send + Sync {
     /// Performs a backfill action.
@@ -34,8 +65,6 @@ pub enum BackfillAction {
 /// The events that can be emitted on backfill sync.
 #[derive(Debug)]
 pub enum BackfillEvent {
-    /// Backfill sync idle.
-    Idle,
     /// Backfill sync started.
     Started(PipelineTarget),
     /// Backfill sync finished.
@@ -101,7 +130,7 @@ where
                 "Pipeline target cannot be zero hash."
             );
             // precaution to never sync to the zero hash
-            return;
+            return
         }
         self.pending_pipeline_target = Some(target);
     }
@@ -141,7 +170,10 @@ where
             }
         };
         let ev = match res {
-            Ok((_, result)) => BackfillEvent::Finished(result),
+            Ok((pipeline, result)) => {
+                self.pipeline_state = PipelineState::Idle(Some(pipeline));
+                BackfillEvent::Finished(result)
+            }
             Err(why) => {
                 // failed to receive the pipeline
                 BackfillEvent::TaskDropped(why.to_string())
@@ -164,14 +196,14 @@ where
     fn poll(&mut self, cx: &mut Context<'_>) -> Poll<BackfillEvent> {
         // try to spawn a pipeline if a target is set
         if let Some(event) = self.try_spawn_pipeline() {
-            return Poll::Ready(event);
+            return Poll::Ready(event)
         }
 
         // make sure we poll the pipeline if it's active, and return any ready pipeline events
-        if !self.is_pipeline_idle() {
+        if self.is_pipeline_active() {
             // advance the pipeline
             if let Poll::Ready(event) = self.poll_pipeline(cx) {
-                return Poll::Ready(event);
+                return Poll::Ready(event)
             }
         }
 

@@ -11,20 +11,21 @@ use reth_primitives::{
     Account, Address, Bytecode, Receipts, StaticFileSegment, StorageEntry, B256, U256,
 };
 use reth_provider::{
-    bundle_state::{BundleStateInit, RevertsInit},
     errors::provider::ProviderResult,
     providers::{StaticFileProvider, StaticFileWriter},
-    BlockHashReader, BlockNumReader, ChainSpecProvider, DatabaseProviderRW, ExecutionOutcome,
-    HashingWriter, HistoryWriter, OriginalValuesKnown, ProviderError, ProviderFactory,
-    StageCheckpointWriter, StateWriter, StaticFileProviderFactory,
+    writer::UnifiedStorageWriter,
+    BlockHashReader, BlockNumReader, BundleStateInit, ChainSpecProvider, DatabaseProviderRW,
+    ExecutionOutcome, HashingWriter, HistoryWriter, OriginalValuesKnown, ProviderError,
+    ProviderFactory, RevertsInit, StageCheckpointWriter, StateWriter, StaticFileProviderFactory,
+    TrieWriter,
 };
 use reth_stages_types::{StageCheckpoint, StageId};
 use reth_trie::{IntermediateStateRootState, StateRoot as StateRootComputer, StateRootProgress};
+use reth_trie_db::DatabaseStateRoot;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
     io::BufRead,
-    ops::DerefMut,
     sync::Arc,
 };
 use tracing::{debug, error, info, trace};
@@ -65,7 +66,7 @@ pub enum InitDatabaseError {
     #[error(
         "state root mismatch, state dump: {expected_state_root}, computed: {computed_state_root}"
     )]
-    SateRootMismatch {
+    StateRootMismatch {
         /// Expected state root.
         expected_state_root: B256,
         /// Actual state root.
@@ -113,35 +114,42 @@ pub fn init_genesis<DB: Database>(factory: ProviderFactory<DB>) -> Result<B256, 
     insert_genesis_history(&provider_rw, alloc.iter())?;
 
     // Insert header
-    let tx = provider_rw.tx_ref();
     let static_file_provider = factory.static_file_provider();
-    insert_genesis_header::<DB>(tx, &static_file_provider, chain.clone())?;
+    insert_genesis_header(&provider_rw, &static_file_provider, chain.clone())?;
 
-    insert_genesis_state::<DB>(tx, alloc.len(), alloc.iter())?;
+    insert_genesis_state(&provider_rw, alloc.len(), alloc.iter())?;
 
     // insert sync stage
     for stage in StageId::ALL {
         provider_rw.save_stage_checkpoint(stage, Default::default())?;
     }
 
-    provider_rw.commit()?;
-    static_file_provider.commit()?;
+    // Static file segments start empty, so we need to initialize the genesis block.
+    let segment = StaticFileSegment::Receipts;
+    static_file_provider.latest_writer(segment)?.increment_block(0)?;
+
+    let segment = StaticFileSegment::Transactions;
+    static_file_provider.latest_writer(segment)?.increment_block(0)?;
+
+    // `commit_unwind`` will first commit the DB and then the static file provider, which is
+    // necessary on `init_genesis`.
+    UnifiedStorageWriter::commit_unwind(provider_rw, static_file_provider)?;
 
     Ok(hash)
 }
 
 /// Inserts the genesis state into the database.
 pub fn insert_genesis_state<'a, 'b, DB: Database>(
-    tx: &<DB as Database>::TXMut,
+    provider: &DatabaseProviderRW<DB>,
     capacity: usize,
     alloc: impl Iterator<Item = (&'a Address, &'b GenesisAccount)>,
 ) -> ProviderResult<()> {
-    insert_state::<DB>(tx, capacity, alloc, 0)
+    insert_state::<DB>(provider, capacity, alloc, 0)
 }
 
 /// Inserts state at given block into database.
 pub fn insert_state<'a, 'b, DB: Database>(
-    tx: &<DB as Database>::TXMut,
+    provider: &DatabaseProviderRW<DB>,
     capacity: usize,
     alloc: impl Iterator<Item = (&'a Address, &'b GenesisAccount)>,
     block: u64,
@@ -203,7 +211,8 @@ pub fn insert_state<'a, 'b, DB: Database>(
         Vec::new(),
     );
 
-    execution_outcome.write_to_storage(tx, None, OriginalValuesKnown::Yes)?;
+    let mut storage_writer = UnifiedStorageWriter::from_database(provider);
+    storage_writer.write_to_storage(execution_outcome, OriginalValuesKnown::Yes)?;
 
     trace!(target: "reth::cli", "Inserted state");
 
@@ -274,7 +283,7 @@ pub fn insert_history<'a, 'b, DB: Database>(
 
 /// Inserts header for the genesis state.
 pub fn insert_genesis_header<DB: Database>(
-    tx: &<DB as Database>::TXMut,
+    provider: &DatabaseProviderRW<DB>,
     static_file_provider: &StaticFileProvider,
     chain: Arc<ChainSpec>,
 ) -> ProviderResult<()> {
@@ -284,14 +293,14 @@ pub fn insert_genesis_header<DB: Database>(
         Ok(None) | Err(ProviderError::MissingStaticFileBlock(StaticFileSegment::Headers, 0)) => {
             let (difficulty, hash) = (header.difficulty, block_hash);
             let mut writer = static_file_provider.latest_writer(StaticFileSegment::Headers)?;
-            writer.append_header(header, difficulty, hash)?;
+            writer.append_header(&header, difficulty, &hash)?;
         }
         Ok(Some(_)) => {}
         Err(e) => return Err(e),
     }
 
-    tx.put::<tables::HeaderNumbers>(block_hash, 0)?;
-    tx.put::<tables::BlockBodyIndices>(0, Default::default())?;
+    provider.tx_ref().put::<tables::HeaderNumbers>(block_hash, 0)?;
+    provider.tx_ref().put::<tables::BlockBodyIndices>(0, Default::default())?;
 
     Ok(())
 }
@@ -323,8 +332,8 @@ pub fn init_from_state_dump<DB: Database>(
     let collector = parse_accounts(&mut reader, etl_config)?;
 
     // write state to db
-    let mut provider_rw = factory.provider_rw()?;
-    dump_state(collector, &mut provider_rw, block)?;
+    let provider_rw = factory.provider_rw()?;
+    dump_state(collector, &provider_rw, block)?;
 
     // compute and compare state root. this advances the stage checkpoints.
     let computed_state_root = compute_state_root(&provider_rw)?;
@@ -335,7 +344,7 @@ pub fn init_from_state_dump<DB: Database>(
             "Computed state root does not match state root in state dump"
         );
 
-        Err(InitDatabaseError::SateRootMismatch { expected_state_root, computed_state_root })?
+        Err(InitDatabaseError::StateRootMismatch { expected_state_root, computed_state_root })?
     } else {
         info!(target: "reth::cli",
             ?computed_state_root,
@@ -398,7 +407,7 @@ fn parse_accounts(
 /// Takes a [`Collector`] and processes all accounts.
 fn dump_state<DB: Database>(
     mut collector: Collector<Address, GenesisAccount>,
-    provider_rw: &mut DatabaseProviderRW<DB>,
+    provider_rw: &DatabaseProviderRW<DB>,
     block: u64,
 ) -> Result<(), eyre::Error> {
     let accounts_len = collector.len();
@@ -435,9 +444,8 @@ fn dump_state<DB: Database>(
             )?;
 
             // block is already written to static files
-            let tx = provider_rw.deref_mut().tx_mut();
             insert_state::<DB>(
-                tx,
+                provider_rw,
                 accounts.len(),
                 accounts.iter().map(|(address, account)| (address, account)),
                 block,
@@ -464,7 +472,7 @@ fn compute_state_root<DB: Database>(provider: &DatabaseProviderRW<DB>) -> eyre::
             .root_with_progress()?
         {
             StateRootProgress::Progress(state, _, updates) => {
-                let updated_len = updates.write_to_database(tx)?;
+                let updated_len = provider.write_trie_updates(&updates)?;
                 total_flushed_updates += updated_len;
 
                 trace!(target: "reth::cli",
@@ -484,7 +492,7 @@ fn compute_state_root<DB: Database>(provider: &DatabaseProviderRW<DB>) -> eyre::
                 }
             }
             StateRootProgress::Complete(root, _, updates) => {
-                let updated_len = updates.write_to_database(tx)?;
+                let updated_len = provider.write_trie_updates(&updates)?;
                 total_flushed_updates += updated_len;
 
                 trace!(target: "reth::cli",

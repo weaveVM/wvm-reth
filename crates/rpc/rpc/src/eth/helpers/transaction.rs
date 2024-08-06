@@ -1,5 +1,10 @@
 //! Contains RPC handler implementations specific to transactions
 
+<<<<<<< HEAD
+=======
+use std::sync::Arc;
+
+>>>>>>> upstream/main
 use reth_provider::{BlockReaderIdExt, TransactionsProvider};
 use reth_rpc_eth_api::{
     helpers::{EthSigner, EthTransactions, LoadTransaction, SpawnBlocking},
@@ -23,7 +28,11 @@ where
     }
 
     #[inline]
+<<<<<<< HEAD
     fn raw_tx_forwarder(&self) -> Option<std::sync::Arc<dyn RawTransactionForwarder>> {
+=======
+    fn raw_tx_forwarder(&self) -> Option<Arc<dyn RawTransactionForwarder>> {
+>>>>>>> upstream/main
         self.inner.raw_tx_forwarder()
     }
 
@@ -43,7 +52,11 @@ where
     type Pool = Pool;
 
     #[inline]
+<<<<<<< HEAD
     fn provider(&self) -> impl reth_provider::TransactionsProvider {
+=======
+    fn provider(&self) -> impl TransactionsProvider {
+>>>>>>> upstream/main
         self.inner.provider()
     }
 

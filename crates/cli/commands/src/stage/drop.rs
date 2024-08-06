@@ -2,14 +2,18 @@
 use crate::common::{AccessRights, Environment, EnvironmentArgs};
 use clap::Parser;
 use itertools::Itertools;
-use reth_db::{static_file::iter_static_files, tables, DatabaseEnv};
+use reth_db::{static_file::iter_static_files, tables};
 use reth_db_api::transaction::DbTxMut;
 use reth_db_common::{
     init::{insert_genesis_header, insert_genesis_history, insert_genesis_state},
     DbTool,
 };
 use reth_node_core::args::StageEnum;
+<<<<<<< HEAD
 use reth_provider::{providers::StaticFileWriter, StaticFileProviderFactory};
+=======
+use reth_provider::{writer::UnifiedStorageWriter, StaticFileProviderFactory};
+>>>>>>> upstream/main
 use reth_stages::StageId;
 use reth_static_file_types::{find_fixed_range, StaticFileSegment};
 
@@ -68,7 +72,7 @@ impl Command {
                     StageId::Headers.to_string(),
                     Default::default(),
                 )?;
-                insert_genesis_header::<DatabaseEnv>(tx, &static_file_provider, self.env.chain)?;
+                insert_genesis_header(&provider_rw, &static_file_provider, self.env.chain)?;
             }
             StageEnum::Bodies => {
                 tx.clear::<tables::BlockBodyIndices>()?;
@@ -81,7 +85,7 @@ impl Command {
                     StageId::Bodies.to_string(),
                     Default::default(),
                 )?;
-                insert_genesis_header::<DatabaseEnv>(tx, &static_file_provider, self.env.chain)?;
+                insert_genesis_header(&provider_rw, &static_file_provider, self.env.chain)?;
             }
             StageEnum::Senders => {
                 tx.clear::<tables::TransactionSenders>()?;
@@ -102,7 +106,7 @@ impl Command {
                     Default::default(),
                 )?;
                 let alloc = &self.env.chain.genesis().alloc;
-                insert_genesis_state::<DatabaseEnv>(tx, alloc.len(), alloc.iter())?;
+                insert_genesis_state(&provider_rw, alloc.len(), alloc.iter())?;
             }
             StageEnum::AccountHashing => {
                 tx.clear::<tables::HashedAccounts>()?;
@@ -168,14 +172,13 @@ impl Command {
                     StageId::TransactionLookup.to_string(),
                     Default::default(),
                 )?;
-                insert_genesis_header::<DatabaseEnv>(tx, &static_file_provider, self.env.chain)?;
+                insert_genesis_header(&provider_rw, &static_file_provider, self.env.chain)?;
             }
         }
 
         tx.put::<tables::StageCheckpoints>(StageId::Finish.to_string(), Default::default())?;
 
-        static_file_provider.commit()?;
-        provider_rw.commit()?;
+        UnifiedStorageWriter::commit_unwind(provider_rw, static_file_provider)?;
 
         Ok(())
     }

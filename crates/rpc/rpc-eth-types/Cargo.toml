@@ -17,7 +17,11 @@ reth-errors.workspace = true
 reth-evm.workspace = true
 reth-execution-types.workspace = true
 reth-metrics.workspace = true
+<<<<<<< HEAD
 reth-primitives.workspace = true
+=======
+reth-primitives = { workspace = true, features = ["secp256k1"] }
+>>>>>>> upstream/main
 reth-provider.workspace = true
 reth-revm.workspace = true
 reth-rpc-server-types.workspace = true
@@ -55,6 +59,7 @@ tracing.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
+<<<<<<< HEAD
 
 [features]
 optimism = [    
@@ -66,3 +71,5 @@ optimism = [
     "reth-revm/optimism",
     "revm/optimism"
 ]
+=======
+>>>>>>> upstream/main

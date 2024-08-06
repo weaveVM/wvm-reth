@@ -1,12 +1,17 @@
 //! Contains connection-oriented interfaces.
 
+<<<<<<< HEAD
 use futures::{ready, Stream};
+=======
+>>>>>>> upstream/main
 use std::{
     io,
     net::SocketAddr,
     pin::Pin,
     task::{Context, Poll},
 };
+
+use futures::{ready, Stream};
 use tokio::net::{TcpListener, TcpStream};
 
 /// A tcp connection listener.

@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 //! Reth CLI implementation.
+=======
+<<<<<<<< HEAD:crates/ethereum/engine/src/lib.rs
+//! Ethereum engine implementation.
+========
+//! Reth CLI implementation.
+>>>>>>>> upstream/main:crates/ethereum/cli/src/lib.rs
+>>>>>>> upstream/main
 
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/paradigmxyz/reth/main/assets/reth-docs.png",
@@ -7,3 +15,14 @@
 )]
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+<<<<<<< HEAD
+=======
+
+<<<<<<<< HEAD:crates/ethereum/engine/src/lib.rs
+/// Ethereum engine service.
+pub mod service;
+========
+/// Chain specification parser.
+pub mod chainspec;
+>>>>>>>> upstream/main:crates/ethereum/cli/src/lib.rs
+>>>>>>> upstream/main

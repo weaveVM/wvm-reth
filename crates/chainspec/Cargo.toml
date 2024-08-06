@@ -36,13 +36,19 @@ derive_more.workspace = true
 
 [dev-dependencies]
 # eth
+<<<<<<< HEAD
 nybbles = { workspace = true, features = ["arbitrary"] }
+=======
+>>>>>>> upstream/main
 alloy-trie = { workspace = true, features = ["arbitrary"] }
 alloy-eips = { workspace = true, features = ["arbitrary"] }
 alloy-rlp = { workspace = true, features = ["arrayvec"] }
 alloy-genesis.workspace = true
+<<<<<<< HEAD
 reth-rpc-types.workspace = true
 rand.workspace = true
+=======
+>>>>>>> upstream/main
 
 # op
 op-alloy-rpc-types.workspace = true

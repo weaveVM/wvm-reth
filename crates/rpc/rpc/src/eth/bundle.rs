@@ -10,6 +10,10 @@ use reth_primitives::{
     PooledTransactionsElement, U256,
 };
 use reth_revm::database::StateProviderDatabase;
+<<<<<<< HEAD
+=======
+use reth_rpc_eth_api::{FromEthApiError, FromEvmError};
+>>>>>>> upstream/main
 use reth_rpc_types::mev::{EthCallBundle, EthCallBundleResponse, EthCallBundleTransactionResult};
 use reth_tasks::pool::BlockingTaskGuard;
 use revm::{
@@ -23,9 +27,13 @@ use reth_rpc_eth_api::{
     helpers::{Call, EthTransactions, LoadPendingBlock},
     EthCallBundleApiServer,
 };
+<<<<<<< HEAD
 use reth_rpc_eth_types::{
     utils::recover_raw_transaction, EthApiError, EthResult, RpcInvalidTransactionError,
 };
+=======
+use reth_rpc_eth_types::{utils::recover_raw_transaction, EthApiError, RpcInvalidTransactionError};
+>>>>>>> upstream/main
 
 /// `Eth` bundle implementation.
 pub struct EthBundle<Eth> {
@@ -48,7 +56,14 @@ where
     /// another (or the same) block. This can be used to simulate future blocks with the current
     /// state, or it can be used to simulate a past block. The sender is responsible for signing the
     /// transactions and using the correct nonce and ensuring validity
+<<<<<<< HEAD
     pub async fn call_bundle(&self, bundle: EthCallBundle) -> EthResult<EthCallBundleResponse> {
+=======
+    pub async fn call_bundle(
+        &self,
+        bundle: EthCallBundle,
+    ) -> Result<EthCallBundleResponse, Eth::Error> {
+>>>>>>> upstream/main
         let EthCallBundle {
             txs,
             block_number,
@@ -61,12 +76,22 @@ where
         if txs.is_empty() {
             return Err(EthApiError::InvalidParams(
                 EthBundleError::EmptyBundleTransactions.to_string(),
+<<<<<<< HEAD
             ));
+=======
+            )
+            .into())
+>>>>>>> upstream/main
         }
         if block_number == 0 {
             return Err(EthApiError::InvalidParams(
                 EthBundleError::BundleMissingBlockNumber.to_string(),
+<<<<<<< HEAD
             ));
+=======
+            )
+            .into())
+>>>>>>> upstream/main
         }
 
         let transactions = txs
@@ -93,7 +118,12 @@ where
         {
             return Err(EthApiError::InvalidParams(
                 EthBundleError::Eip4844BlobGasExceeded.to_string(),
+<<<<<<< HEAD
             ));
+=======
+            )
+            .into())
+>>>>>>> upstream/main
         }
 
         let block_id: reth_rpc_types::BlockId = state_block_number.into();
@@ -133,6 +163,32 @@ where
             }
         }
 
+        if let Some(difficulty) = difficulty {
+            block_env.difficulty = U256::from(difficulty);
+        }
+
+        if let Some(gas_limit) = gas_limit {
+            block_env.gas_limit = U256::from(gas_limit);
+        }
+
+        if let Some(base_fee) = base_fee {
+            block_env.basefee = U256::from(base_fee);
+        } else if cfg.handler_cfg.spec_id.is_enabled_in(SpecId::LONDON) {
+            let parent_block = block_env.number.saturating_to::<u64>();
+            // here we need to fetch the _next_ block's basefee based on the parent block <https://github.com/flashbots/mev-geth/blob/fddf97beec5877483f879a77b7dea2e58a58d653/internal/ethapi/api.go#L2130>
+            let parent = LoadPendingBlock::provider(&self.inner.eth_api)
+                .header_by_number(parent_block)
+                .map_err(Eth::Error::from_eth_err)?
+                .ok_or_else(|| EthApiError::UnknownBlockNumber)?;
+            if let Some(base_fee) = parent.next_block_base_fee(
+                LoadPendingBlock::provider(&self.inner.eth_api)
+                    .chain_spec()
+                    .base_fee_params_at_block(parent_block),
+            ) {
+                block_env.basefee = U256::from(base_fee);
+            }
+        }
+
         let state_block_number = block_env.number;
         // use the block number of the request
         block_env.number = U256::from(block_number);
@@ -147,7 +203,8 @@ where
                 let env = EnvWithHandlerCfg::new_with_cfg_env(cfg, block_env, TxEnv::default());
                 let db = CacheDB::new(StateProviderDatabase::new(state));
 
-                let initial_coinbase = DatabaseRef::basic_ref(&db, coinbase)?
+                let initial_coinbase = DatabaseRef::basic_ref(&db, coinbase)
+                    .map_err(Eth::Error::from_eth_err)?
                     .map(|acc| acc.balance)
                     .unwrap_or_default();
                 let mut coinbase_balance_before_tx = initial_coinbase;
@@ -165,8 +222,14 @@ where
                     // Verify that the given blob data, commitments, and proofs are all valid for
                     // this transaction.
                     if let PooledTransactionsElement::BlobTransaction(ref tx) = tx {
+<<<<<<< HEAD
                         tx.validate(EnvKzgSettings::Default.get())
                             .map_err(|e| EthApiError::InvalidParams(e.to_string()))?;
+=======
+                        tx.validate(EnvKzgSettings::Default.get()).map_err(|e| {
+                            Eth::Error::from_eth_err(EthApiError::InvalidParams(e.to_string()))
+                        })?;
+>>>>>>> upstream/main
                     }
 
                     let tx = tx.into_transaction();
@@ -174,9 +237,17 @@ where
                     hash_bytes.extend_from_slice(tx.hash().as_slice());
                     let gas_price = tx
                         .effective_tip_per_gas(basefee)
+<<<<<<< HEAD
                         .ok_or_else(|| RpcInvalidTransactionError::FeeCapTooLow)?;
                     Call::evm_config(&eth_api).fill_tx_env(evm.tx_mut(), &tx, signer);
                     let ResultAndState { result, state } = evm.transact()?;
+=======
+                        .ok_or_else(|| RpcInvalidTransactionError::FeeCapTooLow)
+                        .map_err(Eth::Error::from_eth_err)?;
+                    Call::evm_config(&eth_api).fill_tx_env(evm.tx_mut(), &tx, signer);
+                    let ResultAndState { result, state } =
+                        evm.transact().map_err(Eth::Error::from_evm_err)?;
+>>>>>>> upstream/main
 
                     let gas_used = result.gas_used();
                     total_gas_used += gas_used;
@@ -255,7 +326,7 @@ where
     Eth: EthTransactions + LoadPendingBlock + Call + 'static,
 {
     async fn call_bundle(&self, request: EthCallBundle) -> RpcResult<EthCallBundleResponse> {
-        Ok(Self::call_bundle(self, request).await?)
+        Self::call_bundle(self, request).await.map_err(Into::into)
     }
 }
 
