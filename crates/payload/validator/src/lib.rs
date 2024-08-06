@@ -124,7 +124,7 @@ impl ExecutionPayloadValidator {
             return Err(PayloadError::BlockHash {
                 execution: sealed_block.hash(),
                 consensus: expected_hash,
-            });
+            })
         }
 
         if self.is_cancun_active_at_timestamp(sealed_block.timestamp) {

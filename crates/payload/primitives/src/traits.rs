@@ -150,7 +150,7 @@ impl PayloadAttributes for OptimismPayloadAttributes {
         if self.gas_limit.is_none() {
             return Err(EngineObjectValidationError::InvalidParams(
                 "MissingGasLimitInPayloadAttributes".to_string().into(),
-            ));
+            ))
         }
 
         Ok(())

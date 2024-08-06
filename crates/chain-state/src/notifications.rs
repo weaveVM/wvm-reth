@@ -178,6 +178,6 @@ impl Stream for ForkChoiceStream {
                 }
                 None => Poll::Ready(None),
             }
-        };
+        }
     }
 }
