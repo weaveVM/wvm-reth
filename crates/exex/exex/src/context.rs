@@ -4,8 +4,9 @@ use reth_node_api::FullNodeComponents;
 use reth_node_core::node_config::NodeConfig;
 use reth_primitives::Head;
 use reth_tasks::TaskExecutor;
-use std::fmt::Debug;
 use tokio::sync::mpsc::{Receiver, UnboundedSender};
+
+use crate::{ExExEvent, ExExNotification};
 
 /// Captures the context that an `ExEx` has access to.
 pub struct ExExContext<Node: FullNodeComponents> {
