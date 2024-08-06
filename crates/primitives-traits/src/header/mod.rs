@@ -16,13 +16,14 @@ use alloy_primitives::{keccak256, Address, BlockNumber, Bloom, Bytes, B256, B64,
 use alloy_rlp::{length_of_length, Decodable, Encodable};
 use bytes::BufMut;
 use core::mem;
-use reth_codecs::{add_arbitrary_tests, main_codec, Compact};
+use reth_codecs::{add_arbitrary_tests, reth_codec, Compact};
 use revm_primitives::{calc_blob_gasprice, calc_excess_blob_gas};
+use serde::{Deserialize, Serialize};
 
 /// Block header
-#[main_codec(no_arbitrary)]
+#[reth_codec(no_arbitrary)]
 #[add_arbitrary_tests(rlp, 25)]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Header {
     /// The Keccak 256-bit hash of the parent
     /// block’s header, in its entirety; formally Hp.
@@ -156,7 +157,7 @@ impl Header {
     /// Returns an error if the extradata size is larger than 100 KB.
     pub fn ensure_extradata_valid(&self) -> Result<(), HeaderError> {
         if self.extra_data.len() > 100 * 1024 {
-            return Err(HeaderError::LargeExtraData);
+            return Err(HeaderError::LargeExtraData)
         }
         Ok(())
     }
@@ -168,7 +169,7 @@ impl Header {
     /// Returns an error if the block difficulty exceeds 80 bits.
     pub fn ensure_difficulty_valid(&self) -> Result<(), HeaderError> {
         if self.difficulty.bit_len() > 80 {
-            return Err(HeaderError::LargeDifficulty);
+            return Err(HeaderError::LargeDifficulty)
         }
         Ok(())
     }
@@ -424,7 +425,7 @@ impl Decodable for Header {
     fn decode(buf: &mut &[u8]) -> alloy_rlp::Result<Self> {
         let rlp_head = alloy_rlp::Header::decode(buf)?;
         if !rlp_head.list {
-            return Err(alloy_rlp::Error::UnexpectedString);
+            return Err(alloy_rlp::Error::UnexpectedString)
         }
         let started_len = buf.len();
         let mut this = Self {
@@ -483,7 +484,7 @@ impl Decodable for Header {
             return Err(alloy_rlp::Error::ListLengthMismatch {
                 expected: rlp_head.payload_length,
                 got: consumed,
-            });
+            })
         }
         Ok(this)
     }

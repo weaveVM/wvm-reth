@@ -22,7 +22,11 @@ pub use database::DatabaseArgs;
 
 /// LogArgs struct for configuring the logger
 mod log;
+<<<<<<< HEAD
 pub use log::{ColorMode, LogArgs};
+=======
+pub use log::{ColorMode, LogArgs, Verbosity};
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// `PayloadBuilderArgs` struct for configuring the payload builder
 mod payload_builder;

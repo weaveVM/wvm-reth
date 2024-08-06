@@ -2,14 +2,14 @@
 
 use crate::{
     constants::EMPTY_TRANSACTIONS, transaction::extract_chain_id, Block, Signature, Transaction,
-    TransactionSigned, TransactionSignedEcRecovered, TxEip1559, TxEip2930, TxEip4844, TxLegacy,
-    TxType,
+    TransactionSigned, TransactionSignedEcRecovered, TransactionSignedNoHash, TxEip1559, TxEip2930,
+    TxEip4844, TxLegacy, TxType,
 };
 use alloy_primitives::TxKind;
 use alloy_rlp::Error as RlpError;
 
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use alloc::{string::ToString, vec::Vec};
 
 impl TryFrom<alloy_rpc_types::Block> for Block {
     type Error = alloy_rpc_types::ConversionError;
@@ -43,7 +43,7 @@ impl TryFrom<alloy_rpc_types::Block> for Block {
                     // alloy deserializes empty blocks into `BlockTransactions::Hashes`, if the tx
                     // root is the empty root then we can just return an empty vec.
                     if block.header.transactions_root == EMPTY_TRANSACTIONS {
-                        Ok(vec![])
+                        Ok(Vec::new())
                     } else {
                         Err(ConversionError::MissingFullTransactions)
                     }
@@ -181,6 +181,34 @@ impl TryFrom<alloy_rpc_types::Transaction> for Transaction {
                         .ok_or(ConversionError::MissingMaxFeePerBlobGas)?,
                 }))
             }
+            Some(TxType::Eip7702) => {
+                // this is currently unsupported as it is not present in alloy due to missing rpc
+                // specs
+                Err(ConversionError::Custom("Unimplemented".to_string()))
+                /*
+                // EIP-7702
+                Ok(Transaction::Eip7702(TxEip7702 {
+                    chain_id: tx.chain_id.ok_or(ConversionError::MissingChainId)?,
+                    nonce: tx.nonce,
+                    max_priority_fee_per_gas: tx
+                        .max_priority_fee_per_gas
+                        .ok_or(ConversionError::MissingMaxPriorityFeePerGas)?,
+                    max_fee_per_gas: tx
+                        .max_fee_per_gas
+                        .ok_or(ConversionError::MissingMaxFeePerGas)?,
+                    gas_limit: tx
+                        .gas
+                        .try_into()
+                        .map_err(|_| ConversionError::Eip2718Error(RlpError::Overflow.into()))?,
+                    to: tx.to.map_or(TxKind::Create, TxKind::Call),
+                    value: tx.value,
+                    access_list: tx.access_list.ok_or(ConversionError::MissingAccessList)?,
+                    authorization_list: tx
+                        .authorization_list
+                        .ok_or(ConversionError::MissingAuthorizationList)?,
+                    input: tx.input,
+                    }))*/
+            }
             #[cfg(feature = "optimism")]
             Some(TxType::Deposit) => {
                 let fields = tx
@@ -193,7 +221,7 @@ impl TryFrom<alloy_rpc_types::Transaction> for Transaction {
                         .ok_or_else(|| ConversionError::Custom("MissingSourceHash".to_string()))?,
                     from: tx.from,
                     to: TxKind::from(tx.to),
-                    mint: fields.mint.map(|n| n.to::<u128>()).filter(|n| *n != 0),
+                    mint: fields.mint.filter(|n| *n != 0),
                     value: tx.value,
                     gas_limit: tx
                         .gas
@@ -265,6 +293,17 @@ impl TryFrom<alloy_rpc_types::Signature> for Signature {
         };
 
         Ok(Self { r: signature.r, s: signature.s, odd_y_parity })
+    }
+}
+
+impl TryFrom<alloy_rpc_types::Transaction> for TransactionSignedNoHash {
+    type Error = alloy_rpc_types::ConversionError;
+
+    fn try_from(tx: alloy_rpc_types::Transaction) -> Result<Self, Self::Error> {
+        Ok(Self {
+            signature: tx.signature.ok_or(Self::Error::MissingSignature)?.try_into()?,
+            transaction: tx.try_into()?,
+        })
     }
 }
 

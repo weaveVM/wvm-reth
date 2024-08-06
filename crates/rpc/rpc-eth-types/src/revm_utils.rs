@@ -1,23 +1,36 @@
 //! utilities for working with revm
 
+<<<<<<< HEAD
 use std::cmp::min;
 
 use reth_primitives::{Address, TxKind, B256, U256};
 use reth_rpc_types::{
     state::{AccountOverride, EvmOverrides, StateOverride},
     BlockOverrides, TransactionRequest,
+=======
+use reth_primitives::{Address, B256, U256};
+use reth_rpc_types::{
+    state::{AccountOverride, StateOverride},
+    BlockOverrides,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
-#[cfg(feature = "optimism")]
-use revm::primitives::{Bytes, OptimismFields};
 use revm::{
     db::CacheDB,
     precompile::{PrecompileSpecId, Precompiles},
+<<<<<<< HEAD
     primitives::{
         db::DatabaseRef, BlockEnv, Bytecode, CfgEnvWithHandlerCfg, EnvWithHandlerCfg, SpecId, TxEnv,
     },
     Database,
 };
 use tracing::trace;
+=======
+    primitives::{db::DatabaseRef, Bytecode, SpecId, TxEnv},
+    Database,
+};
+use revm_primitives::BlockEnv;
+use std::cmp::min;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 use super::{EthApiError, EthResult, RpcInvalidTransactionError};
 
@@ -28,6 +41,7 @@ pub fn get_precompiles(spec_id: SpecId) -> impl IntoIterator<Item = Address> {
     Precompiles::new(spec).addresses().copied().map(Address::from)
 }
 
+<<<<<<< HEAD
 /// Prepares the [`EnvWithHandlerCfg`] for execution.
 ///
 /// Does not commit any changes to the underlying database.
@@ -177,6 +191,8 @@ pub fn create_txn_env(block_env: &BlockEnv, request: TransactionRequest) -> EthR
     Ok(env)
 }
 
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// Caps the configured [`TxEnv`] `gas_limit` with the allowance of the caller.
 pub fn cap_tx_gas_limit_with_caller_allowance<DB>(db: &mut DB, env: &mut TxEnv) -> EthResult<()>
 where
@@ -217,26 +233,30 @@ where
         .unwrap_or_default())
 }
 
+<<<<<<< HEAD
 /// Helper type for representing the fees of a [`TransactionRequest`]
+=======
+/// Helper type for representing the fees of a [`reth_rpc_types::TransactionRequest`]
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 #[derive(Debug)]
 pub struct CallFees {
     /// EIP-1559 priority fee
-    max_priority_fee_per_gas: Option<U256>,
+    pub max_priority_fee_per_gas: Option<U256>,
     /// Unified gas price setting
     ///
     /// Will be the configured `basefee` if unset in the request
     ///
     /// `gasPrice` for legacy,
     /// `maxFeePerGas` for EIP-1559
-    gas_price: U256,
+    pub gas_price: U256,
     /// Max Fee per Blob gas for EIP-4844 transactions
-    max_fee_per_blob_gas: Option<U256>,
+    pub max_fee_per_blob_gas: Option<U256>,
 }
 
 // === impl CallFees ===
 
 impl CallFees {
-    /// Ensures the fields of a [`TransactionRequest`] are not conflicting.
+    /// Ensures the fields of a [`reth_rpc_types::TransactionRequest`] are not conflicting.
     ///
     /// # EIP-4844 transactions
     ///
@@ -246,7 +266,15 @@ impl CallFees {
     ///
     /// Note: Due to the `Default` impl of [`BlockEnv`] (Some(0)) this assumes the `block_blob_fee`
     /// is always `Some`
-    fn ensure_fees(
+    ///
+    /// ## Notable design decisions
+    ///
+    /// For compatibility reasons, this contains several exceptions when fee values are validated:
+    /// - If both `maxFeePerGas` and `maxPriorityFeePerGas` are set to `0` they are treated as
+    ///   missing values, bypassing fee checks wrt. `baseFeePerGas`.
+    ///
+    /// This mirrors geth's behaviour when transaction requests are executed: <https://github.com/ethereum/go-ethereum/blob/380688c636a654becc8f114438c2a5d93d2db032/core/state_transition.go#L306-L306>
+    pub fn ensure_fees(
         call_gas_price: Option<U256>,
         call_max_fee: Option<U256>,
         call_priority_fee: Option<U256>,
@@ -264,11 +292,16 @@ impl CallFees {
         ) -> EthResult<U256> {
             match max_fee_per_gas {
                 Some(max_fee) => {
-                    if max_fee < block_base_fee {
+                    let max_priority_fee_per_gas = max_priority_fee_per_gas.unwrap_or(U256::ZERO);
+
+                    // only enforce the fee cap if provided input is not zero
+                    if !(max_fee.is_zero() && max_priority_fee_per_gas.is_zero()) &&
+                        max_fee < block_base_fee
+                    {
                         // `base_fee_per_gas` is greater than the `max_fee_per_gas`
                         return Err(RpcInvalidTransactionError::FeeCapTooLow.into());
                     }
-                    if max_fee < max_priority_fee_per_gas.unwrap_or(U256::ZERO) {
+                    if max_fee < max_priority_fee_per_gas {
                         return Err(
                             // `max_priority_fee_per_gas` is greater than the `max_fee_per_gas`
                             RpcInvalidTransactionError::TipAboveFeeCap.into(),
@@ -276,11 +309,9 @@ impl CallFees {
                     }
                     Ok(min(
                         max_fee,
-                        block_base_fee
-                            .checked_add(max_priority_fee_per_gas.unwrap_or(U256::ZERO))
-                            .ok_or_else(|| {
-                                EthApiError::from(RpcInvalidTransactionError::TipVeryHigh)
-                            })?,
+                        block_base_fee.checked_add(max_priority_fee_per_gas).ok_or_else(|| {
+                            EthApiError::from(RpcInvalidTransactionError::TipVeryHigh)
+                        })?,
                     ))
                 }
                 None => Ok(block_base_fee
@@ -346,7 +377,7 @@ impl CallFees {
 }
 
 /// Applies the given block overrides to the env
-fn apply_block_overrides(overrides: BlockOverrides, env: &mut BlockEnv) {
+pub fn apply_block_overrides(overrides: BlockOverrides, env: &mut BlockEnv) {
     let BlockOverrides {
         number,
         difficulty,
@@ -408,7 +439,7 @@ where
     let mut account_info = DatabaseRef::basic_ref(db, account)?.unwrap_or_default();
 
     if let Some(nonce) = account_override.nonce {
-        account_info.nonce = nonce.to();
+        account_info.nonce = nonce;
     }
     if let Some(code) = account_override.code {
         account_info.code = Some(Bytecode::new_raw(code));
@@ -461,6 +492,14 @@ mod tests {
     fn test_ensure_0_fallback() {
         let CallFees { gas_price, .. } =
             CallFees::ensure_fees(None, None, None, U256::from(99), None, None, Some(U256::ZERO))
+                .unwrap();
+        assert!(gas_price.is_zero());
+    }
+
+    #[test]
+    fn test_ensure_max_fee_0_exception() {
+        let CallFees { gas_price, .. } =
+            CallFees::ensure_fees(None, Some(U256::ZERO), None, U256::from(99), None, None, None)
                 .unwrap();
         assert!(gas_price.is_zero());
     }

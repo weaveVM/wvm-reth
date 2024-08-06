@@ -21,7 +21,11 @@ use reth::{
 use reth_chainspec::{Chain, ChainSpec};
 use reth_node_api::{ConfigureEvm, ConfigureEvmEnv, FullNodeTypes};
 use reth_node_core::{args::RpcServerArgs, node_config::NodeConfig};
+<<<<<<< HEAD
 use reth_node_ethereum::{EthEvmConfig, EthExecutorProvider, EthereumNode};
+=======
+use reth_node_ethereum::{node::EthereumAddOns, EthEvmConfig, EthExecutorProvider, EthereumNode};
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_primitives::{
     revm_primitives::{SpecId, StatefulPrecompileMut},
     Header, TransactionSigned,
@@ -126,7 +130,11 @@ impl StatefulPrecompileMut for WrappedPrecompile {
 
         // get the result if it exists
         if let Some(result) = cache.get(&key) {
+<<<<<<< HEAD
             return result.clone();
+=======
+            return result.clone()
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         // call the precompile if cache miss
@@ -166,7 +174,11 @@ impl ConfigureEvmEnv for MyEvmConfig {
 impl ConfigureEvm for MyEvmConfig {
     type DefaultExternalContext<'a> = ();
 
+<<<<<<< HEAD
     fn evm<'a, DB: Database + 'a>(&self, db: DB) -> Evm<'a, Self::DefaultExternalContext<'a>, DB> {
+=======
+    fn evm<DB: Database>(&self, db: DB) -> Evm<'_, Self::DefaultExternalContext<'_>, DB> {
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         let new_cache = self.precompile_cache.clone();
         EvmBuilder::default()
             .with_db(db)
@@ -177,9 +189,15 @@ impl ConfigureEvm for MyEvmConfig {
             .build()
     }
 
+<<<<<<< HEAD
     fn evm_with_inspector<'a, DB, I>(&self, db: DB, inspector: I) -> Evm<'a, I, DB>
     where
         DB: Database + 'a,
+=======
+    fn evm_with_inspector<DB, I>(&self, db: DB, inspector: I) -> Evm<'_, I, DB>
+    where
+        DB: Database,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         I: GetInspector<DB>,
     {
         let new_cache = self.precompile_cache.clone();
@@ -193,6 +211,11 @@ impl ConfigureEvm for MyEvmConfig {
             .append_handler_register(inspector_handle_register)
             .build()
     }
+<<<<<<< HEAD
+=======
+
+    fn default_external_context<'a>(&self) -> Self::DefaultExternalContext<'a> {}
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 /// Builds a regular ethereum block executor that uses the custom EVM.
@@ -244,6 +267,10 @@ async fn main() -> eyre::Result<()> {
         .with_types::<EthereumNode>()
         // use default ethereum components but with our executor
         .with_components(EthereumNode::components().executor(MyExecutorBuilder::default()))
+<<<<<<< HEAD
+=======
+        .with_add_ons::<EthereumAddOns>()
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         .launch()
         .await
         .unwrap();

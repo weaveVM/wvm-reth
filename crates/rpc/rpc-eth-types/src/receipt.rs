@@ -58,9 +58,17 @@ impl ReceiptBuilder {
             num_logs += prev_receipt.logs.len();
         }
 
+<<<<<<< HEAD
         let mut logs = Vec::with_capacity(receipt.logs.len());
         for (tx_log_idx, log) in receipt.logs.iter().enumerate() {
             let rpclog = Log {
+=======
+        let logs: Vec<Log> = receipt
+            .logs
+            .iter()
+            .enumerate()
+            .map(|(tx_log_idx, log)| Log {
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                 inner: log.clone(),
                 block_hash: Some(meta.block_hash),
                 block_number: Some(meta.block_number),
@@ -69,9 +77,14 @@ impl ReceiptBuilder {
                 transaction_index: Some(meta.index),
                 log_index: Some((num_logs + tx_log_idx) as u64),
                 removed: false,
+<<<<<<< HEAD
             };
             logs.push(rpclog);
         }
+=======
+            })
+            .collect();
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         let rpc_receipt = reth_rpc_types::Receipt {
             status: receipt.success.into(),
@@ -104,6 +117,10 @@ impl ReceiptBuilder {
             // EIP-4844 fields
             blob_gas_price,
             blob_gas_used: blob_gas_used.map(u128::from),
+<<<<<<< HEAD
+=======
+            authorization_list: transaction.authorization_list().map(|l| l.to_vec()),
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         };
 
         Ok(Self { base, other: Default::default() })
@@ -118,9 +135,13 @@ impl ReceiptBuilder {
     /// Builds a receipt response from the base response body, and any set additional fields.
     pub fn build(self) -> AnyTransactionReceipt {
         let Self { base, other } = self;
+<<<<<<< HEAD
         let mut res = WithOtherFields::new(base);
         res.other = other;
 
         res
+=======
+        WithOtherFields { inner: base, other }
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }

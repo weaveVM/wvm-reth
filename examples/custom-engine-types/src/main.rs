@@ -46,7 +46,12 @@ use reth_node_api::{
 };
 use reth_node_core::{args::RpcServerArgs, node_config::NodeConfig};
 use reth_node_ethereum::node::{
+<<<<<<< HEAD
     EthereumConsensusBuilder, EthereumExecutorBuilder, EthereumNetworkBuilder, EthereumPoolBuilder,
+=======
+    EthereumAddOns, EthereumConsensusBuilder, EthereumExecutorBuilder, EthereumNetworkBuilder,
+    EthereumPoolBuilder,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use reth_payload_builder::{
     error::PayloadBuilderError, EthBuiltPayload, EthPayloadBuilderAttributes, PayloadBuilderHandle,
@@ -212,8 +217,9 @@ where
         EthereumExecutorBuilder,
         EthereumConsensusBuilder,
     >;
+    type AddOns = EthereumAddOns;
 
-    fn components_builder(self) -> Self::ComponentsBuilder {
+    fn components_builder(&self) -> Self::ComponentsBuilder {
         ComponentsBuilder::default()
             .node_types::<N>()
             .pool(EthereumPoolBuilder::default())

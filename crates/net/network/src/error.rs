@@ -1,13 +1,19 @@
 //! Possible errors when interacting with the network.
 
-use crate::session::PendingSessionHandshakeError;
+use std::{fmt, io, io::ErrorKind, net::SocketAddr};
+
 use reth_dns_discovery::resolver::ResolveError;
 use reth_eth_wire::{
     errors::{EthHandshakeError, EthStreamError, P2PHandshakeError, P2PStreamError},
     DisconnectReason,
 };
 use reth_network_types::BackoffKind;
+<<<<<<< HEAD
 use std::{fmt, io, io::ErrorKind, net::SocketAddr};
+=======
+
+use crate::session::PendingSessionHandshakeError;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// Service kind.
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]

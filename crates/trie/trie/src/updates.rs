@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use crate::{
     walker::TrieWalker, BranchNodeCompact, HashBuilder, Nibbles, StorageTrieEntry,
     StoredBranchNode, StoredNibbles, StoredNibblesSubKey,
@@ -7,6 +8,9 @@ use reth_db_api::{
     cursor::{DbCursorRO, DbCursorRW, DbDupCursorRO, DbDupCursorRW},
     transaction::{DbTx, DbTxMut},
 };
+=======
+use crate::{walker::TrieWalker, BranchNodeCompact, HashBuilder, Nibbles};
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use reth_primitives::B256;
 use std::collections::{HashMap, HashSet};
 
@@ -25,6 +29,7 @@ impl TrieUpdates {
         self.account_nodes.is_empty() &&
             self.removed_nodes.is_empty() &&
             self.storage_tries.is_empty()
+<<<<<<< HEAD
     }
 
     /// Returns reference to updated account nodes.
@@ -42,6 +47,34 @@ impl TrieUpdates {
         &self.storage_tries
     }
 
+=======
+    }
+
+    /// Returns reference to updated account nodes.
+    pub const fn account_nodes_ref(&self) -> &HashMap<Nibbles, BranchNodeCompact> {
+        &self.account_nodes
+    }
+
+    /// Returns a reference to removed account nodes.
+    pub const fn removed_nodes_ref(&self) -> &HashSet<Nibbles> {
+        &self.removed_nodes
+    }
+
+    /// Returns a reference to updated storage tries.
+    pub const fn storage_tries_ref(&self) -> &HashMap<B256, StorageTrieUpdates> {
+        &self.storage_tries
+    }
+
+    /// Extends the trie updates.
+    pub fn extend(&mut self, other: Self) {
+        self.account_nodes.extend(other.account_nodes);
+        self.removed_nodes.extend(other.removed_nodes);
+        for (hashed_address, storage_trie) in other.storage_tries {
+            self.storage_tries.entry(hashed_address).or_default().extend(storage_trie);
+        }
+    }
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Insert storage updates for a given hashed address.
     pub fn insert_storage_updates(
         &mut self,
@@ -84,6 +117,7 @@ impl TrieUpdates {
             .collect();
         TrieUpdatesSorted { removed_nodes: self.removed_nodes, account_nodes, storage_tries }
     }
+<<<<<<< HEAD
 
     /// Flush updates all aggregated updates to the database.
     ///
@@ -142,6 +176,8 @@ impl TrieUpdates {
 
         Ok(num_entries)
     }
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 /// Trie updates for storage trie of a single account.
@@ -156,6 +192,17 @@ pub struct StorageTrieUpdates {
     pub(crate) removed_nodes: HashSet<Nibbles>,
 }
 
+<<<<<<< HEAD
+=======
+#[cfg(feature = "test-utils")]
+impl StorageTrieUpdates {
+    /// Creates a new storage trie updates that are not marked as deleted.
+    pub fn new(updates: HashMap<Nibbles, BranchNodeCompact>) -> Self {
+        Self { storage_nodes: updates, ..Default::default() }
+    }
+}
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 impl StorageTrieUpdates {
     /// Returns empty storage trie updates with `deleted` set to `true`.
     pub fn deleted() -> Self {
@@ -196,6 +243,16 @@ impl StorageTrieUpdates {
         self.is_deleted = deleted;
     }
 
+<<<<<<< HEAD
+=======
+    /// Extends storage trie updates.
+    pub fn extend(&mut self, other: Self) {
+        self.is_deleted |= other.is_deleted;
+        self.storage_nodes.extend(other.storage_nodes);
+        self.removed_nodes.extend(other.removed_nodes);
+    }
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Finalize storage trie updates for by taking updates from walker and hash builder.
     pub fn finalize<C>(&mut self, walker: TrieWalker<C>, hash_builder: HashBuilder) {
         // Retrieve deleted keys from trie walker.
@@ -217,6 +274,7 @@ impl StorageTrieUpdates {
             storage_nodes,
         }
     }
+<<<<<<< HEAD
 
     /// Initializes a storage trie cursor and writes updates to database.
     pub fn write_to_database<TX>(
@@ -288,6 +346,8 @@ impl StorageTrieUpdates {
 
         Ok(num_entries)
     }
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 }
 
 /// Sorted trie updates used for lookups and insertions.

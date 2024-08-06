@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use rayon::slice::ParallelSliceMut;
 use reth_db::tables;
 use reth_db_api::{
@@ -91,6 +92,12 @@ impl StateReverts {
     }
 }
 
+=======
+use reth_primitives::{B256, U256};
+use revm::db::states::RevertToSlot;
+use std::iter::Peekable;
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// Iterator over storage reverts.
 /// See [`StorageRevertsIter::next`] for more details.
 #[allow(missing_debug_implementations)]

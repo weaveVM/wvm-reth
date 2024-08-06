@@ -15,10 +15,15 @@ use reth_optimism_consensus::validate_block_post_execution;
 use reth_primitives::{BlockNumber, BlockWithSenders, Header, Receipt, Receipts, TxType, U256};
 use reth_prune_types::PruneModes;
 use reth_revm::{
+<<<<<<< HEAD
     batch::{BlockBatchRecord, BlockExecutorStats},
     db::states::bundle_state::BundleRetention,
     state_change::post_block_balance_increments,
     Evm, State,
+=======
+    batch::BlockBatchRecord, db::states::bundle_state::BundleRetention,
+    state_change::post_block_balance_increments, Evm, State,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 };
 use revm_primitives::{
     db::{Database, DatabaseCommit},
@@ -85,11 +90,15 @@ where
         DB: Database<Error: Into<ProviderError> + std::fmt::Display>,
     {
         let executor = self.op_executor(db);
+<<<<<<< HEAD
         OpBatchExecutor {
             executor,
             batch_record: BlockBatchRecord::default(),
             stats: BlockExecutorStats::default(),
         }
+=======
+        OpBatchExecutor { executor, batch_record: BlockBatchRecord::default() }
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }
 
@@ -376,7 +385,6 @@ pub struct OpBatchExecutor<EvmConfig, DB> {
     executor: OpBlockExecutor<EvmConfig, DB>,
     /// Keeps track of the batch and record receipts based on the configured prune mode
     batch_record: BlockBatchRecord,
-    stats: BlockExecutorStats,
 }
 
 impl<EvmConfig, DB> OpBatchExecutor<EvmConfig, DB> {
@@ -423,8 +431,6 @@ where
     }
 
     fn finalize(mut self) -> Self::Output {
-        self.stats.log_debug();
-
         ExecutionOutcome::new(
             self.executor.state.take_bundle(),
             self.batch_record.take_receipts(),

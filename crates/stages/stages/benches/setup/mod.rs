@@ -6,6 +6,7 @@ use reth_db_api::{
     transaction::{DbTx, DbTxMut},
 };
 use reth_primitives::{Account, Address, SealedBlock, B256, U256};
+use reth_provider::TrieWriter;
 use reth_stages::{
     stages::{AccountHashingStage, StorageHashingStage},
     test_utils::{StorageKind, TestStageDB},
@@ -26,6 +27,7 @@ mod constants;
 mod account_hashing;
 pub use account_hashing::*;
 use reth_stages_api::{ExecInput, Stage, UnwindInput};
+use reth_trie_db::DatabaseStateRoot;
 
 pub(crate) type StageRange = (ExecInput, UnwindInput);
 
@@ -138,12 +140,18 @@ pub(crate) fn txs_testdata(num_blocks: u64) -> TestStageDB {
 
         let offset = transitions.len() as u64;
 
+        let provider_rw = db.factory.provider_rw().unwrap();
         db.insert_changesets(transitions, None).unwrap();
+<<<<<<< HEAD
         db.commit(|tx| {
             updates.write_to_database(tx)?;
             Ok(())
         })
         .unwrap();
+=======
+        provider_rw.write_trie_updates(&updates).unwrap();
+        provider_rw.commit().unwrap();
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
         let (transitions, final_state) = random_changeset_range(
             &mut rng,

@@ -32,6 +32,11 @@
   - [`reth p2p`](./reth/p2p.md)
     - [`reth p2p header`](./reth/p2p/header.md)
     - [`reth p2p body`](./reth/p2p/body.md)
+<<<<<<< HEAD
+=======
+    - [`reth p2p rlpx`](./reth/p2p/rlpx.md)
+      - [`reth p2p rlpx ping`](./reth/p2p/rlpx/ping.md)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
   - [`reth config`](./reth/config.md)
   - [`reth debug`](./reth/debug.md)
     - [`reth debug execution`](./reth/debug/execution.md)

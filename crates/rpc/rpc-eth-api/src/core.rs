@@ -1,6 +1,7 @@
 //! Implementation of the [`jsonrpsee`] generated [`EthApiServer`] trait. Handles RPC requests for
 //! the `eth_` namespace.
 
+<<<<<<< HEAD
 use alloy_dyn_abi::TypedData;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use reth_primitives::{Address, BlockId, BlockNumberOrTag, Bytes, B256, B64, U256, U64};
@@ -14,10 +15,30 @@ use reth_rpc_types::{
 };
 use tracing::trace;
 
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use crate::helpers::{
     transaction::UpdateRawTxForwarder, EthApiSpec, EthBlocks, EthCall, EthFees, EthState,
     EthTransactions, FullEthApi,
 };
+<<<<<<< HEAD
+=======
+use alloy_dyn_abi::TypedData;
+use jsonrpsee::{core::RpcResult, proc_macros::rpc};
+use reth_primitives::{
+    transaction::AccessListResult, Address, BlockId, BlockNumberOrTag, Bytes, B256, B64, U256, U64,
+};
+use reth_rpc_server_types::{result::internal_rpc_err, ToRpcResult};
+use reth_rpc_types::{
+    serde_helpers::JsonStorageKey,
+    simulate::{SimBlock, SimulatedBlock},
+    state::{EvmOverrides, StateOverride},
+    AnyTransactionReceipt, BlockOverrides, Bundle, EIP1186AccountProofResponse, EthCallResponse,
+    FeeHistory, Header, Index, RichBlock, StateContext, SyncStatus, Transaction,
+    TransactionRequest, Work,
+};
+use tracing::trace;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// Helper trait, unifies functionality that must be supported to implement all RPC methods for
 /// server.
@@ -190,6 +211,18 @@ pub trait EthApi {
     #[method(name = "getHeaderByHash")]
     async fn header_by_hash(&self, hash: B256) -> RpcResult<Option<Header>>;
 
+<<<<<<< HEAD
+=======
+    /// `eth_simulateV1` executes an arbitrary number of transactions on top of the requested state.
+    /// The transactions are packed into individual blocks. Overrides can be provided.
+    #[method(name = "simulateV1")]
+    async fn simulate_v1(
+        &self,
+        opts: SimBlock,
+        block_number: Option<BlockId>,
+    ) -> RpcResult<Vec<SimulatedBlock>>;
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Executes a new message call immediately without creating a transaction on the block chain.
     #[method(name = "call")]
     async fn call(
@@ -229,7 +262,11 @@ pub trait EthApi {
         &self,
         request: TransactionRequest,
         block_number: Option<BlockId>,
+<<<<<<< HEAD
     ) -> RpcResult<AccessListWithGasUsed>;
+=======
+    ) -> RpcResult<AccessListResult>;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
     /// Generates and returns an estimate of how much gas is necessary to allow the transaction to
     /// complete.
@@ -245,6 +282,17 @@ pub trait EthApi {
     #[method(name = "gasPrice")]
     async fn gas_price(&self) -> RpcResult<U256>;
 
+<<<<<<< HEAD
+=======
+    /// Returns the account details by specifying an address and a block number/tag
+    #[method(name = "getAccount")]
+    async fn get_account(
+        &self,
+        address: Address,
+        block: BlockId,
+    ) -> RpcResult<reth_rpc_types::Account>;
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Introduced in EIP-1559, returns suggestion for the priority for dynamic fee transactions.
     #[method(name = "maxPriorityFeePerGas")]
     async fn max_priority_fee_per_gas(&self) -> RpcResult<U256>;
@@ -330,7 +378,12 @@ pub trait EthApi {
 #[async_trait::async_trait]
 impl<T> EthApiServer for T
 where
+<<<<<<< HEAD
     Self: FullEthApi,
+=======
+    T: FullEthApi,
+    jsonrpsee_types::error::ErrorObject<'static>: From<T::Error>,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 {
     /// Handler for: `eth_protocolVersion`
     async fn protocol_version(&self) -> RpcResult<U64> {
@@ -524,8 +577,12 @@ where
         block_number: Option<BlockId>,
     ) -> RpcResult<B256> {
         trace!(target: "rpc::eth", ?address, ?block_number, "Serving eth_getStorageAt");
+<<<<<<< HEAD
         let res: B256 = EthState::storage_at(self, address, index, block_number).await?;
         Ok(res)
+=======
+        Ok(EthState::storage_at(self, address, index, block_number).await?)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Handler for: `eth_getTransactionCount`
@@ -556,6 +613,19 @@ where
         Ok(EthBlocks::rpc_block_header(self, hash.into()).await?)
     }
 
+<<<<<<< HEAD
+=======
+    /// Handler for: `eth_simulateV1`
+    async fn simulate_v1(
+        &self,
+        opts: SimBlock,
+        block_number: Option<BlockId>,
+    ) -> RpcResult<Vec<SimulatedBlock>> {
+        trace!(target: "rpc::eth", ?block_number, "Serving eth_simulateV1");
+        Ok(EthCall::simulate_v1(self, opts, block_number).await?)
+    }
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Handler for: `eth_call`
     async fn call(
         &self,
@@ -590,12 +660,18 @@ where
         &self,
         request: TransactionRequest,
         block_number: Option<BlockId>,
+<<<<<<< HEAD
     ) -> RpcResult<AccessListWithGasUsed> {
         trace!(target: "rpc::eth", ?request, ?block_number, "Serving eth_createAccessList");
         let access_list_with_gas_used =
             EthCall::create_access_list_at(self, request, block_number).await?;
 
         Ok(access_list_with_gas_used)
+=======
+    ) -> RpcResult<AccessListResult> {
+        trace!(target: "rpc::eth", ?request, ?block_number, "Serving eth_createAccessList");
+        Ok(EthCall::create_access_list_at(self, request, block_number).await?)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Handler for: `eth_estimateGas`
@@ -618,19 +694,40 @@ where
     /// Handler for: `eth_gasPrice`
     async fn gas_price(&self) -> RpcResult<U256> {
         trace!(target: "rpc::eth", "Serving eth_gasPrice");
+<<<<<<< HEAD
         return Ok(EthFees::gas_price(self).await?);
+=======
+        Ok(EthFees::gas_price(self).await?)
+    }
+
+    /// Handler for: `eth_getAccount`
+    async fn get_account(
+        &self,
+        _address: Address,
+        _block: BlockId,
+    ) -> RpcResult<reth_rpc_types::Account> {
+        Err(internal_rpc_err("unimplemented"))
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Handler for: `eth_maxPriorityFeePerGas`
     async fn max_priority_fee_per_gas(&self) -> RpcResult<U256> {
         trace!(target: "rpc::eth", "Serving eth_maxPriorityFeePerGas");
+<<<<<<< HEAD
         return Ok(EthFees::suggested_priority_fee(self).await?);
+=======
+        Ok(EthFees::suggested_priority_fee(self).await?)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Handler for: `eth_blobBaseFee`
     async fn blob_base_fee(&self) -> RpcResult<U256> {
         trace!(target: "rpc::eth", "Serving eth_blobBaseFee");
+<<<<<<< HEAD
         return Ok(EthFees::blob_base_fee(self).await?);
+=======
+        Ok(EthFees::blob_base_fee(self).await?)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     // FeeHistory is calculated based on lazy evaluation of fees for historical blocks, and further
@@ -649,9 +746,13 @@ where
         reward_percentiles: Option<Vec<f64>>,
     ) -> RpcResult<FeeHistory> {
         trace!(target: "rpc::eth", ?block_count, ?newest_block, ?reward_percentiles, "Serving eth_feeHistory");
+<<<<<<< HEAD
         return Ok(
             EthFees::fee_history(self, block_count.to(), newest_block, reward_percentiles).await?
         );
+=======
+        Ok(EthFees::fee_history(self, block_count.to(), newest_block, reward_percentiles).await?)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Handler for: `eth_mining`

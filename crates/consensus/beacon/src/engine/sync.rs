@@ -8,9 +8,8 @@ use futures::FutureExt;
 use reth_chainspec::ChainSpec;
 use reth_db_api::database::Database;
 use reth_network_p2p::{
-    bodies::client::BodiesClient,
     full_block::{FetchFullBlockFuture, FetchFullBlockRangeFuture, FullBlockClient},
-    headers::client::HeadersClient,
+    BlockClient,
 };
 use reth_primitives::{BlockNumber, SealedBlock, B256};
 use reth_stages_api::{ControlFlow, Pipeline, PipelineError, PipelineTarget, PipelineWithResult};
@@ -35,7 +34,7 @@ use tracing::trace;
 pub(crate) struct EngineSyncController<DB, Client>
 where
     DB: Database,
-    Client: HeadersClient + BodiesClient,
+    Client: BlockClient,
 {
     /// A downloader that can download full blocks from the network.
     full_block_client: FullBlockClient<Client>,
@@ -65,7 +64,7 @@ where
 impl<DB, Client> EngineSyncController<DB, Client>
 where
     DB: Database + 'static,
-    Client: HeadersClient + BodiesClient + Clone + Unpin + 'static,
+    Client: BlockClient + 'static,
 {
     /// Create a new instance
     pub(crate) fn new(
@@ -417,7 +416,7 @@ mod tests {
     use reth_chainspec::{ChainSpecBuilder, MAINNET};
     use reth_db::{mdbx::DatabaseEnv, test_utils::TempDatabase};
     use reth_network_p2p::{either::Either, test_utils::TestFullBlockClient};
-    use reth_primitives::{constants::ETHEREUM_BLOCK_GAS_LIMIT, BlockBody, Header, SealedHeader};
+    use reth_primitives::{BlockBody, Header, SealedHeader};
     use reth_provider::{
         test_utils::create_test_provider_factory_with_chain_spec, ExecutionOutcome,
     };
@@ -523,7 +522,7 @@ mod tests {
         ) -> EngineSyncController<DB, Either<Client, TestFullBlockClient>>
         where
             DB: Database + 'static,
-            Client: HeadersClient + BodiesClient + Clone + Unpin + 'static,
+            Client: BlockClient + 'static,
         {
             let client = self
                 .client
@@ -618,7 +617,7 @@ mod tests {
         let client = TestFullBlockClient::default();
         let header = Header {
             base_fee_per_gas: Some(7),
-            gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+            gas_limit: chain_spec.max_gas_limit,
             ..Default::default()
         }
         .seal_slow();

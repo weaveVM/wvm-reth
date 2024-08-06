@@ -23,8 +23,13 @@ impl<'a, K, V> ForwardInMemoryCursor<'a, K, V> {
 
 impl<'a, K, V> ForwardInMemoryCursor<'a, K, V>
 where
+<<<<<<< HEAD
     K: PartialOrd + Copy,
     V: Copy,
+=======
+    K: PartialOrd + Clone,
+    V: Clone,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 {
     /// Advances the cursor forward while `comparator` returns `true` or until the collection is
     /// exhausted. Returns the first entry for which `comparator` returns `false` or `None`.
@@ -34,7 +39,11 @@ where
             self.index += 1;
             entry = self.entries.get(self.index);
         }
+<<<<<<< HEAD
         entry.copied()
+=======
+        entry.cloned()
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 
     /// Returns the first entry from the current cursor position that's greater or equal to the

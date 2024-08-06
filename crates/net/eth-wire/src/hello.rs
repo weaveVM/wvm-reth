@@ -1,4 +1,4 @@
-use crate::{capability::Capability, EthVersion, ProtocolVersion};
+use crate::{Capability, EthVersion, ProtocolVersion};
 use alloy_rlp::{RlpDecodable, RlpEncodable};
 use reth_codecs::derive_arbitrary;
 use reth_network_peers::PeerId;
@@ -214,9 +214,13 @@ impl HelloMessageBuilder {
 
 #[cfg(test)]
 mod tests {
+<<<<<<< HEAD
     use crate::{
         capability::Capability, p2pstream::P2PMessage, EthVersion, HelloMessage, ProtocolVersion,
     };
+=======
+    use crate::{p2pstream::P2PMessage, Capability, EthVersion, HelloMessage, ProtocolVersion};
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     use alloy_rlp::{Decodable, Encodable, EMPTY_STRING_CODE};
     use reth_network_peers::pk2id;
     use secp256k1::{SecretKey, SECP256K1};

@@ -1,7 +1,12 @@
 use super::{TrieCursor, TrieCursorFactory};
 use crate::{BranchNodeCompact, Nibbles};
+<<<<<<< HEAD
 use reth_db::DatabaseError;
 use reth_primitives::B256;
+=======
+use reth_primitives::B256;
+use reth_storage_errors::db::DatabaseError;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// Noop trie cursor factory.
 #[derive(Default, Debug)]
@@ -12,12 +17,20 @@ impl TrieCursorFactory for NoopTrieCursorFactory {
     type AccountTrieCursor = NoopAccountTrieCursor;
     type StorageTrieCursor = NoopStorageTrieCursor;
 
+<<<<<<< HEAD
     /// Generates a Noop account trie cursor.
+=======
+    /// Generates a noop account trie cursor.
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     fn account_trie_cursor(&self) -> Result<Self::AccountTrieCursor, DatabaseError> {
         Ok(NoopAccountTrieCursor::default())
     }
 
+<<<<<<< HEAD
     /// Generates a Noop storage trie cursor.
+=======
+    /// Generates a noop storage trie cursor.
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     fn storage_trie_cursor(
         &self,
         _hashed_address: B256,
@@ -32,7 +45,6 @@ impl TrieCursorFactory for NoopTrieCursorFactory {
 pub struct NoopAccountTrieCursor;
 
 impl TrieCursor for NoopAccountTrieCursor {
-    /// Seeks an exact match within the account trie.
     fn seek_exact(
         &mut self,
         _key: Nibbles,
@@ -40,7 +52,6 @@ impl TrieCursor for NoopAccountTrieCursor {
         Ok(None)
     }
 
-    /// Seeks within the account trie.
     fn seek(
         &mut self,
         _key: Nibbles,
@@ -48,7 +59,14 @@ impl TrieCursor for NoopAccountTrieCursor {
         Ok(None)
     }
 
+<<<<<<< HEAD
     /// Retrieves the current cursor position within the account trie.
+=======
+    fn next(&mut self) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
+        Ok(None)
+    }
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     fn current(&mut self) -> Result<Option<Nibbles>, DatabaseError> {
         Ok(None)
     }
@@ -60,7 +78,6 @@ impl TrieCursor for NoopAccountTrieCursor {
 pub struct NoopStorageTrieCursor;
 
 impl TrieCursor for NoopStorageTrieCursor {
-    /// Seeks an exact match in storage tries.
     fn seek_exact(
         &mut self,
         _key: Nibbles,
@@ -68,7 +85,6 @@ impl TrieCursor for NoopStorageTrieCursor {
         Ok(None)
     }
 
-    /// Seeks a key in storage tries.
     fn seek(
         &mut self,
         _key: Nibbles,
@@ -76,7 +92,14 @@ impl TrieCursor for NoopStorageTrieCursor {
         Ok(None)
     }
 
+<<<<<<< HEAD
     /// Retrieves the current cursor position within storage tries.
+=======
+    fn next(&mut self) -> Result<Option<(Nibbles, BranchNodeCompact)>, DatabaseError> {
+        Ok(None)
+    }
+
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     fn current(&mut self) -> Result<Option<Nibbles>, DatabaseError> {
         Ok(None)
     }

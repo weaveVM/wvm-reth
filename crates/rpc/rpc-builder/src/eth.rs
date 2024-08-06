@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use std::{fmt::Debug, time::Duration};
 
 use reth_evm::ConfigureEvm;
@@ -26,6 +27,19 @@ const DEFAULT_STALE_FILTER_TTL: Duration = Duration::from_secs(5 * 60);
 /// Alias for function that builds the core `eth` namespace API.
 pub type EthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi> =
     Box<dyn FnOnce(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi>;
+=======
+use reth_evm::ConfigureEvm;
+use reth_provider::{BlockReader, CanonStateSubscriptions, EvmEnvProvider, StateProviderFactory};
+use reth_rpc::{EthFilter, EthPubSub};
+use reth_rpc_eth_types::{
+    cache::cache_new_blocks_task, EthApiBuilderCtx, EthConfig, EthStateCache,
+};
+use reth_tasks::TaskSpawner;
+
+/// Alias for `eth` namespace API builder.
+pub type DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi> =
+    Box<dyn Fn(&EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>) -> EthApi>;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// Handlers for core, filter and pubsub `eth` namespace APIs.
 #[derive(Debug, Clone)]
@@ -38,6 +52,7 @@ pub struct EthHandlers<Provider, Pool, Network, Events, EthApi> {
     pub filter: EthFilter<Provider, Pool>,
     /// Handler for subscriptions only available for transports that support it (ws, ipc)
     pub pubsub: EthPubSub<Provider, Pool, Events, Network>,
+<<<<<<< HEAD
 }
 
 impl<Provider, Pool, Network, Events, EthApi> EthHandlers<Provider, Pool, Network, Events, EthApi> {
@@ -186,45 +201,157 @@ impl Default for EthConfig {
             stale_filter_ttl: DEFAULT_STALE_FILTER_TTL,
             fee_history_cache: FeeHistoryCacheConfig::default(),
             proof_permits: DEFAULT_PROOF_PERMITS,
+=======
+}
+
+impl<Provider, Pool, Network, Events, EthApi> EthHandlers<Provider, Pool, Network, Events, EthApi> {
+    /// Returns a new [`EthHandlers`] builder.
+    #[allow(clippy::too_many_arguments)]
+    pub fn builder<EvmConfig, Tasks>(
+        provider: Provider,
+        pool: Pool,
+        network: Network,
+        evm_config: EvmConfig,
+        config: EthConfig,
+        executor: Tasks,
+        events: Events,
+        eth_api_builder: DynEthApiBuilder<
+            Provider,
+            Pool,
+            EvmConfig,
+            Network,
+            Tasks,
+            Events,
+            EthApi,
+        >,
+    ) -> EthHandlersBuilder<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi> {
+        EthHandlersBuilder {
+            provider,
+            pool,
+            network,
+            evm_config,
+            config,
+            executor,
+            events,
+            eth_api_builder,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
     }
 }
 
-impl EthConfig {
-    /// Configures the caching layer settings
-    pub const fn state_cache(mut self, cache: EthStateCacheConfig) -> Self {
-        self.cache = cache;
-        self
-    }
+/// Builds [`EthHandlers`] for core, filter, and pubsub `eth_` apis.
+#[allow(missing_debug_implementations)]
+pub struct EthHandlersBuilder<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi> {
+    provider: Provider,
+    pool: Pool,
+    network: Network,
+    evm_config: EvmConfig,
+    config: EthConfig,
+    executor: Tasks,
+    events: Events,
+    eth_api_builder: DynEthApiBuilder<Provider, Pool, EvmConfig, Network, Tasks, Events, EthApi>,
+}
 
-    /// Configures the gas price oracle settings
-    pub const fn gpo_config(mut self, gas_oracle_config: GasPriceOracleConfig) -> Self {
-        self.gas_oracle = gas_oracle_config;
-        self
-    }
+impl<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi>
+    EthHandlersBuilder<Provider, Pool, Network, Tasks, Events, EvmConfig, EthApi>
+where
+    Provider: StateProviderFactory + BlockReader + EvmEnvProvider + Clone + Unpin + 'static,
+    Pool: Send + Sync + Clone + 'static,
+    EvmConfig: ConfigureEvm,
+    Network: Clone + 'static,
+    Tasks: TaskSpawner + Clone + 'static,
+    Events: CanonStateSubscriptions + Clone + 'static,
+    EthApi: 'static,
+{
+    /// Returns a new instance with handlers for `eth` namespace.
+    pub fn build(self) -> EthHandlers<Provider, Pool, Network, Events, EthApi> {
+        let Self { provider, pool, network, evm_config, config, executor, events, eth_api_builder } =
+            self;
 
-    /// Configures the maximum number of tracing requests
-    pub const fn max_tracing_requests(mut self, max_requests: usize) -> Self {
-        self.max_tracing_requests = max_requests;
-        self
-    }
+        let cache = EthStateCache::spawn_with(
+            provider.clone(),
+            config.cache,
+            executor.clone(),
+            evm_config.clone(),
+        );
 
-    /// Configures the maximum block length to scan per `eth_getLogs` request
-    pub const fn max_blocks_per_filter(mut self, max_blocks: u64) -> Self {
-        self.max_blocks_per_filter = max_blocks;
-        self
-    }
+        let new_canonical_blocks = events.canonical_state_stream();
+        let c = cache.clone();
+        executor.spawn_critical(
+            "cache canonical blocks task",
+            Box::pin(async move {
+                cache_new_blocks_task(c, new_canonical_blocks).await;
+            }),
+        );
 
-    /// Configures the maximum number of logs per response
-    pub const fn max_logs_per_response(mut self, max_logs: usize) -> Self {
-        self.max_logs_per_response = max_logs;
-        self
-    }
+        let ctx = EthApiBuilderCtx {
+            provider,
+            pool,
+            network,
+            evm_config,
+            config,
+            executor,
+            events,
+            cache,
+        };
 
-    /// Configures the maximum gas limit for `eth_call` and call tracing RPC methods
-    pub const fn rpc_gas_cap(mut self, rpc_gas_cap: u64) -> Self {
-        self.rpc_gas_cap = rpc_gas_cap;
-        self
+        let api = eth_api_builder(&ctx);
+
+        let filter = EthFilterApiBuilder::build(&ctx);
+
+        let pubsub = EthPubSubApiBuilder::build(&ctx);
+
+        EthHandlers { api, cache: ctx.cache, filter, pubsub }
+    }
+}
+
+/// Builds the `eth_` namespace API [`EthFilterApiServer`](reth_rpc_eth_api::EthFilterApiServer).
+#[derive(Debug)]
+pub struct EthFilterApiBuilder;
+
+impl EthFilterApiBuilder {
+    /// Builds the [`EthFilterApiServer`](reth_rpc_eth_api::EthFilterApiServer), for given context.
+    pub fn build<Provider, Pool, EvmConfig, Network, Tasks, Events>(
+        ctx: &EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>,
+    ) -> EthFilter<Provider, Pool>
+    where
+        Provider: Send + Sync + Clone + 'static,
+        Pool: Send + Sync + Clone + 'static,
+        Tasks: TaskSpawner + Clone + 'static,
+    {
+        EthFilter::new(
+            ctx.provider.clone(),
+            ctx.pool.clone(),
+            ctx.cache.clone(),
+            ctx.config.filter_config(),
+            Box::new(ctx.executor.clone()),
+        )
+    }
+}
+
+/// Builds the `eth_` namespace API [`EthPubSubApiServer`](reth_rpc_eth_api::EthFilterApiServer).
+#[derive(Debug)]
+pub struct EthPubSubApiBuilder;
+
+impl EthPubSubApiBuilder {
+    /// Builds the [`EthPubSubApiServer`](reth_rpc_eth_api::EthPubSubApiServer), for given context.
+    pub fn build<Provider, Pool, EvmConfig, Network, Tasks, Events>(
+        ctx: &EthApiBuilderCtx<Provider, Pool, EvmConfig, Network, Tasks, Events>,
+    ) -> EthPubSub<Provider, Pool, Events, Network>
+    where
+        Provider: Clone,
+        Pool: Clone,
+        Events: Clone,
+        Network: Clone,
+        Tasks: TaskSpawner + Clone + 'static,
+    {
+        EthPubSub::with_spawner(
+            ctx.provider.clone(),
+            ctx.pool.clone(),
+            ctx.events.clone(),
+            ctx.network.clone(),
+            Box::new(ctx.executor.clone()),
+        )
     }
 
     /// Configures the maximum proof window for historical proof generation.

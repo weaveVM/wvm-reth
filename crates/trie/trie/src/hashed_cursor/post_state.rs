@@ -3,12 +3,17 @@ use crate::{
     forward_cursor::ForwardInMemoryCursor, HashedAccountsSorted, HashedPostStateSorted,
     HashedStorageSorted,
 };
+<<<<<<< HEAD
 use reth_db::DatabaseError;
 use reth_primitives::{Account, B256, U256};
+=======
+use reth_primitives::{Account, B256, U256};
+use reth_storage_errors::db::DatabaseError;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::collections::HashSet;
 
 /// The hashed cursor factory for the post state.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct HashedPostStateCursorFactory<'a, CF> {
     cursor_factory: CF,
     post_state: &'a HashedPostStateSorted,
@@ -82,7 +87,11 @@ where
         // It's an exact match, return the account from post state without looking up in the
         // database.
         if post_state_entry.map_or(false, |entry| entry.0 == key) {
+<<<<<<< HEAD
             return Ok(post_state_entry);
+=======
+            return Ok(post_state_entry)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         // It's not an exact match, reposition to the first greater or equal account that wasn't
@@ -217,7 +226,11 @@ where
         // If database storage was wiped or it's an exact match,
         // return the storage slot from post state without looking up in the database.
         if self.storage_wiped || post_state_entry.map_or(false, |entry| entry.0 == subkey) {
+<<<<<<< HEAD
             return Ok(post_state_entry);
+=======
+            return Ok(post_state_entry)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         // It's not an exact match and storage was not wiped,
@@ -239,7 +252,11 @@ where
 
         // Return post state entry immediately if database was wiped.
         if self.storage_wiped {
+<<<<<<< HEAD
             return Ok(post_state_entry);
+=======
+            return Ok(post_state_entry)
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         }
 
         // If post state was given precedence, move the cursor forward.
@@ -324,6 +341,7 @@ where
         Ok(is_empty)
     }
 }
+<<<<<<< HEAD
 
 #[cfg(test)]
 mod tests {
@@ -803,3 +821,5 @@ mod tests {
         });
     }
 }
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1

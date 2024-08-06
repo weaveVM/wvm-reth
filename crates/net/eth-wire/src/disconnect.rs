@@ -1,15 +1,14 @@
 //! Disconnect
 
-use alloy_rlp::{Decodable, Encodable, Error as RlpError, Header};
+use std::future::Future;
+
 use futures::{Sink, SinkExt};
-use reth_codecs::derive_arbitrary;
 use reth_ecies::stream::ECIESStream;
-use reth_primitives::bytes::{Buf, BufMut};
-use std::{fmt::Display, future::Future};
-use thiserror::Error;
+use reth_eth_wire_types::DisconnectReason;
 use tokio::io::AsyncWrite;
 use tokio_util::codec::{Encoder, Framed};
 
+<<<<<<< HEAD
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -148,6 +147,8 @@ impl Decodable for DisconnectReason {
     }
 }
 
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// This trait is meant to allow higher level protocols like `eth` to disconnect from a peer, using
 /// lower-level disconnect functions (such as those that exist in the `p2p` protocol) if the
 /// underlying stream supports it.

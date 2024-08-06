@@ -15,6 +15,7 @@
 //! (IP+port) of our node is published via discovery, remote peers can initiate inbound connections
 //! to the local node. Once a (tcp) connection is established, both peers start to authenticate a [RLPx session](https://github.com/ethereum/devp2p/blob/master/rlpx.md) via a handshake. If the handshake was successful, both peers announce their capabilities and are now ready to exchange sub-protocol messages via the `RLPx` session.
 
+<<<<<<< HEAD
 use crate::{
     budget::{DEFAULT_BUDGET_TRY_DRAIN_NETWORK_HANDLE_CHANNEL, DEFAULT_BUDGET_TRY_DRAIN_SWARM},
     config::NetworkConfig,
@@ -50,6 +51,8 @@ use reth_storage_api::BlockNumReader;
 use reth_tasks::shutdown::GracefulShutdown;
 use reth_tokio_util::EventSender;
 use secp256k1::SecretKey;
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     net::SocketAddr,
     path::Path,
@@ -61,9 +64,45 @@ use std::{
     task::{Context, Poll},
     time::{Duration, Instant},
 };
+
+use futures::{Future, StreamExt};
+use parking_lot::Mutex;
+use reth_eth_wire::{capability::CapabilityMessage, Capabilities, DisconnectReason};
+use reth_fs_util::{self as fs, FsPathError};
+use reth_metrics::common::mpsc::UnboundedMeteredSender;
+use reth_network_api::{
+    test_utils::PeersHandle, EthProtocolInfo, NetworkEvent, NetworkStatus, PeerInfo, PeerRequest,
+};
+use reth_network_peers::{NodeRecord, PeerId};
+use reth_network_types::ReputationChangeKind;
+use reth_storage_api::BlockNumReader;
+use reth_tasks::shutdown::GracefulShutdown;
+use reth_tokio_util::EventSender;
+use secp256k1::SecretKey;
 use tokio::sync::mpsc::{self, error::TrySendError};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tracing::{debug, error, trace, warn};
+
+use crate::{
+    budget::{DEFAULT_BUDGET_TRY_DRAIN_NETWORK_HANDLE_CHANNEL, DEFAULT_BUDGET_TRY_DRAIN_SWARM},
+    config::NetworkConfig,
+    discovery::Discovery,
+    error::{NetworkError, ServiceKind},
+    eth_requests::IncomingEthRequest,
+    import::{BlockImport, BlockImportOutcome, BlockValidation},
+    listener::ConnectionListener,
+    message::{NewBlockMessage, PeerMessage},
+    metrics::{DisconnectMetrics, NetworkMetrics, NETWORK_POOL_TRANSACTIONS_SCOPE},
+    network::{NetworkHandle, NetworkHandleMessage},
+    peers::PeersManager,
+    poll_nested_stream_with_budget,
+    protocol::IntoRlpxSubProtocol,
+    session::SessionManager,
+    state::NetworkState,
+    swarm::{Swarm, SwarmEvent},
+    transactions::NetworkTransactionEvent,
+    FetchClient, NetworkBuilder,
+};
 
 #[cfg_attr(doc, aquamarine::aquamarine)]
 /// Manages the _entire_ state of the network.
@@ -75,9 +114,9 @@ use tracing::{debug, error, trace, warn};
 /// include_mmd!("docs/mermaid/network-manager.mmd")
 #[derive(Debug)]
 #[must_use = "The NetworkManager does nothing unless polled"]
-pub struct NetworkManager<C> {
+pub struct NetworkManager {
     /// The type that manages the actual network part, which includes connections.
-    swarm: Swarm<C>,
+    swarm: Swarm,
     /// Underlying network handle that can be shared.
     handle: NetworkHandle,
     /// Receiver half of the command channel set up between this type and the [`NetworkHandle`]
@@ -115,7 +154,7 @@ pub struct NetworkManager<C> {
 }
 
 // === impl NetworkManager ===
-impl<C> NetworkManager<C> {
+impl NetworkManager {
     /// Sets the dedicated channel for events indented for the
     /// [`TransactionsManager`](crate::transactions::TransactionsManager).
     pub fn set_transactions(&mut self, tx: mpsc::UnboundedSender<NetworkTransactionEvent>) {
@@ -160,21 +199,20 @@ impl<C> NetworkManager<C> {
     }
 }
 
-impl<C> NetworkManager<C>
-where
-    C: BlockNumReader,
-{
+impl NetworkManager {
     /// Creates the manager of a new network.
     ///
     /// The [`NetworkManager`] is an endless future that needs to be polled in order to advance the
     /// state of the entire network.
-    pub async fn new(config: NetworkConfig<C>) -> Result<Self, NetworkError> {
+    pub async fn new<C: BlockNumReader + 'static>(
+        config: NetworkConfig<C>,
+    ) -> Result<Self, NetworkError> {
         let NetworkConfig {
             client,
             secret_key,
             discovery_v4_addr,
             mut discovery_v4_config,
-            discovery_v5_config,
+            mut discovery_v5_config,
             listener_addr,
             peers_config,
             sessions_config,
@@ -203,18 +241,19 @@ where
         let listener_addr = incoming.local_address();
 
         // resolve boot nodes
-        let mut resolved_boot_nodes = vec![];
-        for record in &boot_nodes {
-            let resolved = record.resolve().await?;
-            resolved_boot_nodes.push(resolved);
-        }
+        let resolved_boot_nodes =
+            futures::future::try_join_all(boot_nodes.iter().map(|record| record.resolve())).await?;
 
-        discovery_v4_config = discovery_v4_config.map(|mut disc_config| {
+        if let Some(disc_config) = discovery_v4_config.as_mut() {
             // merge configured boot nodes
             disc_config.bootstrap_nodes.extend(resolved_boot_nodes.clone());
             disc_config.add_eip868_pair("eth", status.forkid);
-            disc_config
-        });
+        }
+
+        if let Some(discv5) = discovery_v5_config.as_mut() {
+            // merge configured boot nodes
+            discv5.extend_unsigned_boot_nodes(resolved_boot_nodes)
+        }
 
         let discovery = Discovery::new(
             listener_addr,
@@ -241,8 +280,12 @@ where
             extra_protocols,
         );
 
-        let state =
-            NetworkState::new(client, discovery, peers_manager, Arc::clone(&num_active_peers));
+        let state = NetworkState::new(
+            crate::state::BlockNumReader::new(client),
+            discovery,
+            peers_manager,
+            Arc::clone(&num_active_peers),
+        );
 
         let swarm = Swarm::new(incoming, sessions, state);
 
@@ -306,15 +349,15 @@ where
     ///         .split_with_handle();
     /// }
     /// ```
-    pub async fn builder(
+    pub async fn builder<C: BlockNumReader + 'static>(
         config: NetworkConfig<C>,
-    ) -> Result<NetworkBuilder<C, (), ()>, NetworkError> {
+    ) -> Result<NetworkBuilder<(), ()>, NetworkError> {
         let network = Self::new(config).await?;
         Ok(network.into_builder())
     }
 
     /// Create a [`NetworkBuilder`] to configure all components of the network
-    pub const fn into_builder(self) -> NetworkBuilder<C, (), ()> {
+    pub const fn into_builder(self) -> NetworkBuilder<(), ()> {
         NetworkBuilder { network: self, transactions: (), request_handler: () }
     }
 
@@ -354,11 +397,16 @@ where
     /// `persistent_peers_file`.
     pub fn write_peers_to_file(&self, persistent_peers_file: &Path) -> Result<(), FsPathError> {
         let known_peers = self.all_peers().collect::<Vec<_>>();
+<<<<<<< HEAD
         let known_peers = serde_json::to_string_pretty(&known_peers).map_err(|e| {
             FsPathError::WriteJson { source: e, path: persistent_peers_file.to_path_buf() }
         })?;
         persistent_peers_file.parent().map(fs::create_dir_all).transpose()?;
         fs::write(persistent_peers_file, known_peers)?;
+=======
+        persistent_peers_file.parent().map(fs::create_dir_all).transpose()?;
+        reth_fs_util::write_json_file(persistent_peers_file, &known_peers)?;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         Ok(())
     }
 
@@ -943,10 +991,14 @@ where
     }
 }
 
+<<<<<<< HEAD
 impl<C> NetworkManager<C>
 where
     C: BlockNumReader + Unpin,
 {
+=======
+impl NetworkManager {
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     /// Drives the [`NetworkManager`] future until a [`GracefulShutdown`] signal is received.
     ///
     /// This invokes the given function `shutdown_hook` while holding the graceful shutdown guard.
@@ -972,10 +1024,14 @@ where
     }
 }
 
+<<<<<<< HEAD
 impl<C> Future for NetworkManager<C>
 where
     C: BlockNumReader + Unpin,
 {
+=======
+impl Future for NetworkManager {
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     type Output = ();
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -1047,6 +1103,7 @@ where
     }
 }
 
+<<<<<<< HEAD
 /// (Non-exhaustive) Events emitted by the network that are of interest for subscribers.
 ///
 /// This includes any event types that may be relevant to tasks, for metrics, keep track of peers
@@ -1088,6 +1145,8 @@ pub enum DiscoveredEvent {
     EventQueued { peer_id: PeerId, addr: PeerAddr, fork_id: Option<ForkId> },
 }
 
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 #[derive(Debug, Default)]
 struct NetworkManagerPollDurations {
     acc_network_handle: Duration,

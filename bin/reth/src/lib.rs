@@ -59,9 +59,9 @@ pub mod core {
     pub use reth_node_core::*;
 }
 
-/// Re-exported from `reth_node_core`.
+/// Re-exported from `reth_node_metrics`.
 pub mod prometheus_exporter {
-    pub use reth_node_core::prometheus_exporter::*;
+    pub use reth_node_metrics::recorder::*;
 }
 
 /// Re-export of the `reth_node_core` types specifically in the `args` module.
@@ -127,7 +127,9 @@ pub mod tasks {
 /// Re-exported from `reth_network`.
 pub mod network {
     pub use reth_network::*;
-    pub use reth_network_api::{noop, reputation, NetworkInfo, PeerKind, Peers, PeersInfo};
+    pub use reth_network_api::{
+        noop, test_utils::PeersHandleProvider, NetworkInfo, Peers, PeersInfo,
+    };
 }
 
 /// Re-exported from `reth_transaction_pool`.
@@ -180,18 +182,6 @@ pub mod rpc {
 // re-export for convenience
 #[doc(inline)]
 pub use reth_cli_runner::{tokio_runtime, CliContext, CliRunner};
-
-#[cfg(all(unix, any(target_env = "gnu", target_os = "macos")))]
-pub mod sigsegv_handler;
-
-/// Signal handler to extract a backtrace from stack overflow.
-///
-/// This is a no-op because this platform doesn't support our signal handler's requirements.
-#[cfg(not(all(unix, any(target_env = "gnu", target_os = "macos"))))]
-pub mod sigsegv_handler {
-    /// No-op function.
-    pub fn install() {}
-}
 
 #[cfg(all(feature = "jemalloc", unix))]
 use tikv_jemallocator as _;

@@ -1,5 +1,6 @@
 //! Discovery support for the network.
 
+<<<<<<< HEAD
 use crate::{
     cache::LruMap,
     error::{NetworkError, ServiceKind},
@@ -16,6 +17,8 @@ use reth_dns_discovery::{
 use reth_network_peers::{NodeRecord, PeerId};
 use reth_primitives::{EnrForkIdEntry, ForkId};
 use secp256k1::SecretKey;
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use std::{
     collections::VecDeque,
     net::{IpAddr, SocketAddr},
@@ -23,9 +26,27 @@ use std::{
     sync::Arc,
     task::{ready, Context, Poll},
 };
+
+use enr::Enr;
+use futures::StreamExt;
+use reth_discv4::{DiscoveryUpdate, Discv4, Discv4Config};
+use reth_discv5::{DiscoveredPeer, Discv5};
+use reth_dns_discovery::{
+    DnsDiscoveryConfig, DnsDiscoveryHandle, DnsDiscoveryService, DnsNodeRecordUpdate, DnsResolver,
+};
+use reth_network_api::{DiscoveredEvent, DiscoveryEvent};
+use reth_network_peers::{NodeRecord, PeerId};
+use reth_network_types::PeerAddr;
+use reth_primitives::{EnrForkIdEntry, ForkId};
+use secp256k1::SecretKey;
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_stream::{wrappers::ReceiverStream, Stream};
 use tracing::trace;
+
+use crate::{
+    cache::LruMap,
+    error::{NetworkError, ServiceKind},
+};
 
 /// Default max capacity for cache of discovered peers.
 ///
@@ -324,15 +345,6 @@ impl Discovery {
             discovery_listeners: Default::default(),
         }
     }
-}
-
-/// Events produced by the [`Discovery`] manager.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum DiscoveryEvent {
-    /// Discovered a node
-    NewNode(DiscoveredEvent),
-    /// Retrieved a [`ForkId`] from the peer via ENR request, See <https://eips.ethereum.org/EIPS/eip-868>
-    EnrForkId(PeerId, ForkId),
 }
 
 #[cfg(test)]

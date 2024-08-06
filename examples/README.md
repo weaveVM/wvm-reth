@@ -24,6 +24,7 @@ to make a PR!
 
 ## ExEx
 
+<<<<<<< HEAD
 | Example                                   | Description                                                                                         |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | [In Memory State](./exex/in-memory-state) | Illustrates an ExEx that tracks the plain state in memory                                           |
@@ -31,6 +32,9 @@ to make a PR!
 | [OP Bridge](./exex/op-bridge)             | Illustrates an ExEx that decodes Optimism deposit and withdrawal receipts from L1                   |
 | [Rollup](./exex/rollup)                   | Illustrates a rollup ExEx that derives the state from L1                                            |
 | [Discv5 as ExEx](./exex/discv5)           | Illustrates an ExEx that runs discv5 discovery stack                                                |
+=======
+See examples in a [dedicated repository](https://github.com/paradigmxyz/reth-exex-examples).
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 ## RPC
 

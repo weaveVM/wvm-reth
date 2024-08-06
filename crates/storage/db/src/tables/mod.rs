@@ -16,6 +16,7 @@ pub mod codecs;
 mod raw;
 pub use raw::{RawDupSort, RawKey, RawTable, RawValue, TableRawRow};
 
+#[cfg(feature = "mdbx")]
 pub(crate) mod utils;
 
 use reth_db_api::{
@@ -35,7 +36,11 @@ use reth_primitives::{
 use reth_primitives_traits::IntegerList;
 use reth_prune_types::{PruneCheckpoint, PruneSegment};
 use reth_stages_types::StageCheckpoint;
+<<<<<<< HEAD
 use reth_trie_common::{StorageTrieEntry, StoredBranchNode, StoredNibbles, StoredNibblesSubKey};
+=======
+use reth_trie_common::{BranchNodeCompact, StorageTrieEntry, StoredNibbles, StoredNibblesSubKey};
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -381,7 +386,7 @@ tables! {
     table HashedStorages<Key = B256, Value = StorageEntry, SubKey = B256>;
 
     /// Stores the current state's Merkle Patricia Tree.
-    table AccountsTrie<Key = StoredNibbles, Value = StoredBranchNode>;
+    table AccountsTrie<Key = StoredNibbles, Value = BranchNodeCompact>;
 
     /// From HashedAddress => NibblesSubKey => Intermediate value
     table StoragesTrie<Key = B256, Value = StorageTrieEntry, SubKey = StoredNibblesSubKey>;

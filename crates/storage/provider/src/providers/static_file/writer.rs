@@ -1,8 +1,7 @@
-use crate::providers::static_file::metrics::StaticFileProviderOperation;
-
 use super::{
     manager::StaticFileProviderInner, metrics::StaticFileProviderMetrics, StaticFileProvider,
 };
+use crate::providers::static_file::metrics::StaticFileProviderOperation;
 use dashmap::mapref::one::RefMut;
 use reth_codecs::Compact;
 use reth_db_api::models::CompactU256;
@@ -14,6 +13,7 @@ use reth_primitives::{
 };
 use reth_storage_errors::provider::{ProviderError, ProviderResult};
 use std::{
+    borrow::Borrow,
     path::{Path, PathBuf},
     sync::{Arc, Weak},
     time::Instant,
@@ -270,9 +270,10 @@ impl StaticFileProviderRW {
     /// Returns the current [`BlockNumber`] as seen in the static file.
     pub fn increment_block(
         &mut self,
-        segment: StaticFileSegment,
         expected_block_number: BlockNumber,
     ) -> ProviderResult<BlockNumber> {
+        let segment = self.writer.user_header().segment();
+
         self.check_next_block_number(expected_block_number, segment)?;
 
         let start = Instant::now();
@@ -467,19 +468,19 @@ impl StaticFileProviderRW {
     /// Returns the current [`BlockNumber`] as seen in the static file.
     pub fn append_header(
         &mut self,
-        header: Header,
-        terminal_difficulty: U256,
-        hash: BlockHash,
+        header: &Header,
+        total_difficulty: U256,
+        hash: &BlockHash,
     ) -> ProviderResult<BlockNumber> {
         let start = Instant::now();
         self.ensure_no_queued_prune()?;
 
         debug_assert!(self.writer.user_header().segment() == StaticFileSegment::Headers);
 
-        let block_number = self.increment_block(StaticFileSegment::Headers, header.number)?;
+        let block_number = self.increment_block(header.number)?;
 
         self.append_column(header)?;
-        self.append_column(CompactU256::from(terminal_difficulty))?;
+        self.append_column(CompactU256::from(total_difficulty))?;
         self.append_column(hash)?;
 
         if let Some(metrics) = &self.metrics {
@@ -502,7 +503,7 @@ impl StaticFileProviderRW {
     pub fn append_transaction(
         &mut self,
         tx_num: TxNumber,
-        tx: TransactionSignedNoHash,
+        tx: &TransactionSignedNoHash,
     ) -> ProviderResult<TxNumber> {
         let start = Instant::now();
         self.ensure_no_queued_prune()?;
@@ -529,7 +530,7 @@ impl StaticFileProviderRW {
     pub fn append_receipt(
         &mut self,
         tx_num: TxNumber,
-        receipt: Receipt,
+        receipt: &Receipt,
     ) -> ProviderResult<TxNumber> {
         let start = Instant::now();
         self.ensure_no_queued_prune()?;
@@ -550,9 +551,16 @@ impl StaticFileProviderRW {
     /// Appends multiple receipts to the static file.
     ///
     /// Returns the current [`TxNumber`] as seen in the static file, if any.
+<<<<<<< HEAD
     pub fn append_receipts<I>(&mut self, receipts: I) -> ProviderResult<Option<TxNumber>>
     where
         I: IntoIterator<Item = Result<(TxNumber, Receipt), ProviderError>>,
+=======
+    pub fn append_receipts<I, R>(&mut self, receipts: I) -> ProviderResult<Option<TxNumber>>
+    where
+        I: Iterator<Item = Result<(TxNumber, R), ProviderError>>,
+        R: Borrow<Receipt>,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     {
         let mut receipts_iter = receipts.into_iter().peekable();
         // If receipts are empty, we can simply return None
@@ -569,7 +577,12 @@ impl StaticFileProviderRW {
 
         for receipt_result in receipts_iter {
             let (tx_num, receipt) = receipt_result?;
+<<<<<<< HEAD
             tx_number = self.append_with_tx_number(StaticFileSegment::Receipts, tx_num, receipt)?;
+=======
+            tx_number =
+                self.append_with_tx_number(StaticFileSegment::Receipts, tx_num, receipt.borrow())?;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
             count += 1;
         }
 

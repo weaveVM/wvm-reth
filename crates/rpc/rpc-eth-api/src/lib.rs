@@ -21,6 +21,13 @@ pub mod pubsub;
 pub use bundle::{EthBundleApiServer, EthCallBundleApiServer};
 pub use core::{EthApiServer, FullEthApiServer};
 pub use filter::EthFilterApiServer;
+<<<<<<< HEAD
+=======
+pub use helpers::{
+    error::{AsEthApiError, FromEthApiError, FromEvmError, IntoEthApiError},
+    types::EthApiTypes,
+};
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 pub use pubsub::EthPubSubApiServer;
 
 pub use helpers::transaction::RawTransactionForwarder;

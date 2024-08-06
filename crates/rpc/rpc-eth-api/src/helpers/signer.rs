@@ -37,3 +37,14 @@ pub trait EthSigner: Send + Sync + DynClone {
 }
 
 dyn_clone::clone_trait_object!(EthSigner);
+<<<<<<< HEAD
+=======
+
+/// Adds 20 random dev signers for access via the API. Used in dev mode.
+#[auto_impl::auto_impl(&)]
+pub trait AddDevSigners {
+    /// Generates 20 random developer accounts.
+    /// Used in DEV mode.
+    fn with_dev_accounts(&self);
+}
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1

@@ -2,16 +2,29 @@ use crate::{
     hashed_cursor::{HashedCursorFactory, HashedStorageCursor},
     node_iter::{TrieElement, TrieNodeIter},
     prefix_set::TriePrefixSetsMut,
+<<<<<<< HEAD
     trie_cursor::{DatabaseAccountTrieCursor, DatabaseStorageTrieCursor},
+=======
+    trie_cursor::TrieCursorFactory,
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     walker::TrieWalker,
     HashBuilder, Nibbles,
 };
 use alloy_rlp::{BufMut, Encodable};
+<<<<<<< HEAD
 use reth_db::tables;
 use reth_db_api::transaction::DbTx;
 use reth_execution_errors::{StateRootError, StorageRootError};
 use reth_primitives::{constants::EMPTY_ROOT_HASH, keccak256, Address, B256};
 use reth_trie_common::{proof::ProofRetainer, AccountProof, StorageProof, TrieAccount};
+=======
+use reth_execution_errors::trie::StateProofError;
+use reth_primitives::{keccak256, Address, B256};
+use reth_trie_common::{
+    proof::ProofRetainer, AccountProof, MultiProof, StorageMultiProof, TrieAccount,
+};
+use std::collections::HashMap;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// A struct for generating merkle proofs.
 ///
@@ -19,13 +32,14 @@ use reth_trie_common::{proof::ProofRetainer, AccountProof, StorageProof, TrieAcc
 /// on the hash builder and follows the same algorithm as the state root calculator.
 /// See `StateRoot::root` for more info.
 #[derive(Debug)]
-pub struct Proof<'a, TX, H> {
-    /// A reference to the database transaction.
-    tx: &'a TX,
+pub struct Proof<T, H> {
+    /// The factory for traversing trie nodes.
+    trie_cursor_factory: T,
     /// The factory for hashed cursors.
     hashed_cursor_factory: H,
     /// A set of prefix sets that have changes.
     prefix_sets: TriePrefixSetsMut,
+<<<<<<< HEAD
 }
 
 impl<'a, TX, H> Proof<'a, TX, H> {
@@ -50,37 +64,85 @@ impl<'a, TX> Proof<'a, TX, &'a TX> {
     /// Create a new [Proof] instance from database transaction.
     pub fn from_tx(tx: &'a TX) -> Self {
         Self::new(tx, tx)
+=======
+    /// Proof targets.
+    targets: HashMap<B256, Vec<B256>>,
+}
+
+impl<T, H> Proof<T, H> {
+    /// Create a new [Proof] instance.
+    pub fn new(t: T, h: H) -> Self {
+        Self {
+            trie_cursor_factory: t,
+            hashed_cursor_factory: h,
+            prefix_sets: TriePrefixSetsMut::default(),
+            targets: HashMap::default(),
+        }
+    }
+
+    /// Set the hashed cursor factory.
+    pub fn with_hashed_cursor_factory<HF>(self, hashed_cursor_factory: HF) -> Proof<T, HF> {
+        Proof {
+            trie_cursor_factory: self.trie_cursor_factory,
+            hashed_cursor_factory,
+            prefix_sets: self.prefix_sets,
+            targets: self.targets,
+        }
+    }
+
+    /// Set the prefix sets. They have to be mutable in order to allow extension with proof target.
+    pub fn with_prefix_sets_mut(mut self, prefix_sets: TriePrefixSetsMut) -> Self {
+        self.prefix_sets = prefix_sets;
+        self
+    }
+
+    /// Set the target accounts and slots.
+    pub fn with_targets(mut self, targets: HashMap<B256, Vec<B256>>) -> Self {
+        self.targets = targets;
+        self
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }
 
-impl<'a, TX, H> Proof<'a, TX, H>
+impl<T, H> Proof<T, H>
 where
-    TX: DbTx,
+    T: TrieCursorFactory,
     H: HashedCursorFactory + Clone,
 {
     /// Generate an account proof from intermediate nodes.
     pub fn account_proof(
-        &self,
+        self,
         address: Address,
         slots: &[B256],
-    ) -> Result<AccountProof, StateRootError> {
-        let target_hashed_address = keccak256(address);
-        let target_nibbles = Nibbles::unpack(target_hashed_address);
-        let mut account_proof = AccountProof::new(address);
+    ) -> Result<AccountProof, StateProofError> {
+        Ok(self
+            .with_targets(HashMap::from([(
+                keccak256(address),
+                slots.iter().map(keccak256).collect(),
+            )]))
+            .multiproof()?
+            .account_proof(address, slots)?)
+    }
 
+    /// Generate a state multiproof according to specified targets.
+    pub fn multiproof(&self) -> Result<MultiProof, StateProofError> {
         let hashed_account_cursor = self.hashed_cursor_factory.hashed_account_cursor()?;
-        let trie_cursor =
-            DatabaseAccountTrieCursor::new(self.tx.cursor_read::<tables::AccountsTrie>()?);
+        let trie_cursor = self.trie_cursor_factory.account_trie_cursor()?;
 
         // Create the walker.
         let mut prefix_set = self.prefix_sets.account_prefix_set.clone();
+<<<<<<< HEAD
         prefix_set.insert(target_nibbles.clone());
+=======
+        prefix_set.extend(self.targets.keys().map(Nibbles::unpack));
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         let walker = TrieWalker::new(trie_cursor, prefix_set.freeze());
 
         // Create a hash builder to rebuild the root node since it is not available in the database.
-        let retainer = ProofRetainer::from_iter([target_nibbles]);
+        let retainer = ProofRetainer::from_iter(self.targets.keys().map(Nibbles::unpack));
         let mut hash_builder = HashBuilder::default().with_proof_retainer(retainer);
 
+        let mut storages = HashMap::default();
         let mut account_rlp = Vec::with_capacity(128);
         let mut account_node_iter = TrieNodeIter::new(walker, hashed_account_cursor);
         while let Some(account_node) = account_node_iter.try_next()? {
@@ -89,51 +151,37 @@ where
                     hash_builder.add_branch(node.key, node.value, node.children_are_in_trie);
                 }
                 TrieElement::Leaf(hashed_address, account) => {
-                    let storage_root = if hashed_address == target_hashed_address {
-                        let (storage_root, storage_proofs) =
-                            self.storage_root_with_proofs(hashed_address, slots)?;
-                        account_proof.set_account(account, storage_root, storage_proofs);
-                        storage_root
-                    } else {
-                        self.storage_root(hashed_address)?
-                    };
+                    let storage_multiproof = self.storage_multiproof(hashed_address)?;
 
+                    // Encode account
                     account_rlp.clear();
+<<<<<<< HEAD
                     let account = TrieAccount::from((account, storage_root));
+=======
+                    let account = TrieAccount::from((account, storage_multiproof.root));
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
                     account.encode(&mut account_rlp as &mut dyn BufMut);
 
                     hash_builder.add_leaf(Nibbles::unpack(hashed_address), &account_rlp);
+                    storages.insert(hashed_address, storage_multiproof);
                 }
             }
         }
-
         let _ = hash_builder.root();
-
-        let proofs = hash_builder.take_proofs();
-        account_proof.set_proof(proofs.values().cloned().collect());
-
-        Ok(account_proof)
+        Ok(MultiProof { account_subtree: hash_builder.take_proofs(), storages })
     }
 
-    /// Compute storage root.
-    pub fn storage_root(&self, hashed_address: B256) -> Result<B256, StorageRootError> {
-        let (storage_root, _) = self.storage_root_with_proofs(hashed_address, &[])?;
-        Ok(storage_root)
-    }
-
-    /// Compute the storage root and retain proofs for requested slots.
-    pub fn storage_root_with_proofs(
+    /// Generate a storage multiproof according to specified targets.
+    pub fn storage_multiproof(
         &self,
         hashed_address: B256,
-        slots: &[B256],
-    ) -> Result<(B256, Vec<StorageProof>), StorageRootError> {
+    ) -> Result<StorageMultiProof, StateProofError> {
         let mut hashed_storage_cursor =
             self.hashed_cursor_factory.hashed_storage_cursor(hashed_address)?;
 
-        let mut proofs = slots.iter().copied().map(StorageProof::new).collect::<Vec<_>>();
-
         // short circuit on empty storage
         if hashed_storage_cursor.is_storage_empty()? {
+<<<<<<< HEAD
             return Ok((EMPTY_ROOT_HASH, proofs));
         }
 
@@ -145,6 +193,20 @@ where
             self.tx.cursor_dup_read::<tables::StoragesTrie>()?,
             hashed_address,
         );
+=======
+            return Ok(StorageMultiProof::default())
+        }
+
+        let target_nibbles = self
+            .targets
+            .get(&hashed_address)
+            .map_or(Vec::new(), |slots| slots.iter().map(Nibbles::unpack).collect());
+
+        let mut prefix_set =
+            self.prefix_sets.storage_prefix_sets.get(&hashed_address).cloned().unwrap_or_default();
+        prefix_set.extend(target_nibbles.clone());
+        let trie_cursor = self.trie_cursor_factory.storage_trie_cursor(hashed_address)?;
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
         let walker = TrieWalker::new(trie_cursor, prefix_set.freeze());
 
         let retainer = ProofRetainer::from_iter(target_nibbles);
@@ -156,16 +218,16 @@ where
                     hash_builder.add_branch(node.key, node.value, node.children_are_in_trie);
                 }
                 TrieElement::Leaf(hashed_slot, value) => {
-                    let nibbles = Nibbles::unpack(hashed_slot);
-                    if let Some(proof) = proofs.iter_mut().find(|proof| proof.nibbles == nibbles) {
-                        proof.set_value(value);
-                    }
-                    hash_builder.add_leaf(nibbles, alloy_rlp::encode_fixed_size(&value).as_ref());
+                    hash_builder.add_leaf(
+                        Nibbles::unpack(hashed_slot),
+                        alloy_rlp::encode_fixed_size(&value).as_ref(),
+                    );
                 }
             }
         }
 
         let root = hash_builder.root();
+<<<<<<< HEAD
 
         let all_proof_nodes = hash_builder.take_proofs();
         for proof in &mut proofs {
@@ -471,5 +533,8 @@ mod tests {
             Proof::from_tx(provider.tx_ref()).account_proof(target, &slots).unwrap();
         similar_asserts::assert_eq!(account_proof, expected);
         assert_eq!(account_proof.verify(root), Ok(()));
+=======
+        Ok(StorageMultiProof { root, subtree: hash_builder.take_proofs() })
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
     }
 }

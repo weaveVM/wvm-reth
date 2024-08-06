@@ -1,5 +1,6 @@
 //! Traits for execution.
 
+<<<<<<< HEAD
 use reth_execution_types::ExecutionOutcome;
 use reth_primitives::{BlockNumber, BlockWithSenders, Receipt, Request, U256};
 use reth_prune_types::PruneModes;
@@ -10,8 +11,18 @@ use std::fmt::Display;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+=======
+// Re-export execution types
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 pub use reth_execution_errors::{BlockExecutionError, BlockValidationError};
+pub use reth_execution_types::{BlockExecutionInput, BlockExecutionOutput, ExecutionOutcome};
 pub use reth_storage_errors::provider::ProviderError;
+
+use core::fmt::Display;
+
+use reth_primitives::{BlockNumber, BlockWithSenders, Receipt};
+use reth_prune_types::PruneModes;
+use revm_primitives::db::Database;
 
 /// A general purpose executor trait that executes an input (e.g. block) and produces an output
 /// (e.g. state changes and receipts).
@@ -96,6 +107,7 @@ pub trait BatchExecutor<DB> {
     fn size_hint(&self) -> Option<usize>;
 }
 
+<<<<<<< HEAD
 /// The output of an ethereum block.
 ///
 /// Contains the state changes, transaction receipts, and total gas used in the block.
@@ -135,6 +147,8 @@ impl<'a, Block> From<(&'a Block, U256)> for BlockExecutionInput<'a, Block> {
     }
 }
 
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// A type that can create a new executor for block execution.
 pub trait BlockExecutorProvider: Send + Sync + Clone + Unpin + 'static {
     /// An executor that can execute a single block given a database.
@@ -184,6 +198,7 @@ mod tests {
     use super::*;
     use reth_primitives::Block;
     use revm::db::{CacheDB, EmptyDBTyped};
+    use revm_primitives::U256;
     use std::marker::PhantomData;
 
     #[derive(Clone, Default)]

@@ -21,7 +21,7 @@ pub fn validate_block_post_execution(
         return Err(ConsensusError::BlockGasUsed {
             gas: GotExpected { got: cumulative_gas_used, expected: block.gas_used },
             gas_spent_by_tx: gas_spent_by_transactions(receipts),
-        });
+        })
     }
 
     // Before Byzantium, receipts contained state root that would mean that expensive

@@ -304,6 +304,7 @@ where
     OtterscanClient::get_header_by_number(client, block_number).await.unwrap();
 
     OtterscanClient::has_code(client, address, None).await.unwrap();
+    OtterscanClient::has_code(client, address, Some(block_number)).await.unwrap();
 
     OtterscanClient::get_api_level(client).await.unwrap();
 
@@ -313,9 +314,9 @@ where
 
     OtterscanClient::trace_transaction(client, tx_hash).await.unwrap();
 
-    OtterscanClient::get_block_details(client, block_number).await.unwrap();
+    OtterscanClient::get_block_details(client, block_number).await.unwrap_err();
 
-    OtterscanClient::get_block_details_by_hash(client, block_hash).await.unwrap();
+    OtterscanClient::get_block_details_by_hash(client, block_hash).await.unwrap_err();
 
     OtterscanClient::get_block_transactions(client, block_number, page_number, page_size)
         .await

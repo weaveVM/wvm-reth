@@ -5,18 +5,15 @@ use crate::{
     p2pstream::MAX_RESERVED_MESSAGE_ID,
     protocol::{ProtoVersion, Protocol},
     version::ParseVersionError,
-    EthMessage, EthMessageID, EthVersion,
+    Capability, EthMessage, EthMessageID, EthVersion,
 };
-use alloy_rlp::{Decodable, Encodable, RlpDecodable, RlpEncodable};
 use derive_more::{Deref, DerefMut};
-use reth_codecs::add_arbitrary_tests;
-use reth_primitives::bytes::{BufMut, Bytes};
+use reth_primitives::bytes::Bytes;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     collections::{BTreeSet, HashMap},
-    fmt,
 };
 
 /// A Capability message consisting of the message-id and the payload
@@ -40,6 +37,7 @@ pub enum CapabilityMessage {
     Other(RawCapabilityMessage),
 }
 
+<<<<<<< HEAD
 /// A message indicating a supported capability and capability version.
 #[add_arbitrary_tests(rlp)]
 #[derive(Clone, Debug, PartialEq, Eq, RlpEncodable, RlpDecodable, Default, Hash)]
@@ -207,6 +205,8 @@ impl Decodable for Capabilities {
     }
 }
 
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 /// This represents a shared capability, its version, and its message id offset.
 ///
 /// The [offset](SharedCapability::message_id_offset) is the message ID offset for this shared
@@ -549,6 +549,7 @@ pub struct UnsupportedCapabilityError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{Capabilities, Capability};
 
     #[test]
     fn from_eth_68() {

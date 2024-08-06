@@ -1,10 +1,26 @@
 //! Session handles.
 
+use std::{io, net::SocketAddr, sync::Arc, time::Instant};
+
+use reth_ecies::ECIESError;
+use reth_eth_wire::{
+    capability::CapabilityMessage, errors::EthStreamError, Capabilities, DisconnectReason,
+    EthVersion, Status,
+};
+use reth_network_api::PeerInfo;
+use reth_network_peers::{NodeRecord, PeerId};
+use reth_network_types::PeerKind;
+use tokio::sync::{
+    mpsc::{self, error::SendError},
+    oneshot,
+};
+
 use crate::{
     message::PeerMessage,
     session::{conn::EthRlpxConnection, Direction, SessionId},
     PendingSessionHandshakeError,
 };
+<<<<<<< HEAD
 use reth_ecies::ECIESError;
 use reth_eth_wire::{
     capability::{Capabilities, CapabilityMessage},
@@ -18,6 +34,8 @@ use tokio::sync::{
     mpsc::{self, error::SendError},
     oneshot,
 };
+=======
+>>>>>>> c4b5f5e9c9a88783b2def3ab1cc880b8d41867e1
 
 /// A handler attached to a peer session that's not authenticated yet, pending Handshake and hello
 /// message which exchanges the `capabilities` of the peer.
