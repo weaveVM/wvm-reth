@@ -1,11 +1,13 @@
 use irys::irys::IrysRequest;
-use reth::primitives::revm_primitives::{
-    Precompile, PrecompileError, PrecompileOutput, PrecompileResult,
+use reth::{
+    primitives::{
+        hex,
+        revm_primitives::{Precompile, PrecompileError, PrecompileOutput, PrecompileResult},
+        Bytes,
+    },
+    revm::precompile::{u64_to_address, PrecompileWithAddress},
 };
-use reth::primitives::{hex, Bytes};
-use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
-use reth_revm::precompile::PrecompileErrors;
-use reth_revm::primitives::B256;
+use reth_revm::{precompile::PrecompileErrors, primitives::B256};
 use std::str::FromStr;
 
 pub const PC_ADDRESS: u64 = 0x17;
@@ -59,8 +61,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 #[cfg(test)]
 mod irys_pc_tests {
     use crate::inner::arweave_precompile::{arweave_upload, SOLANA_SILLY_PRIVATE_KEY};
-    use reth::primitives::revm_primitives::PrecompileOutput;
-    use reth::primitives::Bytes;
+    use reth::primitives::{revm_primitives::PrecompileOutput, Bytes};
     use std::env;
 
     #[test]

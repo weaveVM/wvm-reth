@@ -705,13 +705,13 @@ where
         } else {
             let mut latest_valid_hash = None;
             let status = match self.insert_block_without_senders(block).unwrap() {
-                InsertPayloadOk::Inserted(BlockStatus::Valid(_))
-                | InsertPayloadOk::AlreadySeen(BlockStatus::Valid(_)) => {
+                InsertPayloadOk::Inserted(BlockStatus::Valid(_)) |
+                InsertPayloadOk::AlreadySeen(BlockStatus::Valid(_)) => {
                     latest_valid_hash = Some(block_hash);
                     PayloadStatusEnum::Valid
                 }
-                InsertPayloadOk::Inserted(BlockStatus::Disconnected { .. })
-                | InsertPayloadOk::AlreadySeen(BlockStatus::Disconnected { .. }) => {
+                InsertPayloadOk::Inserted(BlockStatus::Disconnected { .. }) |
+                InsertPayloadOk::AlreadySeen(BlockStatus::Disconnected { .. }) => {
                     // TODO: isn't this check redundant?
                     // check if the block's parent is already marked as invalid
                     // if let Some(status) = self

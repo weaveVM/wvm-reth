@@ -1,5 +1,6 @@
-use crate::inner::arweave_precompile::ARWEAVE_UPLOAD_PC;
-use crate::inner::arweave_read_precompile::ARWEAVE_READ_PC;
+use crate::inner::{
+    arweave_precompile::ARWEAVE_UPLOAD_PC, arweave_read_precompile::ARWEAVE_READ_PC,
+};
 use reth::revm::precompile::PrecompileWithAddress;
 
 pub mod arweave_precompile;

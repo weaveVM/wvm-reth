@@ -1,9 +1,13 @@
 use eyre::Error;
-use reth::primitives::revm_primitives::{
-    Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
+use reth::{
+    primitives::{
+        revm_primitives::{
+            Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
+        },
+        Bytes,
+    },
+    revm::precompile::{u64_to_address, PrecompileWithAddress},
 };
-use reth::primitives::Bytes;
-use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -159,8 +163,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 #[cfg(test)]
 mod arweave_read_pc_tests {
     use crate::inner::arweave_read_precompile::{arweave_read, parse_url};
-    use reth::primitives::revm_primitives::PrecompileOutput;
-    use reth::primitives::Bytes;
+    use reth::primitives::{revm_primitives::PrecompileOutput, Bytes};
 
     #[test]
     pub fn test_arweave_read_precompile() {
@@ -172,7 +175,8 @@ mod arweave_read_pc_tests {
 
     #[test]
     pub fn test_arweave_read_precompile_custom_gateway() {
-        let input = Bytes::from("https://ar-io.dev;bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI".as_bytes());
+        let input =
+            Bytes::from("https://ar-io.dev;bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI".as_bytes());
         let PrecompileOutput { gas_used, bytes } = arweave_read(&input, 100_000).unwrap();
         assert_eq!(bytes.len(), 11);
         assert_eq!(bytes.to_vec(), "Hello world".as_bytes().to_vec());
