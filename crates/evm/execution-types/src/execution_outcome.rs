@@ -211,7 +211,7 @@ impl ExecutionOutcome {
 
     /// Return all block receipts
     pub fn receipts_by_block(&self, block_number: BlockNumber) -> &[Option<Receipt>] {
-        let Some(index) = self.block_number_to_index(block_number) else { return &[] }
+        let Some(index) = self.block_number_to_index(block_number) else { return &[] };
         &self.receipts[index]
     }
 
@@ -238,7 +238,7 @@ impl ExecutionOutcome {
     ///
     /// The provided block number will stay inside the bundle state.
     pub fn revert_to(&mut self, block_number: BlockNumber) -> bool {
-        let Some(index) = self.block_number_to_index(block_number) else { return false }
+        let Some(index) = self.block_number_to_index(block_number) else { return false };
 
         // +1 is for number of blocks that we have as index is included.
         let new_len = index + 1;

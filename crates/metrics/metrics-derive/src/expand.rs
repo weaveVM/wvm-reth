@@ -263,7 +263,7 @@ fn parse_metrics_attr(node: &DeriveInput) -> Result<MetricsAttr> {
                             .collect::<Vec<_>>()
                             .join(", ")
                     ),
-                ));
+                ))
             }
             separator = Some(separator_lit);
         } else if kv.path.is_ident("dynamic") {
@@ -317,7 +317,7 @@ fn parse_metric_fields(node: &DeriveInput) -> Result<Vec<MetricField<'_>>> {
                                 return Err(Error::new_spanned(
                                     kv,
                                     "Duplicate `describe` value provided.",
-                                ));
+                                ))
                             }
                             describe = Some(parse_str_lit(lit)?);
                         } else if kv.path.is_ident("rename") {
@@ -325,7 +325,7 @@ fn parse_metric_fields(node: &DeriveInput) -> Result<Vec<MetricField<'_>>> {
                                 return Err(Error::new_spanned(
                                     kv,
                                     "Duplicate `rename` value provided.",
-                                ));
+                                ))
                             }
                             let rename_lit = parse_str_lit(lit)?;
                             validate_metric_name(&rename_lit)?;
