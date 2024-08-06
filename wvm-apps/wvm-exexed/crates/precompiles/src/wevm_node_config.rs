@@ -1,20 +1,22 @@
 use parking_lot::RwLock;
-use reth::api::{ConfigureEvm, ConfigureEvmEnv};
-use reth::primitives::{Address, Bytes, Header, TransactionSigned, U256};
-use reth::revm::handler::register::EvmHandler;
-use reth::revm::precompile::{
-    Precompile, PrecompileResult, PrecompileSpecId, PrecompileWithAddress, StatefulPrecompileMut,
-};
-use reth::revm::primitives::{CfgEnvWithHandlerCfg, Env, SpecId, TxEnv};
-use reth::revm::{
-    inspector_handle_register, ContextPrecompile, ContextPrecompiles, Database, Evm, EvmBuilder,
-    GetInspector,
+use reth::{
+    api::{ConfigureEvm, ConfigureEvmEnv},
+    primitives::{Address, Bytes, Header, TransactionSigned, U256},
+    revm::{
+        handler::register::EvmHandler,
+        inspector_handle_register,
+        precompile::{
+            Precompile, PrecompileResult, PrecompileSpecId, PrecompileWithAddress,
+            StatefulPrecompileMut,
+        },
+        primitives::{CfgEnvWithHandlerCfg, Env, SpecId, TxEnv},
+        ContextPrecompile, ContextPrecompiles, Database, Evm, EvmBuilder, GetInspector,
+    },
 };
 use reth_chainspec::ChainSpec;
 use reth_node_ethereum::EthEvmConfig;
 use schnellru::{ByLength, LruMap};
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 /// Type alias for the LRU cache used within the [`PrecompileCache`].
 type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResult>;

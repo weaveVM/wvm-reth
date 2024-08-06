@@ -1053,8 +1053,8 @@ mod tests {
                 blocks
                     .iter()
                     .filter(|b| {
-                        !first_missing_range.contains(&b.number)
-                            && !second_missing_range.contains(&b.number)
+                        !first_missing_range.contains(&b.number) &&
+                            !second_missing_range.contains(&b.number)
                     })
                     .map(|b| (b.hash(), b.clone().unseal())),
             );
@@ -1083,8 +1083,8 @@ mod tests {
                 // ensure we still return trailing `None`s here because by-hash will not be aware
                 // of the missing block's number, and cannot compare it to the current best block
                 .map(|b| {
-                    if first_missing_range.contains(&b.number)
-                        || second_missing_range.contains(&b.number)
+                    if first_missing_range.contains(&b.number) ||
+                        second_missing_range.contains(&b.number)
                     {
                         None
                     } else {
@@ -1114,8 +1114,8 @@ mod tests {
                     .chain_spec
                     .fork(EthereumHardfork::Paris)
                     .ttd()
-                    .unwrap()
-                    + U256::from(1),
+                    .unwrap() +
+                    U256::from(1),
                 ..Default::default()
             };
 
