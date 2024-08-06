@@ -143,8 +143,6 @@ members = [
     "examples/stateful-precompile/",
     "examples/txpool-tracing/",
     "examples/custom-rlpx-subprotocol",
-    "examples/exex/minimal/",
-    "examples/exex/op-bridge/",
     "testing/ef-tests/",
     "testing/testing-utils/",
     "wvm-apps/wvm-exexed/",

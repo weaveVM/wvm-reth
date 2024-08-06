@@ -468,7 +468,7 @@ where
     }
 
     fn post_unwind_commit(&mut self) -> Result<(), StageError> {
-        let Some(chain) = self.post_unwind_commit_input.take() else { return Ok(()) }
+        let Some(chain) = self.post_unwind_commit_input.take() else { return Ok(()) };
 
         // NOTE: We can ignore the error here, since an error means that the channel is closed,
         // which means the manager has died, which then in turn means the node is shutting down.

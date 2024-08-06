@@ -110,7 +110,7 @@ where
 
     /// Registers progress metrics for each registered stage
     pub fn register_metrics(&mut self) -> Result<(), PipelineError> {
-        let Some(metrics_tx) = &mut self.metrics_tx else { return Ok(()) }
+        let Some(metrics_tx) = &mut self.metrics_tx else { return Ok(()) };
         let provider = self.provider_factory.provider()?;
 
         for stage in &self.stages {

@@ -171,7 +171,7 @@ impl StaticFileProvider {
 
     /// Reports metrics for the static files.
     pub fn report_metrics(&self) -> ProviderResult<()> {
-        let Some(metrics) = &self.metrics else { return Ok(()) }
+        let Some(metrics) = &self.metrics else { return Ok(()) };
 
         let static_files =
             iter_static_files(&self.path).map_err(|e| ProviderError::NippyJar(e.to_string()))?;

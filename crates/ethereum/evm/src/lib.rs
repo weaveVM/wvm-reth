@@ -14,7 +14,10 @@ extern crate alloc;
 
 use reth_chainspec::{ChainSpec, Head};
 use reth_evm::{ConfigureEvm, ConfigureEvmEnv};
-use reth_primitives::{transaction::FillTxEnv, Address, Header, TransactionSigned, U256, constants::ETHEREUM_BLOCK_GAS_LIMIT,};
+use reth_primitives::{
+    constants::ETHEREUM_BLOCK_GAS_LIMIT, transaction::FillTxEnv, Address, Header,
+    TransactionSigned, U256,
+};
 use reth_revm::{Database, EvmBuilder};
 use revm_primitives::{AnalysisKind, Bytes, CfgEnvWithHandlerCfg, Env, TxEnv, TxKind};
 

@@ -208,12 +208,12 @@ where
                 )
                 .map_err(|err| PayloadBuilderError::Internal(err.into()))?;
 
-            let requests = withdrawal_requests;
-            let requests_root = calculate_requests_root(&requests);
-            (Some(requests.into()), Some(requests_root))
-        } else {
-            (None, None)
-        };
+                let requests = withdrawal_requests;
+                let requests_root = calculate_requests_root(&requests);
+                (Some(requests.into()), Some(requests_root))
+            } else {
+                (None, None)
+            };
 
         let header = Header {
             parent_hash: parent_block.hash(),
