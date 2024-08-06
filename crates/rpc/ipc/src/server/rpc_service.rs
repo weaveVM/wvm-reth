@@ -87,7 +87,7 @@ impl<'a> RpcServiceT<'a> for RpcService {
                         tracing::warn!("Subscriptions not supported");
                         let rp =
                             MethodResponse::error(id, ErrorObject::from(ErrorCode::InternalError));
-                        return ResponseFuture::ready(rp)
+                        return ResponseFuture::ready(rp);
                     };
 
                     if let Some(p) = bounded_subscriptions.acquire() {
@@ -113,7 +113,7 @@ impl<'a> RpcServiceT<'a> for RpcService {
                         tracing::warn!("Subscriptions not supported");
                         let rp =
                             MethodResponse::error(id, ErrorObject::from(ErrorCode::InternalError));
-                        return ResponseFuture::ready(rp)
+                        return ResponseFuture::ready(rp);
                     };
 
                     let rp = callback(id, params, conn_id, max_response_body_size, extensions);

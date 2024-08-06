@@ -464,9 +464,9 @@ where
             )
             .await?;
 
-        let Some(transactions) = res else { return Ok(None) }
+        let Some(transactions) = res else { return Ok(None) };
 
-        let Some(block) = self.inner.eth_api.block(block_id).await? else { return Ok(None) }
+        let Some(block) = self.inner.eth_api.block(block_id).await? else { return Ok(None) };
 
         Ok(Some(BlockOpcodeGas {
             block_hash: block.hash(),

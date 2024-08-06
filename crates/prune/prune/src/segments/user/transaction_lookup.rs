@@ -67,7 +67,7 @@ impl<DB: Database> Segment<DB> for TransactionLookup {
         if hashes.len() != tx_count {
             return Err(PrunerError::InconsistentData(
                 "Unexpected number of transaction hashes retrieved by transaction number range",
-            ));
+            ))
         }
 
         let mut limiter = input.limiter;

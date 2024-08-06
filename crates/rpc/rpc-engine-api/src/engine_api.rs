@@ -385,12 +385,12 @@ where
         self.inner.task_spawner.spawn_blocking(Box::pin(async move {
             if count > MAX_PAYLOAD_BODIES_LIMIT {
                 tx.send(Err(EngineApiError::PayloadRequestTooLarge { len: count })).ok();
-                return
+                return;
             }
 
             if start == 0 || count == 0 {
                 tx.send(Err(EngineApiError::InvalidBodiesRange { start, count })).ok();
-                return
+                return;
             }
 
             let mut result = Vec::with_capacity(count as usize);
@@ -414,7 +414,7 @@ where
                     }
                     Err(err) => {
                         tx.send(Err(EngineApiError::Internal(Box::new(err)))).ok();
-                        return
+                        return;
                     }
                 };
             }
@@ -523,7 +523,7 @@ where
             return Err(EngineApiError::TerminalTD {
                 execution: merge_terminal_td,
                 consensus: terminal_total_difficulty,
-            });
+            })
         }
 
         self.inner.beacon_consensus.transition_configuration_exchanged();
@@ -533,7 +533,7 @@ where
             return Ok(TransitionConfiguration {
                 terminal_total_difficulty: merge_terminal_td,
                 ..Default::default()
-            });
+            })
         }
 
         // Attempt to look up terminal block hash

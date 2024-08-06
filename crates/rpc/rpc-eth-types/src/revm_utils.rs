@@ -131,7 +131,7 @@ impl CallFees {
                         return Err(
                             // `max_priority_fee_per_gas` is greater than the `max_fee_per_gas`
                             RpcInvalidTransactionError::TipAboveFeeCap.into(),
-                        );
+                        )
                     }
                     Ok(min(
                         max_fee,

@@ -355,7 +355,7 @@ pub fn validate_block_hash(
         return Err(PayloadError::BlockHash {
             execution: sealed_block.hash(),
             consensus: expected_block_hash,
-        });
+        })
     }
 
     Ok(sealed_block)

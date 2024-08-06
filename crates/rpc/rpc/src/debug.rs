@@ -411,7 +411,7 @@ where
 
                     Ok(GethTrace::JS(res))
                 }
-            };
+            }
         }
 
         // default structlog tracer
@@ -543,8 +543,7 @@ where
                     }
                     // Increment block_env number and timestamp for the next bundle
                     block_env.number += U256::from(1);
-                    // WVM: blocktime 2s
-                    block_env.timestamp += U256::from(2);
+                    block_env.timestamp += U256::from(12);
 
                     all_bundles.push(results);
                 }
@@ -743,7 +742,7 @@ where
                         inspector.json_result(res, &env, db).map_err(Eth::Error::from_eth_err)?;
                     Ok((GethTrace::JS(result), state))
                 }
-            };
+            }
         }
 
         // default structlog tracer

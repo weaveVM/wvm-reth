@@ -219,7 +219,7 @@ impl JsTracerBuilder {
     ///
     /// ```
     /// use reth_rpc_api_testing_util::debug::JsTracerBuilder;
-    /// let code = JsTracerBuilder::default().result_body("return {};").code()
+    /// let code = JsTracerBuilder::default().result_body("return {};").code();
     /// ```
     pub fn result_body(mut self, body: impl Into<String>) -> Self {
         self.result_body = Some(body.into());
@@ -256,7 +256,7 @@ impl JsTracerBuilder {
         template = template.replace("//<setup>", self.setup_body.as_deref().unwrap_or_default());
         template = template.replace("//<fault>", self.fault_body.as_deref().unwrap_or_default());
         template =
-            template.replace("//<result>", self.result_body.as_deref().unwrap_or("return {};"))
+            template.replace("//<result>", self.result_body.as_deref().unwrap_or("return {};"));
         template = template.replace("//<step>", self.step_body.as_deref().unwrap_or_default());
         template = template.replace("//<enter>", self.enter_body.as_deref().unwrap_or_default());
         template = template.replace("//<exit>", self.exit_body.as_deref().unwrap_or_default());

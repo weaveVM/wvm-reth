@@ -145,7 +145,7 @@ where
                 on_ready
                     .send(Err(IpcServerStartError { endpoint: self.endpoint.clone(), source: err }))
                     .ok();
-                return
+                return;
             }
         };
 
@@ -170,7 +170,7 @@ where
                             .write_all(b"Too many connections. Please try again later.")
                             .await;
                         stopped = stop;
-                        continue
+                        continue;
                     };
 
                     let max_conns = connection_guard.max_connections();
@@ -196,7 +196,7 @@ where
                     stopped = stop;
                 }
                 AcceptConnection::Shutdown => {
-                    break
+                    break;
                 }
                 AcceptConnection::Err((err, stop)) => {
                     tracing::error!(%err, "Failed accepting a new IPC connection");

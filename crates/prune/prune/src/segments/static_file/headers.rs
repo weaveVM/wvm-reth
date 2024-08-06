@@ -184,7 +184,7 @@ where
         if ![pruned_block_headers, pruned_block_td, pruned_block_canonical].iter().all_equal() {
             return Some(Err(PrunerError::InconsistentData(
                 "All headers-related tables should be pruned up to the same height",
-            )));
+            )))
         }
 
         pruned_block_headers.map(move |block| {

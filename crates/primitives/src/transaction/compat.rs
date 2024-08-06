@@ -105,7 +105,7 @@ impl FillTxEnv for TransactionSigned {
                     is_system_transaction: Some(tx.is_system_transaction),
                     enveloped_tx: Some(envelope.into()),
                 };
-                return
+                return;
             }
         }
 

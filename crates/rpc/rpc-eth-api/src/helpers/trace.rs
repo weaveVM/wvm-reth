@@ -288,7 +288,7 @@ pub trait Trace: LoadState {
             let ((cfg, block_env, _), block) =
                 futures::try_join!(self.evm_env_at(block_id), self.block_with_senders(block_id))?;
 
-            let Some(block) = block else { return Ok(None) }
+            let Some(block) = block else { return Ok(None) };
 
             if block.body.is_empty() {
                 // nothing to trace

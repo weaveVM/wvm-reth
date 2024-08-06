@@ -128,7 +128,7 @@ where
                             Err(err) => err.into().to_string(),
                         };
                         this.items.push_back(item);
-                        continue 'outer;
+                        continue 'outer
                     } else {
                         drained = true;
                     }
@@ -147,7 +147,7 @@ where
                                         Err(err) => err.into().to_string(),
                                     };
                                     this.items.push_back(item);
-                                    continue 'outer;
+                                    continue 'outer
                                 }
                                 Poll::Pending => {
                                     this.pending_calls.push(call);

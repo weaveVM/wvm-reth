@@ -21,10 +21,8 @@
 //! use reth_provider::{AccountReader, CanonStateSubscriptions, ChangeSetReader, FullRpcProvider};
 //! use reth_rpc::EthApi;
 //! use reth_rpc_builder::{
-//!     EthApiBuild, RethRpcModule, RpcModuleBuilder, RpcServerConfig, ServerBuilder,
-//!     TransportRpcModuleConfig,
+//!     RethRpcModule, RpcModuleBuilder, RpcServerConfig, ServerBuilder, TransportRpcModuleConfig,
 //! };
-//!
 //! use reth_tasks::TokioTaskExecutor;
 //! use reth_transaction_pool::TransactionPool;
 //!
@@ -75,7 +73,7 @@
 //! use reth_rpc::EthApi;
 //! use reth_rpc_api::EngineApiServer;
 //! use reth_rpc_builder::{
-//!     auth::AuthServerConfig, EthApiBuild, RethRpcModule, RpcModuleBuilder, RpcServerConfig,
+//!     auth::AuthServerConfig, RethRpcModule, RpcModuleBuilder, RpcServerConfig,
 //!     TransportRpcModuleConfig,
 //! };
 //! use reth_rpc_layer::JwtSecret;

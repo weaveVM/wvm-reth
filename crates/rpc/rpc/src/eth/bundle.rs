@@ -109,33 +109,7 @@ where
         if let Some(timestamp) = timestamp {
             block_env.timestamp = U256::from(timestamp);
         } else {
-            // WVM: BLOKTIME
-            block_env.timestamp += U256::from(2);
-        }
-
-        if let Some(difficulty) = difficulty {
-            block_env.difficulty = U256::from(difficulty);
-        }
-
-        if let Some(gas_limit) = gas_limit {
-            block_env.gas_limit = U256::from(gas_limit);
-        }
-
-        if let Some(base_fee) = base_fee {
-            block_env.basefee = U256::from(base_fee);
-        } else if cfg.handler_cfg.spec_id.is_enabled_in(SpecId::LONDON) {
-            let parent_block = block_env.number.saturating_to::<u64>();
-            // here we need to fetch the _next_ block's basefee based on the parent block <https://github.com/flashbots/mev-geth/blob/fddf97beec5877483f879a77b7dea2e58a58d653/internal/ethapi/api.go#L2130>
-            let parent = LoadPendingBlock::provider(&self.inner.eth_api)
-                .header_by_number(parent_block)?
-                .ok_or_else(|| EthApiError::UnknownBlockNumber)?;
-            if let Some(base_fee) = parent.next_block_base_fee(
-                LoadPendingBlock::provider(&self.inner.eth_api)
-                    .chain_spec()
-                    .base_fee_params_at_block(parent_block),
-            ) {
-                block_env.basefee = U256::from(base_fee);
-            }
+            block_env.timestamp += U256::from(12);
         }
 
         if let Some(difficulty) = difficulty {

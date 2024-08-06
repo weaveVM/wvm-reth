@@ -1,6 +1,5 @@
 use alloy_primitives::Bytes;
 use async_trait::async_trait;
-use futures::future::BoxFuture;
 use jsonrpsee::core::RpcResult;
 use reth_primitives::{Address, BlockNumberOrTag, TxHash, B256, U256};
 use reth_rpc_api::{EthApiServer, OtterscanServer};
@@ -30,41 +29,6 @@ const API_LEVEL: u64 = 8;
 #[derive(Debug)]
 pub struct OtterscanApi<Eth> {
     eth: Eth,
-}
-
-/// Performs a binary search within a given block range to find the desired block number.
-///
-/// The binary search is performed by calling the provided asynchronous `check` closure on the
-/// blocks of the range. The closure should return a future representing the result of performing
-/// the desired logic at a given block. The future resolves to an `bool` where:
-/// - `true` indicates that the condition has been matched, but we can try to find a lower block to
-///   make the condition more matchable.
-/// - `false` indicates that the condition not matched, so the target is not present in the current
-///   block and should continue searching in a higher range.
-///
-/// Args:
-/// - `low`: The lower bound of the block range (inclusive).
-/// - `high`: The upper bound of the block range (inclusive).
-/// - `check`: A closure that performs the desired logic at a given block.
-async fn binary_search<'a, F>(low: u64, high: u64, check: F) -> RpcResult<u64>
-where
-    F: Fn(u64) -> BoxFuture<'a, RpcResult<bool>>,
-{
-    let mut low = low;
-    let mut high = high;
-    let mut num = high;
-
-    while low <= high {
-        let mid = (low + high) / 2;
-        if check(mid).await? {
-            high = mid - 1;
-            num = mid;
-        } else {
-            low = mid + 1
-        }
-    }
-
-    Ok(num)
 }
 
 impl<Eth> OtterscanApi<Eth> {
@@ -225,12 +189,12 @@ where
         if tx_len != receipts.len() {
             return Err(internal_rpc_err(
                 "the number of transactions does not match the number of receipts",
-            ));
+            ))
         }
 
         // make sure the block is full
         let BlockTransactions::Full(transactions) = &mut block.inner.transactions else {
-            return Err(internal_rpc_err("block is not full"))
+            return Err(internal_rpc_err("block is not full"));
         };
 
         // Crop page
@@ -333,7 +297,7 @@ where
         let Some(BlockTransactions::Full(transactions)) =
             self.eth.block_by_number(num.into(), true).await?.map(|block| block.inner.transactions)
         else {
-            return Err(EthApiError::UnknownBlockNumber.into())
+            return Err(EthApiError::UnknownBlockNumber.into());
         };
 
         Ok(transactions
@@ -345,7 +309,7 @@ where
     /// Handler for `getContractCreator`
     async fn get_contract_creator(&self, address: Address) -> RpcResult<Option<ContractCreator>> {
         if !self.has_code(address, None).await? {
-            return Ok(None)
+            return Ok(None);
         }
 
         let num = binary_search(1, self.eth.block_number()?.saturating_to(), |mid| {

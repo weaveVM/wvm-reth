@@ -505,7 +505,7 @@ impl Decodable for Header {
             return Err(alloy_rlp::Error::ListLengthMismatch {
                 expected: rlp_head.payload_length,
                 got: consumed,
-            });
+            })
         }
         Ok(this)
     }

@@ -504,7 +504,7 @@ where
                         if is_multi_block_range && all_logs.len() > self.max_logs_per_response {
                             return Err(EthFilterError::QueryExceedsMaxResults(
                                 self.max_logs_per_response,
-                            ));
+                            ))
                         }
                     }
                 }

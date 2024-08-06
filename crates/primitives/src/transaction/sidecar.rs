@@ -228,7 +228,7 @@ impl BlobTransaction {
         if !inner_header.list {
             return Err(RlpError::Custom(
                 "PooledTransactions inner blob tx must be encoded as a list",
-            ));
+            ))
         }
 
         let inner_remaining_len = data.len();
