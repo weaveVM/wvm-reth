@@ -322,7 +322,7 @@ where
         if sequencer_tx.value().is_eip4844() {
             return Err(PayloadBuilderError::other(
                 OptimismPayloadBuilderError::BlobTransactionRejected,
-            ));
+            ))
         }
 
         // Convert the transaction to a [TransactionSignedEcRecovered]. This is

@@ -112,7 +112,7 @@ impl Consensus for OptimismBeaconConsensus {
                 return Err(ConsensusError::TimestampIsInFuture {
                     timestamp: header.timestamp,
                     present_timestamp,
-                });
+                })
             }
         }
 

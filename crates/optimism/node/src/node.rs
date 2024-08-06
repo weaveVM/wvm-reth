@@ -24,7 +24,6 @@ use reth_transaction_pool::{
     blobstore::DiskFileBlobStore, CoinbaseTipOrdering, TransactionPool,
     TransactionValidationTaskExecutor,
 };
-use std::sync::Arc;
 
 use crate::{
     args::RollupArgs,

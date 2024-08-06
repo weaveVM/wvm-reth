@@ -9,7 +9,6 @@ use reth_db::tables;
 use reth_db_api::database::Database;
 use reth_downloaders::{
     file_client::{ChunkedFileReader, DEFAULT_BYTE_LEN_CHUNK_CHAIN_FILE},
-    file_codec_ovm_receipt::HackReceiptFileCodec,
     receipt_file_client::ReceiptFileClient,
 };
 use reth_execution_types::ExecutionOutcome;
