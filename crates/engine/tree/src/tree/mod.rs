@@ -130,7 +130,7 @@ impl TreeState {
         let block_number = executed.block.number;
 
         if self.blocks_by_hash.contains_key(&hash) {
-            return
+            return;
         }
 
         self.blocks_by_hash.insert(hash, executed.clone());
@@ -237,7 +237,7 @@ impl TreeState {
                 {
                     // we've found a fork point
                     fork_point = Some(current_block.block.parent_hash);
-                    break
+                    break;
                 }
             }
 
@@ -258,7 +258,7 @@ impl TreeState {
                 } else {
                     // current hash not found in memory
                     warn!(target: "consensus::engine", invalid_hash=?current_hash, "Block not found in TreeState while walking back fork");
-                    return None
+                    return None;
                 }
             }
             reorged.reverse();
@@ -915,7 +915,7 @@ where
         }
 
         // backfill height is the block number that the backfill finished at
-        let Some(backfill_height) = ctrl.block_number() else { return }
+        let Some(backfill_height) = ctrl.block_number() else { return };
 
         // state house keeping after backfill sync
         // remove all executed blocks below the backfill height
@@ -1069,7 +1069,7 @@ where
 
         while let Some(block) = self.state.tree_state.blocks_by_hash.get(&current_hash) {
             if block.block.number <= last_persisted_number {
-                break
+                break;
             }
 
             if block.block.number <= target_number {
@@ -1257,7 +1257,7 @@ where
         head: B256,
     ) -> ProviderResult<Option<PayloadStatus>> {
         // check if the check hash was previously marked as invalid
-        let Some(header) = self.state.invalid_headers.get(&check) else { return Ok(None) }
+        let Some(header) = self.state.invalid_headers.get(&check) else { return Ok(None) };
 
         // populate the latest valid hash field
         let status = self.prepare_invalid_response(header.parent_hash)?;
@@ -1272,7 +1272,7 @@ where
     /// to a forkchoice update.
     fn check_invalid_ancestor(&mut self, head: B256) -> ProviderResult<Option<PayloadStatus>> {
         // check if the head was previously marked as invalid
-        let Some(header) = self.state.invalid_headers.get(&head) else { return Ok(None) }
+        let Some(header) = self.state.invalid_headers.get(&head) else { return Ok(None) };
         // populate the latest valid hash field
         Ok(Some(self.prepare_invalid_response(header.parent_hash)?))
     }
@@ -1493,7 +1493,7 @@ where
             self.backfill_sync_target(head.number, missing_parent.number, Some(downloaded_block))
         {
             trace!(target: "engine", %target, "triggering backfill on downloaded block");
-            return Some(TreeEvent::BackfillAction(BackfillAction::Start(target.into())))
+            return Some(TreeEvent::BackfillAction(BackfillAction::Start(target.into())));
         }
 
         // continue downloading the missing parent
