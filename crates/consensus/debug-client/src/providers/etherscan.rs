@@ -51,12 +51,12 @@ impl BlockProvider for EtherscanBlockProvider {
             };
             let block_number = block.header.number.unwrap();
             if Some(block_number) == last_block_number {
-                continue
+                continue;
             }
 
             if tx.send(block).await.is_err() {
                 // channel closed
-                break
+                break;
             }
 
             last_block_number = Some(block_number);

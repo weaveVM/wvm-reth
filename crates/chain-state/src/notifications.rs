@@ -55,7 +55,7 @@ impl Stream for CanonStateNotificationStream {
                     continue
                 }
                 None => Poll::Ready(None),
-            };
+            }
         }
     }
 }
@@ -177,7 +177,7 @@ impl Stream for ForkChoiceStream {
                     continue
                 }
                 None => Poll::Ready(None),
-            };
+            }
         }
     }
 }

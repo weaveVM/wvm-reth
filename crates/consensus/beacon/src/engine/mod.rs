@@ -795,7 +795,7 @@ where
         head: B256,
     ) -> ProviderResult<Option<PayloadStatus>> {
         // check if the check hash was previously marked as invalid
-        let Some(header) = self.invalid_headers.get(&check) else { return Ok(None) }
+        let Some(header) = self.invalid_headers.get(&check) else { return Ok(None) };
 
         // populate the latest valid hash field
         let status = self.prepare_invalid_response(header.parent_hash)?;
@@ -810,7 +810,7 @@ where
     /// to a forkchoice update.
     fn check_invalid_ancestor(&mut self, head: B256) -> ProviderResult<Option<PayloadStatus>> {
         // check if the head was previously marked as invalid
-        let Some(header) = self.invalid_headers.get(&head) else { return Ok(None) }
+        let Some(header) = self.invalid_headers.get(&head) else { return Ok(None) };
 
         // populate the latest valid hash field
         Ok(Some(self.prepare_invalid_response(header.parent_hash)?))
@@ -995,7 +995,7 @@ where
                 return Ok(PayloadStatus::from_status(PayloadStatusEnum::Invalid {
                     validation_error: error.to_string(),
                 })
-                .with_latest_valid_hash(B256::ZERO));
+                .with_latest_valid_hash(B256::ZERO))
             }
             CanonicalError::BlockchainTree(BlockchainTreeError::BlockHashNotFoundInChain {
                 ..
@@ -1331,7 +1331,7 @@ where
         &mut self,
         inserted: BlockNumHash,
     ) -> Result<(), (B256, CanonicalError)> {
-        let Some(target) = self.forkchoice_state_tracker.sync_target_state() else { return Ok(()) }
+        let Some(target) = self.forkchoice_state_tracker.sync_target_state() else { return Ok(()) };
 
         // optimistically try to make the head of the current FCU target canonical, the sync
         // target might have changed since the block download request was issued
@@ -1896,7 +1896,7 @@ where
 
                 // this could have taken a while, so we start the next cycle to handle any new
                 // engine messages
-                continue 'main;
+                continue 'main
             }
 
             // at this point, all engine messages and sync events are fully drained
@@ -1914,7 +1914,7 @@ where
 
                     // ensure we're polling until pending while also checking for new engine
                     // messages before polling the next hook
-                    continue 'main;
+                    continue 'main
                 }
             }
 

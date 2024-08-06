@@ -18,7 +18,7 @@ pub fn validate_header_gas(header: &SealedHeader) -> Result<(), ConsensusError> 
         return Err(ConsensusError::HeaderGasUsedExceedsGasLimit {
             gas_used: header.gas_used,
             gas_limit: header.gas_limit,
-        });
+        })
     }
     Ok(())
 }
@@ -52,7 +52,7 @@ pub fn validate_block_pre_execution(
     if block.header.ommers_hash != ommers_hash {
         return Err(ConsensusError::BodyOmmersHashDiff(
             GotExpected { got: ommers_hash, expected: block.header.ommers_hash }.into(),
-        ));
+        ))
     }
 
     // Check transaction root
@@ -70,7 +70,7 @@ pub fn validate_block_pre_execution(
         if withdrawals_root != *header_withdrawals_root {
             return Err(ConsensusError::BodyWithdrawalsRootDiff(
                 GotExpected { got: withdrawals_root, expected: *header_withdrawals_root }.into(),
-            ));
+            ))
         }
     }
 
@@ -84,7 +84,7 @@ pub fn validate_block_pre_execution(
             return Err(ConsensusError::BlobGasUsedDiff(GotExpected {
                 got: header_blob_gas_used,
                 expected: total_blob_gas,
-            }));
+            }))
         }
     }
 
@@ -97,7 +97,7 @@ pub fn validate_block_pre_execution(
         if requests_root != *header_requests_root {
             return Err(ConsensusError::BodyRequestsRootDiff(
                 GotExpected { got: requests_root, expected: *header_requests_root }.into(),
-            ));
+            ))
         }
     }
 
@@ -124,14 +124,14 @@ pub fn validate_4844_header_standalone(header: &SealedHeader) -> Result<(), Cons
         return Err(ConsensusError::BlobGasUsedExceedsMaxBlobGasPerBlock {
             blob_gas_used,
             max_blob_gas_per_block: MAX_DATA_GAS_PER_BLOCK,
-        });
+        })
     }
 
     if blob_gas_used % DATA_GAS_PER_BLOB != 0 {
         return Err(ConsensusError::BlobGasUsedNotMultipleOfBlobGasPerBlob {
             blob_gas_used,
             blob_gas_per_blob: DATA_GAS_PER_BLOB,
-        });
+        })
     }
 
     // `excess_blob_gas` must also be a multiple of `DATA_GAS_PER_BLOB`. This will be checked later
@@ -140,7 +140,7 @@ pub fn validate_4844_header_standalone(header: &SealedHeader) -> Result<(), Cons
         return Err(ConsensusError::ExcessBlobGasNotMultipleOfBlobGasPerBlob {
             excess_blob_gas,
             blob_gas_per_blob: DATA_GAS_PER_BLOB,
-        });
+        })
     }
 
     Ok(())
@@ -276,7 +276,7 @@ mod tests {
     use reth_primitives::{
         hex_literal::hex, proofs, Account, Address, BlockBody, BlockHash, BlockHashOrNumber,
         BlockNumber, Bytes, Signature, Transaction, TransactionSigned, TxEip4844, Withdrawal,
-        Withdrawals, U256, constants::ETHEREUM_BLOCK_GAS_LIMIT,
+        Withdrawals, U256,
     };
     use reth_storage_api::{
         errors::provider::ProviderResult, AccountReader, HeaderProvider, WithdrawalsProvider,
@@ -417,7 +417,7 @@ mod tests {
             logs_bloom: hex!("002400000000004000220000800002000000000000000000000000000000100000000000000000100000000000000021020000000800000006000000002100040000000c0004000000000008000008200000000000000000000000008000000001040000020000020000002000000800000002000020000000022010000000000000010002001000000000020200000000000001000200880000004000000900020000000000020000000040000000000000000000000000000080000000000001000002000000000000012000200020000000000000001000000000000020000010321400000000100000000000000000000000000000400000000000000000").into(),
             difficulty: U256::ZERO, // total difficulty: 0xc70d815d562d3cfa955).into(),
             number: 0xf21d20,
-            gas_limit: ETHEREUM_BLOCK_GAS_LIMIT, // WVM: 300_000_000 gas limit
+            gas_limit: 0x1c9c380,
             gas_used: 0x6e813,
             timestamp: 0x635f9657,
             extra_data: hex!("")[..].into(),
@@ -434,7 +434,7 @@ mod tests {
 
         let mut parent = header.clone();
         parent.gas_used = 17763076;
-        parent.gas_limit = ETHEREUM_BLOCK_GAS_LIMIT;
+        parent.gas_limit = 30000000;
         parent.base_fee_per_gas = Some(0x28041f7f5);
         parent.number -= 1;
         parent.timestamp -= 1;

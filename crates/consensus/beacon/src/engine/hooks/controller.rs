@@ -51,7 +51,7 @@ impl EngineHooksController {
         cx: &mut Context<'_>,
         args: EngineHookContext,
     ) -> Poll<Result<PolledHook, EngineHookError>> {
-        let Some(mut hook) = self.active_db_write_hook.take() else { return Poll::Pending }
+        let Some(mut hook) = self.active_db_write_hook.take() else { return Poll::Pending };
 
         match hook.poll(cx, args)? {
             Poll::Ready(event) => {
@@ -101,7 +101,7 @@ impl EngineHooksController {
         args: EngineHookContext,
         db_write_active: bool,
     ) -> Poll<Result<PolledHook, EngineHookError>> {
-        let Some(mut hook) = self.hooks.pop_front() else { return Poll::Pending }
+        let Some(mut hook) = self.hooks.pop_front() else { return Poll::Pending };
 
         let result = self.poll_next_hook_inner(cx, &mut hook, args, db_write_active);
 
