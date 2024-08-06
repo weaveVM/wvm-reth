@@ -249,7 +249,7 @@ where
                             Box::new(state),
                             hashed_entries_walked,
                             trie_updates,
-                        ));
+                        ))
                     }
                 }
             }

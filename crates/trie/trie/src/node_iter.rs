@@ -97,7 +97,7 @@ where
                             key.clone(),
                             self.walker.hash().unwrap(),
                             self.walker.children_are_in_trie(),
-                        ))));
+                        ))))
                     }
                 }
             }

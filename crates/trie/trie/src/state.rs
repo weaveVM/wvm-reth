@@ -133,21 +133,6 @@ impl HashedPostState {
 
         TriePrefixSetsMut { account_prefix_set, storage_prefix_sets, destroyed_accounts }
     }
-
-    /// Generates the state proof for target account and slots on top of this [`HashedPostState`].
-    pub fn account_proof<TX: DbTx>(
-        &self,
-        tx: &TX,
-        address: Address,
-        slots: &[B256],
-    ) -> Result<AccountProof, StateRootError> {
-        let sorted = self.clone().into_sorted();
-        let prefix_sets = self.construct_prefix_sets();
-        Proof::from_tx(tx)
-            .with_hashed_cursor_factory(HashedPostStateCursorFactory::new(tx, &sorted))
-            .with_prefix_sets_mut(prefix_sets)
-            .account_proof(address, slots)
-    }
 }
 
 /// Representation of in-memory hashed storage.

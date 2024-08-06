@@ -201,7 +201,7 @@ impl<C: TrieCursor> TrieWalker<C> {
         &mut self,
         allow_root_to_child_nibble: bool,
     ) -> Result<(), DatabaseError> {
-        let Some(subnode) = self.stack.last_mut() else { return Ok(()) }
+        let Some(subnode) = self.stack.last_mut() else { return Ok(()) };
 
         // Check if the walker needs to backtrack to the previous level in the trie during its
         // traversal.
