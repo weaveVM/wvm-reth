@@ -725,7 +725,7 @@ impl<T: TransactionOrdering> TxPool<T> {
                 }
                 id = descendant;
             } else {
-                return;
+                return
             }
         }
     }
@@ -982,7 +982,7 @@ impl<T: PoolTransaction> AllTransactions<T> {
             if *count == 1 {
                 entry.remove();
                 self.metrics.all_transactions_by_all_senders.decrement(1.0);
-                return;
+                return
             }
             *count -= 1;
             self.metrics.all_transactions_by_all_senders.decrement(1.0);

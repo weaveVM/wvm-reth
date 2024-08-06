@@ -281,14 +281,14 @@ impl PeersManager {
         // on_incoming_pending_session. We also check if the peer is in the backoff list here.
         if self.ban_list.is_banned_peer(&peer_id) {
             self.queued_actions.push_back(PeerAction::DisconnectBannedIncoming { peer_id });
-            return;
+            return
         }
 
         // check if the peer is trustable or not
         let mut is_trusted = self.trusted_peer_ids.contains(&peer_id);
         if self.trusted_nodes_only && !is_trusted {
             self.queued_actions.push_back(PeerAction::DisconnectUntrustedIncoming { peer_id });
-            return;
+            return
         }
 
         // start a new tick, so the peer is not immediately rewarded for the time since last tick
@@ -302,7 +302,7 @@ impl PeersManager {
                 let peer = entry.get_mut();
                 if peer.is_banned() {
                     self.queued_actions.push_back(PeerAction::DisconnectBannedIncoming { peer_id });
-                    return;
+                    return
                 }
                 // it might be the case that we're also trying to connect to this peer at the same
                 // time, so we need to adjust the state here
@@ -418,7 +418,7 @@ impl PeersManager {
                             ReputationChangeKind::Timeout |
                             ReputationChangeKind::AlreadySeenTransaction
                     ) {
-                        return;
+                        return
                     }
 
                     // also be less strict with the reputation slashing for trusted peers
@@ -430,7 +430,7 @@ impl PeersManager {
                 peer.apply_reputation(reputation_change)
             }
         } else {
-            return;
+            return
         };
 
         match outcome {
@@ -484,7 +484,7 @@ impl PeersManager {
                     // session to that peer
                     entry.get_mut().severe_backoff_counter = 0;
                     entry.get_mut().state = PeerConnectionState::Idle;
-                    return;
+                    return
                 }
             }
             Entry::Vacant(_) => return,
@@ -529,7 +529,7 @@ impl PeersManager {
         if let Some(peer) = self.peers.get(peer_id) {
             if peer.state.is_incoming() {
                 // we already have an active connection to the peer, so we can ignore this error
-                return;
+                return
             }
         }
 
@@ -706,7 +706,7 @@ impl PeersManager {
     pub(crate) fn remove_peer(&mut self, peer_id: PeerId) {
         let Entry::Occupied(entry) = self.peers.entry(peer_id) else { return }
         if entry.get().is_trusted() {
-            return;
+            return
         }
         let mut peer = entry.remove();
 
@@ -733,7 +733,7 @@ impl PeersManager {
     pub(crate) fn remove_peer_from_trusted_set(&mut self, peer_id: PeerId) {
         let Entry::Occupied(mut entry) = self.peers.entry(peer_id) else { return }
         if !entry.get().is_trusted() {
-            return;
+            return
         }
 
         let peer = entry.get_mut();
@@ -790,7 +790,7 @@ impl PeersManager {
 
         if !self.net_connection_state.is_active() {
             // nothing to fill
-            return;
+            return
         }
 
         // as long as there are slots available fill them with the best peers

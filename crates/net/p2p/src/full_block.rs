@@ -158,10 +158,10 @@ where
             if let Err(err) = ensure_valid_body_response(header, resp.data()) {
                 debug!(target: "downloaders", %err, hash=?header.hash(), "Received wrong body");
                 self.client.report_bad_message(resp.peer_id());
-                return;
+                return
             }
             self.body = Some(BodyResponse::Validated(resp.into_data()));
-            return;
+            return
         }
         self.body = Some(BodyResponse::PendingValidation(resp));
     }
@@ -500,7 +500,7 @@ where
                 if let Err(err) = self.consensus.validate_header_range(&headers_rising) {
                     debug!(target: "downloaders", %err, ?self.start_hash, "Received bad header response");
                     self.client.report_bad_message(peer);
-                    return;
+                    return
                 }
 
                 // get the bodies request so it can be polled later

@@ -822,7 +822,7 @@ async fn start_pending_outbound_session(
                     error,
                 })
                 .await;
-            return;
+            return
         }
     };
     authenticate(
@@ -868,7 +868,7 @@ async fn authenticate(
                     direction,
                 })
                 .await;
-            return;
+            return
         }
     };
 

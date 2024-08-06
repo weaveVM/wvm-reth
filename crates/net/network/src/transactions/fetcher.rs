@@ -383,7 +383,7 @@ impl TransactionFetcher {
             let Some(TxFetchMetadata { retries, fallback_peers, .. }) =
                 self.hashes_fetch_inflight_and_pending_fetch.get(&hash)
             else {
-                return;
+                return
             };
 
             if let Some(peer_id) = fallback_peer {
@@ -438,7 +438,7 @@ impl TransactionFetcher {
                     budget_find_idle_fallback_peer,
                 ) else {
                     // no peers are idle or budget is depleted
-                    return;
+                    return
                 };
 
                 peer_id
@@ -741,7 +741,7 @@ impl TransactionFetcher {
         if acc_size_response >=
             DEFAULT_SOFT_LIMIT_BYTE_SIZE_POOLED_TRANSACTIONS_RESPONSE_ON_FETCH_PENDING_HASHES
         {
-            return;
+            return
         }
 
         // try to fill request by checking if any other hashes pending fetch (in lru order) are
@@ -778,7 +778,7 @@ impl TransactionFetcher {
             if let Some(ref mut bud) = budget_fill_request {
                 *bud = bud.saturating_sub(1);
                 if *bud == 0 {
-                    return;
+                    return
                 }
             }
         }

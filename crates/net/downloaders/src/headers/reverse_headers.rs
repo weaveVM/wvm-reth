@@ -682,7 +682,7 @@ where
                         .map(|h| h.number)
                     {
                         self.sync_target = Some(new_sync_target.with_number(target_number));
-                        return;
+                        return
                     }
 
                     trace!(target: "downloaders::headers", new=?target, "Request new sync target");

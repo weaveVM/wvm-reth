@@ -299,7 +299,7 @@ impl<C, Pool> TestnetHandle<C, Pool> {
     /// Returns once all sessions are established.
     pub async fn connect_peers(&self) {
         if self.peers.len() < 2 {
-            return;
+            return
         }
 
         // add an event stream for _each_ peer

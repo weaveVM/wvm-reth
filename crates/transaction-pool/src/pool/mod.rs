@@ -700,7 +700,7 @@ where
         A: HandleMempoolData,
     {
         if announcement.is_empty() {
-            return;
+            return
         }
         let pool = self.get_pool_data();
         announcement.retain_by_hash(|tx| !pool.contains(tx))
@@ -747,7 +747,7 @@ where
     /// Notify about propagated transactions.
     pub(crate) fn on_propagated(&self, txs: PropagatedTransactions) {
         if txs.0.is_empty() {
-            return;
+            return
         }
         let mut listener = self.event_listener.write();
 

@@ -102,7 +102,7 @@ impl FeeHistoryCache {
         if entries.len() == 0 {
             self.inner.upper_bound.store(0, SeqCst);
             self.inner.lower_bound.store(0, SeqCst);
-            return;
+            return
         }
 
         let upper_bound = *entries.last_entry().expect("Contains at least one entry").key();

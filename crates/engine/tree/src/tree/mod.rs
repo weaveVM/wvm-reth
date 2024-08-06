@@ -130,7 +130,7 @@ impl TreeState {
         let block_number = executed.block.number;
 
         if self.blocks_by_hash.contains_key(&hash) {
-            return;
+            return
         }
 
         self.blocks_by_hash.insert(hash, executed.clone());

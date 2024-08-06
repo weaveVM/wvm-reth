@@ -145,7 +145,7 @@ where
                 on_ready
                     .send(Err(IpcServerStartError { endpoint: self.endpoint.clone(), source: err }))
                     .ok();
-                return;
+                return
             }
         };
 

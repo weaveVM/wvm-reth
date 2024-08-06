@@ -607,7 +607,7 @@ where
     let local_transactions = pool.get_local_transactions();
     if local_transactions.is_empty() {
         trace!(target: "txpool", "no local transactions to save");
-        return;
+        return
     }
 
     let local_transactions = local_transactions
@@ -656,7 +656,7 @@ pub async fn backup_local_transactions_task<P>(
 {
     let Some(transactions_path) = config.transactions_path else {
         // nothing to do
-        return;
+        return
     };
 
     if let Err(err) = load_and_reinsert_transactions(pool.clone(), &transactions_path).await {

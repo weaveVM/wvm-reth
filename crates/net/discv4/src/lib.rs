@@ -766,7 +766,7 @@ impl Discv4Service {
             // (e.g. connectivity problems over a long period of time, or issues during initial
             // bootstrapping) so we attempt to bootstrap again
             self.bootstrap();
-            return;
+            return
         }
 
         trace!(target: "discv4", ?target, num = closest.len(), "Start lookup closest nodes");
@@ -858,7 +858,7 @@ impl Discv4Service {
     /// a followup request to retrieve the updated ENR
     fn update_on_reping(&mut self, record: NodeRecord, mut last_enr_seq: Option<u64>) {
         if record.id == self.local_node_record.id {
-            return;
+            return
         }
 
         // If EIP868 extension is disabled then we want to ignore this
@@ -893,7 +893,7 @@ impl Discv4Service {
     /// Callback invoked when we receive a pong from the peer.
     fn update_on_pong(&mut self, record: NodeRecord, mut last_enr_seq: Option<u64>) {
         if record.id == *self.local_peer_id() {
-            return;
+            return
         }
 
         // If EIP868 extension is disabled then we want to ignore this
@@ -1002,7 +1002,7 @@ impl Discv4Service {
     fn on_ping(&mut self, ping: Ping, remote_addr: SocketAddr, remote_id: PeerId, hash: B256) {
         if self.is_expired(ping.expire) {
             // ping's expiration timestamp is in the past
-            return;
+            return
         }
 
         // create the record
@@ -1120,17 +1120,17 @@ impl Discv4Service {
     fn try_ping(&mut self, node: NodeRecord, reason: PingReason) {
         if node.id == *self.local_peer_id() {
             // don't ping ourselves
-            return;
+            return
         }
 
         if self.pending_pings.contains_key(&node.id) ||
             self.pending_find_nodes.contains_key(&node.id)
         {
-            return;
+            return
         }
 
         if self.queued_pings.iter().any(|(n, _)| n.id == node.id) {
-            return;
+            return
         }
 
         if self.pending_pings.len() < MAX_NODES_PING {
@@ -1165,7 +1165,7 @@ impl Discv4Service {
     /// Returns the echo hash of the ping message.
     pub(crate) fn send_enr_request(&mut self, node: NodeRecord) {
         if !self.config.enable_eip868 {
-            return;
+            return
         }
         let remote_addr = node.udp_addr();
         let enr_request = EnrRequest { expire: self.enr_request_expiration() };
@@ -1180,7 +1180,7 @@ impl Discv4Service {
     /// Message handler for an incoming `Pong`.
     fn on_pong(&mut self, pong: Pong, remote_addr: SocketAddr, remote_id: PeerId) {
         if self.is_expired(pong.expire) {
-            return;
+            return
         }
 
         let PingRequest { node, reason, .. } = match self.pending_pings.entry(remote_id) {
@@ -1189,7 +1189,7 @@ impl Discv4Service {
                     let request = entry.get();
                     if request.echo_hash != pong.echo {
                         trace!(target: "discv4", from=?remote_addr, expected=?request.echo_hash, echo_hash=?pong.echo,"Got unexpected Pong");
-                        return;
+                        return
                     }
                 }
                 entry.remove()
@@ -1225,11 +1225,11 @@ impl Discv4Service {
     fn on_find_node(&mut self, msg: FindNode, remote_addr: SocketAddr, node_id: PeerId) {
         if self.is_expired(msg.expire) {
             // expiration timestamp is in the past
-            return;
+            return
         }
         if node_id == *self.local_peer_id() {
             // ignore find node requests to ourselves
-            return;
+            return
         }
 
         if self.has_bond(node_id, remote_addr.ip()) {
@@ -1244,7 +1244,7 @@ impl Discv4Service {
             // ensure the ENR's public key matches the expected node id
             let enr_id = pk2id(&msg.enr.public_key());
             if id != enr_id {
-                return;
+                return
             }
 
             if resp.echo_hash == msg.request_hash {
@@ -1283,7 +1283,7 @@ impl Discv4Service {
         request_hash: B256,
     ) {
         if !self.config.enable_eip868 || self.is_expired(msg.expire) {
-            return;
+            return
         }
 
         if self.has_bond(id, remote_addr.ip()) {
@@ -1302,7 +1302,7 @@ impl Discv4Service {
     fn on_neighbours(&mut self, msg: Neighbours, remote_addr: SocketAddr, node_id: PeerId) {
         if self.is_expired(msg.expire) {
             // response is expired
-            return;
+            return
         }
         // check if this request was expected
         let ctx = match self.pending_find_nodes.entry(node_id) {
@@ -1318,7 +1318,7 @@ impl Discv4Service {
                         request.response_count = total;
                     } else {
                         trace!(target: "discv4", total, from=?remote_addr, "Received neighbors packet entries exceeds max nodes per bucket");
-                        return;
+                        return
                     }
                 };
 
@@ -1334,7 +1334,7 @@ impl Discv4Service {
             Entry::Vacant(_) => {
                 // received neighbours response without requesting it
                 trace!(target: "discv4", from=?remote_addr, "Received unsolicited Neighbours");
-                return;
+                return
             }
         };
 

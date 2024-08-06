@@ -124,7 +124,7 @@ impl<K: EnrKeyUnambiguous> SyncTree<K> {
             }
             _ => {
                 // unchanged
-                return;
+                return
             }
         };
         self.sync_state = state;

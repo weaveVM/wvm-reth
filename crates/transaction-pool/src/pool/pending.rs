@@ -415,7 +415,7 @@ impl<T: TransactionOrdering> PendingPool<T> {
                         }
                     }
 
-                    return;
+                    return
                 }
 
                 if !remove_locals && tx.transaction.is_local() {
@@ -438,7 +438,7 @@ impl<T: TransactionOrdering> PendingPool<T> {
             // return if either the pool is under limits or there are no more _eligible_
             // transactions to remove
             if !self.exceeds(limit) || non_local_senders == 0 {
-                return;
+                return
             }
         }
     }

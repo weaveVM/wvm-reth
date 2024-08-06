@@ -209,7 +209,7 @@ where
                 "Pipeline target cannot be zero hash."
             );
             // precaution to never sync to the zero hash
-            return;
+            return
         }
         self.pending_pipeline_target = Some(target);
     }

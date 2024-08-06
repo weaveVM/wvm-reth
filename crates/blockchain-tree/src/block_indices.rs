@@ -252,7 +252,7 @@ impl BlockIndices {
     /// It is assumed that blocks are interconnected and that they connect to canonical chain
     pub fn canonicalize_blocks(&mut self, blocks: &BTreeMap<BlockNumber, SealedBlockWithSenders>) {
         if blocks.is_empty() {
-            return;
+            return
         }
 
         // Remove all blocks from canonical chain

@@ -99,7 +99,7 @@ impl Discv5 {
                 err="key not utf-8",
                 "failed to update local enr"
             );
-            return;
+            return
         };
         if let Err(err) = self.discv5.enr_insert(key_str, &rlp) {
             error!(target: "discv5",

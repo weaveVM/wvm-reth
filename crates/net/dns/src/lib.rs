@@ -220,7 +220,7 @@ impl<R: Resolver> DnsDiscoveryService<R> {
             // already resolved
             let cached = ResolveEntryResult { entry: Some(Ok(entry)), link, hash, kind };
             self.on_resolved_entry(cached);
-            return;
+            return
         }
         self.queries.resolve_entry(link, hash, kind)
     }

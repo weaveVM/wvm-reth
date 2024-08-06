@@ -1298,7 +1298,7 @@ where
             // threshold
             self.sync.set_pipeline_sync_target(target.into());
             // we can exit early here because the pipeline will take care of syncing
-            return;
+            return
         }
 
         // continue downloading the missing parent

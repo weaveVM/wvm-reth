@@ -111,7 +111,7 @@ impl<T: ParkedOrd> ParkedPool<T> {
                 if value.count == 0 {
                     entry.remove()
                 } else {
-                    return;
+                    return
                 }
             }
             Entry::Vacant(_) => {
