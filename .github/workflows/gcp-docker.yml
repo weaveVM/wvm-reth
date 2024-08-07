@@ -19,7 +19,7 @@ jobs:
     steps:
       - id: checkout
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - id: auth
         name: Authenticate with Google Cloud
@@ -44,7 +44,7 @@ jobs:
 
       - name: Get tag
         id: get-tag
-        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+        run: echo "short_ref=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Set Docker Tag
         id: tag
@@ -58,7 +58,7 @@ jobs:
           else
             tag=${GITHUB_REF#refs/heads/}
           fi
-          echo "::set-output name=tag::${tag}"
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
           echo "Docker tag: ${tag}"
 
       - name: Build and Push Container
@@ -68,14 +68,3 @@ jobs:
           docker tag wevm us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
           docker push "us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}"
           docker push "us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}"
-
-#      - id: docker-push-tagged
-#        name: Tag Docker image and push to Google Artifact Registry
-#        uses: docker/build-push-action@v6
-#        with:
-#          context: .
-#          push: true
-#          tags: |
-#            wevm
-#            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}
-#            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
