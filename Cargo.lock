@@ -7178,6 +7178,7 @@ dependencies = [
  "reth-node-ethereum",
  "reth-revm",
  "reth-tracing",
+ "revm-primitives",
  "schnellru",
  "serde",
  "serde_json",

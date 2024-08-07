@@ -17,6 +17,7 @@ use reth_chainspec::ChainSpec;
 use reth_node_ethereum::EthEvmConfig;
 use schnellru::{ByLength, LruMap};
 use std::{collections::HashMap, sync::Arc};
+use revm_primitives::EnvWithHandlerCfg;
 
 /// Type alias for the LRU cache used within the [`PrecompileCache`].
 type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResult>;
@@ -166,10 +167,7 @@ impl StatefulPrecompileMut for WrappedPrecompile {
 impl ConfigureEvm for WvmEthEvmConfig {
     type DefaultExternalContext<'a> = ();
 
-    fn evm<'a, DB: Database + 'a>(
-        &self,
-        db: DB,
-    ) -> reth_revm::Evm<'a, Self::DefaultExternalContext<'a>, DB> {
+    fn evm<DB: Database>(&self, db: DB) -> Evm<'_, Self::DefaultExternalContext<'_>, DB> {
         let precompiles_cache = self.precompile_cache.clone();
         let exts = self.exts.clone().into_iter();
 
@@ -181,9 +179,14 @@ impl ConfigureEvm for WvmEthEvmConfig {
             .build()
     }
 
-    fn evm_with_inspector<'a, DB, I>(&self, db: DB, inspector: I) -> Evm<'a, I, DB>
+    fn evm_with_env_and_inspector<DB, I>(
+        &self,
+        db: DB,
+        env: EnvWithHandlerCfg,
+        inspector: I,
+    ) -> Evm<'_, I, DB>
     where
-        DB: Database + 'a,
+        DB: Database,
         I: GetInspector<DB>,
     {
         let precompiles_cache = self.precompile_cache.clone();
@@ -191,6 +194,7 @@ impl ConfigureEvm for WvmEthEvmConfig {
 
         EvmBuilder::default()
             .with_db(db)
+            .with_env(env.env)
             .with_external_context(inspector)
             // add additional precompiles
             .append_handler_register_box(Box::new(move |handler| {
@@ -199,4 +203,5 @@ impl ConfigureEvm for WvmEthEvmConfig {
             .append_handler_register(inspector_handle_register)
             .build()
     }
+    fn default_external_context<'a>(&self) -> Self::DefaultExternalContext<'a> {}
 }
