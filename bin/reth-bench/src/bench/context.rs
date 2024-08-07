@@ -41,7 +41,7 @@ impl BenchContext {
         // Ensure that output directory is a directory
         if let Some(output) = &bench_args.output {
             if output.is_file() {
-                return Err(eyre::eyre!("Output path must be a directory"));
+                return Err(eyre::eyre!("Output path must be a directory"))
             }
         }
 
@@ -102,7 +102,7 @@ impl BenchContext {
             }
             None => {
                 // this should never happen
-                return Err(eyre::eyre!("First block number is None"));
+                return Err(eyre::eyre!("First block number is None"))
             }
         };
 

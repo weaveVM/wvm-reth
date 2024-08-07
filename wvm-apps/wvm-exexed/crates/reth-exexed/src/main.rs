@@ -12,7 +12,11 @@ use precompiles::node::WvmEthExecutorBuilder;
 use repository::state_repository;
 use reth::{api::FullNodeComponents, builder::Node};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
-use reth_node_ethereum::{node::EthereumExecutorBuilder, EthereumNode};
+
+use reth_node_ethereum::{
+    node::{EthereumAddOns, EthereumExecutorBuilder},
+    EthereumNode,
+};
 use reth_tracing::tracing::info;
 use serde_json::to_string;
 use types::types::ExecutionTipState;
@@ -71,19 +75,27 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
     Ok(())
 }
+/*
+fn basic_exex() {
+    let config = NodeConfig::test();
+    let db = create_test_rw_db();
+    let _builder = NodeBuilder::new(config)
+        .with_database(db)
+        .with_types::<EthereumNode>()
+        .with_components(EthereumNode::components())
+        .with_add_ons::<EthereumAddOns>()
+        .install_exex("dummy", move |ctx| future::ok(DummyExEx { _ctx: ctx }))
+        .check_launch();
+}
+ */
 
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
-        // let mut builder = builder.with_types::<EthereumNode>();
-        // let builder = builder.with_components(EthereumNode::components().executor())
-        // let node = EthereumNode::default();
-        //
-        // let mut handle = builder.node(node);
-
         let mut handle = builder
             .with_types::<EthereumNode>()
-            .with_components(EthereumNode::components().executor(WvmEthExecutorBuilder::default()));
+            .with_components(EthereumNode::components().executor(WvmEthExecutorBuilder::default()))
+            .with_add_ons::<EthereumAddOns>();
 
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
         if run_exex == "true" {

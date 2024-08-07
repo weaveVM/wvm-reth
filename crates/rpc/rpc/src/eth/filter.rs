@@ -17,7 +17,7 @@ use reth_provider::{BlockIdReader, BlockReader, EvmEnvProvider, ProviderError};
 use reth_rpc_eth_api::EthFilterApiServer;
 use reth_rpc_eth_types::{
     logs_utils::{self, append_matching_block_logs},
-    EthApiError, EthFilterError, EthStateCache, EthSubscriptionIdProvider,
+    EthApiError, EthFilterConfig, EthFilterError, EthStateCache, EthSubscriptionIdProvider,
 };
 use reth_rpc_server_types::ToRpcResult;
 use reth_rpc_types::{
@@ -141,7 +141,7 @@ where
 
             if filter.block > best_number {
                 // no new blocks since the last poll
-                return Ok(FilterChanges::Empty);
+                return Ok(FilterChanges::Empty)
             }
 
             // update filter
@@ -210,7 +210,7 @@ where
                 *filter.clone()
             } else {
                 // Not a log filter
-                return Err(EthFilterError::FilterNotFound(id));
+                return Err(EthFilterError::FilterNotFound(id))
             }
         };
 
@@ -430,11 +430,11 @@ where
         let best_number = chain_info.best_number;
 
         if to_block < from_block {
-            return Err(EthFilterError::InvalidBlockRangeParams);
+            return Err(EthFilterError::InvalidBlockRangeParams)
         }
 
         if to_block - from_block > self.max_blocks_per_filter {
-            return Err(EthFilterError::QueryExceedsMaxBlocks(self.max_blocks_per_filter));
+            return Err(EthFilterError::QueryExceedsMaxBlocks(self.max_blocks_per_filter))
         }
 
         let mut all_logs = Vec::new();
@@ -458,7 +458,7 @@ where
                     block.header.timestamp,
                 )?;
             }
-            return Ok(all_logs);
+            return Ok(all_logs)
         }
 
         // derive bloom filters from filter input, so we can check headers for matching logs
@@ -504,7 +504,7 @@ where
                         if is_multi_block_range && all_logs.len() > self.max_logs_per_response {
                             return Err(EthFilterError::QueryExceedsMaxResults(
                                 self.max_logs_per_response,
-                            ));
+                            ))
                         }
                     }
                 }
@@ -512,56 +512,6 @@ where
         }
 
         Ok(all_logs)
-    }
-}
-
-/// Config for the filter
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EthFilterConfig {
-    /// Maximum number of blocks that a filter can scan for logs.
-    ///
-    /// If `None` then no limit is enforced.
-    pub max_blocks_per_filter: Option<u64>,
-    /// Maximum number of logs that can be returned in a single response in `eth_getLogs` calls.
-    ///
-    /// If `None` then no limit is enforced.
-    pub max_logs_per_response: Option<usize>,
-    /// How long a filter remains valid after the last poll.
-    ///
-    /// A filter is considered stale if it has not been polled for longer than this duration and
-    /// will be removed.
-    pub stale_filter_ttl: Duration,
-}
-
-impl EthFilterConfig {
-    /// Sets the maximum number of blocks that a filter can scan for logs.
-    pub const fn max_blocks_per_filter(mut self, num: u64) -> Self {
-        self.max_blocks_per_filter = Some(num);
-        self
-    }
-
-    /// Sets the maximum number of logs that can be returned in a single response in `eth_getLogs`
-    /// calls.
-    pub const fn max_logs_per_response(mut self, num: usize) -> Self {
-        self.max_logs_per_response = Some(num);
-        self
-    }
-
-    /// Sets how long a filter remains valid after the last poll before it will be removed.
-    pub const fn stale_filter_ttl(mut self, duration: Duration) -> Self {
-        self.stale_filter_ttl = duration;
-        self
-    }
-}
-
-impl Default for EthFilterConfig {
-    fn default() -> Self {
-        Self {
-            max_blocks_per_filter: None,
-            max_logs_per_response: None,
-            // 5min
-            stale_filter_ttl: Duration::from_secs(5 * 60),
-        }
     }
 }
 
@@ -700,7 +650,7 @@ impl Iterator for BlockRangeInclusiveIter {
         let start = self.iter.next()?;
         let end = (start + self.step).min(self.end);
         if start > end {
-            return None;
+            return None
         }
         Some((start, end))
     }

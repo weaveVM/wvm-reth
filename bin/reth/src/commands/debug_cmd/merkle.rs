@@ -1,5 +1,7 @@
 //! Command for debugging merkle trie calculation.
-use crate::{args::NetworkArgs, macros::block_executor, utils::get_single_header};
+
+use std::{path::PathBuf, sync::Arc};
+
 use backon::{ConstantBuilder, Retryable};
 use clap::Parser;
 use reth_beacon_consensus::EthBeaconConsensus;
@@ -11,13 +13,13 @@ use reth_consensus::Consensus;
 use reth_db::{tables, DatabaseEnv};
 use reth_db_api::{cursor::DbCursorRO, transaction::DbTx};
 use reth_evm::execute::{BatchExecutor, BlockExecutorProvider};
-use reth_network::NetworkHandle;
+use reth_network::{BlockDownloaderProvider, NetworkHandle};
 use reth_network_api::NetworkInfo;
 use reth_network_p2p::full_block::FullBlockClient;
 use reth_primitives::BlockHashOrNumber;
 use reth_provider::{
-    BlockNumReader, BlockWriter, ChainSpecProvider, HeaderProvider, LatestStateProviderRef,
-    OriginalValuesKnown, ProviderError, ProviderFactory, StateWriter,
+    writer::UnifiedStorageWriter, BlockNumReader, BlockWriter, ChainSpecProvider, HeaderProvider,
+    LatestStateProviderRef, OriginalValuesKnown, ProviderError, ProviderFactory, StateWriter,
 };
 use reth_revm::database::StateProviderDatabase;
 use reth_stages::{
@@ -25,8 +27,9 @@ use reth_stages::{
     ExecInput, Stage, StageCheckpoint,
 };
 use reth_tasks::TaskExecutor;
-use std::{path::PathBuf, sync::Arc};
 use tracing::*;
+
+use crate::{args::NetworkArgs, macros::block_executor, utils::get_single_header};
 
 /// `reth debug merkle` command
 #[derive(Debug, Parser)]
@@ -150,14 +153,15 @@ impl Command {
                 ),
             ));
             executor.execute_and_verify_one((&sealed_block.clone().unseal(), td).into())?;
-            executor.finalize().write_to_storage(
-                provider_rw.tx_ref(),
-                None,
-                OriginalValuesKnown::Yes,
-            )?;
+            let execution_outcome = executor.finalize();
+
+            let mut storage_writer = UnifiedStorageWriter::from_database(&provider_rw);
+            storage_writer.write_to_storage(execution_outcome, OriginalValuesKnown::Yes)?;
 
             let checkpoint = Some(StageCheckpoint::new(
-                block_number.checked_sub(1).ok_or(eyre::eyre!("GenesisBlockHasNoParent"))?,
+                block_number
+                    .checked_sub(1)
+                    .ok_or_else(|| eyre::eyre!("GenesisBlockHasNoParent"))?,
             ));
 
             let mut account_hashing_done = false;
@@ -179,7 +183,7 @@ impl Command {
 
             if incremental_result.is_ok() {
                 debug!(target: "reth::cli", block_number, "Successfully computed incremental root");
-                continue;
+                continue
             }
 
             warn!(target: "reth::cli", block_number, "Incremental calculation failed, retrying from scratch");
@@ -199,7 +203,7 @@ impl Command {
                 let clean_result = merkle_stage.execute(&provider_rw, clean_input);
                 assert!(clean_result.is_ok(), "Clean state root calculation failed");
                 if clean_result.unwrap().done {
-                    break;
+                    break
                 }
             }
 
@@ -246,7 +250,7 @@ impl Command {
                 }
             }
 
-            // Stoarge trie
+            // Storage trie
             let mut first_mismatched_storage = None;
             let mut incremental_storage_trie_iter = incremental_storage_trie.into_iter().peekable();
             let mut clean_storage_trie_iter = clean_storage_trie.into_iter().peekable();
@@ -259,7 +263,7 @@ impl Command {
                             clean.1.nibbles.len() > self.skip_node_depth.unwrap_or_default()
                         {
                             first_mismatched_storage = Some((incremental, clean));
-                            break;
+                            break
                         }
                     }
                     (Some(incremental), None) => {

@@ -136,7 +136,7 @@ impl BigQueryClient {
     //                 let res = table.delete(&self.client).await;
     //                 match res {
     //                     Err(err) => {
-    //                         return Err(err);
+    //                         return Err(err)
     //                     }
     //                     Ok(_) => println!("Removed table: {}", table_name),
     //                 }
@@ -194,7 +194,7 @@ impl BigQueryClient {
         match table_ref {
             Ok(..) => {
                 println!("Table {table_name} already exists, skip creation.");
-                return Ok(());
+                return Ok(())
             }
             Err(..) => {
                 // Table does not exist (err), create

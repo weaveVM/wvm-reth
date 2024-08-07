@@ -8,7 +8,7 @@ use futures_util::Future;
 use reth_db_api::database::Database;
 use reth_primitives_traits::constants::BEACON_CONSENSUS_REORG_UNWIND_DEPTH;
 use reth_provider::{
-    providers::StaticFileWriter, FinalizedBlockReader, FinalizedBlockWriter, ProviderFactory,
+    writer::UnifiedStorageWriter, FinalizedBlockReader, FinalizedBlockWriter, ProviderFactory,
     StageCheckpointReader, StageCheckpointWriter, StaticFileProviderFactory,
 };
 use reth_prune::PrunerBuilder;
@@ -138,14 +138,14 @@ where
                     PipelineTarget::Sync(tip) => self.set_tip(tip),
                     PipelineTarget::Unwind(target) => {
                         if let Err(err) = self.move_to_static_files() {
-                            return (self, Err(err.into()));
+                            return (self, Err(err.into()))
                         }
                         if let Err(err) = self.unwind(target, None) {
-                            return (self, Err(err));
+                            return (self, Err(err))
                         }
                         self.progress.update(target);
 
-                        return (self, Ok(ControlFlow::Continue { block_number: target }));
+                        return (self, Ok(ControlFlow::Continue { block_number: target }))
                     }
                 }
             }
@@ -179,7 +179,7 @@ where
                     max_block = ?self.max_block,
                     "Terminating pipeline."
                 );
-                return Ok(());
+                return Ok(())
             }
         }
     }
@@ -217,7 +217,7 @@ where
                 ControlFlow::Continue { block_number } => self.progress.update(block_number),
                 ControlFlow::Unwind { target, bad_block } => {
                     self.unwind(target, Some(bad_block.number))?;
-                    return Ok(ControlFlow::Unwind { target, bad_block });
+                    return Ok(ControlFlow::Unwind { target, bad_block })
                 }
             }
 
@@ -256,8 +256,8 @@ where
             // Run the pruner so we don't potentially end up with higher height in the database vs
             // static files during a pipeline unwind
             let mut pruner = PrunerBuilder::new(Default::default())
-                .prune_delete_limit(usize::MAX)
-                .build(self.provider_factory.clone());
+                .delete_limit(usize::MAX)
+                .build_with_provider_factory(self.provider_factory.clone());
 
             pruner.run(prune_tip)?;
         }
@@ -293,7 +293,7 @@ where
                 );
                 self.event_sender.notify(PipelineEvent::Skipped { stage_id });
 
-                continue;
+                continue
             }
 
             info!(
@@ -336,18 +336,21 @@ where
                         // update finalized block if needed
                         let last_saved_finalized_block_number =
                             provider_rw.last_finalized_block_number()?;
-                        if checkpoint.block_number < last_saved_finalized_block_number {
+
+                        // If None, that means the finalized block is not written so we should
+                        // always save in that case
+                        if last_saved_finalized_block_number.is_none() ||
+                            Some(checkpoint.block_number) < last_saved_finalized_block_number
+                        {
                             provider_rw.save_finalized_block_number(BlockNumber::from(
                                 checkpoint.block_number,
                             ))?;
                         }
 
-                        // For unwinding it makes more sense to commit the database first, since if
-                        // this function is interrupted before the static files commit, we can just
-                        // truncate the static files according to the
-                        // checkpoints on the next start-up.
-                        provider_rw.commit()?;
-                        self.provider_factory.static_file_provider().commit()?;
+                        UnifiedStorageWriter::commit_unwind(
+                            provider_rw,
+                            self.provider_factory.static_file_provider(),
+                        )?;
 
                         stage.post_unwind_commit()?;
 
@@ -356,7 +359,7 @@ where
                     Err(err) => {
                         self.event_sender.notify(PipelineEvent::Error { stage_id });
 
-                        return Err(PipelineError::Stage(StageError::Fatal(Box::new(err))));
+                        return Err(PipelineError::Stage(StageError::Fatal(Box::new(err))))
                     }
                 }
             }
@@ -396,7 +399,7 @@ where
                 // We reached the maximum block, so we skip the stage
                 return Ok(ControlFlow::NoProgress {
                     block_number: prev_checkpoint.map(|progress| progress.block_number),
-                });
+                })
             }
 
             let exec_input = ExecInput { target, checkpoint: prev_checkpoint };
@@ -420,6 +423,8 @@ where
                 };
             }
 
+            let provider_rw = self.provider_factory.provider_rw()?;
+
             self.event_sender.notify(PipelineEvent::Run {
                 pipeline_stages_progress: PipelineStagesProgress {
                     current: stage_index + 1,
@@ -430,7 +435,6 @@ where
                 target,
             });
 
-            let provider_rw = self.provider_factory.provider_rw()?;
             match stage.execute(&provider_rw, exec_input) {
                 Ok(out @ ExecOutput { checkpoint, done }) => {
                     made_progress |=
@@ -454,14 +458,10 @@ where
                         result: out.clone(),
                     });
 
-                    // For execution it makes more sense to commit the static files first, since if
-                    // this function is interrupted before the database commit, we can just truncate
-                    // the static files according to the checkpoints on the next
-                    // start-up.
-                    self.provider_factory.static_file_provider().commit()?;
-                    provider_rw.commit()?;
-
-                    stage.post_execute_commit()?;
+                    UnifiedStorageWriter::commit(
+                        provider_rw,
+                        self.provider_factory.static_file_provider(),
+                    )?;
 
                     if done {
                         let block_number = checkpoint.block_number;
@@ -469,7 +469,7 @@ where
                             ControlFlow::Continue { block_number }
                         } else {
                             ControlFlow::NoProgress { block_number: Some(block_number) }
-                        });
+                        })
                     }
                 }
                 Err(err) => {
@@ -479,7 +479,7 @@ where
                     if let Some(ctrl) =
                         on_stage_error(&self.provider_factory, stage_id, prev_checkpoint, err)?
                     {
-                        return Ok(ctrl);
+                        return Ok(ctrl)
                     }
                 }
             }
@@ -519,8 +519,8 @@ fn on_stage_error<DB: Database>(
                     StageId::MerkleExecute,
                     prev_checkpoint.unwrap_or_default(),
                 )?;
-                factory.static_file_provider().commit()?;
-                provider_rw.commit()?;
+
+                UnifiedStorageWriter::commit(provider_rw, factory.static_file_provider())?;
 
                 // We unwind because of a validation error. If the unwind itself
                 // fails, we bail entirely,

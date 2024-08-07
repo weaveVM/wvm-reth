@@ -19,17 +19,20 @@ impl PruningArgs {
     /// Returns pruning configuration.
     pub fn prune_config(&self, chain_spec: &ChainSpec) -> Option<PruneConfig> {
         if !self.full {
-            return None;
+            return None
         }
+
         Some(PruneConfig {
             block_interval: 5,
             segments: PruneModes {
                 sender_recovery: Some(PruneMode::Full),
                 transaction_lookup: None,
+                // prune all receipts if chain doesn't have deposit contract specified in chain spec
                 receipts: chain_spec
                     .deposit_contract
                     .as_ref()
-                    .map(|contract| PruneMode::Before(contract.block)),
+                    .map(|contract| PruneMode::Before(contract.block))
+                    .or(Some(PruneMode::Full)),
                 account_history: Some(PruneMode::Distance(MINIMUM_PRUNING_DISTANCE)),
                 storage_history: Some(PruneMode::Distance(MINIMUM_PRUNING_DISTANCE)),
                 receipts_log_filter: ReceiptsLogPruneConfig(

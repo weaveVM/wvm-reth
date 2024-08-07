@@ -67,7 +67,7 @@ impl<DB: Database> Stage<DB> for SenderRecoveryStage {
         input: ExecInput,
     ) -> Result<ExecOutput, StageError> {
         if input.target_reached() {
-            return Ok(ExecOutput::done(input.checkpoint()));
+            return Ok(ExecOutput::done(input.checkpoint()))
         }
 
         let (tx_range, block_range, is_final_range) =
@@ -81,24 +81,23 @@ impl<DB: Database> Stage<DB> for SenderRecoveryStage {
                 checkpoint: StageCheckpoint::new(end_block)
                     .with_entities_stage_checkpoint(stage_checkpoint(provider)?),
                 done: is_final_range,
-            });
+            })
         }
 
-        let tx = provider.tx_ref();
-
         // Acquire the cursor for inserting elements
-        let mut senders_cursor = tx.cursor_write::<tables::TransactionSenders>()?;
+        let mut senders_cursor = provider.tx_ref().cursor_write::<tables::TransactionSenders>()?;
 
         info!(target: "sync::stages::sender_recovery", ?tx_range, "Recovering senders");
 
         // Iterate over transactions in batches, recover the senders and append them
-        let batch = (tx_range.start..tx_range.end)
+        let batch = tx_range
+            .clone()
             .step_by(BATCH_SIZE)
             .map(|start| start..std::cmp::min(start + BATCH_SIZE as u64, tx_range.end))
             .collect::<Vec<Range<u64>>>();
 
         for range in batch {
-            recover_range(range, provider, tx, &mut senders_cursor)?;
+            recover_range(range, provider, &mut senders_cursor)?;
         }
 
         Ok(ExecOutput {
@@ -130,18 +129,20 @@ impl<DB: Database> Stage<DB> for SenderRecoveryStage {
     }
 }
 
-fn recover_range<DB: Database>(
+fn recover_range<DB, CURSOR>(
     tx_range: Range<u64>,
     provider: &DatabaseProviderRW<DB>,
-    tx: &<DB as Database>::TXMut,
-    senders_cursor: &mut <<DB as Database>::TXMut as DbTxMut>::CursorMut<
-        tables::TransactionSenders,
-    >,
-) -> Result<(), StageError> {
+    senders_cursor: &mut CURSOR,
+) -> Result<(), StageError>
+where
+    DB: Database,
+    CURSOR: DbCursorRW<tables::TransactionSenders>,
+{
     debug!(target: "sync::stages::sender_recovery", ?tx_range, "Recovering senders batch");
 
     // Preallocate channels
-    let (chunks, receivers): (Vec<_>, Vec<_>) = (tx_range.start..tx_range.end)
+    let (chunks, receivers): (Vec<_>, Vec<_>) = tx_range
+        .clone()
         .step_by(WORKER_CHUNK_SIZE)
         .map(|start| {
             let range = start..std::cmp::min(start + WORKER_CHUNK_SIZE as u64, tx_range.end);
@@ -193,7 +194,8 @@ fn recover_range<DB: Database>(
                     return match *error {
                         SenderRecoveryStageError::FailedRecovery(err) => {
                             // get the block number for the bad transaction
-                            let block_number = tx
+                            let block_number = provider
+                                .tx_ref()
                                 .get::<tables::TransactionBlocks>(err.tx)?
                                 .ok_or(ProviderError::BlockNumberForTransactionIndexNotFound)?;
 
@@ -210,7 +212,7 @@ fn recover_range<DB: Database>(
                             })
                         }
                         SenderRecoveryStageError::StageError(err) => Err(err),
-                    };
+                    }
                 }
             };
             senders_cursor.append(tx_id, sender)?;
@@ -562,7 +564,7 @@ mod tests {
                     let end_block = output.checkpoint.block_number;
 
                     if start_block > end_block {
-                        return Ok(());
+                        return Ok(())
                     }
 
                     let mut body_cursor =

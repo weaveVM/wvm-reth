@@ -1,4 +1,5 @@
-use reth_primitives::{BlockHashOrNumber, B256};
+use alloy_eips::BlockHashOrNumber;
+use alloy_primitives::B256;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr, ToSocketAddrs},
     str::FromStr,
@@ -48,15 +49,15 @@ pub enum SocketAddressParsingError {
 /// An error is returned if the value is empty.
 pub fn parse_socket_address(value: &str) -> eyre::Result<SocketAddr, SocketAddressParsingError> {
     if value.is_empty() {
-        return Err(SocketAddressParsingError::Empty);
+        return Err(SocketAddressParsingError::Empty)
     }
 
     if let Some(port) = value.strip_prefix(':').or_else(|| value.strip_prefix("localhost:")) {
         let port: u16 = port.parse()?;
-        return Ok(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port));
+        return Ok(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port))
     }
     if let Ok(port) = value.parse::<u16>() {
-        return Ok(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port));
+        return Ok(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port))
     }
     value
         .to_socket_addrs()?
@@ -67,8 +68,7 @@ pub fn parse_socket_address(value: &str) -> eyre::Result<SocketAddr, SocketAddre
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::prelude::Rng;
-    use secp256k1::rand::thread_rng;
+    use rand::Rng;
 
     #[test]
     fn parse_socket_addresses() {
@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn parse_socket_address_random() {
-        let port: u16 = thread_rng().gen();
+        let port: u16 = rand::thread_rng().gen();
 
         for value in [format!("localhost:{port}"), format!(":{port}"), port.to_string()] {
             let socket_addr = parse_socket_address(&value)

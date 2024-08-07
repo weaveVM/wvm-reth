@@ -87,7 +87,7 @@ impl<DB: Database> Stage<DB> for IndexAccountHistoryStage {
         }
 
         if input.target_reached() {
-            return Ok(ExecOutput::done(input.checkpoint()));
+            return Ok(ExecOutput::done(input.checkpoint()))
         }
 
         let mut range = input.next_block_range();
@@ -103,7 +103,7 @@ impl<DB: Database> Stage<DB> for IndexAccountHistoryStage {
         info!(target: "sync::stages::index_account_history::exec", ?first_sync, "Collecting indices");
         let collector =
             collect_history_indices::<_, tables::AccountChangeSets, tables::AccountsHistory, _>(
-                provider.tx_ref(),
+                provider,
                 range.clone(),
                 ShardedKey::new,
                 |(index, value)| (index, value.address),
@@ -112,7 +112,7 @@ impl<DB: Database> Stage<DB> for IndexAccountHistoryStage {
 
         info!(target: "sync::stages::index_account_history::exec", "Loading indices into database");
         load_history_indices::<_, tables::AccountsHistory, _>(
-            provider.tx_ref(),
+            provider,
             collector,
             first_sync,
             ShardedKey::new,
@@ -563,7 +563,7 @@ mod tests {
                 let start_block = input.next_block();
                 let end_block = output.checkpoint.block_number;
                 if start_block > end_block {
-                    return Ok(());
+                    return Ok(())
                 }
 
                 assert_eq!(

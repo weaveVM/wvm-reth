@@ -5,7 +5,7 @@ use crate::{
     error::PoolError,
     metrics::MaintainPoolMetrics,
     traits::{CanonicalStateUpdate, ChangedAccount, TransactionPool, TransactionPoolExt},
-    BlockInfo,
+    BlockInfo, PoolTransaction,
 };
 use futures_util::{
     future::{BoxFuture, Fuse, FusedFuture},
@@ -14,9 +14,8 @@ use futures_util::{
 use reth_execution_types::ExecutionOutcome;
 use reth_fs_util::FsPathError;
 use reth_primitives::{
-    Address, BlockHash, BlockNumber, BlockNumberOrTag, FromRecoveredPooledTransaction,
-    IntoRecoveredTransaction, PooledTransactionsElementEcRecovered, TransactionSigned,
-    TryFromRecoveredTransaction,
+    Address, BlockHash, BlockNumber, BlockNumberOrTag, IntoRecoveredTransaction,
+    PooledTransactionsElementEcRecovered, TransactionSigned,
 };
 use reth_provider::{
     BlockReaderIdExt, CanonStateNotification, ChainSpecProvider, ProviderError,
@@ -188,20 +187,19 @@ pub async fn maintain_transaction_pool<Client, P, St, Tasks>(
         if let Some(finalized) =
             last_finalized_block.update(client.finalized_block_number().ok().flatten())
         {
-            match blob_store_tracker.on_finalized_block(finalized) {
-                BlobStoreUpdates::None => {}
-                BlobStoreUpdates::Finalized(blobs) => {
-                    metrics.inc_deleted_tracked_blobs(blobs.len());
-                    // remove all finalized blobs from the blob store
-                    pool.delete_blobs(blobs);
-                }
+            if let BlobStoreUpdates::Finalized(blobs) =
+                blob_store_tracker.on_finalized_block(finalized)
+            {
+                metrics.inc_deleted_tracked_blobs(blobs.len());
+                // remove all finalized blobs from the blob store
+                pool.delete_blobs(blobs);
+                // and also do periodic cleanup
+                let pool = pool.clone();
+                task_spawner.spawn_blocking(Box::pin(async move {
+                    debug!(target: "txpool", finalized_block = %finalized, "cleaning up blob store");
+                    pool.cleanup_blobs();
+                }));
             }
-            // also do periodic cleanup of the blob store
-            let pool = pool.clone();
-            task_spawner.spawn_blocking(Box::pin(async move {
-                debug!(target: "txpool", finalized_block = %finalized, "cleaning up blob store");
-                pool.cleanup_blobs();
-            }));
         }
 
         // outcomes of the futures we are waiting on
@@ -333,13 +331,11 @@ pub async fn maintain_transaction_pool<Client, P, St, Tasks>(
                                     )
                                     .ok()
                                 })
-                                .map(
-                                    <P as TransactionPool>::Transaction::from_recovered_pooled_transaction,
-                                )
+                                .map(|tx| {
+                                    <<P as TransactionPool>::Transaction as PoolTransaction>::from_pooled(tx)
+                                })
                         } else {
-                            <P as TransactionPool>::Transaction::try_from_recovered_transaction(
-                                tx,
-                            ).ok()
+                            tx.try_into().ok()
                         }
                     })
                     .collect::<Vec<_>>();
@@ -406,7 +402,7 @@ pub async fn maintain_transaction_pool<Client, P, St, Tasks>(
                     // keep track of mined blob transactions
                     blob_store_tracker.add_new_chain_blocks(&blocks);
 
-                    continue;
+                    continue
                 }
 
                 let mut changed_accounts = Vec::with_capacity(state.state().len());
@@ -576,14 +572,14 @@ where
     P: TransactionPool,
 {
     if !file_path.exists() {
-        return Ok(());
+        return Ok(())
     }
 
     debug!(target: "txpool", txs_file =?file_path, "Check local persistent storage for saved transactions");
     let data = reth_fs_util::read(file_path)?;
 
     if data.is_empty() {
-        return Ok(());
+        return Ok(())
     }
 
     let txs_signed: Vec<TransactionSigned> = alloy_rlp::Decodable::decode(&mut data.as_slice())?;
@@ -593,7 +589,7 @@ where
         .filter_map(|tx| tx.try_ecrecovered())
         .filter_map(|tx| {
             // Filter out errors
-            <P as TransactionPool>::Transaction::try_from_recovered_transaction(tx).ok()
+            tx.try_into().ok()
         })
         .collect::<Vec<_>>();
 
@@ -611,7 +607,7 @@ where
     let local_transactions = pool.get_local_transactions();
     if local_transactions.is_empty() {
         trace!(target: "txpool", "no local transactions to save");
-        return;
+        return
     }
 
     let local_transactions = local_transactions
@@ -660,7 +656,7 @@ pub async fn backup_local_transactions_task<P>(
 {
     let Some(transactions_path) = config.transactions_path else {
         // nothing to do
-        return;
+        return
     };
 
     if let Err(err) = load_and_reinsert_transactions(pool.clone(), &transactions_path).await {
@@ -680,7 +676,7 @@ mod tests {
     use super::*;
     use crate::{
         blobstore::InMemoryBlobStore, validate::EthTransactionValidatorBuilder,
-        CoinbaseTipOrdering, EthPooledTransaction, Pool, PoolTransaction, TransactionOrigin,
+        CoinbaseTipOrdering, EthPooledTransaction, Pool, TransactionOrigin,
     };
     use reth_chainspec::MAINNET;
     use reth_fs_util as fs;
@@ -706,9 +702,7 @@ mod tests {
         let tx_bytes = hex!("02f87201830655c2808505ef61f08482565f94388c818ca8b9251b393131c08a736a67ccb192978801049e39c4b5b1f580c001a01764ace353514e8abdfb92446de356b260e3c1225b73fc4c8876a6258d12a129a04f02294aa61ca7676061cd99f29275491218b4754b46a0248e5e42bc5091f507");
         let tx = PooledTransactionsElement::decode_enveloped(&mut &tx_bytes[..]).unwrap();
         let provider = MockEthProvider::default();
-        let transaction = EthPooledTransaction::from_recovered_pooled_transaction(
-            tx.try_into_ecrecovered().unwrap(),
-        );
+        let transaction: EthPooledTransaction = tx.try_into_ecrecovered().unwrap().into();
         let tx_to_cmp = transaction.clone();
         let sender = hex!("1f9090aaE28b8a3dCeaDf281B0F12828e676c326").into();
         provider.add_account(sender, ExtendedAccount::new(42, U256::MAX));
@@ -747,5 +741,47 @@ mod tests {
         assert_eq!(txs.len(), 1);
 
         temp_dir.close().unwrap();
+    }
+
+    #[test]
+    fn test_update_with_higher_finalized_block() {
+        let mut tracker = FinalizedBlockTracker::new(Some(10));
+        assert_eq!(tracker.update(Some(15)), Some(15));
+        assert_eq!(tracker.last_finalized_block, Some(15));
+    }
+
+    #[test]
+    fn test_update_with_lower_finalized_block() {
+        let mut tracker = FinalizedBlockTracker::new(Some(20));
+        assert_eq!(tracker.update(Some(15)), None);
+        assert_eq!(tracker.last_finalized_block, Some(15));
+    }
+
+    #[test]
+    fn test_update_with_equal_finalized_block() {
+        let mut tracker = FinalizedBlockTracker::new(Some(20));
+        assert_eq!(tracker.update(Some(20)), None);
+        assert_eq!(tracker.last_finalized_block, Some(20));
+    }
+
+    #[test]
+    fn test_update_with_no_last_finalized_block() {
+        let mut tracker = FinalizedBlockTracker::new(None);
+        assert_eq!(tracker.update(Some(10)), Some(10));
+        assert_eq!(tracker.last_finalized_block, Some(10));
+    }
+
+    #[test]
+    fn test_update_with_no_new_finalized_block() {
+        let mut tracker = FinalizedBlockTracker::new(Some(10));
+        assert_eq!(tracker.update(None), None);
+        assert_eq!(tracker.last_finalized_block, Some(10));
+    }
+
+    #[test]
+    fn test_update_with_no_finalized_blocks() {
+        let mut tracker = FinalizedBlockTracker::new(None);
+        assert_eq!(tracker.update(None), None);
+        assert_eq!(tracker.last_finalized_block, None);
     }
 }

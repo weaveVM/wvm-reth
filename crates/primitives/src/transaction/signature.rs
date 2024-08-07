@@ -1,9 +1,10 @@
 use crate::{transaction::util::secp256k1, Address, B256, U256};
 use alloy_primitives::Bytes;
 use alloy_rlp::{Decodable, Encodable, Error as RlpError};
-use bytes::Buf;
-use reth_codecs::{derive_arbitrary, Compact};
 use serde::{Deserialize, Serialize};
+
+#[cfg(test)]
+use reth_codecs::Compact;
 
 /// The order of the secp256k1 curve, divided by two. Signatures that should be checked according
 /// to EIP-2 should have an S value less than or equal to this.
@@ -17,7 +18,7 @@ const SECP256K1N_HALF: U256 = U256::from_be_bytes([
 /// r, s: Values corresponding to the signature of the
 /// transaction and used to determine the sender of
 /// the transaction; formally Tr and Ts. This is expanded in Appendix F of yellow paper.
-#[derive_arbitrary(compact)]
+#[cfg_attr(any(test, feature = "reth-codec"), reth_codecs::derive_arbitrary(compact))]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct Signature {
     /// The R field of the signature; the point on the curve.
@@ -25,6 +26,9 @@ pub struct Signature {
     /// The S field of the signature; the point on the curve.
     pub s: U256,
     /// yParity: Signature Y parity; formally Ty
+    ///
+    /// WARNING: if it's deprecated in favor of `alloy_primitives::Signature` be sure that parity
+    /// storage deser matches.
     pub odd_y_parity: bool,
 }
 
@@ -37,8 +41,9 @@ impl Signature {
     }
 }
 
-impl Compact for Signature {
-    fn to_compact<B>(self, buf: &mut B) -> usize
+#[cfg(any(test, feature = "reth-codec"))]
+impl reth_codecs::Compact for Signature {
+    fn to_compact<B>(&self, buf: &mut B) -> usize
     where
         B: bytes::BufMut + AsMut<[u8]>,
     {
@@ -48,6 +53,7 @@ impl Compact for Signature {
     }
 
     fn from_compact(mut buf: &[u8], identifier: usize) -> (Self, &[u8]) {
+        use bytes::Buf;
         assert!(buf.len() >= 64);
         let r = U256::from_le_slice(&buf[0..32]);
         let s = U256::from_le_slice(&buf[32..64]);
@@ -89,7 +95,7 @@ impl Signature {
             //
             // NOTE: this is very hacky and only relevant for op-mainnet pre bedrock
             if *self == Self::optimism_deposit_tx_signature() {
-                return 0;
+                return 0
             }
             self.odd_y_parity as u64 + 27
         }
@@ -113,7 +119,7 @@ impl Signature {
                 //
                 // NOTE: this is very hacky and only relevant for op-mainnet pre bedrock
                 if v == 0 && r.is_zero() && s.is_zero() {
-                    return Ok((Self { r, s, odd_y_parity: false }, None));
+                    return Ok((Self { r, s, odd_y_parity: false }, None))
                 }
             }
         }
@@ -168,7 +174,7 @@ impl Signature {
     /// If the S value is too large, then this will return `None`
     pub fn recover_signer(&self, hash: B256) -> Option<Address> {
         if self.s > SECP256K1N_HALF {
-            return None;
+            return None
         }
 
         self.recover_signer_unchecked(hash)
@@ -204,7 +210,7 @@ pub const fn extract_chain_id(v: u64) -> alloy_rlp::Result<(bool, Option<u64>)> 
     if v < 35 {
         // non-EIP-155 legacy scheme, v = 27 for even y-parity, v = 28 for odd y-parity
         if v != 27 && v != 28 {
-            return Err(RlpError::Custom("invalid Ethereum signature (V is not 27 or 28)"));
+            return Err(RlpError::Custom("invalid Ethereum signature (V is not 27 or 28)"))
         }
         Ok((v == 28, None))
     } else {

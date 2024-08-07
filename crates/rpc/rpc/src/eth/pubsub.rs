@@ -138,7 +138,7 @@ where
                                 ),
                             ))
                         });
-                        return pipe_from_stream(accepted_sink, stream).await;
+                        return pipe_from_stream(accepted_sink, stream).await
                     }
                     Params::Bool(false) | Params::None => {
                         // only hashes requested
@@ -168,7 +168,7 @@ where
             let msg = SubscriptionMessage::from_json(&current_sub_res)
                 .map_err(SubscriptionSerializeError::new)?;
             if accepted_sink.send(msg).await.is_err() {
-                return Ok(());
+                return Ok(())
             }
 
             while canon_state.next().await.is_some() {
@@ -183,7 +183,7 @@ where
                     let msg = SubscriptionMessage::from_json(&sync_status)
                         .map_err(SubscriptionSerializeError::new)?;
                     if accepted_sink.send(msg).await.is_err() {
-                        break;
+                        break
                     }
                 }
             }

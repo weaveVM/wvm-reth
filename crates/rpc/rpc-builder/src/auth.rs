@@ -198,7 +198,7 @@ impl AuthRpcModule {
     /// Create a new `AuthRpcModule` with the given `engine_api`.
     pub fn new<EngineApi, EngineT>(engine: EngineApi) -> Self
     where
-        EngineT: EngineTypes + 'static,
+        EngineT: EngineTypes,
         EngineApi: EngineApiServer<EngineT>,
     {
         let mut module = RpcModule::new(());
@@ -304,7 +304,7 @@ impl AuthServerHandle {
                     .build(ipc_endpoint)
                     .await
                     .expect("Failed to create ipc client"),
-            );
+            )
         }
         None
     }

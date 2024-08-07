@@ -25,7 +25,6 @@ use reth_stages_api::{
 };
 use reth_storage_errors::provider::ProviderResult;
 
-// TODO(onbjerg): Metrics and events (gradual status for e.g. CLI)
 /// The body stage downloads block bodies.
 ///
 /// The body stage downloads block bodies for all block headers stored locally in storage.
@@ -83,7 +82,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
         input: ExecInput,
     ) -> Poll<Result<(), StageError>> {
         if input.target_reached() || self.buffer.is_some() {
-            return Poll::Ready(Ok(()));
+            return Poll::Ready(Ok(()))
         }
 
         // Update the header range on the downloader
@@ -113,7 +112,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
         input: ExecInput,
     ) -> Result<ExecOutput, StageError> {
         if input.target_reached() {
-            return Ok(ExecOutput::done(input.checkpoint()));
+            return Ok(ExecOutput::done(input.checkpoint()))
         }
         let (from_block, to_block) = input.next_block_range().into_inner();
 
@@ -182,8 +181,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
 
             // Increment block on static file header.
             if block_number > 0 {
-                let appended_block_number = static_file_producer
-                    .increment_block(StaticFileSegment::Transactions, block_number)?;
+                let appended_block_number = static_file_producer.increment_block(block_number)?;
 
                 if appended_block_number != block_number {
                     // This scenario indicates a critical error in the logic of adding new
@@ -192,7 +190,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
                         segment: StaticFileSegment::Transactions,
                         database: block_number,
                         static_file: appended_block_number,
-                    });
+                    })
                 }
             }
 
@@ -206,7 +204,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
                     // Write transactions
                     for transaction in block.body {
                         let appended_tx_number = static_file_producer
-                            .append_transaction(next_tx_num, transaction.into())?;
+                            .append_transaction(next_tx_num, &transaction.into())?;
 
                         if appended_tx_number != next_tx_num {
                             // This scenario indicates a critical error in the logic of adding new
@@ -215,7 +213,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
                                 segment: StaticFileSegment::Transactions,
                                 database: next_tx_num,
                                 static_file: appended_tx_number,
-                            });
+                            })
                         }
 
                         // Increment transaction id for each transaction.
@@ -284,7 +282,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
         let mut rev_walker = body_cursor.walk_back(None)?;
         while let Some((number, block_meta)) = rev_walker.next().transpose()? {
             if number <= input.unwind_to {
-                break;
+                break
             }
 
             // Delete the ommers entry if any
@@ -331,7 +329,7 @@ impl<DB: Database, D: BodyDownloader> Stage<DB> for BodyStage<D> {
                 static_file_tx_num,
                 static_file_provider,
                 provider,
-            )?);
+            )?)
         }
 
         // Unwinds static file
@@ -359,11 +357,11 @@ fn missing_static_data_error<DB: Database>(
     loop {
         if let Some(indices) = provider.block_body_indices(last_block)? {
             if indices.last_tx_num() <= last_tx_num {
-                break;
+                break
             }
         }
         if last_block == 0 {
-            break;
+            break
         }
         last_block -= 1;
     }
@@ -740,7 +738,7 @@ mod tests {
                         body.tx_num_range().try_for_each(|tx_num| {
                             let transaction = random_signed_tx(&mut rng);
                             static_file_producer
-                                .append_transaction(tx_num, transaction.into())
+                                .append_transaction(tx_num, &transaction.into())
                                 .map(drop)
                         })?;
 
@@ -929,7 +927,7 @@ mod tests {
                 let this = self.get_mut();
 
                 if this.headers.is_empty() {
-                    return Poll::Ready(None);
+                    return Poll::Ready(None)
                 }
 
                 let mut response = Vec::default();
@@ -949,12 +947,12 @@ mod tests {
                     }
 
                     if response.len() as u64 >= this.batch_size {
-                        break;
+                        break
                     }
                 }
 
                 if !response.is_empty() {
-                    return Poll::Ready(Some(Ok(response)));
+                    return Poll::Ready(Some(Ok(response)))
                 }
 
                 panic!("requested bodies without setting headers")

@@ -21,12 +21,18 @@ pub enum ProviderError {
     /// Database error.
     #[error(transparent)]
     Database(#[from] crate::db::DatabaseError),
+    /// RLP error.
+    #[error(transparent)]
+    Rlp(#[from] alloy_rlp::Error),
     /// Filesystem path error.
     #[error("{0}")]
     FsPathError(String),
     /// Nippy jar error.
     #[error("nippy jar error: {0}")]
     NippyJar(String),
+    /// Trie witness error.
+    #[error("trie witness error: {0}")]
+    TrieWitnessError(String),
     /// Error when recovering the sender for a transaction
     #[error("failed to recover sender for transaction")]
     SenderRecoveryError,
@@ -139,6 +145,9 @@ pub enum ProviderError {
     /// Storage lock error.
     #[error(transparent)]
     StorageLockError(#[from] crate::lockfile::StorageLockError),
+    /// Storage writer error.
+    #[error(transparent)]
+    UnifiedStorageWriterError(#[from] crate::writer::UnifiedStorageWriterError),
 }
 
 impl From<reth_fs_util::FsPathError> for ProviderError {

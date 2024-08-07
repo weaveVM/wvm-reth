@@ -90,7 +90,7 @@ where
     /// database table.
     fn write_headers<DB: Database>(
         &mut self,
-        tx: &<DB as Database>::TXMut,
+        provider: &DatabaseProviderRW<DB>,
         static_file_provider: StaticFileProvider,
     ) -> Result<BlockNumber, StageError> {
         let total_headers = self.header_collector.len();
@@ -122,7 +122,7 @@ where
             let (sealed_header, _) = SealedHeader::from_compact(&header_buf, header_buf.len());
             let (header, header_hash) = sealed_header.split();
             if header.number == 0 {
-                continue;
+                continue
             }
             last_header_number = header.number;
 
@@ -138,12 +138,13 @@ where
             })?;
 
             // Append to Headers segment
-            writer.append_header(header, td, header_hash)?;
+            writer.append_header(&header, td, &header_hash)?;
         }
 
         info!(target: "sync::stages::headers", total = total_headers, "Writing headers hash index");
 
-        let mut cursor_header_numbers = tx.cursor_write::<RawTable<tables::HeaderNumbers>>()?;
+        let mut cursor_header_numbers =
+            provider.tx_ref().cursor_write::<RawTable<tables::HeaderNumbers>>()?;
         let mut first_sync = false;
 
         // If we only have the genesis block hash, then we are at first sync, and we can remove it,
@@ -202,7 +203,7 @@ where
 
         // Return if stage has already completed the gap on the ETL files
         if self.is_etl_ready {
-            return Poll::Ready(Ok(()));
+            return Poll::Ready(Ok(()))
         }
 
         // Lookup the head and tip of the sync range
@@ -219,7 +220,7 @@ where
                 "Target block already reached"
             );
             self.is_etl_ready = true;
-            return Poll::Ready(Ok(()));
+            return Poll::Ready(Ok(()))
         }
 
         debug!(target: "sync::stages::headers", ?tip, head = ?gap.local_head.hash(), "Commencing sync");
@@ -243,13 +244,13 @@ where
                         // filled the gap.
                         if header_number == local_head_number + 1 {
                             self.is_etl_ready = true;
-                            return Poll::Ready(Ok(()));
+                            return Poll::Ready(Ok(()))
                         }
                     }
                 }
                 Some(Err(HeadersDownloaderError::DetachedHead { local_head, header, error })) => {
                     error!(target: "sync::stages::headers", %error, "Cannot attach header to head");
-                    return Poll::Ready(Err(StageError::DetachedHead { local_head, header, error }));
+                    return Poll::Ready(Err(StageError::DetachedHead { local_head, header, error }))
                 }
                 None => return Poll::Ready(Err(StageError::ChannelClosed)),
             }
@@ -267,12 +268,12 @@ where
 
         if self.sync_gap.as_ref().ok_or(StageError::MissingSyncGap)?.is_closed() {
             self.is_etl_ready = false;
-            return Ok(ExecOutput::done(current_checkpoint));
+            return Ok(ExecOutput::done(current_checkpoint))
         }
 
         // We should be here only after we have downloaded all headers into the disk buffer (ETL).
         if !self.is_etl_ready {
-            return Err(StageError::MissingDownloadBuffer);
+            return Err(StageError::MissingDownloadBuffer)
         }
 
         // Reset flag
@@ -281,7 +282,7 @@ where
         // Write the headers and related tables to DB from ETL space
         let to_be_processed = self.hash_collector.len() as u64;
         let last_header_number =
-            self.write_headers::<DB>(provider.tx_ref(), provider.static_file_provider().clone())?;
+            self.write_headers(provider, provider.static_file_provider().clone())?;
 
         // Clear ETL collectors
         self.hash_collector.clear();
@@ -317,7 +318,7 @@ where
         // First unwind the db tables, until the unwind_to block number. use the walker to unwind
         // HeaderNumbers based on the index in CanonicalHeaders
         provider.unwind_table_by_walker::<tables::CanonicalHeaders, tables::HeaderNumbers>(
-            input.unwind_to,
+            input.unwind_to..,
         )?;
         provider.unwind_table_by_num::<tables::CanonicalHeaders>(input.unwind_to)?;
         provider.unwind_table_by_num::<tables::HeaderTerminalDifficulties>(input.unwind_to)?;
@@ -381,7 +382,7 @@ mod tests {
     use reth_provider::{BlockWriter, ProviderFactory, StaticFileProviderFactory};
     use reth_stages_api::StageUnitCheckpoint;
     use reth_testing_utils::generators::{self, random_header, random_header_range};
-    use reth_trie::{updates::TrieUpdates, HashedPostState};
+    use reth_trie::{updates::TrieUpdates, HashedPostStateSorted};
     use test_runner::HeadersTestRunner;
 
     mod test_runner {
@@ -456,7 +457,7 @@ mod tests {
                 let end = input.target.unwrap_or_default() + 1;
 
                 if start + 1 >= end {
-                    return Ok(Vec::default());
+                    return Ok(Vec::default())
                 }
 
                 let mut headers = random_header_range(&mut rng, start + 1..end, head.hash());
@@ -629,7 +630,7 @@ mod tests {
             .append_blocks_with_state(
                 sealed_blocks,
                 ExecutionOutcome::default(),
-                HashedPostState::default(),
+                HashedPostStateSorted::default(),
                 TrieUpdates::default(),
             )
             .unwrap();

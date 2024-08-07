@@ -1,6 +1,6 @@
 //! Contains RPC handler implementations specific to state.
 
-use reth_provider::StateProviderFactory;
+use reth_provider::{ChainSpecProvider, StateProviderFactory};
 use reth_transaction_pool::TransactionPool;
 
 use reth_rpc_eth_api::helpers::{EthState, LoadState, SpawnBlocking};
@@ -13,17 +13,18 @@ where
     Self: LoadState + SpawnBlocking,
 {
     fn max_proof_window(&self) -> u64 {
-        self.eth_proof_window()
+        self.inner.eth_proof_window()
     }
 }
 
 impl<Provider, Pool, Network, EvmConfig> LoadState for EthApi<Provider, Pool, Network, EvmConfig>
 where
-    Provider: StateProviderFactory,
+    Self: Send + Sync,
+    Provider: StateProviderFactory + ChainSpecProvider,
     Pool: TransactionPool,
 {
     #[inline]
-    fn provider(&self) -> impl StateProviderFactory {
+    fn provider(&self) -> impl StateProviderFactory + ChainSpecProvider {
         self.inner.provider()
     }
 
@@ -40,8 +41,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
+    use super::*;
     use reth_evm_ethereum::EthEvmConfig;
     use reth_primitives::{
         constants::ETHEREUM_BLOCK_GAS_LIMIT, Address, StorageKey, StorageValue, U256,
@@ -54,8 +54,7 @@ mod tests {
     use reth_rpc_server_types::constants::{DEFAULT_ETH_PROOF_WINDOW, DEFAULT_PROOF_PERMITS};
     use reth_tasks::pool::BlockingTaskPool;
     use reth_transaction_pool::test_utils::testing_pool;
-
-    use super::*;
+    use std::collections::HashMap;
 
     #[tokio::test]
     async fn test_storage() {

@@ -18,6 +18,8 @@ eyre.workspace = true
 dotenv = {version = "0.15.0"}
 tokio = "1.38.0"
 borsh.workspace = true
+reth-primitives.workspace = true
+
 
 [dev-dependencies]
 alloy-eips.workspace = true

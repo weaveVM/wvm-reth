@@ -42,7 +42,7 @@ pub const DEFAULT_SECONDS_LOOKUP_INTERVAL: u64 = 60;
 /// Default is 100 counts.
 pub const DEFAULT_COUNT_BOOTSTRAP_LOOKUPS: u64 = 100;
 
-/// Default duration of look up interval, for pulse look ups at bootstrap.
+/// Default duration of the pulse lookup interval at bootstrap.
 ///
 /// Default is 5 seconds.
 pub const DEFAULT_SECONDS_BOOTSTRAP_LOOKUP_INTERVAL: u64 = 5;
@@ -296,6 +296,27 @@ impl Config {
             bootstrap_lookup_interval: None,
             bootstrap_lookup_countdown: None,
             discovered_peer_filter: None,
+        }
+    }
+
+    /// Inserts a new boot node to the list of boot nodes.
+    pub fn insert_boot_node(&mut self, boot_node: BootNode) {
+        self.bootstrap_nodes.insert(boot_node);
+    }
+
+    /// Inserts a new unsigned enode boot node to the list of boot nodes if it can be parsed, see
+    /// also [`BootNode::from_unsigned`].
+    pub fn insert_unsigned_boot_node(&mut self, node_record: NodeRecord) {
+        let _ = BootNode::from_unsigned(node_record).map(|node| self.insert_boot_node(node));
+    }
+
+    /// Extends the list of boot nodes with a list of enode boot nodes if they can be parsed.
+    pub fn extend_unsigned_boot_nodes(
+        &mut self,
+        node_records: impl IntoIterator<Item = NodeRecord>,
+    ) {
+        for node_record in node_records {
+            self.insert_unsigned_boot_node(node_record);
         }
     }
 

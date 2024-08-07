@@ -17,6 +17,7 @@ use reth_transaction_pool::error::{
 };
 use revm::primitives::{EVMError, ExecutionResult, HaltReason, OutOfGasError};
 use revm_inspectors::tracing::{js::JsInspectorError, MuxError};
+use tracing::error;
 
 /// Result alias
 pub type EthResult<T> = Result<T, EthApiError>;
@@ -136,6 +137,11 @@ impl EthApiError {
     /// crates a new [`EthApiError::Other`] variant.
     pub fn other<E: ToRpcError>(err: E) -> Self {
         Self::Other(Box::new(err))
+    }
+
+    /// Returns `true` if error is [`RpcInvalidTransactionError::GasTooHigh`]
+    pub const fn is_gas_too_high(&self) -> bool {
+        matches!(self, Self::InvalidTransaction(RpcInvalidTransactionError::GasTooHigh))
     }
 }
 
@@ -369,22 +375,16 @@ pub enum RpcInvalidTransactionError {
     /// EIP-7702 transaction has invalid fields set.
     #[error("EIP-7702 authorization list has invalid fields")]
     AuthorizationListInvalidFields,
-    /// Optimism related error
-    #[error(transparent)]
-    #[cfg(feature = "optimism")]
-    Optimism(#[from] OptimismInvalidTransactionError),
+    /// Any other error
+    #[error("{0}")]
+    Other(Box<dyn ToRpcError>),
 }
 
-/// Optimism specific invalid transaction errors
-#[cfg(feature = "optimism")]
-#[derive(thiserror::Error, Debug)]
-pub enum OptimismInvalidTransactionError {
-    /// A deposit transaction was submitted as a system transaction post-regolith.
-    #[error("no system transactions allowed after regolith")]
-    DepositSystemTxPostRegolith,
-    /// A deposit transaction halted post-regolith
-    #[error("deposit transaction halted after regolith")]
-    HaltedDepositPostRegolith,
+impl RpcInvalidTransactionError {
+    /// crates a new [`RpcInvalidTransactionError::Other`] variant.
+    pub fn other<E: ToRpcError>(err: E) -> Self {
+        Self::Other(Box::new(err))
+    }
 }
 
 impl RpcInvalidTransactionError {
@@ -432,6 +432,7 @@ impl From<RpcInvalidTransactionError> for jsonrpsee_types::error::ErrorObject<'s
                     revert.output.as_ref().map(|out| out.as_ref()),
                 )
             }
+            RpcInvalidTransactionError::Other(err) => err.to_rpc_error(),
             err => rpc_err(err.error_code(), err.to_string(), None),
         }
     }
@@ -444,7 +445,7 @@ impl From<revm::primitives::InvalidTransaction> for RpcInvalidTransactionError {
             InvalidTransaction::InvalidChainId => Self::InvalidChainId,
             InvalidTransaction::PriorityFeeGreaterThanMaxFee => Self::TipAboveFeeCap,
             InvalidTransaction::GasPriceLessThanBasefee => Self::FeeCapTooLow,
-            InvalidTransaction::CallerGasLimitMoreThanBlock => Self::GasTooHigh,
+            InvalidTransaction::CallerGasLimitMoreThanBlock |
             InvalidTransaction::CallGasCostMoreThanGasLimit => Self::GasTooHigh,
             InvalidTransaction::RejectCallerWithCode => Self::SenderNoEOA,
             InvalidTransaction::LackOfFundForMaxFee { .. } => Self::InsufficientFunds,
@@ -470,13 +471,14 @@ impl From<revm::primitives::InvalidTransaction> for RpcInvalidTransactionError {
             InvalidTransaction::AuthorizationListInvalidFields => {
                 Self::AuthorizationListInvalidFields
             }
-            #[cfg(feature = "optimism")]
-            InvalidTransaction::DepositSystemTxPostRegolith => {
-                Self::Optimism(OptimismInvalidTransactionError::DepositSystemTxPostRegolith)
-            }
-            #[cfg(feature = "optimism")]
-            InvalidTransaction::HaltedDepositPostRegolith => {
-                Self::Optimism(OptimismInvalidTransactionError::HaltedDepositPostRegolith)
+            #[allow(unreachable_patterns)]
+            err => {
+                error!(target: "rpc",
+                    ?err,
+                    "unexpected transaction error"
+                );
+
+                Self::other(internal_rpc_err(format!("unexpected transaction error: {err}")))
             }
         }
     }
@@ -498,6 +500,7 @@ impl From<reth_primitives::InvalidTransactionError> for RpcInvalidTransactionErr
             InvalidTransactionError::Eip2930Disabled |
             InvalidTransactionError::Eip1559Disabled |
             InvalidTransactionError::Eip4844Disabled |
+            InvalidTransactionError::Eip7702Disabled |
             InvalidTransactionError::TxTypeNotSupported => Self::TxTypeNotSupported,
             InvalidTransactionError::GasUintOverflow => Self::GasUintOverflow,
             InvalidTransactionError::GasTooLow => Self::GasTooLow,

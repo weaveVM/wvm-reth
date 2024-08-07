@@ -112,7 +112,7 @@ impl PriceBumpConfig {
     #[inline]
     pub(crate) const fn price_bump(&self, tx_type: u8) -> u128 {
         if tx_type == EIP4844_TX_TYPE_ID {
-            return self.replace_blob_tx_price_bump;
+            return self.replace_blob_tx_price_bump
         }
         self.default_price_bump
     }
@@ -173,7 +173,7 @@ impl LocalTransactionConfig {
     #[inline]
     pub fn is_local(&self, origin: TransactionOrigin, sender: Address) -> bool {
         if self.no_local_exemptions() {
-            return false;
+            return false
         }
         origin.is_local() || self.contains_local_address(sender)
     }
@@ -227,5 +227,76 @@ mod tests {
 
         // now this should be above the limits
         assert!(config.is_exceeded(pool_size));
+    }
+
+    #[test]
+    fn test_default_config() {
+        let config = LocalTransactionConfig::default();
+
+        assert!(!config.no_exemptions);
+        assert!(config.local_addresses.is_empty());
+        assert!(config.propagate_local_transactions);
+    }
+
+    #[test]
+    fn test_no_local_exemptions() {
+        let config = LocalTransactionConfig { no_exemptions: true, ..Default::default() };
+        assert!(config.no_local_exemptions());
+    }
+
+    #[test]
+    fn test_contains_local_address() {
+        let address = Address::new([1; 20]);
+        let mut local_addresses = HashSet::new();
+        local_addresses.insert(address);
+
+        let config = LocalTransactionConfig { local_addresses, ..Default::default() };
+
+        // Should contain the inserted address
+        assert!(config.contains_local_address(address));
+
+        // Should not contain another random address
+        assert!(!config.contains_local_address(Address::new([2; 20])));
+    }
+
+    #[test]
+    fn test_is_local_with_no_exemptions() {
+        let address = Address::new([1; 20]);
+        let config = LocalTransactionConfig {
+            no_exemptions: true,
+            local_addresses: HashSet::new(),
+            ..Default::default()
+        };
+
+        // Should return false as no exemptions is set to true
+        assert!(!config.is_local(TransactionOrigin::Local, address));
+    }
+
+    #[test]
+    fn test_is_local_without_no_exemptions() {
+        let address = Address::new([1; 20]);
+        let mut local_addresses = HashSet::new();
+        local_addresses.insert(address);
+
+        let config =
+            LocalTransactionConfig { no_exemptions: false, local_addresses, ..Default::default() };
+
+        // Should return true as the transaction origin is local
+        assert!(config.is_local(TransactionOrigin::Local, Address::new([2; 20])));
+        assert!(config.is_local(TransactionOrigin::Local, address));
+
+        // Should return true as the address is in the local_addresses set
+        assert!(config.is_local(TransactionOrigin::External, address));
+        // Should return false as the address is not in the local_addresses set
+        assert!(!config.is_local(TransactionOrigin::External, Address::new([2; 20])));
+    }
+
+    #[test]
+    fn test_set_propagate_local_transactions() {
+        let config = LocalTransactionConfig::default();
+        assert!(config.propagate_local_transactions);
+
+        let new_config = config.set_propagate_local_transactions(false);
+        assert!(!new_config.propagate_local_transactions);
     }
 }

@@ -1,14 +1,19 @@
 //! Contains [Chain], a chain of blocks and their final state.
 
+#[cfg(not(feature = "std"))]
+use alloc::{borrow::Cow, collections::BTreeMap};
+use core::{fmt, ops::RangeInclusive};
+#[cfg(feature = "std")]
+use std::{borrow::Cow, collections::BTreeMap};
+
 use crate::ExecutionOutcome;
-use reth_execution_errors::BlockExecutionError;
+use reth_execution_errors::{BlockExecutionError, InternalBlockExecutionError};
 use reth_primitives::{
     Address, BlockHash, BlockNumHash, BlockNumber, ForkBlock, Receipt, SealedBlock,
     SealedBlockWithSenders, SealedHeader, TransactionSigned, TransactionSignedEcRecovered, TxHash,
 };
 use reth_trie::updates::TrieUpdates;
 use revm::db::BundleState;
-use std::{borrow::Cow, collections::BTreeMap, fmt, ops::RangeInclusive};
 
 /// A chain of blocks and their final state.
 ///
@@ -131,13 +136,13 @@ impl Chain {
         block_number: BlockNumber,
     ) -> Option<ExecutionOutcome> {
         if self.tip().number == block_number {
-            return Some(self.execution_outcome.clone());
+            return Some(self.execution_outcome.clone())
         }
 
         if self.blocks.contains_key(&block_number) {
             let mut execution_outcome = self.execution_outcome.clone();
             execution_outcome.revert_to(block_number);
-            return Some(execution_outcome);
+            return Some(execution_outcome)
         }
         None
     }
@@ -261,10 +266,11 @@ impl Chain {
         let chain_tip = self.tip();
         let other_fork_block = other.fork_block();
         if chain_tip.hash() != other_fork_block.hash {
-            return Err(BlockExecutionError::AppendChainDoesntConnect {
+            return Err(InternalBlockExecutionError::AppendChainDoesntConnect {
                 chain_tip: Box::new(chain_tip.num_hash()),
                 other_chain_fork: Box::new(other_fork_block),
-            });
+            }
+            .into())
         }
 
         // Insert blocks from other chain
@@ -301,23 +307,23 @@ impl Chain {
         let block_number = match split_at {
             ChainSplitTarget::Hash(block_hash) => {
                 let Some(block_number) = self.block_number(block_hash) else {
-                    return ChainSplit::NoSplitPending(self);
+                    return ChainSplit::NoSplitPending(self)
                 };
                 // If block number is same as tip whole chain is becoming canonical.
                 if block_number == chain_tip {
-                    return ChainSplit::NoSplitCanonical(self);
+                    return ChainSplit::NoSplitCanonical(self)
                 }
                 block_number
             }
             ChainSplitTarget::Number(block_number) => {
                 if block_number > chain_tip {
-                    return ChainSplit::NoSplitPending(self);
+                    return ChainSplit::NoSplitPending(self)
                 }
                 if block_number == chain_tip {
-                    return ChainSplit::NoSplitCanonical(self);
+                    return ChainSplit::NoSplitCanonical(self)
                 }
                 if block_number < *self.blocks.first_entry().expect("chain is never empty").key() {
-                    return ChainSplit::NoSplitPending(self);
+                    return ChainSplit::NoSplitPending(self)
                 }
                 block_number
             }

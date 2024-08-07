@@ -60,7 +60,7 @@ pub async fn connect_passthrough(
 /// A Rplx subprotocol for testing
 pub mod proto {
     use super::*;
-    use crate::{capability::Capability, protocol::Protocol};
+    use crate::{protocol::Protocol, Capability};
     use bytes::{Buf, BufMut, BytesMut};
 
     /// Returns a new testing `HelloMessage` with eth and the test protocol
@@ -137,7 +137,7 @@ pub mod proto {
         /// Decodes a `TestProtoMessage` from the given message buffer.
         pub fn decode_message(buf: &mut &[u8]) -> Option<Self> {
             if buf.is_empty() {
-                return None;
+                return None
             }
             let id = buf[0];
             buf.advance(1);
