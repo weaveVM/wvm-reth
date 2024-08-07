@@ -15,9 +15,9 @@ use reth::{
 };
 use reth_chainspec::ChainSpec;
 use reth_node_ethereum::EthEvmConfig;
+use revm_primitives::EnvWithHandlerCfg;
 use schnellru::{ByLength, LruMap};
 use std::{collections::HashMap, sync::Arc};
-use revm_primitives::EnvWithHandlerCfg;
 
 /// Type alias for the LRU cache used within the [`PrecompileCache`].
 type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResult>;

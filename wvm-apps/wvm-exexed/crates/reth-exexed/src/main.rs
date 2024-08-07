@@ -13,8 +13,10 @@ use repository::state_repository;
 use reth::{api::FullNodeComponents, builder::Node};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 
-
-use reth_node_ethereum::{node::{EthereumExecutorBuilder, EthereumAddOns}, EthereumNode};
+use reth_node_ethereum::{
+    node::{EthereumAddOns, EthereumExecutorBuilder},
+    EthereumNode,
+};
 use reth_tracing::tracing::info;
 use serde_json::to_string;
 use types::types::ExecutionTipState;
