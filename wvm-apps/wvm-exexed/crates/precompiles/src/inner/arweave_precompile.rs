@@ -24,7 +24,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let gas_used: u64 = (10_000 + data_size * 3) as u64;
 
     if gas_used > gas_limit {
-        return Err(PrecompileErrors::Error(PrecompileError::OutOfGas))
+        return Err(PrecompileErrors::Error(PrecompileError::OutOfGas));
     }
 
     if input.is_empty() {

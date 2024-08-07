@@ -1,8 +1,8 @@
+use crate::inner::test_precompile::HELLO_WORLD_PC;
 use crate::inner::{
     arweave_precompile::ARWEAVE_UPLOAD_PC, arweave_read_precompile::ARWEAVE_READ_PC,
 };
 use reth::revm::precompile::PrecompileWithAddress;
-use crate::inner::test_precompile::HELLO_WORLD_PC;
 
 pub mod arweave_precompile;
 mod arweave_read_precompile;

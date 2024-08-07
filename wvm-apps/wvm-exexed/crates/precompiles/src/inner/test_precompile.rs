@@ -1,6 +1,6 @@
-use reth::primitives::Bytes;
 use reth::primitives::revm_primitives::{Precompile, PrecompileOutput, PrecompileResult};
-use reth::revm::precompile::{PrecompileWithAddress, u64_to_address};
+use reth::primitives::Bytes;
+use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 
 pub const PC_ADDRESS: u64 = 0x19;
 pub const HELLO_WORLD_PC: PrecompileWithAddress =
