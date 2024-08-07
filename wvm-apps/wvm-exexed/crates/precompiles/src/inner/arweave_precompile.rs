@@ -24,7 +24,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let gas_used: u64 = (10_000 + data_size * 3) as u64;
 
     if gas_used > gas_limit {
-        return Err(PrecompileErrors::Error(PrecompileError::OutOfGas))
+        return Err(PrecompileErrors::Error(PrecompileError::OutOfGas));
     }
 
     if input.is_empty() {
@@ -43,6 +43,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let res = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
         async {
             IrysRequest::new()
+                .set_private_key(SOLANA_SILLY_PRIVATE_KEY.to_string())
                 .set_tag("Content-Type", "application/octet-stream")
                 .set_tag("WeaveVM:Precompile", "true")
                 .set_tag("WeaveVM:Precompile-Address", PC_ADDRESS.to_string().as_str())
