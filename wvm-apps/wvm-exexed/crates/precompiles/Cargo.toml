@@ -1,5 +1,5 @@
 [package]
-name = "reth-exexed"
+name = "precompiles"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -7,19 +7,19 @@ rust-version.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-brotlic.workspace = true
+parking_lot.workspace = true
+schnellru.workspace = true
+reth-revm.workspace = true
+reth-chainspec.workspace = true
+reth-ethereum-engine-primitives.workspace = true
 reth.workspace = true
 reth-exex.workspace = true
 reth-node-ethereum.workspace = true
 reth-tracing.workspace = true
-eyre.workspace = true
-borsh.workspace = true
 serde_json.workspace = true
-wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
-repository = { path = "../repository" }
-bigquery = { path = "../bigquery" }
-exex-etl = { path = "../exex-etl" }
-types = { path = "../types" }
-lambda = { path = "../lambda" }
+serde.workspace = true
+reqwest.workspace = true
+eyre.workspace = true
 irys = { path = "../irys" }
-precompiles = { path = "../precompiles" }
+tokio.workspace = true
+reqwest-graphql = "1.0.0"

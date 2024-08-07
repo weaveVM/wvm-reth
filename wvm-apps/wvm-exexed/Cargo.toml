@@ -8,6 +8,11 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
+reth-revm.workspace = true
+reth-ethereum-engine-primitives.workspace = true
+reth-chainspec.workspace = true
+parking_lot.workspace = true
+schnellru.workspace = true
 reth.workspace = true
 reth-exex.workspace = true
 reth-node-api.workspace = true
@@ -29,6 +34,7 @@ repository = { path = "crates/repository" }
 bigquery = { path = "crates/bigquery" }
 lambda = { path = "crates/lambda" }
 irys = { path = "crates/irys" }
+precompiles = { path = "crates/precompiles" }
 wevm-borsh = { path = "crates/wevm-borsh" }
 exex-etl = { path = "crates/exex-etl" }
 types = { path = "crates/types" }

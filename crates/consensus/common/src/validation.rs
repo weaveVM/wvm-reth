@@ -274,9 +274,9 @@ mod tests {
     use rand::Rng;
     use reth_chainspec::ChainSpecBuilder;
     use reth_primitives::{
-        hex_literal::hex, proofs, Account, Address, BlockBody, BlockHash, BlockHashOrNumber,
-        BlockNumber, Bytes, Signature, Transaction, TransactionSigned, TxEip4844, Withdrawal,
-        Withdrawals, U256,
+        constants::ETHEREUM_BLOCK_GAS_LIMIT, hex_literal::hex, proofs, Account, Address, BlockBody,
+        BlockHash, BlockHashOrNumber, BlockNumber, Bytes, Signature, Transaction,
+        TransactionSigned, TxEip4844, Withdrawal, Withdrawals, U256,
     };
     use reth_storage_api::{
         errors::provider::ProviderResult, AccountReader, HeaderProvider, WithdrawalsProvider,
@@ -417,7 +417,7 @@ mod tests {
             logs_bloom: hex!("002400000000004000220000800002000000000000000000000000000000100000000000000000100000000000000021020000000800000006000000002100040000000c0004000000000008000008200000000000000000000000008000000001040000020000020000002000000800000002000020000000022010000000000000010002001000000000020200000000000001000200880000004000000900020000000000020000000040000000000000000000000000000080000000000001000002000000000000012000200020000000000000001000000000000020000010321400000000100000000000000000000000000000400000000000000000").into(),
             difficulty: U256::ZERO, // total difficulty: 0xc70d815d562d3cfa955).into(),
             number: 0xf21d20,
-            gas_limit: 0x1c9c380,
+            gas_limit: ETHEREUM_BLOCK_GAS_LIMIT, // WVM: 300_000_000 gas limit
             gas_used: 0x6e813,
             timestamp: 0x635f9657,
             extra_data: hex!("")[..].into(),
@@ -434,7 +434,7 @@ mod tests {
 
         let mut parent = header.clone();
         parent.gas_used = 17763076;
-        parent.gas_limit = 30000000;
+        parent.gas_limit = ETHEREUM_BLOCK_GAS_LIMIT;
         parent.base_fee_per_gas = Some(0x28041f7f5);
         parent.number -= 1;
         parent.timestamp -= 1;

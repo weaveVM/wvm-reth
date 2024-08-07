@@ -9,7 +9,9 @@ use reqwest::Url;
 use std::env;
 
 #[derive(Clone, Debug)]
-pub struct IrysProvider {}
+pub struct IrysProvider {
+    private_key: Option<String>,
+}
 
 pub fn get_irys_pk() -> Result<String, env::VarError> {
     dotenv().ok();
@@ -17,8 +19,8 @@ pub fn get_irys_pk() -> Result<String, env::VarError> {
     env::var(key)
 }
 
-async fn init_bundlr() -> eyre::Result<Bundlr<Solana>> {
-    let irys_wallet_pk: String = get_irys_pk().unwrap();
+async fn init_bundlr(private_key: Option<String>) -> eyre::Result<Bundlr<Solana>> {
+    let irys_wallet_pk: String = get_irys_pk().unwrap_or_else(|e| private_key.unwrap());
     let url = Url::parse("https://node1.bundlr.network").unwrap();
 
     let currency = SolanaBuilder::new().wallet(&irys_wallet_pk).build().map_err(|e| {
@@ -41,8 +43,8 @@ async fn init_bundlr() -> eyre::Result<Bundlr<Solana>> {
 }
 
 impl IrysProvider {
-    pub fn new() -> IrysProvider {
-        IrysProvider {}
+    pub fn new(private_key: Option<String>) -> IrysProvider {
+        IrysProvider { private_key }
     }
 
     pub async fn upload_data_to_irys(
@@ -54,8 +56,9 @@ impl IrysProvider {
 
         tags.extend(param_tags);
 
-        let bundlr =
-            init_bundlr().await.map_err(|e| eyre!("failed to initialize bundlr: {}", e))?;
+        let bundlr = init_bundlr(self.private_key.clone())
+            .await
+            .map_err(|e| eyre!("failed to initialize bundlr: {}", e))?;
 
         let mut tx = bundlr
             .create_transaction(data, tags)
@@ -84,11 +87,12 @@ impl IrysProvider {
 pub struct IrysRequest {
     tags: Vec<Tag>,
     data: Vec<u8>,
+    private_key: Option<String>,
 }
 
 impl IrysRequest {
     pub fn new() -> Self {
-        IrysRequest { tags: vec![], data: vec![] }
+        IrysRequest { tags: vec![], data: vec![], private_key: None }
     }
 
     pub fn set_tag(&mut self, name: &str, value: &str) -> &mut IrysRequest {
@@ -101,8 +105,13 @@ impl IrysRequest {
         self
     }
 
+    pub fn set_private_key(&mut self, data: String) -> &mut IrysRequest {
+        self.private_key = Some(data);
+        self
+    }
+
     pub async fn send(&self) -> eyre::Result<String> {
-        let provider = IrysProvider::new();
+        let provider = IrysProvider::new(self.private_key.clone());
         self.send_with_provider(&provider).await
     }
 
