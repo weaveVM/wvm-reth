@@ -19,8 +19,6 @@ use reth_node_ethereum::{
 };
 use reth_tracing::tracing::info;
 use serde_json::to_string;
-use reth::builder::Node;
-use reth_node_ethereum::node::EthereumExecutorBuilder;
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
