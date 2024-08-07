@@ -27,7 +27,6 @@ use reth_transaction_pool::{
     blobstore::DiskFileBlobStore, EthTransactionPool, TransactionPool,
     TransactionValidationTaskExecutor,
 };
-use std::sync::Arc;
 
 use crate::{EthEngineTypes, EthEvmConfig};
 

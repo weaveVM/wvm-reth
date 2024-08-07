@@ -11,9 +11,9 @@ use crate::{
 };
 use reth_chainspec::{ChainSpec, EthereumHardforks};
 use reth_primitives::{
-    constants::{eip4844::MAX_BLOBS_PER_BLOCK, ETHEREUM_BLOCK_GAS_LIMIT},
-    GotExpected, InvalidTransactionError, SealedBlock, EIP1559_TX_TYPE_ID, EIP2930_TX_TYPE_ID,
-    EIP4844_TX_TYPE_ID, EIP7702_TX_TYPE_ID, LEGACY_TX_TYPE_ID,
+    constants::eip4844::MAX_BLOBS_PER_BLOCK, GotExpected, InvalidTransactionError, SealedBlock,
+    EIP1559_TX_TYPE_ID, EIP2930_TX_TYPE_ID, EIP4844_TX_TYPE_ID, EIP7702_TX_TYPE_ID,
+    LEGACY_TX_TYPE_ID,
 };
 use reth_provider::{AccountReader, BlockReaderIdExt, StateProviderFactory};
 use reth_tasks::TaskSpawner;
@@ -214,7 +214,7 @@ where
                     transaction_size,
                     self.max_tx_input_bytes,
                 ),
-            );
+            )
         }
 
         // Check whether the init code size has been exceeded.
@@ -233,7 +233,7 @@ where
                     transaction_gas_limit,
                     self.block_gas_limit,
                 ),
-            );
+            )
         }
 
         // Ensure max_priority_fee_per_gas (if EIP1559) is less than max_fee_per_gas if any.
@@ -788,20 +788,6 @@ pub fn ensure_intrinsic_gas<T: EthPoolTransaction>(
     } else {
         Ok(())
     }
-}
-
-/// Calculates the Intrinsic Gas usage for a Transaction
-///
-/// Caution: This only checks past the Merge hardfork.
-#[inline]
-pub fn calculate_intrinsic_gas_after_merge(
-    input: &[u8],
-    kind: &TxKind,
-    access_list: &[AccessListItem],
-    is_shanghai: bool,
-) -> u64 {
-    let spec_id = if is_shanghai { SpecId::SHANGHAI } else { SpecId::MERGE };
-    validate_initial_tx_gas(spec_id, input, kind.is_create(), access_list, 0)
 }
 
 #[cfg(test)]

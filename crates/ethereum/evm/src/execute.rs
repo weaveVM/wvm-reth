@@ -39,8 +39,6 @@ use alloc::{boxed::Box, sync::Arc, vec, vec::Vec};
 #[cfg(feature = "std")]
 use std::sync::Arc;
 
-#[cfg(feature = "std")]
-use std::{fmt::Display, sync::Arc, vec, vec::Vec};
 /// Provides executors to execute regular ethereum blocks
 #[derive(Debug, Clone)]
 pub struct EthExecutorProvider<EvmConfig = EthEvmConfig> {
