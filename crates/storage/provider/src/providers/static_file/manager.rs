@@ -39,7 +39,7 @@ use std::{
     sync::{mpsc, Arc},
 };
 use strum::IntoEnumIterator;
-use tracing::{info, warn};
+use tracing::{info, trace, warn};
 
 /// Alias type for a map that can be queried for block ranges from a transaction
 /// segment respectively. It uses `TxNumber` to represent the transaction end of a static file
@@ -261,7 +261,7 @@ impl StaticFileProvider {
             )
             .and_then(|(parsed_segment, block_range)| {
                 if parsed_segment == segment {
-                    return Some(block_range);
+                    return Some(block_range)
                 }
                 None
             }),
@@ -270,7 +270,7 @@ impl StaticFileProvider {
 
         // Return cached `LoadedJar` or insert it for the first time, and then, return it.
         if let Some(block_range) = block_range {
-            return Ok(Some(self.get_or_create_jar_provider(segment, &block_range)?));
+            return Ok(Some(self.get_or_create_jar_provider(segment, &block_range)?))
         }
 
         Ok(None)
@@ -329,9 +329,12 @@ impl StaticFileProvider {
         let key = (fixed_block_range.end(), segment);
 
         // Avoid using `entry` directly to avoid a write lock in the common case.
+        trace!(target: "provider::static_file", ?segment, ?fixed_block_range, "Getting provider");
         let mut provider: StaticFileJarProvider<'_> = if let Some(jar) = self.map.get(&key) {
+            trace!(target: "provider::static_file", ?segment, ?fixed_block_range, "Jar found in cache");
             jar.into()
         } else {
+            trace!(target: "provider::static_file", ?segment, ?fixed_block_range, "Creating jar from scratch");
             let path = self.path.join(segment.filename(fixed_block_range));
             let mut jar =
                 NippyJar::load(&path).map_err(|e| ProviderError::NippyJar(e.to_string()))?;
@@ -379,11 +382,11 @@ impl StaticFileProvider {
         while let Some((tx_end, block_range)) = static_files_rev_iter.next() {
             if tx > *tx_end {
                 // request tx is higher than highest static file tx
-                return None;
+                return None
             }
             let tx_start = static_files_rev_iter.peek().map(|(tx_end, _)| *tx_end + 1).unwrap_or(0);
             if tx_start <= tx {
-                return Some(find_fixed_range(block_range.end()));
+                return Some(find_fixed_range(block_range.end()))
             }
         }
         None
@@ -532,6 +535,18 @@ impl StaticFileProvider {
         provider: &DatabaseProvider<TX>,
         has_receipt_pruning: bool,
     ) -> ProviderResult<Option<PipelineTarget>> {
+        // OVM chain contains duplicate transactions, so is inconsistent by default since reth db
+        // not designed for duplicate transactions (see <https://github.com/paradigmxyz/reth/blob/v1.0.3/crates/optimism/primitives/src/bedrock_import.rs>). Undefined behaviour for queries
+        // to OVM chain is also in op-erigon.
+        if provider.chain_spec().is_optimism_mainnet() {
+            info!(target: "reth::cli",
+                "Skipping storage verification for OP mainnet, expected inconsistency in OVM chain"
+            );
+            return Ok(None);
+        }
+
+        info!(target: "reth::cli", "Verifying storage consistency.");
+
         let mut unwind_target: Option<BlockNumber> = None;
         let mut update_unwind_target = |new_target: BlockNumber| {
             if let Some(target) = unwind_target.as_mut() {
@@ -544,7 +559,7 @@ impl StaticFileProvider {
         for segment in StaticFileSegment::iter() {
             if has_receipt_pruning && segment.is_receipts() {
                 // Pruned nodes (including full node) do not store receipts as static files.
-                continue;
+                continue
             }
 
             let initial_highest_block = self.get_highest_static_file_block(segment);
@@ -586,16 +601,16 @@ impl StaticFileProvider {
                 loop {
                     if let Some(indices) = provider.block_body_indices(last_block)? {
                         if indices.last_tx_num() <= highest_tx {
-                            break;
+                            break
                         }
                     } else {
                         // If the block body indices can not be found, then it means that static
                         // files is ahead of database, and the `ensure_invariants` check will fix
                         // it by comparing with stage checkpoints.
-                        break;
+                        break
                     }
                     if last_block == 0 {
-                        break;
+                        break
                     }
                     last_block -= 1;
 
@@ -646,8 +661,13 @@ impl StaticFileProvider {
     /// * its highest block should match the stage checkpoint block number if it's equal or higher
     ///   than the corresponding database table last entry.
     ///   * If the checkpoint block is higher, then request a pipeline unwind to the static file
-    ///     block.
-    ///   * If the checkpoint block is lower, then heal by removing rows from the static file.
+    ///     block. This is expressed by returning [`Some`] with the requested pipeline unwind
+    ///     target.
+    ///   * If the checkpoint block is lower, then heal by removing rows from the static file. In
+    ///     this case, the rows will be removed and [`None`] will be returned.
+    ///
+    /// * If the database tables overlap with static files and have contiguous keys, or the
+    ///   checkpoint block matches the highest static files block, then [`None`] will be returned.
     fn ensure_invariants<TX: DbTx, T: Table<Key = u64>>(
         &self,
         provider: &DatabaseProvider<TX>,
@@ -674,12 +694,12 @@ impl StaticFileProvider {
                     ?segment,
                     "Setting unwind target."
                 );
-                return Ok(Some(highest_static_file_block));
+                return Ok(Some(highest_static_file_block))
             }
 
             if let Some((db_last_entry, _)) = db_cursor.last()? {
                 if db_last_entry > highest_static_file_entry {
-                    return Ok(None);
+                    return Ok(None)
                 }
             }
         }
@@ -704,7 +724,7 @@ impl StaticFileProvider {
                 ?segment,
                 "Setting unwind target."
             );
-            return Ok(Some(highest_static_file_block));
+            return Ok(Some(highest_static_file_block))
         }
 
         // If the checkpoint is behind, then we failed to do a database commit **but committed** to
@@ -736,11 +756,15 @@ impl StaticFileProvider {
     }
 
     /// Gets the highest static file block if it exists for a static file segment.
+    ///
+    /// If there is nothing on disk for the given segment, this will return [`None`].
     pub fn get_highest_static_file_block(&self, segment: StaticFileSegment) -> Option<BlockNumber> {
         self.static_files_max_block.read().get(&segment).copied()
     }
 
     /// Gets the highest static file transaction.
+    ///
+    /// If there is nothing on disk for the given segment, this will return [`None`].
     pub fn get_highest_static_file_tx(&self, segment: StaticFileSegment) -> Option<TxNumber> {
         self.static_files_tx_index
             .read()
@@ -768,7 +792,7 @@ impl StaticFileProvider {
             let mut range = find_fixed_range(highest_block);
             while range.end() > 0 {
                 if let Some(res) = func(self.get_or_create_jar_provider(segment, &range)?)? {
-                    return Ok(Some(res));
+                    return Ok(Some(res))
                 }
                 range = SegmentRangeInclusive::new(
                     range.start().saturating_sub(BLOCKS_PER_STATIC_FILE),
@@ -821,10 +845,10 @@ impl StaticFileProvider {
                 match get_fn(&mut cursor, number)? {
                     Some(res) => {
                         if !predicate(&res) {
-                            break 'outer;
+                            break 'outer
                         }
                         result.push(res);
-                        break 'inner;
+                        break 'inner
                     }
                     None => {
                         if retrying {
@@ -840,8 +864,14 @@ impl StaticFileProvider {
                             } else {
                                 ProviderError::MissingStaticFileTx(segment, number)
                             };
-                            return Err(err);
+                            return Err(err)
                         }
+                        // There is a very small chance of hitting a deadlock if two consecutive
+                        // static files share the same bucket in the
+                        // internal dashmap and we don't drop the current provider
+                        // before requesting the next one.
+                        drop(cursor);
+                        drop(provider);
                         provider = get_provider(number)?;
                         cursor = provider.cursor()?;
                         retrying = true;
@@ -874,14 +904,19 @@ impl StaticFileProvider {
                 self.get_segment_provider_from_transaction(segment, start, None)
             }
         };
-        let mut provider = get_provider(range.start)?;
 
+        let mut provider = Some(get_provider(range.start)?);
         Ok(range.filter_map(move |number| {
-            match get_fn(&mut provider.cursor().ok()?, number).transpose() {
+            match get_fn(&mut provider.as_ref().expect("qed").cursor().ok()?, number).transpose() {
                 Some(result) => Some(result),
                 None => {
-                    provider = get_provider(number).ok()?;
-                    get_fn(&mut provider.cursor().ok()?, number).transpose()
+                    // There is a very small chance of hitting a deadlock if two consecutive static
+                    // files share the same bucket in the internal dashmap and
+                    // we don't drop the current provider before requesting the
+                    // next one.
+                    provider.take();
+                    provider = Some(get_provider(number).ok()?);
+                    get_fn(&mut provider.as_ref().expect("qed").cursor().ok()?, number).transpose()
                 }
             }
         }))
@@ -923,7 +958,7 @@ impl StaticFileProvider {
         if static_file_upper_bound
             .map_or(false, |static_file_upper_bound| static_file_upper_bound >= number)
         {
-            return fetch_from_static_file(self);
+            return fetch_from_static_file(self)
         }
         fetch_from_database()
     }
@@ -1016,10 +1051,10 @@ impl StaticFileWriter for StaticFileProvider {
         segment: StaticFileSegment,
     ) -> ProviderResult<StaticFileProviderRWRefMut<'_>> {
         if self.access.is_read_only() {
-            return Err(ProviderError::ReadOnlyStaticFileAccess);
+            return Err(ProviderError::ReadOnlyStaticFileAccess)
         }
 
-        tracing::trace!(target: "providers::static_file", ?block, ?segment, "Getting static file writer.");
+        trace!(target: "provider::static_file", ?block, ?segment, "Getting static file writer.");
         Ok(match self.writers.entry(segment) {
             DashMapEntry::Occupied(entry) => entry.into_ref(),
             DashMapEntry::Vacant(entry) => {
@@ -1079,7 +1114,7 @@ impl HeaderProvider for StaticFileProvider {
                 .get_two::<HeaderMask<Header, BlockHash>>(block_hash.into())?
                 .and_then(|(header, hash)| {
                     if &hash == block_hash {
-                        return Some(header);
+                        return Some(header)
                     }
                     None
                 }))
@@ -1192,7 +1227,7 @@ impl ReceiptProvider for StaticFileProvider {
 
     fn receipt_by_hash(&self, hash: TxHash) -> ProviderResult<Option<Receipt>> {
         if let Some(num) = self.transaction_id(hash)? {
-            return self.receipt(num);
+            return self.receipt(num)
         }
         Ok(None)
     }
@@ -1228,7 +1263,8 @@ impl TransactionsProviderExt for StaticFileProvider {
         let mut channels = Vec::new();
 
         // iterator over the chunks
-        let chunks = (tx_range.start..tx_range.end)
+        let chunks = tx_range
+            .clone()
             .step_by(chunk_size)
             .map(|start| start..std::cmp::min(start + chunk_size as u64, tx_range.end));
 

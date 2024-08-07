@@ -18,15 +18,12 @@ use reth_ethereum_engine_primitives::EthEngineTypes;
 use reth_evm::{either::Either, test_utils::MockExecutorProvider};
 use reth_evm_ethereum::execute::EthExecutorProvider;
 use reth_exex_types::FinishedExExHeight;
-use reth_network_p2p::{
-    bodies::client::BodiesClient, headers::client::HeadersClient, sync::NoopSyncStateUpdater,
-    test_utils::NoopFullBlockClient,
-};
+use reth_network_p2p::{sync::NoopSyncStateUpdater, test_utils::NoopFullBlockClient, BlockClient};
 use reth_payload_builder::test_utils::spawn_test_payload_service;
 use reth_primitives::{BlockNumber, B256};
 use reth_provider::{
     providers::BlockchainProvider, test_utils::create_test_provider_factory_with_chain_spec,
-    ExecutionOutcome,
+    ExecutionOutcome, ProviderFactory,
 };
 use reth_prune::Pruner;
 use reth_prune_types::PruneModes;
@@ -85,7 +82,7 @@ impl<DB> TestEnv<DB> {
         loop {
             let result = self.send_new_payload(payload.clone(), cancun_fields.clone()).await?;
             if !result.is_syncing() {
-                return Ok(result);
+                return Ok(result)
             }
         }
     }
@@ -106,7 +103,7 @@ impl<DB> TestEnv<DB> {
         loop {
             let result = self.engine_handle.fork_choice_updated(state, None).await?;
             if !result.is_syncing() {
-                return Ok(result);
+                return Ok(result)
             }
         }
     }
@@ -232,7 +229,7 @@ impl TestConsensusEngineBuilder {
         client: Client,
     ) -> NetworkedTestConsensusEngineBuilder<Client>
     where
-        Client: HeadersClient + BodiesClient + 'static,
+        Client: BlockClient + 'static,
     {
         NetworkedTestConsensusEngineBuilder { base_config: self, client: Some(client) }
     }
@@ -259,7 +256,7 @@ pub struct NetworkedTestConsensusEngineBuilder<Client> {
 
 impl<Client> NetworkedTestConsensusEngineBuilder<Client>
 where
-    Client: HeadersClient + BodiesClient + 'static,
+    Client: BlockClient + 'static,
 {
     /// Set the pipeline execution outputs to use for the test consensus engine.
     #[allow(dead_code)]
@@ -314,7 +311,7 @@ where
         client: ClientType,
     ) -> NetworkedTestConsensusEngineBuilder<ClientType>
     where
-        ClientType: HeadersClient + BodiesClient + 'static,
+        ClientType: BlockClient + 'static,
     {
         NetworkedTestConsensusEngineBuilder { base_config: self.base_config, client: Some(client) }
     }
@@ -391,21 +388,24 @@ where
 
         // Setup blockchain tree
         let externals = TreeExternals::new(provider_factory.clone(), consensus, executor_factory);
-        let config = BlockchainTreeConfig::new(1, 2, 3, 2);
         let tree = Arc::new(ShareableBlockchainTree::new(
-            BlockchainTree::new(externals, config, PruneModes::default())
-                .expect("failed to create tree"),
+            BlockchainTree::new(
+                externals,
+                BlockchainTreeConfig::new(1, 2, 3, 2),
+                PruneModes::default(),
+            )
+            .expect("failed to create tree"),
         ));
-        let latest = self.base_config.chain_spec.genesis_header().seal_slow();
-        let blockchain_provider =
-            BlockchainProvider::with_latest(provider_factory.clone(), tree, latest);
+        let genesis_block = self.base_config.chain_spec.genesis_header().seal_slow();
 
-        let pruner = Pruner::new(
+        let blockchain_provider =
+            BlockchainProvider::with_blocks(provider_factory.clone(), tree, genesis_block, None);
+
+        let pruner = Pruner::<_, ProviderFactory<_>>::new(
             provider_factory.clone(),
             vec![],
             5,
             self.base_config.chain_spec.prune_delete_limit,
-            config.max_reorg_depth() as usize,
             None,
             watch::channel(FinishedExExHeight::NoExExs).1,
         );
@@ -439,7 +439,7 @@ pub fn spawn_consensus_engine<Client>(
     engine: TestBeaconConsensusEngine<Client>,
 ) -> oneshot::Receiver<Result<(), BeaconConsensusEngineError>>
 where
-    Client: HeadersClient + BodiesClient + 'static,
+    Client: BlockClient + 'static,
 {
     let (tx, rx) = oneshot::channel();
     tokio::spawn(async move {

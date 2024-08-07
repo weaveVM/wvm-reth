@@ -1,22 +1,18 @@
 //! Support for handling peer sessions.
 
-use crate::{message::PeerMessage, metrics::SessionManagerMetrics, session::active::ActiveSession};
-use counter::SessionCounter;
-use futures::{future::Either, io, FutureExt, StreamExt};
-use reth_ecies::{stream::ECIESStream, ECIESError};
-use reth_eth_wire::{
-    capability::{Capabilities, CapabilityMessage},
-    errors::EthStreamError,
-    DisconnectReason, EthVersion, HelloMessageWithProtocols, Status, UnauthedEthStream,
-    UnauthedP2PStream,
+mod active;
+mod conn;
+mod counter;
+mod handle;
+
+pub use conn::EthRlpxConnection;
+pub use handle::{
+    ActiveSessionHandle, ActiveSessionMessage, PendingSessionEvent, PendingSessionHandle,
+    SessionCommand,
 };
-use reth_metrics::common::mpsc::MeteredPollSender;
-use reth_network_peers::PeerId;
-use reth_network_types::SessionsConfig;
-use reth_primitives::{ForkFilter, ForkId, ForkTransition, Head};
-use reth_tasks::TaskSpawner;
-use rustc_hash::FxHashMap;
-use secp256k1::SecretKey;
+
+pub use reth_network_api::{Direction, PeerInfo};
+
 use std::{
     collections::HashMap,
     future::Future,
@@ -25,6 +21,23 @@ use std::{
     task::{Context, Poll},
     time::{Duration, Instant},
 };
+
+use counter::SessionCounter;
+use futures::{future::Either, io, FutureExt, StreamExt};
+use reth_ecies::{stream::ECIESStream, ECIESError};
+use reth_eth_wire::{
+    capability::CapabilityMessage, errors::EthStreamError, multiplex::RlpxProtocolMultiplexer,
+    Capabilities, DisconnectReason, EthVersion, HelloMessageWithProtocols, Status,
+    UnauthedEthStream, UnauthedP2PStream,
+};
+use reth_metrics::common::mpsc::MeteredPollSender;
+use reth_network_api::PeerRequestSender;
+use reth_network_peers::PeerId;
+use reth_network_types::SessionsConfig;
+use reth_primitives::{ForkFilter, ForkId, ForkTransition, Head};
+use reth_tasks::TaskSpawner;
+use rustc_hash::FxHashMap;
+use secp256k1::SecretKey;
 use tokio::{
     io::{AsyncRead, AsyncWrite},
     net::TcpStream,
@@ -34,18 +47,12 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::PollSender;
 use tracing::{debug, instrument, trace};
 
-mod active;
-mod conn;
-mod counter;
-mod handle;
-pub use crate::message::PeerRequestSender;
-use crate::protocol::{IntoRlpxSubProtocol, RlpxSubProtocolHandlers, RlpxSubProtocols};
-pub use handle::{
-    ActiveSessionHandle, ActiveSessionMessage, PendingSessionEvent, PendingSessionHandle,
-    SessionCommand,
+use crate::{
+    message::PeerMessage,
+    metrics::SessionManagerMetrics,
+    protocol::{IntoRlpxSubProtocol, RlpxSubProtocolHandlers, RlpxSubProtocols},
+    session::active::ActiveSession,
 };
-use reth_eth_wire::multiplex::RlpxProtocolMultiplexer;
-pub use reth_network_api::{Direction, PeerInfo};
 
 /// Internal identifier for active sessions.
 #[derive(Debug, Clone, Copy, PartialOrd, PartialEq, Eq, Hash)]
@@ -449,7 +456,7 @@ impl SessionManager {
                         peer_id,
                         remote_addr,
                         direction,
-                    });
+                    })
                 }
 
                 let (commands_to_session, commands_rx) = mpsc::channel(self.session_command_buffer);
@@ -815,7 +822,7 @@ async fn start_pending_outbound_session(
                     error,
                 })
                 .await;
-            return;
+            return
         }
     };
     authenticate(
@@ -861,7 +868,7 @@ async fn authenticate(
                     direction,
                 })
                 .await;
-            return;
+            return
         }
     };
 

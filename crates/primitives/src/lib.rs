@@ -7,6 +7,8 @@
 //! - `alloy-compat`: Adds compatibility conversions for certain alloy types.
 //! - `arbitrary`: Adds `proptest` and `arbitrary` support for primitive types.
 //! - `test-utils`: Export utilities for testing
+//! - `reth-codec`: Enables db codec support for reth types including zstd compression for certain
+//!   types.
 
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/paradigmxyz/reth/main/assets/reth-docs.png",
@@ -24,10 +26,11 @@ extern crate alloc;
 mod alloy_compat;
 pub mod basefee;
 mod block;
-#[cfg(feature = "zstd-codec")]
+#[cfg(feature = "reth-codec")]
 mod compression;
 pub mod constants;
 pub mod eip4844;
+pub mod eip7702;
 pub mod genesis;
 pub mod proofs;
 mod receipt;
@@ -39,7 +42,7 @@ pub use block::{
     Block, BlockBody, BlockHashOrNumber, BlockId, BlockNumHash, BlockNumberOrTag, BlockWithSenders,
     ForkBlock, RpcBlockHash, SealedBlock, SealedBlockWithSenders,
 };
-#[cfg(feature = "zstd-codec")]
+#[cfg(feature = "reth-codec")]
 pub use compression::*;
 pub use constants::{
     DEV_GENESIS_HASH, EMPTY_OMMER_ROOT_HASH, HOLESKY_GENESIS_HASH, KECCAK_EMPTY,
@@ -56,8 +59,8 @@ pub use reth_primitives_traits::{
 pub use static_file::StaticFileSegment;
 
 pub use transaction::{
-    BlobTransaction, BlobTransactionSidecar, FromRecoveredPooledTransaction,
-    PooledTransactionsElement, PooledTransactionsElementEcRecovered,
+    BlobTransaction, BlobTransactionSidecar, PooledTransactionsElement,
+    PooledTransactionsElementEcRecovered,
 };
 
 #[cfg(feature = "c-kzg")]
@@ -67,8 +70,8 @@ pub use transaction::{
     util::secp256k1::{public_key_to_address, recover_signer_unchecked, sign_message},
     AccessList, AccessListItem, IntoRecoveredTransaction, InvalidTransactionError, Signature,
     Transaction, TransactionMeta, TransactionSigned, TransactionSignedEcRecovered,
-    TransactionSignedNoHash, TryFromRecoveredTransaction, TxEip1559, TxEip2930, TxEip4844,
-    TxHashOrNumber, TxLegacy, TxType, EIP1559_TX_TYPE_ID, EIP2930_TX_TYPE_ID, EIP4844_TX_TYPE_ID,
+    TransactionSignedNoHash, TxEip1559, TxEip2930, TxEip4844, TxEip7702, TxHashOrNumber, TxLegacy,
+    TxType, EIP1559_TX_TYPE_ID, EIP2930_TX_TYPE_ID, EIP4844_TX_TYPE_ID, EIP7702_TX_TYPE_ID,
     LEGACY_TX_TYPE_ID,
 };
 

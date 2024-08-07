@@ -56,17 +56,20 @@ impl BlobStore for DiskFileBlobStore {
 
     fn insert_all(&self, txs: Vec<(B256, BlobTransactionSidecar)>) -> Result<(), BlobStoreError> {
         if txs.is_empty() {
-            return Ok(());
+            return Ok(())
         }
         self.inner.insert_many(txs)
     }
 
     fn delete(&self, tx: B256) -> Result<(), BlobStoreError> {
-        self.inner.txs_to_delete.write().insert(tx);
+        if self.inner.contains(tx)? {
+            self.inner.txs_to_delete.write().insert(tx);
+        }
         Ok(())
     }
 
     fn delete_all(&self, txs: Vec<B256>) -> Result<(), BlobStoreError> {
+        let txs = self.inner.retain_existing(txs)?;
         self.inner.txs_to_delete.write().extend(txs);
         Ok(())
     }
@@ -112,14 +115,14 @@ impl BlobStore for DiskFileBlobStore {
         txs: Vec<B256>,
     ) -> Result<Vec<(B256, BlobTransactionSidecar)>, BlobStoreError> {
         if txs.is_empty() {
-            return Ok(Vec::new());
+            return Ok(Vec::new())
         }
         self.inner.get_all(txs)
     }
 
     fn get_exact(&self, txs: Vec<B256>) -> Result<Vec<BlobTransactionSidecar>, BlobStoreError> {
         if txs.is_empty() {
-            return Ok(Vec::new());
+            return Ok(Vec::new())
         }
         self.inner.get_exact(txs)
     }
@@ -225,16 +228,33 @@ impl DiskFileBlobStoreInner {
     /// Returns true if the blob for the given transaction hash is in the blob cache or on disk.
     fn contains(&self, tx: B256) -> Result<bool, BlobStoreError> {
         if self.blob_cache.lock().get(&tx).is_some() {
-            return Ok(true);
+            return Ok(true)
         }
         // we only check if the file exists and assume it's valid
         Ok(self.blob_disk_file(tx).is_file())
     }
 
+    /// Returns all the blob transactions which are in the cache or on the disk.
+    fn retain_existing(&self, txs: Vec<B256>) -> Result<Vec<B256>, BlobStoreError> {
+        let (in_cache, not_in_cache): (Vec<B256>, Vec<B256>) = {
+            let mut cache = self.blob_cache.lock();
+            txs.into_iter().partition(|tx| cache.get(tx).is_some())
+        };
+
+        let mut existing = in_cache;
+        for tx in not_in_cache {
+            if self.blob_disk_file(tx).is_file() {
+                existing.push(tx);
+            }
+        }
+
+        Ok(existing)
+    }
+
     /// Retrieves the blob for the given transaction hash from the blob cache or disk.
     fn get_one(&self, tx: B256) -> Result<Option<BlobTransactionSidecar>, BlobStoreError> {
         if let Some(blob) = self.blob_cache.lock().get(&tx) {
-            return Ok(Some(blob.clone()));
+            return Ok(Some(blob.clone()))
         }
         let blob = self.read_one(tx)?;
         if let Some(blob) = &blob {
@@ -342,11 +362,11 @@ impl DiskFileBlobStoreInner {
             }
         }
         if cache_miss.is_empty() {
-            return Ok(res);
+            return Ok(res)
         }
         let from_disk = self.read_many_decoded(cache_miss);
         if from_disk.is_empty() {
-            return Ok(res);
+            return Ok(res)
         }
         let mut cache = self.blob_cache.lock();
         for (tx, data) in from_disk {

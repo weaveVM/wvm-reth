@@ -1,5 +1,5 @@
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use reth_primitives::{Address, BlockId, Bytes, TxHash, B256};
+use reth_primitives::{Address, Bytes, TxHash, B256};
 use reth_rpc_types::{
     trace::otterscan::{
         BlockDetails, ContractCreator, InternalOperation, OtsBlockTransactions, TraceEntry,
@@ -24,7 +24,7 @@ pub trait Otterscan {
 
     /// Check if a certain address contains a deployed code.
     #[method(name = "hasCode")]
-    async fn has_code(&self, address: Address, block_number: Option<BlockId>) -> RpcResult<bool>;
+    async fn has_code(&self, address: Address, block_number: Option<u64>) -> RpcResult<bool>;
 
     /// Very simple API versioning scheme. Every time we add a new capability, the number is
     /// incremented. This allows for Otterscan to check if the node contains all API it
@@ -48,11 +48,11 @@ pub trait Otterscan {
     /// Tailor-made and expanded version of eth_getBlockByNumber for block details page in
     /// Otterscan.
     #[method(name = "getBlockDetails")]
-    async fn get_block_details(&self, block_number: u64) -> RpcResult<Option<BlockDetails>>;
+    async fn get_block_details(&self, block_number: u64) -> RpcResult<BlockDetails>;
 
     /// Tailor-made and expanded version of eth_getBlockByHash for block details page in Otterscan.
     #[method(name = "getBlockDetailsByHash")]
-    async fn get_block_details_by_hash(&self, block_hash: B256) -> RpcResult<Option<BlockDetails>>;
+    async fn get_block_details_by_hash(&self, block_hash: B256) -> RpcResult<BlockDetails>;
 
     /// Get paginated transactions for a certain block. Also remove some verbose fields like logs.
     #[method(name = "getBlockTransactions")]

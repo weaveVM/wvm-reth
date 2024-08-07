@@ -114,8 +114,6 @@ impl EnvironmentArgs {
         let factory = ProviderFactory::new(db, self.chain.clone(), static_file_provider)
             .with_prune_modes(prune_modes.clone());
 
-        info!(target: "reth::cli", "Verifying storage consistency.");
-
         // Check for consistency between database and static files.
         if let Some(unwind_target) = factory
             .static_file_provider()
@@ -123,7 +121,7 @@ impl EnvironmentArgs {
         {
             if factory.db_ref().is_read_only() {
                 warn!(target: "reth::cli", ?unwind_target, "Inconsistent storage. Restart node to heal.");
-                return Ok(factory);
+                return Ok(factory)
             }
 
             // Highly unlikely to happen, and given its destructive nature, it's better to panic

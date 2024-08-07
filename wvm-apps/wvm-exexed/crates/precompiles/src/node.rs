@@ -66,8 +66,9 @@ where
         WvmEthExecutorBuilder,
         EthereumConsensusBuilder,
     >;
+    type AddOns = ();
 
-    fn components_builder(self) -> Self::ComponentsBuilder {
+    fn components_builder(&self) -> Self::ComponentsBuilder {
         Self::components()
     }
 }

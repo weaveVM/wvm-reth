@@ -1,6 +1,6 @@
 //! Implementation of [`BlockIndices`] related to [`super::BlockchainTree`]
 
-use super::state::BlockchainId;
+use super::state::SidechainId;
 use crate::canonical_chain::CanonicalChain;
 use linked_hash_set::LinkedHashSet;
 use reth_execution_types::Chain;
@@ -38,8 +38,8 @@ pub struct BlockIndices {
     /// Note: This is a bijection: at all times `blocks_to_chain` and this map contain the block
     /// hashes.
     block_number_to_block_hashes: BTreeMap<BlockNumber, HashSet<BlockHash>>,
-    /// Block hashes and side chain they belong
-    blocks_to_chain: HashMap<BlockHash, BlockchainId>,
+    /// Block hashes to the sidechain IDs they belong to.
+    blocks_to_chain: HashMap<BlockHash, SidechainId>,
 }
 
 impl BlockIndices {
@@ -62,8 +62,9 @@ impl BlockIndices {
         &self.fork_to_child
     }
 
-    /// Return block to chain id
-    pub const fn blocks_to_chain(&self) -> &HashMap<BlockHash, BlockchainId> {
+    /// Return block to sidechain id
+    #[allow(dead_code)]
+    pub(crate) const fn blocks_to_chain(&self) -> &HashMap<BlockHash, SidechainId> {
         &self.blocks_to_chain
     }
 
@@ -103,14 +104,14 @@ impl BlockIndices {
         &mut self,
         block_number: BlockNumber,
         block_hash: BlockHash,
-        chain_id: BlockchainId,
+        chain_id: SidechainId,
     ) {
         self.block_number_to_block_hashes.entry(block_number).or_default().insert(block_hash);
         self.blocks_to_chain.insert(block_hash, chain_id);
     }
 
     /// Insert block to chain and fork child indices of the new chain
-    pub(crate) fn insert_chain(&mut self, chain_id: BlockchainId, chain: &Chain) {
+    pub(crate) fn insert_chain(&mut self, chain_id: SidechainId, chain: &Chain) {
         for (number, block) in chain.blocks() {
             // add block -> chain_id index
             self.blocks_to_chain.insert(block.hash(), chain_id);
@@ -122,8 +123,8 @@ impl BlockIndices {
         self.fork_to_child.entry(first.parent_hash).or_default().insert_if_absent(first.hash());
     }
 
-    /// Get the [`BlockchainId`] the given block belongs to if it exists.
-    pub(crate) fn get_block_chain_id(&self, block: &BlockHash) -> Option<BlockchainId> {
+    /// Get the [`SidechainId`] for the given block hash if it exists.
+    pub(crate) fn get_side_chain_id(&self, block: &BlockHash) -> Option<SidechainId> {
         self.blocks_to_chain.get(block).cloned()
     }
 
@@ -133,7 +134,7 @@ impl BlockIndices {
     pub(crate) fn update_block_hashes(
         &mut self,
         hashes: BTreeMap<u64, BlockHash>,
-    ) -> (BTreeSet<BlockchainId>, Vec<BlockNumHash>) {
+    ) -> (BTreeSet<SidechainId>, Vec<BlockNumHash>) {
         // set new canonical hashes.
         self.canonical_chain.replace(hashes.clone());
 
@@ -154,7 +155,7 @@ impl BlockIndices {
                     added.push(new.into());
                     new_hash = new_hashes.next();
                 }
-                break;
+                break
             };
             let Some(new_block_value) = new_hash else {
                 // Old canonical chain had more block than new chain.
@@ -164,7 +165,7 @@ impl BlockIndices {
                     removed.push(rem);
                     old_hash = old_hashes.next();
                 }
-                break;
+                break
             };
             // compare old and new canonical block number
             match new_block_value.0.cmp(&old_block_value.0) {
@@ -202,7 +203,7 @@ impl BlockIndices {
 
     /// Remove chain from indices and return dependent chains that need to be removed.
     /// Does the cleaning of the tree and removing blocks from the chain.
-    pub fn remove_chain(&mut self, chain: &Chain) -> BTreeSet<BlockchainId> {
+    pub(crate) fn remove_chain(&mut self, chain: &Chain) -> BTreeSet<SidechainId> {
         chain
             .blocks()
             .iter()
@@ -218,7 +219,7 @@ impl BlockIndices {
         &mut self,
         block_number: BlockNumber,
         block_hash: BlockHash,
-    ) -> BTreeSet<BlockchainId> {
+    ) -> BTreeSet<SidechainId> {
         // rm number -> block
         if let btree_map::Entry::Occupied(mut entry) =
             self.block_number_to_block_hashes.entry(block_number)
@@ -251,7 +252,7 @@ impl BlockIndices {
     /// It is assumed that blocks are interconnected and that they connect to canonical chain
     pub fn canonicalize_blocks(&mut self, blocks: &BTreeMap<BlockNumber, SealedBlockWithSenders>) {
         if blocks.is_empty() {
-            return;
+            return
         }
 
         // Remove all blocks from canonical chain
@@ -311,7 +312,7 @@ impl BlockIndices {
         &mut self,
         finalized_block: BlockNumber,
         num_of_additional_canonical_hashes_to_retain: u64,
-    ) -> BTreeSet<BlockchainId> {
+    ) -> BTreeSet<SidechainId> {
         // get finalized chains. blocks between [self.last_finalized,finalized_block).
         // Dont remove finalized_block, as sidechain can point to it.
         let finalized_blocks: Vec<BlockHash> = self

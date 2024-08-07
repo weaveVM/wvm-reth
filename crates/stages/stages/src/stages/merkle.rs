@@ -8,13 +8,14 @@ use reth_db_api::{
 use reth_primitives::{BlockNumber, GotExpected, SealedHeader, B256};
 use reth_provider::{
     DatabaseProviderRW, HeaderProvider, ProviderError, StageCheckpointReader,
-    StageCheckpointWriter, StatsReader,
+    StageCheckpointWriter, StatsReader, TrieWriter,
 };
 use reth_stages_api::{
     BlockErrorKind, EntitiesCheckpoint, ExecInput, ExecOutput, MerkleCheckpoint, Stage,
     StageCheckpoint, StageError, StageId, UnwindInput, UnwindOutput,
 };
 use reth_trie::{IntermediateStateRootState, StateRoot, StateRootProgress, StoredSubNode};
+use reth_trie_db::DatabaseStateRoot;
 use std::fmt::Debug;
 use tracing::*;
 
@@ -105,7 +106,7 @@ impl MerkleStage {
             provider.get_stage_checkpoint_progress(StageId::MerkleExecute)?.unwrap_or_default();
 
         if buf.is_empty() {
-            return Ok(None);
+            return Ok(None)
         }
 
         let (checkpoint, _) = MerkleCheckpoint::from_compact(&buf, buf.len());
@@ -151,7 +152,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
         let threshold = match self {
             Self::Unwind => {
                 info!(target: "sync::stages::merkle::unwind", "Stage is always skipped");
-                return Ok(ExecOutput::done(StageCheckpoint::new(input.target())));
+                return Ok(ExecOutput::done(StageCheckpoint::new(input.target())))
             }
             Self::Execution { clean_threshold } => *clean_threshold,
             #[cfg(any(test, feature = "test-utils"))]
@@ -217,7 +218,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
                 })?;
             match progress {
                 StateRootProgress::Progress(state, hashed_entries_walked, updates) => {
-                    updates.write_to_database(tx)?;
+                    provider.write_trie_updates(&updates)?;
 
                     let checkpoint = MerkleCheckpoint::new(
                         to_block,
@@ -234,10 +235,10 @@ impl<DB: Database> Stage<DB> for MerkleStage {
                             .checkpoint()
                             .with_entities_stage_checkpoint(entities_checkpoint),
                         done: false,
-                    });
+                    })
                 }
                 StateRootProgress::Complete(root, hashed_entries_walked, updates) => {
-                    updates.write_to_database(tx)?;
+                    provider.write_trie_updates(&updates)?;
 
                     entities_checkpoint.processed += hashed_entries_walked as u64;
 
@@ -252,7 +253,8 @@ impl<DB: Database> Stage<DB> for MerkleStage {
                         error!(target: "sync::stages::merkle", %e, ?current_block_number, ?to_block, "Incremental state root failed! {INVALID_STATE_ROOT_ERROR_MESSAGE}");
                         StageError::Fatal(Box::new(e))
                     })?;
-            updates.write_to_database(provider.tx_ref())?;
+
+            provider.write_trie_updates(&updates)?;
 
             let total_hashed_entries = (provider.count_entries::<tables::HashedAccounts>()? +
                 provider.count_entries::<tables::HashedStorages>()?)
@@ -291,7 +293,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
         let range = input.unwind_block_range();
         if matches!(self, Self::Execution { .. }) {
             info!(target: "sync::stages::merkle::unwind", "Stage is always skipped");
-            return Ok(UnwindOutput { checkpoint: StageCheckpoint::new(input.unwind_to) });
+            return Ok(UnwindOutput { checkpoint: StageCheckpoint::new(input.unwind_to) })
         }
 
         let mut entities_checkpoint =
@@ -310,7 +312,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
             return Ok(UnwindOutput {
                 checkpoint: StageCheckpoint::new(input.unwind_to)
                     .with_entities_stage_checkpoint(entities_checkpoint),
-            });
+            })
         }
 
         // Unwind trie only if there are transitions
@@ -325,7 +327,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
             validate_state_root(block_root, target.seal_slow(), input.unwind_to)?;
 
             // Validation passed, apply unwind changes to the database.
-            updates.write_to_database(provider.tx_ref())?;
+            provider.write_trie_updates(&updates)?;
 
             // TODO(alexey): update entities checkpoint
         } else {
@@ -562,7 +564,7 @@ mod tests {
                     }
                     let storage = storage_entries
                         .into_iter()
-                        .filter(|v| v.value != U256::ZERO)
+                        .filter(|v| !v.value.is_zero())
                         .map(|v| (v.key, v.value))
                         .collect::<Vec<_>>();
                     accounts.insert(key, (account, storage));
@@ -580,7 +582,7 @@ mod tests {
             let hash = last_header.hash_slow();
             writer.prune_headers(1).unwrap();
             writer.commit().unwrap();
-            writer.append_header(last_header, U256::ZERO, hash).unwrap();
+            writer.append_header(&last_header, U256::ZERO, &hash).unwrap();
             writer.commit().unwrap();
 
             Ok(blocks)
@@ -620,7 +622,7 @@ mod tests {
                         rev_changeset_walker.next().transpose().unwrap()
                     {
                         if bn_address.block_number() < target_block {
-                            break;
+                            break
                         }
 
                         tree.entry(keccak256(bn_address.address()))
@@ -636,7 +638,7 @@ mod tests {
                                 storage_cursor.delete_current().unwrap();
                             }
 
-                            if value != U256::ZERO {
+                            if !value.is_zero() {
                                 let storage_entry = StorageEntry { key: hashed_slot, value };
                                 storage_cursor.upsert(hashed_address, storage_entry).unwrap();
                             }
@@ -651,7 +653,7 @@ mod tests {
                         rev_changeset_walker.next().transpose().unwrap()
                     {
                         if block_number < target_block {
-                            break;
+                            break
                         }
 
                         if let Some(acc) = account_before_tx.info {

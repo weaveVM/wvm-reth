@@ -90,7 +90,7 @@ impl<DB: Database> Stage<DB> for IndexStorageHistoryStage {
         }
 
         if input.target_reached() {
-            return Ok(ExecOutput::done(input.checkpoint()));
+            return Ok(ExecOutput::done(input.checkpoint()))
         }
 
         let mut range = input.next_block_range();
@@ -106,7 +106,7 @@ impl<DB: Database> Stage<DB> for IndexStorageHistoryStage {
         info!(target: "sync::stages::index_storage_history::exec", ?first_sync, "Collecting indices");
         let collector =
             collect_history_indices::<_, tables::StorageChangeSets, tables::StoragesHistory, _>(
-                provider.tx_ref(),
+                provider,
                 BlockNumberAddress::range(range.clone()),
                 |AddressStorageKey((address, storage_key)), highest_block_number| {
                     StorageShardedKey::new(address, storage_key, highest_block_number)
@@ -117,7 +117,7 @@ impl<DB: Database> Stage<DB> for IndexStorageHistoryStage {
 
         info!(target: "sync::stages::index_storage_history::exec", "Loading indices into database");
         load_history_indices::<_, tables::StoragesHistory, _>(
-            provider.tx_ref(),
+            provider,
             collector,
             first_sync,
             |AddressStorageKey((address, storage_key)), highest_block_number| {
@@ -585,7 +585,7 @@ mod tests {
                 let start_block = input.next_block();
                 let end_block = output.checkpoint.block_number;
                 if start_block > end_block {
-                    return Ok(());
+                    return Ok(())
                 }
 
                 assert_eq!(

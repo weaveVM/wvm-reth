@@ -18,7 +18,7 @@ pub fn validate_header_gas(header: &SealedHeader) -> Result<(), ConsensusError> 
         return Err(ConsensusError::HeaderGasUsedExceedsGasLimit {
             gas_used: header.gas_used,
             gas_limit: header.gas_limit,
-        });
+        })
     }
     Ok(())
 }
@@ -32,7 +32,7 @@ pub fn validate_header_base_fee(
     if chain_spec.is_fork_active_at_block(EthereumHardfork::London, header.number) &&
         header.base_fee_per_gas.is_none()
     {
-        return Err(ConsensusError::BaseFeeMissing);
+        return Err(ConsensusError::BaseFeeMissing)
     }
     Ok(())
 }
@@ -52,12 +52,12 @@ pub fn validate_block_pre_execution(
     if block.header.ommers_hash != ommers_hash {
         return Err(ConsensusError::BodyOmmersHashDiff(
             GotExpected { got: ommers_hash, expected: block.header.ommers_hash }.into(),
-        ));
+        ))
     }
 
     // Check transaction root
     if let Err(error) = block.ensure_transaction_root_valid() {
-        return Err(ConsensusError::BodyTransactionRootDiff(error.into()));
+        return Err(ConsensusError::BodyTransactionRootDiff(error.into()))
     }
 
     // EIP-4895: Beacon chain push withdrawals as operations
@@ -70,7 +70,7 @@ pub fn validate_block_pre_execution(
         if withdrawals_root != *header_withdrawals_root {
             return Err(ConsensusError::BodyWithdrawalsRootDiff(
                 GotExpected { got: withdrawals_root, expected: *header_withdrawals_root }.into(),
-            ));
+            ))
         }
     }
 
@@ -84,7 +84,7 @@ pub fn validate_block_pre_execution(
             return Err(ConsensusError::BlobGasUsedDiff(GotExpected {
                 got: header_blob_gas_used,
                 expected: total_blob_gas,
-            }));
+            }))
         }
     }
 
@@ -97,7 +97,7 @@ pub fn validate_block_pre_execution(
         if requests_root != *header_requests_root {
             return Err(ConsensusError::BodyRequestsRootDiff(
                 GotExpected { got: requests_root, expected: *header_requests_root }.into(),
-            ));
+            ))
         }
     }
 
@@ -117,21 +117,21 @@ pub fn validate_4844_header_standalone(header: &SealedHeader) -> Result<(), Cons
     let excess_blob_gas = header.excess_blob_gas.ok_or(ConsensusError::ExcessBlobGasMissing)?;
 
     if header.parent_beacon_block_root.is_none() {
-        return Err(ConsensusError::ParentBeaconBlockRootMissing);
+        return Err(ConsensusError::ParentBeaconBlockRootMissing)
     }
 
     if blob_gas_used > MAX_DATA_GAS_PER_BLOCK {
         return Err(ConsensusError::BlobGasUsedExceedsMaxBlobGasPerBlock {
             blob_gas_used,
             max_blob_gas_per_block: MAX_DATA_GAS_PER_BLOCK,
-        });
+        })
     }
 
     if blob_gas_used % DATA_GAS_PER_BLOB != 0 {
         return Err(ConsensusError::BlobGasUsedNotMultipleOfBlobGasPerBlob {
             blob_gas_used,
             blob_gas_per_blob: DATA_GAS_PER_BLOB,
-        });
+        })
     }
 
     // `excess_blob_gas` must also be a multiple of `DATA_GAS_PER_BLOB`. This will be checked later
@@ -140,7 +140,7 @@ pub fn validate_4844_header_standalone(header: &SealedHeader) -> Result<(), Cons
         return Err(ConsensusError::ExcessBlobGasNotMultipleOfBlobGasPerBlob {
             excess_blob_gas,
             blob_gas_per_blob: DATA_GAS_PER_BLOB,
-        });
+        })
     }
 
     Ok(())
@@ -174,13 +174,13 @@ pub fn validate_against_parent_hash_number(
         return Err(ConsensusError::ParentBlockNumberMismatch {
             parent_block_number: parent.number,
             block_number: header.number,
-        });
+        })
     }
 
     if parent.hash() != header.parent_hash {
         return Err(ConsensusError::ParentHashMismatch(
             GotExpected { got: header.parent_hash, expected: parent.hash() }.into(),
-        ));
+        ))
     }
 
     Ok(())
@@ -210,7 +210,7 @@ pub fn validate_against_parent_eip1559_base_fee(
             return Err(ConsensusError::BaseFeeDiff(GotExpected {
                 expected: expected_base_fee,
                 got: base_fee,
-            }));
+            }))
         }
     }
 
@@ -227,7 +227,7 @@ pub fn validate_against_parent_timestamp(
         return Err(ConsensusError::TimestampIsInPast {
             parent_timestamp: parent.timestamp,
             timestamp: header.timestamp,
-        });
+        })
     }
     Ok(())
 }
@@ -250,7 +250,7 @@ pub fn validate_against_parent_4844(
     let parent_excess_blob_gas = parent.excess_blob_gas.unwrap_or(0);
 
     if header.blob_gas_used.is_none() {
-        return Err(ConsensusError::BlobGasUsedMissing);
+        return Err(ConsensusError::BlobGasUsedMissing)
     }
     let excess_blob_gas = header.excess_blob_gas.ok_or(ConsensusError::ExcessBlobGasMissing)?;
 
@@ -261,7 +261,7 @@ pub fn validate_against_parent_4844(
             diff: GotExpected { got: excess_blob_gas, expected: expected_excess_blob_gas },
             parent_excess_blob_gas,
             parent_blob_gas_used,
-        });
+        })
     }
 
     Ok(())
@@ -274,9 +274,9 @@ mod tests {
     use rand::Rng;
     use reth_chainspec::ChainSpecBuilder;
     use reth_primitives::{
-        constants::ETHEREUM_BLOCK_GAS_LIMIT, hex_literal::hex, proofs, Account, Address, BlockBody,
-        BlockHash, BlockHashOrNumber, BlockNumber, Bytes, Signature, Transaction,
-        TransactionSigned, TxEip4844, Withdrawal, Withdrawals, U256,
+        hex_literal::hex, proofs, Account, Address, BlockBody, BlockHash, BlockHashOrNumber,
+        BlockNumber, Bytes, Signature, Transaction, TransactionSigned, TxEip4844, Withdrawal,
+        Withdrawals, U256,
     };
     use reth_storage_api::{
         errors::provider::ProviderResult, AccountReader, HeaderProvider, WithdrawalsProvider,
@@ -417,7 +417,7 @@ mod tests {
             logs_bloom: hex!("002400000000004000220000800002000000000000000000000000000000100000000000000000100000000000000021020000000800000006000000002100040000000c0004000000000008000008200000000000000000000000008000000001040000020000020000002000000800000002000020000000022010000000000000010002001000000000020200000000000001000200880000004000000900020000000000020000000040000000000000000000000000000080000000000001000002000000000000012000200020000000000000001000000000000020000010321400000000100000000000000000000000000000400000000000000000").into(),
             difficulty: U256::ZERO, // total difficulty: 0xc70d815d562d3cfa955).into(),
             number: 0xf21d20,
-            gas_limit: ETHEREUM_BLOCK_GAS_LIMIT, // WVM: 300_000_000 gas limit
+            gas_limit: 0x1c9c380,
             gas_used: 0x6e813,
             timestamp: 0x635f9657,
             extra_data: hex!("")[..].into(),
@@ -434,7 +434,7 @@ mod tests {
 
         let mut parent = header.clone();
         parent.gas_used = 17763076;
-        parent.gas_limit = ETHEREUM_BLOCK_GAS_LIMIT;
+        parent.gas_limit = 30000000;
         parent.base_fee_per_gas = Some(0x28041f7f5);
         parent.number -= 1;
         parent.timestamp -= 1;

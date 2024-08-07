@@ -1,8 +1,7 @@
 use alloy_primitives::Bytes;
 use async_trait::async_trait;
-use futures::future::BoxFuture;
 use jsonrpsee::core::RpcResult;
-use reth_primitives::{Address, BlockId, BlockNumberOrTag, TxHash, B256};
+use reth_primitives::{Address, BlockNumberOrTag, TxHash, B256, U256};
 use reth_rpc_api::{EthApiServer, OtterscanServer};
 use reth_rpc_eth_api::helpers::TraceExt;
 use reth_rpc_eth_types::EthApiError;
@@ -15,13 +14,14 @@ use reth_rpc_types::{
         },
         parity::{Action, CreateAction, CreateOutput, TraceOutput},
     },
-    BlockTransactions, Header,
+    AnyTransactionReceipt, BlockTransactions, Header, RichBlock,
 };
 use revm_inspectors::{
     tracing::{types::CallTraceNode, TracingInspectorConfig},
     transfer::{TransferInspector, TransferKind},
 };
 use revm_primitives::ExecutionResult;
+use std::future::Future;
 
 const API_LEVEL: u64 = 8;
 
@@ -31,45 +31,28 @@ pub struct OtterscanApi<Eth> {
     eth: Eth,
 }
 
-/// Performs a binary search within a given block range to find the desired block number.
-///
-/// The binary search is performed by calling the provided asynchronous `check` closure on the
-/// blocks of the range. The closure should return a future representing the result of performing
-/// the desired logic at a given block. The future resolves to an `bool` where:
-/// - `true` indicates that the condition has been matched, but we can try to find a lower block to
-///   make the condition more matchable.
-/// - `false` indicates that the condition not matched, so the target is not present in the current
-///   block and should continue searching in a higher range.
-///
-/// Args:
-/// - `low`: The lower bound of the block range (inclusive).
-/// - `high`: The upper bound of the block range (inclusive).
-/// - `check`: A closure that performs the desired logic at a given block.
-async fn binary_search<'a, F>(low: u64, high: u64, check: F) -> RpcResult<u64>
-where
-    F: Fn(u64) -> BoxFuture<'a, RpcResult<bool>>,
-{
-    let mut low = low;
-    let mut high = high;
-    let mut num = high;
-
-    while low <= high {
-        let mid = (low + high) / 2;
-        if check(mid).await? {
-            high = mid - 1;
-            num = mid;
-        } else {
-            low = mid + 1
-        }
-    }
-
-    Ok(num)
-}
-
 impl<Eth> OtterscanApi<Eth> {
     /// Creates a new instance of `Otterscan`.
     pub const fn new(eth: Eth) -> Self {
         Self { eth }
+    }
+
+    /// Constructs a `BlockDetails` from a block and its receipts.
+    fn block_details(
+        &self,
+        block: Option<RichBlock>,
+        receipts: Option<Vec<AnyTransactionReceipt>>,
+    ) -> RpcResult<BlockDetails> {
+        let block = block.ok_or_else(|| EthApiError::UnknownBlockNumber)?;
+        let receipts = receipts.ok_or_else(|| EthApiError::UnknownBlockNumber)?;
+
+        // blob fee is burnt, so we don't need to calculate it
+        let total_fees = receipts
+            .iter()
+            .map(|receipt| receipt.gas_used.saturating_mul(receipt.effective_gas_price))
+            .sum::<u128>();
+
+        Ok(BlockDetails::new(block, Default::default(), U256::from(total_fees)))
     }
 }
 
@@ -84,8 +67,8 @@ where
     }
 
     /// Handler for `ots_hasCode`
-    async fn has_code(&self, address: Address, block_number: Option<BlockId>) -> RpcResult<bool> {
-        self.eth.get_code(address, block_number).await.map(|code| !code.is_empty())
+    async fn has_code(&self, address: Address, block_number: Option<u64>) -> RpcResult<bool> {
+        self.eth.get_code(address, block_number.map(Into::into)).await.map(|code| !code.is_empty())
     }
 
     /// Handler for `ots_getApiLevel`
@@ -102,7 +85,8 @@ where
                 TransferInspector::new(false),
                 |_tx_info, inspector, _, _| Ok(inspector.into_transfers()),
             )
-            .await?
+            .await
+            .map_err(Into::into)?
             .map(|transfer_operations| {
                 transfer_operations
                     .iter()
@@ -132,7 +116,8 @@ where
                 _ => Ok(None),
             })
             .await
-            .map(Option::flatten)?;
+            .map(Option::flatten)
+            .map_err(Into::into)?;
         Ok(maybe_revert)
     }
 
@@ -145,7 +130,8 @@ where
                 TracingInspectorConfig::default_parity(),
                 move |_tx_info, inspector, _, _| Ok(inspector.into_traces().into_nodes()),
             )
-            .await?
+            .await
+            .map_err(Into::into)?
             .map(|traces| {
                 traces
                     .into_iter()
@@ -168,15 +154,19 @@ where
     }
 
     /// Handler for `ots_getBlockDetails`
-    async fn get_block_details(&self, block_number: u64) -> RpcResult<Option<BlockDetails>> {
-        let block = self.eth.block_by_number(BlockNumberOrTag::Number(block_number), true).await?;
-        Ok(block.map(Into::into))
+    async fn get_block_details(&self, block_number: u64) -> RpcResult<BlockDetails> {
+        let block = self.eth.block_by_number(block_number.into(), true);
+        let receipts = self.eth.block_receipts(block_number.into());
+        let (block, receipts) = futures::try_join!(block, receipts)?;
+        self.block_details(block, receipts)
     }
 
     /// Handler for `getBlockDetailsByHash`
-    async fn get_block_details_by_hash(&self, block_hash: B256) -> RpcResult<Option<BlockDetails>> {
-        let block = self.eth.block_by_hash(block_hash, true).await?;
-        Ok(block.map(Into::into))
+    async fn get_block_details_by_hash(&self, block_hash: B256) -> RpcResult<BlockDetails> {
+        let block = self.eth.block_by_hash(block_hash, true);
+        let receipts = self.eth.block_receipts(block_hash.into());
+        let (block, receipts) = futures::try_join!(block, receipts)?;
+        self.block_details(block, receipts)
     }
 
     /// Handler for `getBlockTransactions`
@@ -187,12 +177,11 @@ where
         page_size: usize,
     ) -> RpcResult<OtsBlockTransactions> {
         // retrieve full block and its receipts
-        let block_number = BlockNumberOrTag::Number(block_number);
-        let block = self.eth.block_by_number(block_number, true);
-        let receipts = self.eth.block_receipts(BlockId::Number(block_number));
+        let block = self.eth.block_by_number(block_number.into(), true);
+        let receipts = self.eth.block_receipts(block_number.into());
         let (block, receipts) = futures::try_join!(block, receipts)?;
 
-        let mut block = block.ok_or_else(|| internal_rpc_err("block not found"))?;
+        let mut block = block.ok_or_else(|| EthApiError::UnknownBlockNumber)?;
         let mut receipts = receipts.ok_or_else(|| internal_rpc_err("receipts not found"))?;
 
         // check if the number of transactions matches the number of receipts
@@ -200,7 +189,7 @@ where
         if tx_len != receipts.len() {
             return Err(internal_rpc_err(
                 "the number of transactions does not match the number of receipts",
-            ));
+            ))
         }
 
         // make sure the block is full
@@ -275,7 +264,7 @@ where
     ) -> RpcResult<Option<TxHash>> {
         // Check if the sender is a contract
         if self.has_code(sender, None).await? {
-            return Ok(None);
+            return Ok(None)
         }
 
         let highest =
@@ -284,13 +273,13 @@ where
         // If the nonce is higher or equal to the highest nonce, the transaction is pending or not
         // exists.
         if nonce >= highest {
-            return Ok(None);
+            return Ok(None)
         }
 
         // perform a binary search over the block range to find the block in which the sender's
         // nonce reached the requested nonce.
         let num = binary_search(1, self.eth.block_number()?.saturating_to(), |mid| {
-            Box::pin(async move {
+            async move {
                 let mid_nonce =
                     EthApiServer::transaction_count(&self.eth, sender, Some(mid.into()))
                         .await?
@@ -301,7 +290,7 @@ where
                 // the transaction whose nonce is the pre-state, so need to compare with `nonce`(no
                 // equal).
                 Ok(mid_nonce > nonce)
-            })
+            }
         })
         .await?;
 
@@ -339,7 +328,8 @@ where
                     Ok(inspector.into_parity_builder().into_localized_transaction_traces(tx_info))
                 },
             )
-            .await?
+            .await
+            .map_err(Into::into)?
             .map(|traces| {
                 traces
                     .into_iter()
@@ -372,6 +362,42 @@ where
         let found = traces.and_then(|traces| traces.first().cloned());
         Ok(found)
     }
+}
+
+/// Performs a binary search within a given block range to find the desired block number.
+///
+/// The binary search is performed by calling the provided asynchronous `check` closure on the
+/// blocks of the range. The closure should return a future representing the result of performing
+/// the desired logic at a given block. The future resolves to an `bool` where:
+/// - `true` indicates that the condition has been matched, but we can try to find a lower block to
+///   make the condition more matchable.
+/// - `false` indicates that the condition not matched, so the target is not present in the current
+///   block and should continue searching in a higher range.
+///
+/// Args:
+/// - `low`: The lower bound of the block range (inclusive).
+/// - `high`: The upper bound of the block range (inclusive).
+/// - `check`: A closure that performs the desired logic at a given block.
+async fn binary_search<F, Fut>(low: u64, high: u64, check: F) -> RpcResult<u64>
+where
+    F: Fn(u64) -> Fut,
+    Fut: Future<Output = RpcResult<bool>>,
+{
+    let mut low = low;
+    let mut high = high;
+    let mut num = high;
+
+    while low <= high {
+        let mid = (low + high) / 2;
+        if check(mid).await? {
+            high = mid - 1;
+            num = mid;
+        } else {
+            low = mid + 1
+        }
+    }
+
+    Ok(num)
 }
 
 #[cfg(test)]
