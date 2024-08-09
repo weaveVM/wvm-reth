@@ -69,6 +69,7 @@ jobs:
           git clone https://github.com/weaveVM/wvm-docker-testnet.git .
           echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/key.json
           docker compose up -d
+          npm i
           SIGNER_KEY=${{ secrets.TEST_SIGNER_KEY }} node test.js
           docker compose down
           
