@@ -1,8 +1,7 @@
-use crate::providers::static_file::metrics::StaticFileProviderOperation;
-
 use super::{
     manager::StaticFileProviderInner, metrics::StaticFileProviderMetrics, StaticFileProvider,
 };
+use crate::providers::static_file::metrics::StaticFileProviderOperation;
 use dashmap::mapref::one::RefMut;
 use reth_codecs::Compact;
 use reth_db_api::models::CompactU256;
@@ -14,6 +13,7 @@ use reth_primitives::{
 };
 use reth_storage_errors::provider::{ProviderError, ProviderResult};
 use std::{
+    borrow::Borrow,
     path::{Path, PathBuf},
     sync::{Arc, Weak},
     time::Instant,
@@ -139,7 +139,7 @@ impl StaticFileProviderRW {
 
         self.writer.ensure_file_consistency(check_mode).map_err(|error| {
             if matches!(error, NippyJarError::InconsistentState) {
-                return inconsistent_error();
+                return inconsistent_error()
             }
             ProviderError::NippyJar(error.to_string())
         })?;
@@ -153,7 +153,7 @@ impl StaticFileProviderRW {
         let pruned_rows = expected_rows - self.writer.rows() as u64;
         if pruned_rows > 0 {
             if read_only {
-                return Err(inconsistent_error());
+                return Err(inconsistent_error())
             }
             self.user_header_mut().prune(pruned_rows);
         }
@@ -270,9 +270,10 @@ impl StaticFileProviderRW {
     /// Returns the current [`BlockNumber`] as seen in the static file.
     pub fn increment_block(
         &mut self,
-        segment: StaticFileSegment,
         expected_block_number: BlockNumber,
     ) -> ProviderResult<BlockNumber> {
+        let segment = self.writer.user_header().segment();
+
         self.check_next_block_number(expected_block_number, segment)?;
 
         let start = Instant::now();
@@ -327,7 +328,7 @@ impl StaticFileProviderRW {
                 segment,
                 expected_block_number,
                 next_static_file_block,
-            ));
+            ))
         }
         Ok(())
     }
@@ -369,7 +370,7 @@ impl StaticFileProviderRW {
                     self.writer
                         .prune_rows(len as usize)
                         .map_err(|e| ProviderError::NippyJar(e.to_string()))?;
-                    break;
+                    break
                 }
 
                 remaining_rows -= len;
@@ -467,19 +468,19 @@ impl StaticFileProviderRW {
     /// Returns the current [`BlockNumber`] as seen in the static file.
     pub fn append_header(
         &mut self,
-        header: Header,
-        terminal_difficulty: U256,
-        hash: BlockHash,
+        header: &Header,
+        total_difficulty: U256,
+        hash: &BlockHash,
     ) -> ProviderResult<BlockNumber> {
         let start = Instant::now();
         self.ensure_no_queued_prune()?;
 
         debug_assert!(self.writer.user_header().segment() == StaticFileSegment::Headers);
 
-        let block_number = self.increment_block(StaticFileSegment::Headers, header.number)?;
+        let block_number = self.increment_block(header.number)?;
 
         self.append_column(header)?;
-        self.append_column(CompactU256::from(terminal_difficulty))?;
+        self.append_column(CompactU256::from(total_difficulty))?;
         self.append_column(hash)?;
 
         if let Some(metrics) = &self.metrics {
@@ -502,7 +503,7 @@ impl StaticFileProviderRW {
     pub fn append_transaction(
         &mut self,
         tx_num: TxNumber,
-        tx: TransactionSignedNoHash,
+        tx: &TransactionSignedNoHash,
     ) -> ProviderResult<TxNumber> {
         let start = Instant::now();
         self.ensure_no_queued_prune()?;
@@ -529,7 +530,7 @@ impl StaticFileProviderRW {
     pub fn append_receipt(
         &mut self,
         tx_num: TxNumber,
-        receipt: Receipt,
+        receipt: &Receipt,
     ) -> ProviderResult<TxNumber> {
         let start = Instant::now();
         self.ensure_no_queued_prune()?;
@@ -550,9 +551,10 @@ impl StaticFileProviderRW {
     /// Appends multiple receipts to the static file.
     ///
     /// Returns the current [`TxNumber`] as seen in the static file, if any.
-    pub fn append_receipts<I>(&mut self, receipts: I) -> ProviderResult<Option<TxNumber>>
+    pub fn append_receipts<I, R>(&mut self, receipts: I) -> ProviderResult<Option<TxNumber>>
     where
-        I: IntoIterator<Item = Result<(TxNumber, Receipt), ProviderError>>,
+        I: Iterator<Item = Result<(TxNumber, R), ProviderError>>,
+        R: Borrow<Receipt>,
     {
         let mut receipts_iter = receipts.into_iter().peekable();
         // If receipts are empty, we can simply return None
@@ -569,7 +571,8 @@ impl StaticFileProviderRW {
 
         for receipt_result in receipts_iter {
             let (tx_num, receipt) = receipt_result?;
-            tx_number = self.append_with_tx_number(StaticFileSegment::Receipts, tx_num, receipt)?;
+            tx_number =
+                self.append_with_tx_number(StaticFileSegment::Receipts, tx_num, receipt.borrow())?;
             count += 1;
         }
 
@@ -634,7 +637,7 @@ impl StaticFileProviderRW {
         if self.prune_on_commit.is_some() {
             return Err(ProviderError::NippyJar(
                 "Pruning should be committed before appending or pruning more data".to_string(),
-            ));
+            ))
         }
         Ok(())
     }

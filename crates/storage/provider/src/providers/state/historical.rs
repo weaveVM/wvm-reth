@@ -10,14 +10,20 @@ use reth_db_api::{
     transaction::DbTx,
 };
 use reth_primitives::{
-    constants::EPOCH_SLOTS, Account, Address, BlockNumber, Bytecode, StaticFileSegment, StorageKey,
-    StorageValue, B256,
+    constants::EPOCH_SLOTS, Account, Address, BlockNumber, Bytecode, Bytes, StaticFileSegment,
+    StorageKey, StorageValue, B256,
 };
 use reth_storage_api::StateProofProvider;
 use reth_storage_errors::provider::ProviderResult;
-use reth_trie::{updates::TrieUpdates, AccountProof, HashedPostState};
-use revm::db::BundleState;
-use std::fmt::Debug;
+use reth_trie::{
+    proof::Proof, updates::TrieUpdates, witness::TrieWitness, AccountProof, HashedPostState,
+    HashedStorage, StateRoot, StorageRoot,
+};
+use reth_trie_db::{
+    DatabaseHashedPostState, DatabaseProof, DatabaseStateRoot, DatabaseStorageRoot,
+    DatabaseTrieWitness,
+};
+use std::{collections::HashMap, fmt::Debug};
 
 /// State provider for a given block number which takes a tx reference.
 ///
@@ -74,7 +80,7 @@ impl<'b, TX: DbTx> HistoricalStateProviderRef<'b, TX> {
     /// Lookup an account in the `AccountsHistory` table
     pub fn account_history_lookup(&self, address: Address) -> ProviderResult<HistoryInfo> {
         if !self.lowest_available_blocks.is_account_history_available(self.block_number) {
-            return Err(ProviderError::StateAtBlockPruned(self.block_number));
+            return Err(ProviderError::StateAtBlockPruned(self.block_number))
         }
 
         // history key to search IntegerList of block number changesets.
@@ -93,7 +99,7 @@ impl<'b, TX: DbTx> HistoricalStateProviderRef<'b, TX> {
         storage_key: StorageKey,
     ) -> ProviderResult<HistoryInfo> {
         if !self.lowest_available_blocks.is_storage_history_available(self.block_number) {
-            return Err(ProviderError::StateAtBlockPruned(self.block_number));
+            return Err(ProviderError::StateAtBlockPruned(self.block_number))
         }
 
         // history key to search IntegerList of block number changesets.
@@ -110,7 +116,7 @@ impl<'b, TX: DbTx> HistoricalStateProviderRef<'b, TX> {
         if !self.lowest_available_blocks.is_account_history_available(self.block_number) ||
             !self.lowest_available_blocks.is_storage_history_available(self.block_number)
         {
-            return Err(ProviderError::StateAtBlockPruned(self.block_number));
+            return Err(ProviderError::StateAtBlockPruned(self.block_number))
         }
 
         let tip = self
@@ -131,7 +137,7 @@ impl<'b, TX: DbTx> HistoricalStateProviderRef<'b, TX> {
             );
         }
 
-        Ok(HashedPostState::from_revert_range(self.tx, self.block_number..=tip)?)
+        Ok(HashedPostState::from_reverts(self.tx, self.block_number)?)
     }
 
     fn history_info<T, K>(
@@ -257,34 +263,56 @@ impl<'b, TX: DbTx> BlockHashReader for HistoricalStateProviderRef<'b, TX> {
 }
 
 impl<'b, TX: DbTx> StateRootProvider for HistoricalStateProviderRef<'b, TX> {
-    fn state_root(&self, state: &BundleState) -> ProviderResult<B256> {
+    fn hashed_state_root(&self, hashed_state: HashedPostState) -> ProviderResult<B256> {
         let mut revert_state = self.revert_state()?;
-        revert_state.extend(HashedPostState::from_bundle_state(&state.state));
-        revert_state.state_root(self.tx).map_err(|err| ProviderError::Database(err.into()))
+        revert_state.extend(hashed_state);
+        StateRoot::overlay_root(self.tx, revert_state, Default::default())
+            .map_err(|err| ProviderError::Database(err.into()))
     }
 
-    fn state_root_with_updates(&self, state: &BundleState) -> ProviderResult<(B256, TrieUpdates)> {
+    fn hashed_state_root_with_updates(
+        &self,
+        hashed_state: HashedPostState,
+    ) -> ProviderResult<(B256, TrieUpdates)> {
         let mut revert_state = self.revert_state()?;
-        revert_state.extend(HashedPostState::from_bundle_state(&state.state));
-        revert_state
-            .state_root_with_updates(self.tx)
+        revert_state.extend(hashed_state);
+        StateRoot::overlay_root_with_updates(self.tx, revert_state, Default::default())
+            .map_err(|err| ProviderError::Database(err.into()))
+    }
+
+    fn hashed_storage_root(
+        &self,
+        address: Address,
+        hashed_storage: HashedStorage,
+    ) -> ProviderResult<B256> {
+        StorageRoot::overlay_root(self.tx, address, hashed_storage)
             .map_err(|err| ProviderError::Database(err.into()))
     }
 }
 
 impl<'b, TX: DbTx> StateProofProvider for HistoricalStateProviderRef<'b, TX> {
     /// Get account and storage proofs.
-    fn proof(
+    fn hashed_proof(
         &self,
-        state: &BundleState,
+        hashed_state: HashedPostState,
         address: Address,
         slots: &[B256],
     ) -> ProviderResult<AccountProof> {
         let mut revert_state = self.revert_state()?;
-        revert_state.extend(HashedPostState::from_bundle_state(&state.state));
-        revert_state
-            .account_proof(self.tx, address, slots)
-            .map_err(|err| ProviderError::Database(err.into()))
+        revert_state.extend(hashed_state);
+        Proof::overlay_account_proof(self.tx, revert_state, address, slots)
+            .map_err(Into::<ProviderError>::into)
+    }
+
+    fn witness(
+        &self,
+        overlay: HashedPostState,
+        target: HashedPostState,
+    ) -> ProviderResult<HashMap<B256, Bytes>> {
+        let mut revert_state = self.revert_state()?;
+        revert_state.extend(overlay);
+        TrieWitness::overlay_witness(self.tx, revert_state, target)
+            .map_err(Into::<ProviderError>::into)
     }
 }
 

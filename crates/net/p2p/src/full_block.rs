@@ -3,6 +3,7 @@ use crate::{
     bodies::client::{BodiesClient, SingleBodyRequest},
     error::PeerRequestResult,
     headers::client::{HeadersClient, SingleHeaderRequest},
+    BlockClient,
 };
 use reth_consensus::{Consensus, ConsensusError};
 use reth_eth_wire_types::HeadersDirection;
@@ -41,7 +42,7 @@ impl<Client> FullBlockClient<Client> {
 
 impl<Client> FullBlockClient<Client>
 where
-    Client: BodiesClient + HeadersClient + Clone,
+    Client: BlockClient,
 {
     /// Returns a future that fetches the [`SealedBlock`] for the given hash.
     ///
@@ -105,7 +106,7 @@ where
 #[must_use = "futures do nothing unless polled"]
 pub struct FetchFullBlockFuture<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     client: Client,
     hash: B256,
@@ -116,7 +117,7 @@ where
 
 impl<Client> FetchFullBlockFuture<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     /// Returns the hash of the block being requested.
     pub const fn hash(&self) -> &B256 {
@@ -131,7 +132,7 @@ where
     /// Returns the [`SealedBlock`] if the request is complete and valid.
     fn take_block(&mut self) -> Option<SealedBlock> {
         if self.header.is_none() || self.body.is_none() {
-            return None;
+            return None
         }
 
         let header = self.header.take().unwrap();
@@ -145,7 +146,7 @@ where
                     self.client.report_bad_message(resp.peer_id());
                     self.header = Some(header);
                     self.request.body = Some(self.client.get_block_body(self.hash));
-                    return None;
+                    return None
                 }
                 Some(SealedBlock::new(header, resp.into_data()))
             }
@@ -157,10 +158,10 @@ where
             if let Err(err) = ensure_valid_body_response(header, resp.data()) {
                 debug!(target: "downloaders", %err, hash=?header.hash(), "Received wrong body");
                 self.client.report_bad_message(resp.peer_id());
-                return;
+                return
             }
             self.body = Some(BodyResponse::Validated(resp.into_data()));
-            return;
+            return
         }
         self.body = Some(BodyResponse::PendingValidation(resp));
     }
@@ -168,7 +169,7 @@ where
 
 impl<Client> Future for FetchFullBlockFuture<Client>
 where
-    Client: BodiesClient + HeadersClient + Unpin + 'static,
+    Client: BlockClient + 'static,
 {
     type Output = SealedBlock;
 
@@ -221,7 +222,7 @@ where
             }
 
             if let Some(res) = this.take_block() {
-                return Poll::Ready(res);
+                return Poll::Ready(res)
             }
         }
     }
@@ -229,7 +230,7 @@ where
 
 impl<Client> Debug for FetchFullBlockFuture<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FetchFullBlockFuture")
@@ -242,7 +243,7 @@ where
 
 struct FullBlockRequest<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     header: Option<SingleHeaderRequest<<Client as HeadersClient>::Output>>,
     body: Option<SingleBodyRequest<<Client as BodiesClient>::Output>>,
@@ -250,20 +251,20 @@ where
 
 impl<Client> FullBlockRequest<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     fn poll(&mut self, cx: &mut Context<'_>) -> Poll<ResponseResult> {
         if let Some(fut) = Pin::new(&mut self.header).as_pin_mut() {
             if let Poll::Ready(res) = fut.poll(cx) {
                 self.header = None;
-                return Poll::Ready(ResponseResult::Header(res));
+                return Poll::Ready(ResponseResult::Header(res))
             }
         }
 
         if let Some(fut) = Pin::new(&mut self.body).as_pin_mut() {
             if let Poll::Ready(res) = fut.poll(cx) {
                 self.body = None;
-                return Poll::Ready(ResponseResult::Body(res));
+                return Poll::Ready(ResponseResult::Body(res))
             }
         }
 
@@ -301,14 +302,14 @@ fn ensure_valid_body_response(
     if header.ommers_hash != ommers_hash {
         return Err(ConsensusError::BodyOmmersHashDiff(
             GotExpected { got: ommers_hash, expected: header.ommers_hash }.into(),
-        ));
+        ))
     }
 
     let tx_root = block.calculate_tx_root();
     if header.transactions_root != tx_root {
         return Err(ConsensusError::BodyTransactionRootDiff(
             GotExpected { got: tx_root, expected: header.transactions_root }.into(),
-        ));
+        ))
     }
 
     match (header.withdrawals_root, &block.withdrawals) {
@@ -318,7 +319,7 @@ fn ensure_valid_body_response(
             if withdrawals_root != header_withdrawals_root {
                 return Err(ConsensusError::BodyWithdrawalsRootDiff(
                     GotExpected { got: withdrawals_root, expected: header_withdrawals_root }.into(),
-                ));
+                ))
             }
         }
         (None, None) => {
@@ -334,7 +335,7 @@ fn ensure_valid_body_response(
             if requests_root != header_requests_root {
                 return Err(ConsensusError::BodyRequestsRootDiff(
                     GotExpected { got: requests_root, expected: header_requests_root }.into(),
-                ));
+                ))
             }
         }
         (None, None) => {
@@ -362,7 +363,7 @@ fn ensure_valid_body_response(
 #[allow(missing_debug_implementations)]
 pub struct FetchFullBlockRangeFuture<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     /// The client used to fetch headers and bodies.
     client: Client,
@@ -384,7 +385,7 @@ where
 
 impl<Client> FetchFullBlockRangeFuture<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     /// Returns the block hashes for the given range, if they are available.
     pub fn range_block_hashes(&self) -> Option<Vec<B256>> {
@@ -428,7 +429,7 @@ where
     fn take_blocks(&mut self) -> Option<Vec<SealedBlock>> {
         if !self.is_bodies_complete() {
             // not done with bodies yet
-            return None;
+            return None
         }
 
         let headers = self.headers.take()?;
@@ -449,7 +450,7 @@ where
                             // get body that doesn't match, put back into vecdeque, and retry it
                             self.pending_headers.push_back(header.clone());
                             needs_retry = true;
-                            continue;
+                            continue
                         }
 
                         resp.into_data()
@@ -474,7 +475,7 @@ where
             // create response for failing bodies
             let hashes = self.remaining_bodies_hashes();
             self.request.bodies = Some(self.client.get_block_bodies(hashes));
-            return None;
+            return None
         }
 
         Some(valid_responses)
@@ -499,7 +500,7 @@ where
                 if let Err(err) = self.consensus.validate_header_range(&headers_rising) {
                     debug!(target: "downloaders", %err, ?self.start_hash, "Received bad header response");
                     self.client.report_bad_message(peer);
-                    return;
+                    return
                 }
 
                 // get the bodies request so it can be polled later
@@ -539,7 +540,7 @@ where
 
 impl<Client> Future for FetchFullBlockRangeFuture<Client>
 where
-    Client: BodiesClient + HeadersClient + Unpin + 'static,
+    Client: BlockClient + 'static,
 {
     type Output = Vec<SealedBlock>;
 
@@ -627,7 +628,7 @@ where
             }
 
             if let Some(res) = this.take_blocks() {
-                return Poll::Ready(res);
+                return Poll::Ready(res)
             }
         }
     }
@@ -638,7 +639,7 @@ where
 /// on which future successfully returned.
 struct FullBlockRangeRequest<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     headers: Option<<Client as HeadersClient>::Output>,
     bodies: Option<<Client as BodiesClient>::Output>,
@@ -646,20 +647,20 @@ where
 
 impl<Client> FullBlockRangeRequest<Client>
 where
-    Client: BodiesClient + HeadersClient,
+    Client: BlockClient,
 {
     fn poll(&mut self, cx: &mut Context<'_>) -> Poll<RangeResponseResult> {
         if let Some(fut) = Pin::new(&mut self.headers).as_pin_mut() {
             if let Poll::Ready(res) = fut.poll(cx) {
                 self.headers = None;
-                return Poll::Ready(RangeResponseResult::Header(res));
+                return Poll::Ready(RangeResponseResult::Header(res))
             }
         }
 
         if let Some(fut) = Pin::new(&mut self.bodies).as_pin_mut() {
             if let Poll::Ready(res) = fut.poll(cx) {
                 self.bodies = None;
-                return Poll::Ready(RangeResponseResult::Body(res));
+                return Poll::Ready(RangeResponseResult::Body(res))
             }
         }
 

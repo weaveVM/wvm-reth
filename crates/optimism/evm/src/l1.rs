@@ -32,7 +32,7 @@ pub fn extract_l1_info(block: &Block) -> Result<L1BlockInfo, OptimismBlockExecut
     let l1_info_tx_data = block
         .body
         .first()
-        .ok_or(OptimismBlockExecutionError::L1BlockInfoError {
+        .ok_or_else(|| OptimismBlockExecutionError::L1BlockInfoError {
             message: "could not find l1 block info tx in the L2 block".to_string(),
         })
         .map(|tx| tx.input())?;
@@ -40,7 +40,7 @@ pub fn extract_l1_info(block: &Block) -> Result<L1BlockInfo, OptimismBlockExecut
     if l1_info_tx_data.len() < 4 {
         return Err(OptimismBlockExecutionError::L1BlockInfoError {
             message: "invalid l1 block info transaction calldata in the L2 block".to_string(),
-        });
+        })
     }
 
     // If the first 4 bytes of the calldata are the L1BlockInfoEcotone selector, then we parse the
@@ -68,24 +68,24 @@ pub fn parse_l1_info_tx_bedrock(data: &[u8]) -> Result<L1BlockInfo, OptimismBloc
     if data.len() != 256 {
         return Err(OptimismBlockExecutionError::L1BlockInfoError {
             message: "unexpected l1 block info tx calldata length found".to_string(),
-        });
+        })
     }
 
-    let l1_base_fee = U256::try_from_be_slice(&data[64..96]).ok_or(
+    let l1_base_fee = U256::try_from_be_slice(&data[64..96]).ok_or_else(|| {
         OptimismBlockExecutionError::L1BlockInfoError {
             message: "could not convert l1 base fee".to_string(),
-        },
-    )?;
-    let l1_fee_overhead = U256::try_from_be_slice(&data[192..224]).ok_or(
+        }
+    })?;
+    let l1_fee_overhead = U256::try_from_be_slice(&data[192..224]).ok_or_else(|| {
         OptimismBlockExecutionError::L1BlockInfoError {
             message: "could not convert l1 fee overhead".to_string(),
-        },
-    )?;
-    let l1_fee_scalar = U256::try_from_be_slice(&data[224..256]).ok_or(
+        }
+    })?;
+    let l1_fee_scalar = U256::try_from_be_slice(&data[224..256]).ok_or_else(|| {
         OptimismBlockExecutionError::L1BlockInfoError {
             message: "could not convert l1 fee scalar".to_string(),
-        },
-    )?;
+        }
+    })?;
 
     let mut l1block = L1BlockInfo::default();
     l1block.l1_base_fee = l1_base_fee;
@@ -114,29 +114,29 @@ pub fn parse_l1_info_tx_ecotone(data: &[u8]) -> Result<L1BlockInfo, OptimismBloc
     if data.len() != 160 {
         return Err(OptimismBlockExecutionError::L1BlockInfoError {
             message: "unexpected l1 block info tx calldata length found".to_string(),
-        });
+        })
     }
 
-    let l1_blob_base_fee_scalar = U256::try_from_be_slice(&data[8..12]).ok_or(
+    let l1_blob_base_fee_scalar = U256::try_from_be_slice(&data[8..12]).ok_or_else(|| {
         OptimismBlockExecutionError::L1BlockInfoError {
             message: "could not convert l1 blob base fee scalar".to_string(),
-        },
-    )?;
-    let l1_base_fee_scalar = U256::try_from_be_slice(&data[12..16]).ok_or(
+        }
+    })?;
+    let l1_base_fee_scalar = U256::try_from_be_slice(&data[12..16]).ok_or_else(|| {
         OptimismBlockExecutionError::L1BlockInfoError {
             message: "could not convert l1 base fee scalar".to_string(),
-        },
-    )?;
-    let l1_base_fee = U256::try_from_be_slice(&data[32..64]).ok_or(
+        }
+    })?;
+    let l1_base_fee = U256::try_from_be_slice(&data[32..64]).ok_or_else(|| {
         OptimismBlockExecutionError::L1BlockInfoError {
             message: "could not convert l1 blob base fee".to_string(),
-        },
-    )?;
-    let l1_blob_base_fee = U256::try_from_be_slice(&data[64..96]).ok_or(
+        }
+    })?;
+    let l1_blob_base_fee = U256::try_from_be_slice(&data[64..96]).ok_or_else(|| {
         OptimismBlockExecutionError::L1BlockInfoError {
             message: "could not convert l1 blob base fee".to_string(),
-        },
-    )?;
+        }
+    })?;
 
     let mut l1block = L1BlockInfo::default();
     l1block.l1_base_fee = l1_base_fee;
@@ -188,7 +188,7 @@ impl RethL1BlockInfo for L1BlockInfo {
         is_deposit: bool,
     ) -> Result<U256, BlockExecutionError> {
         if is_deposit {
-            return Ok(U256::ZERO);
+            return Ok(U256::ZERO)
         }
 
         let spec_id = if chain_spec.is_fork_active_at_timestamp(OptimismHardfork::Fjord, timestamp)
@@ -204,7 +204,7 @@ impl RethL1BlockInfo for L1BlockInfo {
             return Err(OptimismBlockExecutionError::L1BlockInfoError {
                 message: "Optimism hardforks are not active".to_string(),
             }
-            .into());
+            .into())
         };
         Ok(self.calculate_tx_l1_cost(input, spec_id))
     }
@@ -226,7 +226,7 @@ impl RethL1BlockInfo for L1BlockInfo {
             return Err(OptimismBlockExecutionError::L1BlockInfoError {
                 message: "Optimism hardforks are not active".to_string(),
             }
-            .into());
+            .into())
         };
         Ok(self.data_gas(input, spec_id))
     }
@@ -246,8 +246,7 @@ where
     // If the canyon hardfork is active at the current timestamp, and it was not active at the
     // previous block timestamp (heuristically, block time is not perfectly constant at 2s), and the
     // chain is an optimism chain, then we need to force-deploy the create2 deployer contract.
-    if chain_spec.is_optimism() &&
-        chain_spec.is_fork_active_at_timestamp(OptimismHardfork::Canyon, timestamp) &&
+    if chain_spec.is_fork_active_at_timestamp(OptimismHardfork::Canyon, timestamp) &&
         !chain_spec
             .is_fork_active_at_timestamp(OptimismHardfork::Canyon, timestamp.saturating_sub(2))
     {
@@ -267,7 +266,7 @@ where
 
         // Commit the create2 deployer account to the database.
         db.commit(HashMap::from([(CREATE_2_DEPLOYER_ADDR, revm_acc)]));
-        return Ok(());
+        return Ok(())
     }
 
     Ok(())

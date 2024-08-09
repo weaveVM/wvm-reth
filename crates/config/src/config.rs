@@ -1,6 +1,7 @@
 //! Configuration files.
 
 use reth_network_types::{PeersConfig, SessionsConfig};
+use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
 use reth_prune_types::PruneModes;
 use reth_stages_types::ExecutionStageThresholds;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -48,7 +49,7 @@ impl Config {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("reth config file extension must be '{EXTENSION}'"),
-            ));
+            ))
         }
         confy::store_path(path, self).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
     }
@@ -71,6 +72,8 @@ pub struct StageConfig {
     pub sender_recovery: SenderRecoveryConfig,
     /// Execution stage configuration.
     pub execution: ExecutionConfig,
+    /// Prune stage configuration.
+    pub prune: PruneStageConfig,
     /// Account Hashing stage configuration.
     pub account_hashing: HashingConfig,
     /// Storage Hashing stage configuration.
@@ -211,7 +214,7 @@ impl Default for ExecutionConfig {
             max_changes: Some(5_000_000),
             // 50k full blocks of 30M gas
             // WVM: 300kk
-            max_cumulative_gas: Some(300_000_000 * 50_000),
+            max_cumulative_gas: Some(ETHEREUM_BLOCK_GAS_LIMIT * 50_000),
             // 10 minutes
             max_duration: Some(Duration::from_secs(10 * 60)),
         }
@@ -226,6 +229,20 @@ impl From<ExecutionConfig> for ExecutionStageThresholds {
             max_cumulative_gas: config.max_cumulative_gas,
             max_duration: config.max_duration,
         }
+    }
+}
+
+/// Prune stage configuration.
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(default)]
+pub struct PruneStageConfig {
+    /// The maximum number of entries to prune before committing progress to the database.
+    pub commit_threshold: usize,
+}
+
+impl Default for PruneStageConfig {
+    fn default() -> Self {
+        Self { commit_threshold: 1_000_000 }
     }
 }
 
@@ -368,7 +385,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::{Config, EXTENSION};
-    use std::time::Duration;
+    use reth_network_peers::TrustedPeer;
+    use std::{str::FromStr, time::Duration};
 
     fn with_tempdir(filename: &str, proc: fn(&std::path::Path)) {
         let temp_dir = tempfile::tempdir().unwrap();
@@ -735,5 +753,29 @@ connect_trusted_nodes_only = true
 #";
         let conf: Config = toml::from_str(trusted_nodes_only).unwrap();
         assert!(conf.peers.trusted_nodes_only);
+    }
+
+    #[test]
+    fn test_can_support_dns_in_trusted_nodes() {
+        let reth_toml = r#"
+    [peers]
+    trusted_nodes = [
+        "enode://0401e494dbd0c84c5c0f72adac5985d2f2525e08b68d448958aae218f5ac8198a80d1498e0ebec2ce38b1b18d6750f6e61a56b4614c5a6c6cf0981c39aed47dc@34.159.32.127:30303",
+        "enode://e9675164b5e17b9d9edf0cc2bd79e6b6f487200c74d1331c220abb5b8ee80c2eefbf18213989585e9d0960683e819542e11d4eefb5f2b4019e1e49f9fd8fff18@berav2-bootnode.staketab.org:30303"
+    ]
+    "#;
+
+        let conf: Config = toml::from_str(reth_toml).unwrap();
+        assert_eq!(conf.peers.trusted_nodes.len(), 2);
+
+        let expected_enodes = vec![
+        "enode://0401e494dbd0c84c5c0f72adac5985d2f2525e08b68d448958aae218f5ac8198a80d1498e0ebec2ce38b1b18d6750f6e61a56b4614c5a6c6cf0981c39aed47dc@34.159.32.127:30303",
+        "enode://e9675164b5e17b9d9edf0cc2bd79e6b6f487200c74d1331c220abb5b8ee80c2eefbf18213989585e9d0960683e819542e11d4eefb5f2b4019e1e49f9fd8fff18@berav2-bootnode.staketab.org:30303",
+    ];
+
+        for enode in expected_enodes {
+            let node = TrustedPeer::from_str(enode).unwrap();
+            assert!(conf.peers.trusted_nodes.contains(&node));
+        }
     }
 }

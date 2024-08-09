@@ -1,13 +1,15 @@
 //! Possible errors when interacting with the network.
 
-use crate::session::PendingSessionHandshakeError;
+use std::{fmt, io, io::ErrorKind, net::SocketAddr};
+
 use reth_dns_discovery::resolver::ResolveError;
 use reth_eth_wire::{
     errors::{EthHandshakeError, EthStreamError, P2PHandshakeError, P2PStreamError},
     DisconnectReason,
 };
 use reth_network_types::BackoffKind;
-use std::{fmt, io, io::ErrorKind, net::SocketAddr};
+
+use crate::session::PendingSessionHandshakeError;
 
 /// Service kind.
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -71,7 +73,7 @@ impl NetworkError {
             ErrorKind::AddrInUse => Self::AddressAlreadyInUse { kind, error: err },
             _ => {
                 if let ServiceKind::Discovery(_) = kind {
-                    return Self::Discovery(err);
+                    return Self::Discovery(err)
                 }
                 Self::Io(err)
             }
@@ -157,7 +159,7 @@ impl SessionError for EthStreamError {
 
     fn should_backoff(&self) -> Option<BackoffKind> {
         if let Some(err) = self.as_io() {
-            return err.should_backoff();
+            return err.should_backoff()
         }
 
         if let Some(err) = self.as_disconnected() {
@@ -180,7 +182,7 @@ impl SessionError for EthStreamError {
                     // [`SessionError::is_fatal_protocol_error`]
                     Some(BackoffKind::High)
                 }
-            };
+            }
         }
 
         // This only checks for a subset of error variants, the counterpart of

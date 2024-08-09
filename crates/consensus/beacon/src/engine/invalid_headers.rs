@@ -41,7 +41,7 @@ impl InvalidHeaderCache {
             let entry = self.headers.get(hash)?;
             entry.hit_count += 1;
             if entry.hit_count < INVALID_HEADER_HIT_EVICTION_THRESHOLD {
-                return Some(entry.header.clone());
+                return Some(entry.header.clone())
             }
         }
         // if we get here, the entry has been hit too many times, so we evict it
@@ -67,7 +67,7 @@ impl InvalidHeaderCache {
     }
 
     /// Inserts an invalid ancestor into the map.
-    pub(crate) fn insert(&mut self, invalid_ancestor: SealedHeader) {
+    pub fn insert(&mut self, invalid_ancestor: SealedHeader) {
         if self.get(&invalid_ancestor.hash()).is_none() {
             let hash = invalid_ancestor.hash();
             let header = invalid_ancestor.unseal();

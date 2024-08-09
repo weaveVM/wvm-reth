@@ -14,8 +14,8 @@ use reth_ethereum_forks::{
 use reth_network_peers::NodeRecord;
 use reth_primitives_traits::{
     constants::{
-        DEV_GENESIS_HASH, EIP1559_INITIAL_BASE_FEE, EMPTY_WITHDRAWALS, HOLESKY_GENESIS_HASH,
-        MAINNET_GENESIS_HASH, SEPOLIA_GENESIS_HASH,
+        DEV_GENESIS_HASH, EIP1559_INITIAL_BASE_FEE, EMPTY_WITHDRAWALS, ETHEREUM_BLOCK_GAS_LIMIT,
+        HOLESKY_GENESIS_HASH, MAINNET_GENESIS_HASH, SEPOLIA_GENESIS_HASH,
     },
     Header, SealedHeader,
 };
@@ -23,11 +23,6 @@ use reth_trie_common::root::state_root_ref_unhashed;
 #[cfg(feature = "std")]
 use std::sync::Arc;
 
-#[cfg(feature = "optimism")]
-use crate::constants::optimism::{
-    BASE_SEPOLIA_BASE_FEE_PARAMS, BASE_SEPOLIA_CANYON_BASE_FEE_PARAMS, OP_BASE_FEE_PARAMS,
-    OP_CANYON_BASE_FEE_PARAMS, OP_SEPOLIA_BASE_FEE_PARAMS, OP_SEPOLIA_CANYON_BASE_FEE_PARAMS,
-};
 pub use alloy_eips::eip1559::BaseFeeParams;
 #[cfg(feature = "optimism")]
 use reth_ethereum_forks::OptimismHardfork;
@@ -38,7 +33,7 @@ use reth_network_peers::{
 
 /// The Ethereum mainnet spec
 pub static MAINNET: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
-    ChainSpec {
+    let mut spec = ChainSpec {
         chain: Chain::mainnet(),
         genesis: serde_json::from_str(include_str!("../res/genesis/mainnet.json"))
             .expect("Can't deserialize Mainnet genesis json"),
@@ -56,14 +51,16 @@ pub static MAINNET: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
             b256!("649bbc62d0e31342afea4e5cd82d4049e7e1ee912fc0889aa790803be39038c5"),
         )),
         base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
-        prune_delete_limit: 3500,
-    }
-    .into()
+        max_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+        prune_delete_limit: 20000,
+    };
+    spec.genesis.config.dao_fork_support = true;
+    spec.into()
 });
 
 /// The Sepolia spec
 pub static SEPOLIA: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
-    ChainSpec {
+    let mut spec = ChainSpec {
         chain: Chain::sepolia(),
         genesis: serde_json::from_str(include_str!("../res/genesis/sepolia.json"))
             .expect("Can't deserialize Sepolia genesis json"),
@@ -78,14 +75,16 @@ pub static SEPOLIA: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
             b256!("649bbc62d0e31342afea4e5cd82d4049e7e1ee912fc0889aa790803be39038c5"),
         )),
         base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
-        prune_delete_limit: 1700,
-    }
-    .into()
+        max_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+        prune_delete_limit: 10000,
+    };
+    spec.genesis.config.dao_fork_support = true;
+    spec.into()
 });
 
 /// The Holesky spec
 pub static HOLESKY: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
-    ChainSpec {
+    let mut spec = ChainSpec {
         chain: Chain::holesky(),
         genesis: serde_json::from_str(include_str!("../res/genesis/holesky.json"))
             .expect("Can't deserialize Holesky genesis json"),
@@ -98,9 +97,11 @@ pub static HOLESKY: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
             b256!("649bbc62d0e31342afea4e5cd82d4049e7e1ee912fc0889aa790803be39038c5"),
         )),
         base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
-        prune_delete_limit: 1700,
-    }
-    .into()
+        max_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+        prune_delete_limit: 10000,
+    };
+    spec.genesis.config.dao_fork_support = true;
+    spec.into()
 });
 
 /// Dev testnet specification
@@ -138,12 +139,13 @@ pub static OP_MAINNET: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
         hardforks: OptimismHardfork::op_mainnet(),
         base_fee_params: BaseFeeParamsKind::Variable(
             vec![
-                (EthereumHardfork::London.boxed(), OP_BASE_FEE_PARAMS),
-                (OptimismHardfork::Canyon.boxed(), OP_CANYON_BASE_FEE_PARAMS),
+                (EthereumHardfork::London.boxed(), BaseFeeParams::optimism()),
+                (OptimismHardfork::Canyon.boxed(), BaseFeeParams::optimism_canyon()),
             ]
             .into(),
         ),
-        prune_delete_limit: 1700,
+        max_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+        prune_delete_limit: 10000,
         ..Default::default()
     }
     .into()
@@ -163,12 +165,13 @@ pub static OP_SEPOLIA: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
         hardforks: OptimismHardfork::op_sepolia(),
         base_fee_params: BaseFeeParamsKind::Variable(
             vec![
-                (EthereumHardfork::London.boxed(), OP_SEPOLIA_BASE_FEE_PARAMS),
-                (OptimismHardfork::Canyon.boxed(), OP_SEPOLIA_CANYON_BASE_FEE_PARAMS),
+                (EthereumHardfork::London.boxed(), BaseFeeParams::optimism_sepolia()),
+                (OptimismHardfork::Canyon.boxed(), BaseFeeParams::optimism_sepolia_canyon()),
             ]
             .into(),
         ),
-        prune_delete_limit: 1700,
+        max_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+        prune_delete_limit: 10000,
         ..Default::default()
     }
     .into()
@@ -188,12 +191,13 @@ pub static BASE_SEPOLIA: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
         hardforks: OptimismHardfork::base_sepolia(),
         base_fee_params: BaseFeeParamsKind::Variable(
             vec![
-                (EthereumHardfork::London.boxed(), BASE_SEPOLIA_BASE_FEE_PARAMS),
-                (OptimismHardfork::Canyon.boxed(), BASE_SEPOLIA_CANYON_BASE_FEE_PARAMS),
+                (EthereumHardfork::London.boxed(), BaseFeeParams::base_sepolia()),
+                (OptimismHardfork::Canyon.boxed(), BaseFeeParams::base_sepolia_canyon()),
             ]
             .into(),
         ),
-        prune_delete_limit: 1700,
+        max_gas_limit: crate::constants::BASE_SEPOLIA_MAX_GAS_LIMIT,
+        prune_delete_limit: 10000,
         ..Default::default()
     }
     .into()
@@ -213,12 +217,13 @@ pub static BASE_MAINNET: Lazy<Arc<ChainSpec>> = Lazy::new(|| {
         hardforks: OptimismHardfork::base_mainnet(),
         base_fee_params: BaseFeeParamsKind::Variable(
             vec![
-                (EthereumHardfork::London.boxed(), OP_BASE_FEE_PARAMS),
-                (OptimismHardfork::Canyon.boxed(), OP_CANYON_BASE_FEE_PARAMS),
+                (EthereumHardfork::London.boxed(), BaseFeeParams::optimism()),
+                (OptimismHardfork::Canyon.boxed(), BaseFeeParams::optimism_canyon()),
             ]
             .into(),
         ),
-        prune_delete_limit: 1700,
+        max_gas_limit: crate::constants::BASE_MAINNET_MAX_GAS_LIMIT,
+        prune_delete_limit: 10000,
         ..Default::default()
     }
     .into()
@@ -300,9 +305,10 @@ pub struct ChainSpec {
     /// The parameters that configure how a block's base fee is computed
     pub base_fee_params: BaseFeeParamsKind,
 
-    /// The delete limit for pruner, per block. In the actual pruner run it will be multiplied by
-    /// the amount of blocks between pruner runs to account for the difference in amount of new
-    /// data coming in.
+    /// The maximum gas limit
+    pub max_gas_limit: u64,
+
+    /// The delete limit for pruner, per run.
     pub prune_delete_limit: usize,
 }
 
@@ -316,6 +322,7 @@ impl Default for ChainSpec {
             hardforks: Default::default(),
             deposit_contract: Default::default(),
             base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
+            max_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
             prune_delete_limit: MAINNET.prune_delete_limit,
         }
     }
@@ -585,7 +592,7 @@ impl ChainSpec {
                 } else {
                     // we can return here because this block fork is not active, so we set the
                     // `next` value
-                    return ForkId { hash: forkhash, next: block };
+                    return ForkId { hash: forkhash, next: block }
                 }
             }
         }
@@ -606,7 +613,7 @@ impl ChainSpec {
                 // can safely return here because we have already handled all block forks and
                 // have handled all active timestamp forks, and set the next value to the
                 // timestamp that is known but not active yet
-                return ForkId { hash: forkhash, next: timestamp };
+                return ForkId { hash: forkhash, next: timestamp }
             }
         }
 
@@ -621,7 +628,7 @@ impl ChainSpec {
                 // to satisfy every timestamp ForkCondition, we find the last ForkCondition::Block
                 // if one exists, and include its block_num in the returned Head
                 if let Some(last_block_num) = self.last_block_fork_before_merge_or_timestamp() {
-                    return Head { timestamp, number: last_block_num, ..Default::default() };
+                    return Head { timestamp, number: last_block_num, ..Default::default() }
                 }
                 Head { timestamp, ..Default::default() }
             }
@@ -649,17 +656,17 @@ impl ChainSpec {
                     ForkCondition::TTD { fork_block, .. } => {
                         // handle Sepolia merge netsplit case
                         if fork_block.is_some() {
-                            return *fork_block;
+                            return *fork_block
                         }
                         // ensure curr_cond is indeed ForkCondition::Block and return block_num
                         if let ForkCondition::Block(block_num) = curr_cond {
-                            return Some(block_num);
+                            return Some(block_num)
                         }
                     }
                     ForkCondition::Timestamp(_) => {
                         // ensure curr_cond is indeed ForkCondition::Block and return block_num
                         if let ForkCondition::Block(block_num) = curr_cond {
-                            return Some(block_num);
+                            return Some(block_num)
                         }
                     }
                     ForkCondition::Block(_) | ForkCondition::Never => continue,
@@ -945,6 +952,13 @@ impl ChainSpecBuilder {
     pub fn cancun_activated(mut self) -> Self {
         self = self.shanghai_activated();
         self.hardforks.insert(EthereumHardfork::Cancun, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Prague at genesis.
+    pub fn prague_activated(mut self) -> Self {
+        self = self.cancun_activated();
+        self.hardforks.insert(EthereumHardfork::Prague, ForkCondition::Timestamp(0));
         self
     }
 

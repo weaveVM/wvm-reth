@@ -40,10 +40,10 @@ pub trait BlockNumReader: BlockHashReader + Send + Sync {
     }
 }
 
-/// Client trait for transforming [BlockId] into block numbers or hashes.
+/// Client trait for transforming [`BlockId`] into block numbers or hashes.
 ///
-/// Types that implement this trait must be able to resolve all variants of [BlockNumberOrTag] to
-/// block numbers or hashes. Automatic implementations for resolving [BlockNumberOrTag] variants
+/// Types that implement this trait must be able to resolve all variants of [`BlockNumberOrTag`] to
+/// block numbers or hashes. Automatic implementations for resolving [`BlockNumberOrTag`] variants
 /// are provided if the type implements the `pending_block_num_hash`, `finalized_block_num`, and
 /// `safe_block_num` methods.
 ///
@@ -129,3 +129,6 @@ pub trait BlockIdReader: BlockNumReader + Send + Sync {
         self.finalized_block_num_hash().map(|res_opt| res_opt.map(|num_hash| num_hash.hash))
     }
 }
+
+#[cfg(test)]
+fn _object_safe(_: Box<dyn BlockIdReader>) {}

@@ -465,12 +465,12 @@ impl<H: NippyJarHeader> NippyJar<H> {
         columns: &[impl IntoIterator<Item = ColumnResult<Vec<u8>>>],
     ) -> Result<(), NippyJarError> {
         if columns.len() != self.columns {
-            return Err(NippyJarError::ColumnLenMismatch(self.columns, columns.len()));
+            return Err(NippyJarError::ColumnLenMismatch(self.columns, columns.len()))
         }
 
         if let Some(compression) = &self.compressor {
             if !compression.is_ready() {
-                return Err(NippyJarError::CompressorNotReady);
+                return Err(NippyJarError::CompressorNotReady)
             }
         }
 
@@ -560,7 +560,7 @@ impl DataReader {
 
         let offset_end = index.saturating_add(self.offset_size as usize);
         if offset_end > self.offset_mmap.len() {
-            return Err(NippyJarError::OffsetOutOfBounds { index });
+            return Err(NippyJarError::OffsetOutOfBounds { index })
         }
 
         buffer[..self.offset_size as usize].copy_from_slice(&self.offset_mmap[index..offset_end]);

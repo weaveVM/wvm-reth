@@ -1,21 +1,5 @@
 //! Discovery support for the network.
 
-use crate::{
-    cache::LruMap,
-    error::{NetworkError, ServiceKind},
-    manager::DiscoveredEvent,
-    peers::PeerAddr,
-};
-use enr::Enr;
-use futures::StreamExt;
-use reth_discv4::{DiscoveryUpdate, Discv4, Discv4Config};
-use reth_discv5::{DiscoveredPeer, Discv5};
-use reth_dns_discovery::{
-    DnsDiscoveryConfig, DnsDiscoveryHandle, DnsDiscoveryService, DnsNodeRecordUpdate, DnsResolver,
-};
-use reth_network_peers::{NodeRecord, PeerId};
-use reth_primitives::{EnrForkIdEntry, ForkId};
-use secp256k1::SecretKey;
 use std::{
     collections::VecDeque,
     net::{IpAddr, SocketAddr},
@@ -23,9 +7,27 @@ use std::{
     sync::Arc,
     task::{ready, Context, Poll},
 };
+
+use enr::Enr;
+use futures::StreamExt;
+use reth_discv4::{DiscoveryUpdate, Discv4, Discv4Config};
+use reth_discv5::{DiscoveredPeer, Discv5};
+use reth_dns_discovery::{
+    DnsDiscoveryConfig, DnsDiscoveryHandle, DnsDiscoveryService, DnsNodeRecordUpdate, DnsResolver,
+};
+use reth_network_api::{DiscoveredEvent, DiscoveryEvent};
+use reth_network_peers::{NodeRecord, PeerId};
+use reth_network_types::PeerAddr;
+use reth_primitives::{EnrForkIdEntry, ForkId};
+use secp256k1::SecretKey;
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_stream::{wrappers::ReceiverStream, Stream};
 use tracing::trace;
+
+use crate::{
+    cache::LruMap,
+    error::{NetworkError, ServiceKind},
+};
 
 /// Default max capacity for cache of discovered peers.
 ///
@@ -243,7 +245,7 @@ impl Discovery {
             // Drain all buffered events first
             if let Some(event) = self.queued_events.pop_front() {
                 self.notify_listeners(&event);
-                return Poll::Ready(event);
+                return Poll::Ready(event)
             }
 
             // drain the discv4 update stream
@@ -281,7 +283,7 @@ impl Discovery {
             }
 
             if self.queued_events.is_empty() {
-                return Poll::Pending;
+                return Poll::Pending
             }
         }
     }
@@ -324,15 +326,6 @@ impl Discovery {
             discovery_listeners: Default::default(),
         }
     }
-}
-
-/// Events produced by the [`Discovery`] manager.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum DiscoveryEvent {
-    /// Discovered a node
-    NewNode(DiscoveredEvent),
-    /// Retrieved a [`ForkId`] from the peer via ENR request, See <https://eips.ethereum.org/EIPS/eip-868>
-    EnrForkId(PeerId, ForkId),
 }
 
 #[cfg(test)]

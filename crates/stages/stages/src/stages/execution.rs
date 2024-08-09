@@ -10,6 +10,7 @@ use reth_primitives::{BlockNumber, Header, StaticFileSegment};
 use reth_primitives_traits::format_gas_throughput;
 use reth_provider::{
     providers::{StaticFileProvider, StaticFileProviderRWRefMut, StaticFileWriter},
+    writer::UnifiedStorageWriter,
     BlockReader, DatabaseProviderRW, HeaderProvider, LatestStateProviderRef, OriginalValuesKnown,
     ProviderError, StateWriter, StatsReader, TransactionVariant,
 };
@@ -197,7 +198,7 @@ where
         input: ExecInput,
     ) -> Result<ExecOutput, StageError> {
         if input.target_reached() {
-            return Ok(ExecOutput::done(input.checkpoint()));
+            return Ok(ExecOutput::done(input.checkpoint()))
         }
 
         let start_block = input.next_block();
@@ -209,6 +210,7 @@ where
         let static_file_producer = if self.prune_modes.receipts.is_none() &&
             self.prune_modes.receipts_log_filter.is_empty()
         {
+            debug!(target: "sync::stages::execution", start = start_block, "Preparing static file producer");
             let mut producer = prepare_static_file_producer(provider, start_block)?;
             // Since there might be a database <-> static file inconsistency (read
             // `prepare_static_file_producer` for context), we commit the change straight away.
@@ -316,7 +318,7 @@ where
                 cumulative_gas,
                 batch_start.elapsed(),
             ) {
-                break;
+                break
             }
         }
 
@@ -357,12 +359,11 @@ where
         }
 
         let time = Instant::now();
+
         // write output
-        state.write_to_storage(
-            provider.tx_ref(),
-            static_file_producer,
-            OriginalValuesKnown::Yes,
-        )?;
+        let mut writer = UnifiedStorageWriter::new(provider, static_file_producer);
+        writer.write_to_storage(state, OriginalValuesKnown::Yes)?;
+
         let db_write_duration = time.elapsed();
         debug!(
             target: "sync::stages::execution",
@@ -404,13 +405,13 @@ where
         if range.is_empty() {
             return Ok(UnwindOutput {
                 checkpoint: input.checkpoint.with_block_number(input.unwind_to),
-            });
+            })
         }
 
         // Unwind account and storage changesets, as well as receipts.
         //
         // This also updates `PlainStorageState` and `PlainAccountState`.
-        let bundle_state_with_receipts = provider.unwind_or_peek_state::<true>(range.clone())?;
+        let bundle_state_with_receipts = provider.take_state(range.clone())?;
 
         // Prepare the input for post unwind commit hook, where an `ExExNotification` will be sent.
         if self.exex_manager_handle.has_exexs() {
@@ -444,7 +445,7 @@ where
             // files do not support filters.
             //
             // If we hit this case, the receipts have already been unwound by the call to
-            // `unwind_or_peek_state`.
+            // `take_state`.
         }
 
         // Update the checkpoint.
@@ -549,6 +550,8 @@ fn calculate_gas_used_from_headers(
     provider: &StaticFileProvider,
     range: RangeInclusive<BlockNumber>,
 ) -> Result<u64, ProviderError> {
+    debug!(target: "sync::stages::execution", ?range, "Calculating gas used from headers");
+
     let mut gas_total = 0;
 
     let start = Instant::now();
@@ -563,7 +566,7 @@ fn calculate_gas_used_from_headers(
     }
 
     let duration = start.elapsed();
-    trace!(target: "sync::stages::execution", ?range, ?duration, "Time elapsed in calculate_gas_used_from_headers");
+    debug!(target: "sync::stages::execution", ?range, ?duration, "Finished calculating gas used from headers");
 
     Ok(gas_total)
 }
@@ -624,11 +627,11 @@ where
             loop {
                 if let Some(indices) = provider.block_body_indices(last_block)? {
                     if indices.last_tx_num() <= last_receipt_num {
-                        break;
+                        break
                     }
                 }
                 if last_block == 0 {
-                    break;
+                    break
                 }
                 last_block -= 1;
             }
@@ -639,7 +642,7 @@ where
             return Err(StageError::MissingStaticFileData {
                 block: missing_block,
                 segment: StaticFileSegment::Receipts,
-            });
+            })
         }
     }
 
@@ -833,8 +836,6 @@ mod tests {
 
     #[tokio::test]
     async fn sanity_execution_of_block() {
-        // TODO cleanup the setup after https://github.com/paradigmxyz/reth/issues/332
-        // is merged as it has similar framework
         let factory = create_test_provider_factory();
         let provider = factory.provider_rw().unwrap();
         let input = ExecInput { target: Some(1), checkpoint: None };
@@ -853,7 +854,7 @@ mod tests {
         {
             let mut receipts_writer =
                 provider.static_file_provider().latest_writer(StaticFileSegment::Receipts).unwrap();
-            receipts_writer.increment_block(StaticFileSegment::Receipts, 0).unwrap();
+            receipts_writer.increment_block(0).unwrap();
             receipts_writer.commit().unwrap();
         }
         provider.commit().unwrap();
@@ -981,9 +982,6 @@ mod tests {
 
     #[tokio::test]
     async fn sanity_execute_unwind() {
-        // TODO cleanup the setup after https://github.com/paradigmxyz/reth/issues/332
-        // is merged as it has similar framework
-
         let factory = create_test_provider_factory();
         let provider = factory.provider_rw().unwrap();
         let input = ExecInput { target: Some(1), checkpoint: None };
@@ -1002,7 +1000,7 @@ mod tests {
         {
             let mut receipts_writer =
                 provider.static_file_provider().latest_writer(StaticFileSegment::Receipts).unwrap();
-            receipts_writer.increment_block(StaticFileSegment::Receipts, 0).unwrap();
+            receipts_writer.increment_block(0).unwrap();
             receipts_writer.commit().unwrap();
         }
         provider.commit().unwrap();
@@ -1119,7 +1117,7 @@ mod tests {
         {
             let mut receipts_writer =
                 provider.static_file_provider().latest_writer(StaticFileSegment::Receipts).unwrap();
-            receipts_writer.increment_block(StaticFileSegment::Receipts, 0).unwrap();
+            receipts_writer.increment_block(0).unwrap();
             receipts_writer.commit().unwrap();
         }
         provider.commit().unwrap();

@@ -1,6 +1,6 @@
 consensus:
-  enabled: false
-  url: "http://lighthouse:5052"
+  enabled: true
+  url: "http://beacon-chain:5052"
   name: "consensus-client"
 execution:
   enabled: true

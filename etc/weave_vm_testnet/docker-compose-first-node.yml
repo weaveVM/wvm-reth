@@ -1,0 +1,178 @@
+version: "3.8"
+
+services:
+  reth:
+    image: reth:local # ghcr.io/paradigmxyz/reth:latest
+    container_name: reth
+    restart: unless-stopped
+    ports:
+      - "8551:8551"
+      - "8545:8545"
+      - "8546:8546"
+      - "30303:30303/udp"
+      - "30303:30303/tcp"
+      - "30304:30304/udp"
+      - "30304:30304/tcp"
+      - "9001:9001" #metrics
+    volumes:
+      - reth_data:/data
+      - reth_jwt:/jwt:ro
+      - reth_genesis:/genesis:ro
+      - logs:/root/logs
+      - ./../jwttoken:/root/jwt:ro
+    command:
+      - node
+      - --metrics=0.0.0.0:9001
+      - --http
+      - --http.addr=0.0.0.0
+      - --http.api=eth,net,trace,txpool,web3,rpc,debug,admin
+      - --http.corsdomain=*
+      - --ws
+      - --ws.addr=0.0.0.0
+      - --ws.api=eth,net,trace,txpool,web3,rpc,debug,admin
+      - --ws.origins=*
+      - --auth-ipc
+      - --auth-ipc.path=/data/reth_engine_api.ipc
+      - --authrpc.addr=0.0.0.0
+      - --authrpc.port=8551
+      - --authrpc.jwtsecret=/root/jwt/jwt.hex
+      - --chain=/genesis/genesis.json
+      - --datadir=/data
+      - --log.file.directory=/root/logs
+      - --discovery.addr=0.0.0.0
+      - --port=30303
+      - --discovery.port=30303
+      - --enable-discv5-discovery
+      - --discovery.v5.port=30304
+      - -vvvv
+
+  # default prometheus + grafana setup
+  prometheus:
+    restart: unless-stopped
+    image: prom/prometheus
+    depends_on:
+      - reth
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./../prometheus/:/etc/prometheus/
+      - prometheusdata:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+
+  grafana:
+    restart: unless-stopped
+    image: grafana/grafana:10.3.3
+    depends_on:
+      - reth
+      - prometheus
+    ports:
+      - "3000:3000"
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./../grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./../grafana/dashboards:/etc/grafana/provisioning_temp/dashboards
+    # 1. Copy dashboards from temp directory to prevent modifying original host files
+    # 2. Replace Prometheus datasource placeholder with the actual name
+    # 3. Run Grafana
+    entrypoint: >
+      sh -c "cp -r /etc/grafana/provisioning_temp/dashboards/. /etc/grafana/provisioning/dashboards &&
+             find /etc/grafana/provisioning/dashboards/ -name '*.json' -exec sed -i 's/$${DS_PROMETHEUS}/Prometheus/g' {} \+ &&
+             /run.sh"
+
+  metrics-exporter:
+    restart: unless-stopped
+    image: ethpandaops/ethereum-metrics-exporter:debian-latest
+    depends_on:
+      - reth
+    ports:
+      - "9091:9091" # metrics
+    volumes:
+      - ./../ethereum-metrics-exporter/config.yaml:/root/config.yaml
+    command:
+      - --config=/root/config.yaml
+      - --metrics-port=9091
+
+  # Consensus client part
+  beacon-chain:
+    image: wvm-lighthouse:local
+    ports:
+      - '5052:5052/tcp' # rpc
+      - '5053:5053/tcp'
+      - '5054:5054/tcp' # metrics
+      - '9000:9000/tcp' # p2p
+      - '9000:9000/udp' # p2p
+      - '9002:9002/udp' # quic
+    volumes:
+      - lighthousedata:/data
+      - testnetdata:/testnetdata
+      - ./../jwttoken:/root/jwt:ro
+    command: >
+      lighthouse bn
+      --testnet-dir=/testnetdata/ 
+      --http 
+      --http-address 0.0.0.0 
+      --execution-endpoint http://reth:8551 
+      --metrics 
+      --metrics-address 0.0.0.0 
+      --execution-jwt /root/jwt/jwt.hex 
+      --staking 
+      --allow-insecure-genesis-sync 
+      --import-all-attestations 
+      --subscribe-all-subnets 
+      --http-allow-origin "*" 
+      --disable-packet-filter 
+      --http-allow-sync-stalled 
+      --enr-tcp-port 9000 
+      --enr-udp-port 9000 
+      --enr-address local_IP
+      --libp2p-addresses "/ip4/10.156.0.10/udp/9000/p2p/16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU"
+      --trusted-peers "16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU"
+      --disable-peer-scoring
+      --reconstruct-historic-states
+      --genesis-backfill
+      --debug-level debug
+      --disable-upnp
+      --disable-enr-auto-update
+      --disable-backfill-rate-limiting
+      --slots-per-restore-point 256
+      --beacon-processor-max-workers 40
+      --beacon-processor-work-queue-len 32768
+      --beacon-processor-reprocess-queue-len 24576
+      --beacon-processor-attestation-batch-size 2048
+      --beacon-processor-aggregate-batch-size 2048
+      --disable-inbound-rate-limiter
+      --validator-monitor-auto
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  validator:
+    image: wvm-lighthouse:local
+    volumes:
+      - testnetdata:/testnetdata
+      - lighthousedata:/data
+    command:
+      lighthouse vc
+      --builder-proposals 
+      --testnet-dir=/testnetdata/
+      --beacon-nodes http://beacon-chain:5052
+      --datadir=/data/custom/
+      --init-slashing-protection
+      --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7
+      --http-allow-origin "*"
+      --http
+
+volumes:
+  reth_data:
+  reth_jwt:
+  reth_genesis:
+  logs:
+  prometheusdata:
+  grafanadata:
+  testnetdata:
+  lighthousedata:

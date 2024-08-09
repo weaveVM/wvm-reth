@@ -1,4 +1,6 @@
-use crate::{metrics::EngineApiMetrics, EngineApiError, EngineApiResult};
+use crate::{
+    capabilities::EngineCapabilities, metrics::EngineApiMetrics, EngineApiError, EngineApiResult,
+};
 use async_trait::async_trait;
 use jsonrpsee_core::RpcResult;
 use reth_beacon_consensus::BeaconConsensusEngineHandle;
@@ -18,7 +20,7 @@ use reth_rpc_types::engine::{
     CancunPayloadFields, ClientVersionV1, ExecutionPayload, ExecutionPayloadBodiesV1,
     ExecutionPayloadBodiesV2, ExecutionPayloadInputV2, ExecutionPayloadV1, ExecutionPayloadV3,
     ExecutionPayloadV4, ForkchoiceState, ForkchoiceUpdated, PayloadId, PayloadStatus,
-    TransitionConfiguration, CAPABILITIES,
+    TransitionConfiguration,
 };
 use reth_rpc_types_compat::engine::payload::{
     convert_payload_input_v2_to_payload, convert_to_payload_body_v1, convert_to_payload_body_v2,
@@ -56,12 +58,14 @@ struct EngineApiInner<Provider, EngineT: EngineTypes> {
     metrics: EngineApiMetrics,
     /// Identification of the execution client used by the consensus client
     client: ClientVersionV1,
+    /// The list of all supported Engine capabilities available over the engine endpoint.
+    capabilities: EngineCapabilities,
 }
 
 impl<Provider, EngineT> EngineApi<Provider, EngineT>
 where
     Provider: HeaderProvider + BlockReader + StateProviderFactory + EvmEnvProvider + 'static,
-    EngineT: EngineTypes + 'static,
+    EngineT: EngineTypes,
 {
     /// Create new instance of [`EngineApi`].
     pub fn new(
@@ -71,6 +75,7 @@ where
         payload_store: PayloadStore<EngineT>,
         task_spawner: Box<dyn TaskSpawner>,
         client: ClientVersionV1,
+        capabilities: EngineCapabilities,
     ) -> Self {
         let inner = Arc::new(EngineApiInner {
             provider,
@@ -80,6 +85,7 @@ where
             task_spawner,
             metrics: EngineApiMetrics::default(),
             client,
+            capabilities,
         });
         Self { inner }
     }
@@ -459,7 +465,7 @@ where
     {
         let len = hashes.len() as u64;
         if len > MAX_PAYLOAD_BODIES_LIMIT {
-            return Err(EngineApiError::PayloadRequestTooLarge { len });
+            return Err(EngineApiError::PayloadRequestTooLarge { len })
         }
 
         let mut result = Vec::with_capacity(hashes.len());
@@ -517,7 +523,7 @@ where
             return Err(EngineApiError::TerminalTD {
                 execution: merge_terminal_td,
                 consensus: terminal_total_difficulty,
-            });
+            })
         }
 
         self.inner.beacon_consensus.transition_configuration_exchanged();
@@ -527,14 +533,14 @@ where
             return Ok(TransitionConfiguration {
                 terminal_total_difficulty: merge_terminal_td,
                 ..Default::default()
-            });
+            })
         }
 
         // Attempt to look up terminal block hash
         let local_hash = self
             .inner
             .provider
-            .block_hash(terminal_block_number.to())
+            .block_hash(terminal_block_number)
             .map_err(|err| EngineApiError::Internal(Box::new(err)))?;
 
         // Transition configuration exchange is successful if block hashes match
@@ -592,9 +598,9 @@ where
                 // TODO: decide if we want this branch - the FCU INVALID response might be more
                 // useful than the payload attributes INVALID response
                 if fcu_res.is_invalid() {
-                    return Ok(fcu_res);
+                    return Ok(fcu_res)
                 }
-                return Err(err.into());
+                return Err(err.into())
             }
         }
 
@@ -606,7 +612,7 @@ where
 impl<Provider, EngineT> EngineApiServer<EngineT> for EngineApi<Provider, EngineT>
 where
     Provider: HeaderProvider + BlockReader + StateProviderFactory + EvmEnvProvider + 'static,
-    EngineT: EngineTypes + 'static,
+    EngineT: EngineTypes,
 {
     /// Handler for `engine_newPayloadV1`
     /// See also <https://github.com/ethereum/execution-apis/blob/3d627c95a4d3510a8187dd02e0250ecb4331d27e/src/engine/paris.md#engine_newpayloadv1>
@@ -896,7 +902,7 @@ where
     /// Handler for `engine_exchangeCapabilitiesV1`
     /// See also <https://github.com/ethereum/execution-apis/blob/6452a6b194d7db269bf1dbd087a267251d3cc7f8/src/engine/common.md#capabilities>
     async fn exchange_capabilities(&self, _capabilities: Vec<String>) -> RpcResult<Vec<String>> {
-        Ok(CAPABILITIES.iter().cloned().map(str::to_owned).collect())
+        Ok(self.inner.capabilities.list())
     }
 }
 
@@ -949,6 +955,7 @@ mod tests {
             payload_store.into(),
             task_executor,
             client,
+            EngineCapabilities::default(),
         );
         let handle = EngineApiTestHandle { chain_spec, provider, from_api: engine_rx };
         (handle, api)
@@ -1147,7 +1154,7 @@ mod tests {
                     .ttd()
                     .unwrap(),
                 terminal_block_hash: consensus_terminal_block.hash(),
-                terminal_block_number: U64::from(terminal_block_number),
+                terminal_block_number,
             };
 
             // Unknown block number
@@ -1189,7 +1196,7 @@ mod tests {
                     .ttd()
                     .unwrap(),
                 terminal_block_hash: terminal_block.hash(),
-                terminal_block_number: U64::from(terminal_block_number),
+                terminal_block_number,
             };
 
             handle.provider.add_block(terminal_block.hash(), terminal_block.unseal());

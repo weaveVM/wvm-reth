@@ -9,9 +9,11 @@ services:
       - "8551:8551"
       - "8545:8545"
       - "8546:8546"
-      - "30304:30304/tcp" #p2p
-      - "30304:30304/udp" #p2p
-      - '9001:9001' #metrics
+      - "30303:30303/udp"
+      - "30303:30303/tcp"
+      - "30304:30304/udp"
+      - "30304:30304/tcp"
+      - "9001:9001" #metrics
     volumes:
       - reth_data:/data
       - reth_jwt:/jwt:ro
@@ -23,11 +25,11 @@ services:
       - --metrics=0.0.0.0:9001
       - --http
       - --http.addr=0.0.0.0
-      - --http.api=eth,net,trace,txpool,web3,rpc,debug
+      - --http.api=eth,net,trace,txpool,web3,rpc,debug,admin
       - --http.corsdomain=*
       - --ws
       - --ws.addr=0.0.0.0
-      - --ws.api=eth,net,trace,txpool,web3,rpc,debug
+      - --ws.api=eth,net,trace,txpool,web3,rpc,debug,admin
       - --ws.origins=*
       - --auth-ipc
       - --auth-ipc.path=/data/reth_engine_api.ipc
@@ -37,6 +39,15 @@ services:
       - --chain=/genesis/genesis.json
       - --datadir=/data
       - --log.file.directory=/root/logs
+      - --discovery.addr=0.0.0.0
+      - --port=30303
+      - --discovery.port=30303
+      - --enable-discv5-discovery
+      - --discovery.v5.port=30304
+      - --trusted-peers=enode://e6592ab87a01aeb6425a494629355718984ce26f5f256f2e1c90615bd0c93d0afabcf87caddc0d058123f6e47f26503c937970833186647201f2ffda759dcc74@34.107.39.173:30303
+      - --bootnodes=enode://e6592ab87a01aeb6425a494629355718984ce26f5f256f2e1c90615bd0c93d0afabcf87caddc0d058123f6e47f26503c937970833186647201f2ffda759dcc74@34.107.39.173:30303
+      - --debug.tip=0xf55fd86dbd5df2149a9c5a0aa18e9aab2b76f1c1aeff8dd948eae16199cb0bac
+      - -vvvv
 
   # default prometheus + grafana setup
   prometheus:
@@ -90,13 +101,14 @@ services:
 
   # Consensus client part
   beacon-chain:
-    image: sigp/lighthouse:v5.1.3-modern
+    image: wvm-lighthouse:local
     ports:
       - '5052:5052/tcp' # rpc
       - '5053:5053/tcp'
       - '5054:5054/tcp' # metrics
       - '9000:9000/tcp' # p2p
-      - '9001:9001/udp' # quic
+      - '9000:9000/udp' # p2p
+      - '9002:9002/udp' # quic
     volumes:
       - lighthousedata:/data
       - testnetdata:/testnetdata
@@ -112,19 +124,42 @@ services:
       --execution-jwt /root/jwt/jwt.hex 
       --staking 
       --allow-insecure-genesis-sync 
-      --target-peers 1 
       --import-all-attestations 
       --subscribe-all-subnets 
       --http-allow-origin "*" 
-      --enable-private-discovery 
       --disable-packet-filter 
-      --enr-tcp-port 9000 
-      --enr-udp-port 9000 
+      --listen-address=0.0.0.0
+      --port=9000
+      --discovery-port=9000
+      --enr-tcp-port 9000
+      --enr-udp-port 9000
+      --enr-quic-port 9002
       --enr-address local_IP 
       --boot-nodes enrX
+      --libp2p-addresses "/ip4/10.156.0.10/udp/9000/p2p/16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU"
+      --trusted-peers "16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU"
+      --disable-peer-scoring
+      --reconstruct-historic-states
+      --genesis-backfill
+      --debug-level debug
+      --disable-upnp
+      --disable-enr-auto-update
+      --disable-backfill-rate-limiting
+      --slots-per-restore-point 256
+      --beacon-processor-max-workers 40
+      --beacon-processor-work-queue-len 32768
+      --beacon-processor-reprocess-queue-len 24576
+      --beacon-processor-attestation-batch-size 2048
+      --beacon-processor-aggregate-batch-size 2048
+      --disable-inbound-rate-limiter
+      --validator-monitor-auto
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   validator:
-    image: sigp/lighthouse:v5.1.3-modern
+    image: wvm-lighthouse:local
     volumes:
       - testnetdata:/testnetdata
       - lighthousedata:/data

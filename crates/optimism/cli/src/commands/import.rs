@@ -69,7 +69,7 @@ impl ImportOpCommand {
                 "Importing chain file chunk"
             );
 
-            let tip = file_client.tip().ok_or(eyre::eyre!("file client has no tip"))?;
+            let tip = file_client.tip().ok_or_else(|| eyre::eyre!("file client has no tip"))?;
             info!(target: "reth::cli", "Chain file chunk read");
 
             total_decoded_blocks += file_client.headers_len();
@@ -79,7 +79,7 @@ impl ImportOpCommand {
                 body.transactions.retain(|_| {
                     if is_dup_tx(block_number) {
                         total_filtered_out_dup_txns += 1;
-                        return false;
+                        return false
                     }
                     true
                 })

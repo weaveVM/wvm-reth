@@ -1,27 +1,30 @@
 //! Blocks/Headers management for the p2p network.
 
-use crate::{
-    budget::DEFAULT_BUDGET_TRY_DRAIN_DOWNLOADERS, metered_poll_nested_stream_with_budget,
-    metrics::EthRequestHandlerMetrics, peers::PeersHandle,
-};
-use alloy_rlp::Encodable;
-use futures::StreamExt;
-use reth_eth_wire::{
-    BlockBodies, BlockHeaders, GetBlockBodies, GetBlockHeaders, GetNodeData, GetReceipts,
-    HeadersDirection, NodeData, Receipts,
-};
-use reth_network_p2p::error::RequestResult;
-use reth_network_peers::PeerId;
-use reth_primitives::{BlockBody, BlockHashOrNumber, Header};
-use reth_storage_api::{BlockReader, HeaderProvider, ReceiptProvider};
 use std::{
     future::Future,
     pin::Pin,
     task::{Context, Poll},
     time::Duration,
 };
+
+use alloy_rlp::Encodable;
+use futures::StreamExt;
+use reth_eth_wire::{
+    BlockBodies, BlockHeaders, GetBlockBodies, GetBlockHeaders, GetNodeData, GetReceipts,
+    HeadersDirection, NodeData, Receipts,
+};
+use reth_network_api::test_utils::PeersHandle;
+use reth_network_p2p::error::RequestResult;
+use reth_network_peers::PeerId;
+use reth_primitives::{BlockBody, BlockHashOrNumber, Header};
+use reth_storage_api::{BlockReader, HeaderProvider, ReceiptProvider};
 use tokio::sync::{mpsc::Receiver, oneshot};
 use tokio_stream::wrappers::ReceiverStream;
+
+use crate::{
+    budget::DEFAULT_BUDGET_TRY_DRAIN_DOWNLOADERS, metered_poll_nested_stream_with_budget,
+    metrics::EthRequestHandlerMetrics,
+};
 
 // Limits: <https://github.com/ethereum/go-ethereum/blob/b0d44338bbcefee044f1f635a84487cbbd8f0538/eth/protocols/eth/handler.go#L34-L56>
 
@@ -89,7 +92,7 @@ where
             BlockHashOrNumber::Hash(start) => start.into(),
             BlockHashOrNumber::Number(num) => {
                 let Some(hash) = self.client.block_hash(num).unwrap_or_default() else {
-                    return headers;
+                    return headers
                 };
                 hash.into()
             }
@@ -105,7 +108,7 @@ where
                         if let Some(next) = (header.number + 1).checked_add(skip) {
                             block = next.into()
                         } else {
-                            break;
+                            break
                         }
                     }
                     HeadersDirection::Falling => {
@@ -117,7 +120,7 @@ where
                             {
                                 block = next.into()
                             } else {
-                                break;
+                                break
                             }
                         } else {
                             block = header.parent_hash.into()
@@ -132,7 +135,7 @@ where
                     break
                 }
             } else {
-                break;
+                break
             }
         }
 
@@ -172,7 +175,7 @@ where
                     break
                 }
             } else {
-                break;
+                break
             }
         }
 
@@ -207,7 +210,7 @@ where
                     break
                 }
             } else {
-                break;
+                break
             }
         }
 
@@ -258,7 +261,7 @@ where
         if maybe_more_incoming_requests {
             // make sure we're woken up again
             cx.waker().wake_by_ref();
-            return Poll::Pending;
+            return Poll::Pending
         }
 
         Poll::Pending
