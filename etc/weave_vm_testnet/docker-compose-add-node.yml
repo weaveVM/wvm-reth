@@ -101,7 +101,7 @@ services:
 
   # Consensus client part
   beacon-chain:
-    image: sigp/lighthouse:v5.2.1-modern
+    image: wvm-lighthouse:local
     ports:
       - '5052:5052/tcp' # rpc
       - '5053:5053/tcp'
@@ -124,7 +124,6 @@ services:
       --execution-jwt /root/jwt/jwt.hex 
       --staking 
       --allow-insecure-genesis-sync 
-      --import-all-attestations 
       --subscribe-all-subnets 
       --http-allow-origin "*" 
       --disable-packet-filter 
@@ -153,13 +152,14 @@ services:
       --beacon-processor-attestation-batch-size 2048
       --beacon-processor-aggregate-batch-size 2048
       --disable-inbound-rate-limiter
+      --validator-monitor-auto
     ulimits:
       nofile:
         soft: 65536
         hard: 65536
 
   validator:
-    image: sigp/lighthouse:v5.2.1-modern
+    image: wvm-lighthouse:local
     volumes:
       - testnetdata:/testnetdata
       - lighthousedata:/data
