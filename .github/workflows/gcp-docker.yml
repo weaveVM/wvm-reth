@@ -72,7 +72,7 @@ jobs:
           npm i
           SIGNER_KEY=${{ secrets.TEST_SIGNER_KEY }} node test.js
           docker compose down
-          
+          cd .. && rm -rf .testnet
 
       - name: Build and Push Container
         run: |-
