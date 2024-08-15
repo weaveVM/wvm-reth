@@ -4,7 +4,7 @@
 
 pub mod util;
 
-use crate::util::to_brotli;
+use crate::r#mod::to_brotli;
 use bigquery::client::BigQueryConfig;
 use irys::irys::IrysRequest;
 use lambda::lambda::exex_lambda_processor;
@@ -19,6 +19,7 @@ use reth_node_ethereum::{
 };
 use reth_tracing::tracing::info;
 use serde_json::to_string;
+use rbrotli::to_brotli;
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
