@@ -107,7 +107,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                     };
 
                     if TX_MAX_SIZE >= tx_size {
-                        download_tx(gas_used, tx_id, clean_gateway).await
+                        download_tx(gas_used, clean_gateway, tx_id).await
                     } else {
                         Err(PrecompileErrors::Error(PrecompileError::Other(
                             "Arweave Transaction size is greater than allowed (18mb)".to_string(),
