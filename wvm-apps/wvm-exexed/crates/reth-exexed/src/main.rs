@@ -76,7 +76,6 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
     Ok(())
 }
 
-
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {

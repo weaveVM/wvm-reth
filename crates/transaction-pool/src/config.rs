@@ -12,6 +12,9 @@ pub const TXPOOL_SUBPOOL_MAX_TXS_DEFAULT: usize = 1_000_000;
 /// WVM: 1Gb
 pub const TXPOOL_SUBPOOL_MAX_SIZE_MB_DEFAULT: usize = 1024;
 
+/// The default additional validation tasks size.
+pub const DEFAULT_TXPOOL_ADDITIONAL_VALIDATION_TASKS: usize = 1;
+
 /// Default price bump (in %) for the transaction pool underpriced check.
 pub const DEFAULT_PRICE_BUMP: u128 = 10;
 
