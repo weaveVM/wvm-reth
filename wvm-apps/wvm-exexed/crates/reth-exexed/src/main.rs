@@ -2,9 +2,6 @@
 
 #![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
-pub mod util;
-
-use crate::r#mod::to_brotli;
 use bigquery::client::BigQueryConfig;
 use irys::irys::IrysRequest;
 use lambda::lambda::exex_lambda_processor;

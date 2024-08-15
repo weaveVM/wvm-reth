@@ -13642,6 +13642,7 @@ dependencies = [
  "lambda",
  "parking_lot 0.12.3",
  "precompiles",
+ "rbrotli",
  "repository",
  "reth",
  "reth-chainspec",
