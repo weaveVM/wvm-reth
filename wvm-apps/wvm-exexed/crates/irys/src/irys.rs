@@ -55,7 +55,6 @@ impl IrysProvider {
         let mut tags = vec![
             Tag::new("Protocol", "WeaveVM-ExEx"),
             Tag::new("ExEx-Type", "Arweave-Data-Uploader"),
-            Tag::new("Network", "Alphanet v0.1.0")
         ];
 
         tags.extend(param_tags);
