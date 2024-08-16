@@ -12,6 +12,7 @@ use precompiles::node::WvmEthExecutorBuilder;
 use repository::state_repository;
 use reth::{api::FullNodeComponents, builder::Node};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
+use std::env;
 
 use reth_node_ethereum::{
     node::{EthereumAddOns, EthereumExecutorBuilder},
@@ -21,6 +22,14 @@ use reth_tracing::tracing::info;
 use serde_json::to_string;
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
+
+pub fn get_network_tag() -> &'static str {
+    let devnet_flag = env::var("DEVNET").unwrap_or(String::from("false")).to_lowercase();
+    if devnet_flag == "true" {
+        return "Devnet"
+    }
+    "Alphanet v0.1.0"
+}
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -57,6 +66,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                 .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
                 .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
                 .set_tag("Block-Hash", sealed_block_with_senders.block.hash().to_string().as_str())
+                .set_tag("Network", get_network_tag())
                 .set_data(brotli_borsh)
                 .send_with_provider(&irys_provider)
                 .await?;
