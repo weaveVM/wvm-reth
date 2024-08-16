@@ -26,7 +26,7 @@ use wevm_borsh::block::BorshSealedBlockWithSenders;
 pub fn get_network_tag() -> &'static str {
     let devnet_flag = env::var("DEVNET").unwrap_or(String::from("false")).to_lowercase();
     if devnet_flag == "true" {
-        return "Devnet v0.1.0"
+        return "Devnet v0.2.0"
     }
     "Alphanet v0.1.0"
 }
