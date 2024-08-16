@@ -39,6 +39,7 @@ precompiles = { path = "crates/precompiles" }
 wevm-borsh = { path = "crates/wevm-borsh" }
 exex-etl = { path = "crates/exex-etl" }
 types = { path = "crates/types" }
+rbrotli = { path = "crates/brotli" }
 borsh.workspace = true
 
 [dev-dependencies]

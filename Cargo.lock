@@ -7166,9 +7166,11 @@ dependencies = [
 name = "precompiles"
 version = "1.0.5"
 dependencies = [
+ "borsh 1.5.1",
  "eyre",
  "irys",
  "parking_lot 0.12.3",
+ "rbrotli",
  "reqwest 0.12.5",
  "reqwest-graphql",
  "reth",
@@ -7183,6 +7185,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "wevm-borsh",
 ]
 
 [[package]]
@@ -7666,6 +7669,17 @@ checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "rbrotli"
+version = "1.0.4"
+dependencies = [
+ "borsh 1.5.1",
+ "brotlic",
+ "reth",
+ "serde_json",
+ "wevm-borsh",
 ]
 
 [[package]]
@@ -9083,6 +9097,7 @@ dependencies = [
  "irys",
  "lambda",
  "precompiles",
+ "rbrotli",
  "repository",
  "reth",
  "reth-exex",
@@ -13628,6 +13643,7 @@ dependencies = [
  "lambda",
  "parking_lot 0.12.3",
  "precompiles",
+ "rbrotli",
  "repository",
  "reth",
  "reth-chainspec",
