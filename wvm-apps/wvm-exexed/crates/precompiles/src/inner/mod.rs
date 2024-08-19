@@ -29,7 +29,7 @@ pub fn wvm_precompiles() -> impl Iterator<Item = PrecompileWithAddress> {
     for pc in pcs_funcs.into_iter() {
         let addr = hex_to_u64(format!("0x{}", start_addr).as_str());
         pcs.push(PrecompileWithAddress(u64_to_address(addr), pc));
-        start_addr + 1;
+        start_addr = start_addr + 1;
     }
 
     pcs.into_iter()
