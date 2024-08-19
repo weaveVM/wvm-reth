@@ -13,8 +13,7 @@ use std::str::FromStr;
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
 
-pub const ARWEAVE_UPLOAD_PC: PrecompileWithAddress =
-    PrecompileWithAddress(u64_to_address(PC_ADDRESS), Precompile::Standard(arweave_upload));
+pub const ARWEAVE_UPLOAD_PC: Precompile = Precompile::Standard(arweave_upload);
 
 pub const SOLANA_SILLY_PRIVATE_KEY: &str =
     "kNykCXNxgePDjFbDWjPNvXQRa8U12Ywc19dFVaQ7tebUj3m7H4sF4KKdJwM7yxxb3rqxchdjezX9Szh8bLcQAjb";
