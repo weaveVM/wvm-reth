@@ -1,25 +1,16 @@
 use crate::inner::graphql_util::send_graphql;
 use crate::inner::util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT};
-use eyre::Error;
-use reth::{
-    primitives::{
-        revm_primitives::{
-            Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
-        },
-        Bytes,
-    },
-    revm::precompile::{u64_to_address, PrecompileWithAddress},
+use reth::primitives::{
+    revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult},
+    Bytes,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-pub const PC_ADDRESS: u64 = 0x18;
 pub const ARWEAVE_PC_READ_BASE: u64 = 10_000;
 
 pub const TX_MAX_SIZE: usize = 18_874_368; // 18MB
 
-pub const ARWEAVE_READ_PC: PrecompileWithAddress =
-    PrecompileWithAddress(u64_to_address(PC_ADDRESS), Precompile::Standard(arweave_read));
+pub const ARWEAVE_READ_PC: Precompile = Precompile::Standard(arweave_read);
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {

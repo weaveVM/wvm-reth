@@ -1,20 +1,13 @@
 use crate::inner::graphql_util::send_graphql;
 use crate::inner::string_block::Block;
 use crate::inner::util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT};
-use eyre::Report;
 use rbrotli::from_brotli;
 use reth::primitives::revm_primitives::{Precompile, PrecompileOutput, PrecompileResult};
 use reth::primitives::Bytes;
-use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 use revm_primitives::{PrecompileError, PrecompileErrors};
-use std::string::FromUtf8Error;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
-pub const WEVM_BLOCK_PC_ADDRESS: u64 = 0x20;
-pub const WEVM_BLOCK_PC: PrecompileWithAddress = PrecompileWithAddress(
-    u64_to_address(WEVM_BLOCK_PC_ADDRESS),
-    Precompile::Standard(wevm_read_block_pc),
-);
+pub const WEVM_BLOCK_PC: Precompile = Precompile::Standard(wevm_read_block_pc);
 
 pub const WEVM_BLOCK_PC_READ_BASE: u64 = 10_000;
 
