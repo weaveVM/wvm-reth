@@ -1,8 +1,12 @@
 use reth::primitives::Bytes;
-use revm_primitives::{PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult};
+use revm_primitives::{
+    Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
+};
 
 pub const KYVE_PC_BASE: u64 = 10_000;
 pub const KYVE_API_URL: &str = "https://data.services.kyve.network";
+
+pub const KYVE_READ_PC: Precompile = Precompile::Standard(kyve_read);
 
 fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let data_size = input.len();
