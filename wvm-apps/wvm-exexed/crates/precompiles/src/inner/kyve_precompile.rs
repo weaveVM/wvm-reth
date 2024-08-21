@@ -42,6 +42,13 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     }
 
     let blk_number = block_number.unwrap();
+
+    if !(blk_number.to_string().parse::<usize>().unwrap() >= 19426589) {
+        return Err(PrecompileErrors::Error(PrecompileError::Other(
+            "Can only read from block 19426589".to_string(),
+        )));
+    }
+
     let field = field.unwrap();
 
     tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
@@ -106,6 +113,14 @@ mod kyve_tests {
         let read = kyve_read(&input, 100_000).unwrap();
         let res = read.bytes.0.to_vec();
         assert_eq!(String::from_utf8(res).unwrap(), "0x81eb4254a890fd840a6bc60de54fb6fcd3b91242153386b9e83337f00f641a12bf6ebd876134e8703edce6725e29046c");
+    }
+
+    #[test]
+    pub fn test_kyve_precompile_before_blk() {
+        let input = Bytes::from("19426588;0.kzg_commitment".as_bytes());
+        let read = kyve_read(&input, 100_000);
+        assert!(read.is_err());
+        assert_eq!("Can only read from block 19426589", read.err().unwrap().to_string());
     }
 
     #[test]
