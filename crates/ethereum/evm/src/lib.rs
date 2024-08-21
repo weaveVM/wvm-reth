@@ -216,6 +216,9 @@ mod tests {
 
         // Ensure that there are no valid authorizations in the EVM context
         assert!(evm.context.evm.inner.valid_authorizations.is_empty());
+
+        // No Optimism
+        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
     }
 
     #[test]
@@ -233,6 +236,9 @@ mod tests {
 
         // Default spec ID
         assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
+
+        // No Optimism
+        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
     }
 
     #[test]
@@ -260,6 +266,9 @@ mod tests {
 
         // Default spec ID
         assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
+
+        // No Optimism
+        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
     }
 
     #[test]
@@ -290,9 +299,13 @@ mod tests {
 
         // Default spec ID
         assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
+
+        // No Optimism
+        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
     }
 
     #[test]
+    #[allow(clippy::needless_update)]
     fn test_evm_with_spec_id() {
         let evm_config = EthEvmConfig::default();
 
@@ -306,6 +319,12 @@ mod tests {
 
         // Check that the spec ID is setup properly
         assert_eq!(evm.handler.spec_id(), SpecId::CONSTANTINOPLE);
+
+        // No Optimism
+        assert_eq!(
+            evm.handler.cfg,
+            HandlerCfg { spec_id: SpecId::CONSTANTINOPLE, ..Default::default() }
+        );
     }
 
     #[test]
@@ -347,6 +366,9 @@ mod tests {
 
         // Ensure that there are no valid authorizations in the EVM context
         assert!(evm.context.evm.inner.valid_authorizations.is_empty());
+
+        // No Optimism
+        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
     }
 
     #[test]
@@ -363,6 +385,9 @@ mod tests {
         assert_eq!(evm.context.evm.env, env_with_handler.env);
         assert_eq!(evm.context.external, NoOpInspector);
         assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
+
+        // No Optimism
+        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
     }
 
     #[test]
@@ -384,6 +409,9 @@ mod tests {
         assert_eq!(evm.context.evm.env.cfg, cfg);
         assert_eq!(evm.context.external, NoOpInspector);
         assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
+
+        // No Optimism
+        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
     }
 
     #[test]
@@ -412,9 +440,13 @@ mod tests {
         assert_eq!(evm.context.evm.env.tx, env_with_handler.env.tx);
         assert_eq!(evm.context.external, NoOpInspector);
         assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
+
+        // No Optimism
+        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
     }
 
     #[test]
+    #[allow(clippy::needless_update)]
     fn test_evm_with_env_inspector_and_spec_id() {
         let evm_config = EthEvmConfig::default();
         let db = CacheDB::<EmptyDBTyped<ProviderError>>::default();
@@ -429,5 +461,11 @@ mod tests {
         assert_eq!(evm.handler.spec_id(), SpecId::CONSTANTINOPLE);
         assert_eq!(evm.context.evm.env, env_with_handler.env);
         assert_eq!(evm.context.external, NoOpInspector);
+
+        // No Optimism
+        assert_eq!(
+            evm.handler.cfg,
+            HandlerCfg { spec_id: SpecId::CONSTANTINOPLE, ..Default::default() }
+        );
     }
 }
