@@ -1,25 +1,16 @@
-use eyre::Error;
-use reth::{
-    primitives::{
-        revm_primitives::{
-            Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
-        },
-        Bytes,
-    },
-    revm::precompile::{u64_to_address, PrecompileWithAddress},
+use crate::inner::graphql_util::send_graphql;
+use crate::inner::util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT};
+use reth::primitives::{
+    revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult},
+    Bytes,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-pub const PC_ADDRESS: u64 = 0x18;
 pub const ARWEAVE_PC_READ_BASE: u64 = 10_000;
 
 pub const TX_MAX_SIZE: usize = 18_874_368; // 18MB
 
-pub const ARWEAVE_READ_PC: PrecompileWithAddress =
-    PrecompileWithAddress(u64_to_address(PC_ADDRESS), Precompile::Standard(arweave_read));
-
-pub const ARWEAVE_TX_ENDPOINT: &str = "https://arweave.net/";
+pub const ARWEAVE_READ_PC: Precompile = Precompile::Standard(arweave_read);
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
@@ -52,8 +43,8 @@ struct NodeData {
     size: String,
 }
 
-fn parse_url(input: &str) -> (String, String) {
-    let default_endpoint = ARWEAVE_TX_ENDPOINT;
+pub fn parse_gateway_content(input: &str) -> (String, String) {
+    let default_endpoint = DEFAULT_ARWEAVE_TX_ENDPOINT;
     let mut parts = input.split(';');
     let first_part = parts.next().unwrap_or(default_endpoint);
     let second_part = parts.next().unwrap_or(first_part);
@@ -61,37 +52,6 @@ fn parse_url(input: &str) -> (String, String) {
     let endpoint = if input.contains(';') { first_part } else { default_endpoint };
 
     (endpoint.to_string(), second_part.to_string())
-}
-
-fn clean_gateway_url(gateway: &str) -> String {
-    let clean_gateway =
-        if gateway.ends_with('/') { &gateway[..gateway.len() - 1] } else { gateway };
-
-    clean_gateway.to_string()
-}
-
-async fn send_graphql(gateway: &str, tx_id: &str) -> Result<Response, Error> {
-    // Define the GraphQL query
-    let mut query = "{\n  transactions(ids: [\"$id\"]) {\n    edges {\n      node {\n        id\n        data {\n          size\n        }\n      }\n    }\n  }\n}\n";
-    let query = query.replace("$id", tx_id);
-
-    let query = serde_json::json!({
-        "variables": {},
-        "query": query
-    });
-
-    // Create a client
-    let client = reqwest::Client::new();
-
-    // Send the request
-    let res = client
-        .post(format!("{}/{}", gateway, "graphql"))
-        .header("Content-Type", "application/json")
-        .json(&query)
-        .send()
-        .await?;
-
-    Ok(res.json::<Response>().await?)
 }
 
 fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
@@ -112,11 +72,16 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
     let res = match id_str {
         Ok(id) => {
-            let (gateway, tx_id) = parse_url(id.as_str());
+            let (gateway, tx_id) = parse_gateway_content(id.as_str());
             tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
                 async {
                     let clean_gateway = clean_gateway_url(gateway.as_str());
-                    let data = send_graphql(clean_gateway.as_str(), tx_id.as_str()).await;
+                    let query = {
+                        let mut query = "{\n  transactions(ids: [\"$id\"]) {\n    edges {\n      node {\n        id\n        data {\n          size\n        }\n      }\n    }\n  }\n}\n";
+                        let query = query.replace("$id", tx_id.as_str());
+                        query
+                    };
+                    let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
 
                     let tx_size = if let Ok(data) = data {
                         let resp = data.data;
@@ -133,17 +98,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                     };
 
                     if TX_MAX_SIZE >= tx_size {
-                        let download_tx =
-                            reqwest::get(format!("{}/{}", clean_gateway, tx_id.as_str())).await;
-                        match download_tx {
-                            Ok(tx) => Ok(PrecompileOutput::new(
-                                gas_used,
-                                tx.bytes().await.unwrap().into(),
-                            )),
-                            Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
-                                "Arweave Transaction was not found".to_string(),
-                            ))),
-                        }
+                        download_tx(gas_used, clean_gateway, tx_id).await
                     } else {
                         Err(PrecompileErrors::Error(PrecompileError::Other(
                             "Arweave Transaction size is greater than allowed (18mb)".to_string(),
@@ -162,7 +117,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
 #[cfg(test)]
 mod arweave_read_pc_tests {
-    use crate::inner::arweave_read_precompile::{arweave_read, parse_url};
+    use crate::inner::arweave_read_precompile::{arweave_read, parse_gateway_content};
     use reth::primitives::{revm_primitives::PrecompileOutput, Bytes};
 
     #[test]
@@ -185,12 +140,12 @@ mod arweave_read_pc_tests {
     #[test]
     pub fn test_parse_url() {
         let input = "http://arweave-custom.net;bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI";
-        let parse_url_data = parse_url(input);
+        let parse_url_data = parse_gateway_content(input);
         assert_eq!(parse_url_data.0, "http://arweave-custom.net");
         assert_eq!(parse_url_data.1, "bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI");
 
         let input = "bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI";
-        let parse_url_data = parse_url(input);
+        let parse_url_data = parse_gateway_content(input);
         assert_eq!(parse_url_data.0, "https://arweave.net/");
         assert_eq!(parse_url_data.1, "bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI");
     }

@@ -61,6 +61,19 @@ jobs:
           echo "::set-output name=tag::${tag}"
           echo "Docker tag: ${tag}"
 
+      - name: Test Docker
+        run: |-
+          docker build . -t wevm:local
+          mkdir -m 777 .testnet
+          cd .testnet
+          git clone https://github.com/weaveVM/wvm-docker-testnet.git .
+          echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/key.json
+          docker compose up -d
+          npm i
+          SIGNER_KEY=${{ secrets.TEST_SIGNER_KEY }} node test.js
+          docker compose down
+          cd .. && sudo rm -rf .testnet
+
       - name: Build and Push Container
         run: |-
           docker build . -t wevm
@@ -68,14 +81,3 @@ jobs:
           docker tag wevm us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
           docker push "us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}"
           docker push "us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}"
-
-#      - id: docker-push-tagged
-#        name: Tag Docker image and push to Google Artifact Registry
-#        uses: docker/build-push-action@v6
-#        with:
-#          context: .
-#          push: true
-#          tags: |
-#            wevm
-#            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}
-#            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}

@@ -52,7 +52,10 @@ impl IrysProvider {
         data: Vec<u8>,
         param_tags: Vec<Tag>,
     ) -> eyre::Result<String> {
-        let mut tags = vec![Tag::new("Protocol", "WeaveVM-Testnet-V0")];
+        let mut tags = vec![
+            Tag::new("Protocol", "WeaveVM-ExEx"),
+            Tag::new("ExEx-Type", "Arweave-Data-Uploader"),
+        ];
 
         tags.extend(param_tags);
 
