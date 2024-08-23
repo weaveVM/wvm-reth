@@ -1,9 +1,13 @@
-use crate::inner::graphql_util::send_graphql;
-use crate::inner::string_block::Block;
-use crate::inner::util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT};
+use crate::inner::{
+    graphql_util::send_graphql,
+    string_block::Block,
+    util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
+};
 use rbrotli::from_brotli;
-use reth::primitives::revm_primitives::{Precompile, PrecompileOutput, PrecompileResult};
-use reth::primitives::Bytes;
+use reth::primitives::{
+    revm_primitives::{Precompile, PrecompileOutput, PrecompileResult},
+    Bytes,
+};
 use revm_primitives::{PrecompileError, PrecompileErrors};
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 

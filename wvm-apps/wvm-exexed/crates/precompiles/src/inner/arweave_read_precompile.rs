@@ -1,5 +1,7 @@
-use crate::inner::graphql_util::send_graphql;
-use crate::inner::util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT};
+use crate::inner::{
+    graphql_util::send_graphql,
+    util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
+};
 use reth::primitives::{
     revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult},
     Bytes,

@@ -11,13 +11,13 @@ use reth::{api::FullNodeComponents, builder::Node};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use std::env;
 
+use rbrotli::to_brotli;
 use reth_node_ethereum::{
     node::{EthereumAddOns, EthereumExecutorBuilder},
     EthereumNode,
 };
 use reth_tracing::tracing::info;
 use serde_json::to_string;
-use rbrotli::to_brotli;
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
@@ -65,6 +65,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                 .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
                 .set_tag("Block-Hash", sealed_block_with_senders.block.hash().to_string().as_str())
                 .set_tag("Network", get_network_tag())
+                .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
                 .set_data(brotli_borsh)
                 .send_with_provider(&irys_provider)
                 .await?;
