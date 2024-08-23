@@ -1,8 +1,8 @@
-use crate::inner::arweave_precompile::ARWEAVE_UPLOAD_PC;
-use crate::inner::arweave_read_precompile::ARWEAVE_READ_PC;
-use crate::inner::kyve_precompile::KYVE_READ_PC;
-use crate::inner::test_precompile::HELLO_WORLD_PC;
-use crate::inner::wevm_block_precompile::WEVM_BLOCK_PC;
+use crate::inner::{
+    arweave_precompile::ARWEAVE_UPLOAD_PC, arweave_read_precompile::ARWEAVE_READ_PC,
+    kyve_precompile::KYVE_READ_PC, test_precompile::HELLO_WORLD_PC,
+    wevm_block_precompile::WEVM_BLOCK_PC,
+};
 use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 
 pub mod arweave_precompile;

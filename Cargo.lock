@@ -9102,6 +9102,7 @@ dependencies = [
  "reth",
  "reth-exex",
  "reth-node-ethereum",
+ "reth-primitives",
  "reth-tracing",
  "serde_json",
  "types",
