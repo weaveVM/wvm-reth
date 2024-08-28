@@ -2,6 +2,8 @@
 
 #![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
+mod util;
+
 use bigquery::client::BigQueryConfig;
 use irys::irys::IrysRequest;
 use lambda::lambda::exex_lambda_processor;
@@ -11,6 +13,7 @@ use reth::{api::FullNodeComponents, builder::Node};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use std::env;
 
+use crate::util::check_block_existence;
 use rbrotli::to_brotli;
 use reth_node_ethereum::{
     node::{EthereumAddOns, EthereumExecutorBuilder},
@@ -24,7 +27,7 @@ use wevm_borsh::block::BorshSealedBlockWithSenders;
 pub fn get_network_tag() -> &'static str {
     let devnet_flag = env::var("DEVNET").unwrap_or(String::from("false")).to_lowercase();
     if devnet_flag == "true" {
-        return "Devnet v0.2.0"
+        return "Devnet v0.2.0";
     }
     "Alphanet v0.1.0"
 }
@@ -59,26 +62,31 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             let brotli_borsh = to_brotli(borsh_data);
             let json_str = to_string(&sealed_block_with_senders)?;
 
-            let arweave_id = IrysRequest::new()
-                .set_tag("Content-Type", "application/octet-stream")
-                .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
-                .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
-                .set_tag("Block-Hash", sealed_block_with_senders.block.hash().to_string().as_str())
-                .set_tag("Network", get_network_tag())
-                .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
-                .set_data(brotli_borsh)
-                .send_with_provider(&irys_provider)
-                .await?;
+            let blk_str_hash = sealed_block_with_senders.block.hash().to_string();
+            let block_hash = blk_str_hash.as_str();
+            let does_block_exist = check_block_existence(block_hash).await;
 
-            println!("irys id: {}", arweave_id);
+            if !does_block_exist {
+                let arweave_id = IrysRequest::new()
+                    .set_tag("Content-Type", "application/octet-stream")
+                    .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
+                    .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
+                    .set_tag("Block-Hash", block_hash)
+                    .set_tag("Network", get_network_tag())
+                    .set_data(brotli_borsh)
+                    .send_with_provider(&irys_provider)
+                    .await?;
 
-            state_repository
-                .save(ExecutionTipState {
-                    block_number: committed_chain.tip().block.number,
-                    arweave_id: arweave_id.clone(),
-                    sealed_block_with_senders_serialized: json_str,
-                })
-                .await?;
+                println!("irys id: {}", arweave_id);
+
+                state_repository
+                    .save(ExecutionTipState {
+                        block_number: committed_chain.tip().block.number,
+                        arweave_id: arweave_id.clone(),
+                        sealed_block_with_senders_serialized: json_str,
+                    })
+                    .await?;
+            }
         }
     }
 

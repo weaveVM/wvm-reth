@@ -7,7 +7,7 @@ use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 
 pub mod arweave_precompile;
 mod arweave_read_precompile;
-mod graphql_util;
+pub mod graphql_util;
 mod kyve_precompile;
 mod string_block;
 mod test_precompile;
