@@ -9104,6 +9104,7 @@ dependencies = [
  "reth-node-ethereum",
  "reth-tracing",
  "serde_json",
+ "tokio",
  "types",
  "wevm-borsh",
 ]
