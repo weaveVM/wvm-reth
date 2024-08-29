@@ -7,6 +7,7 @@ use reth::{
     },
     payload::{EthBuiltPayload, EthPayloadBuilderAttributes},
 };
+use reth_chainspec::ChainSpec;
 use reth_ethereum_engine_primitives::EthPayloadAttributes;
 use reth_node_ethereum::{
     node::{
@@ -52,6 +53,7 @@ impl WvmEthereumNode {
 impl NodeTypes for WvmEthereumNode {
     type Primitives = ();
     type Engine = EthEngineTypes;
+    type ChainSpec = ChainSpec;
 }
 
 impl<N> Node<N> for WvmEthereumNode

@@ -97,7 +97,7 @@ impl InMemoryState {
 
     /// Returns the hash for a specific block number
     pub(crate) fn hash_by_number(&self, number: u64) -> Option<B256> {
-        self.numbers.read().get(&number).cloned()
+        self.numbers.read().get(&number).copied()
     }
 
     /// Returns the current chain head state.
@@ -111,8 +111,8 @@ impl InMemoryState {
 
     /// Returns the pending state corresponding to the current head plus one,
     /// from the payload received in newPayload that does not have a FCU yet.
-    pub(crate) fn pending_state(&self) -> Option<Arc<BlockState>> {
-        self.pending.borrow().as_ref().map(|state| Arc::new(state.clone()))
+    pub(crate) fn pending_state(&self) -> Option<BlockState> {
+        self.pending.borrow().clone()
     }
 
     #[cfg(test)]
@@ -347,7 +347,7 @@ impl CanonicalInMemoryState {
     }
 
     /// Returns the in memory pending state.
-    pub fn pending_state(&self) -> Option<Arc<BlockState>> {
+    pub fn pending_state(&self) -> Option<BlockState> {
         self.inner.in_memory_state.pending_state()
     }
 
@@ -465,12 +465,12 @@ impl CanonicalInMemoryState {
 
     /// Subscribe to new safe block events.
     pub fn subscribe_safe_block(&self) -> watch::Receiver<Option<SealedHeader>> {
-        self.inner.chain_info_tracker.subscribe_to_safe_block()
+        self.inner.chain_info_tracker.subscribe_safe_block()
     }
 
     /// Subscribe to new finalized block events.
     pub fn subscribe_finalized_block(&self) -> watch::Receiver<Option<SealedHeader>> {
-        self.inner.chain_info_tracker.subscribe_to_finalized_block()
+        self.inner.chain_info_tracker.subscribe_finalized_block()
     }
 
     /// Attempts to send a new [`CanonStateNotification`] to all active Receiver handles.
@@ -493,7 +493,7 @@ impl CanonicalInMemoryState {
             Vec::new()
         };
 
-        MemoryOverlayStateProvider::new(in_memory, historical)
+        MemoryOverlayStateProvider::new(historical, in_memory)
     }
 
     /// Returns an iterator over all canonical blocks in the in-memory state, from newest to oldest.
@@ -530,7 +530,7 @@ impl CanonicalInMemoryState {
         &self,
         tx_hash: TxHash,
     ) -> Option<(TransactionSigned, TransactionMeta)> {
-        for (block_number, block_state) in self.canonical_chain().enumerate() {
+        for block_state in self.canonical_chain() {
             if let Some((index, tx)) = block_state
                 .block()
                 .block()
@@ -543,7 +543,7 @@ impl CanonicalInMemoryState {
                     tx_hash,
                     index: index as u64,
                     block_hash: block_state.hash(),
-                    block_number: block_number as u64,
+                    block_number: block_state.block().block.number,
                     base_fee: block_state.block().block().header.base_fee_per_gas,
                     timestamp: block_state.block().block.timestamp,
                     excess_blob_gas: block_state.block().block.excess_blob_gas,
@@ -567,12 +567,12 @@ pub struct BlockState {
 
 #[allow(dead_code)]
 impl BlockState {
-    /// `BlockState` constructor.
+    /// [`BlockState`] constructor.
     pub const fn new(block: ExecutedBlock) -> Self {
         Self { block, parent: None }
     }
 
-    /// `BlockState` constructor with parent.
+    /// [`BlockState`] constructor with parent.
     pub fn with_parent(block: ExecutedBlock, parent: Option<Self>) -> Self {
         Self { block, parent: parent.map(Box::new) }
     }
@@ -657,7 +657,7 @@ impl BlockState {
         chain
     }
 
-    /// Appends the parent chain of this `BlockState` to the given vector.
+    /// Appends the parent chain of this [`BlockState`] to the given vector.
     pub fn append_parent_chain<'a>(&'a self, chain: &mut Vec<&'a Self>) {
         chain.extend(self.parent_state_chain());
     }
@@ -814,6 +814,7 @@ mod tests {
     };
     use reth_storage_api::{
         AccountReader, BlockHashReader, StateProofProvider, StateProvider, StateRootProvider,
+        StorageRootProvider,
     };
     use reth_trie::{prefix_set::TriePrefixSetsMut, AccountProof, HashedStorage};
 
@@ -885,11 +886,11 @@ mod tests {
     }
 
     impl StateRootProvider for MockStateProvider {
-        fn hashed_state_root(&self, _hashed_state: HashedPostState) -> ProviderResult<B256> {
+        fn state_root(&self, _hashed_state: HashedPostState) -> ProviderResult<B256> {
             Ok(B256::random())
         }
 
-        fn hashed_state_root_from_nodes(
+        fn state_root_from_nodes(
             &self,
             _nodes: TrieUpdates,
             _post_state: HashedPostState,
@@ -898,14 +899,14 @@ mod tests {
             Ok(B256::random())
         }
 
-        fn hashed_state_root_with_updates(
+        fn state_root_with_updates(
             &self,
             _hashed_state: HashedPostState,
         ) -> ProviderResult<(B256, TrieUpdates)> {
             Ok((B256::random(), TrieUpdates::default()))
         }
 
-        fn hashed_state_root_from_nodes_with_updates(
+        fn state_root_from_nodes_with_updates(
             &self,
             _nodes: TrieUpdates,
             _post_state: HashedPostState,
@@ -913,8 +914,10 @@ mod tests {
         ) -> ProviderResult<(B256, TrieUpdates)> {
             Ok((B256::random(), TrieUpdates::default()))
         }
+    }
 
-        fn hashed_storage_root(
+    impl StorageRootProvider for MockStateProvider {
+        fn storage_root(
             &self,
             _address: Address,
             _hashed_storage: HashedStorage,
@@ -924,7 +927,7 @@ mod tests {
     }
 
     impl StateProofProvider for MockStateProvider {
-        fn hashed_proof(
+        fn proof(
             &self,
             _hashed_state: HashedPostState,
             _address: Address,
@@ -1131,7 +1134,7 @@ mod tests {
         // Check the pending state
         assert_eq!(
             state.pending_state().unwrap(),
-            Arc::new(BlockState::with_parent(block2.clone(), Some(BlockState::new(block1))))
+            BlockState::with_parent(block2.clone(), Some(BlockState::new(block1)))
         );
 
         // Check the pending block
