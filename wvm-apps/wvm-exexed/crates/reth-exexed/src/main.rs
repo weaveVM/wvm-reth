@@ -39,11 +39,14 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
     _state_processor: exex_etl::state_processor::StateProcessor,
 ) -> eyre::Result<()> {
     while let Some(notification) = ctx.notifications.recv().await {
+        let mut notification_type = "";
         match &notification {
             ExExNotification::ChainCommitted { new } => {
+                notification_type = "ChainCommitted";
                 info!(committed_chain = ?new.range(), "Received commit");
             }
             ExExNotification::ChainReorged { old, new } => {
+                notification_type = "ChainReorged";
                 info!(from_chain = ?old.range(), to_chain = ?new.range(), "Received reorg");
             }
             ExExNotification::ChainReverted { old } => {
@@ -74,6 +77,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                     .set_tag("Block-Hash", block_hash)
                     .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
                     .set_tag("Network", get_network_tag())
+                    .set_tag("WeaveVM:Internal-Chain", notification_type)
                     .set_data(brotli_borsh)
                     .send_with_provider(&irys_provider)
                     .await?;
