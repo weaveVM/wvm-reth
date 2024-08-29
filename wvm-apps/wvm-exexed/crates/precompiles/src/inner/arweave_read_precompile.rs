@@ -89,7 +89,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                         let resp = data.data;
                         let tx = resp.transactions.edges.get(0);
                         if let Some(&ref tx) = tx {
-                            let tx_size = tx.clone().node.data.size;
+                            let tx_size = tx.clone().node.data.unwrap().size;
                             let tx_size = tx_size.parse::<usize>().unwrap();
                             tx_size
                         } else {

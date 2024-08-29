@@ -1,11 +1,13 @@
 use precompiles::inner::graphql_util::send_graphql;
 
-pub const AR_GRAPHQL_GATEWAY: &str = "https://arweave.net";
+pub const AR_GRAPHQL_GATEWAY: &str = "https://arweave.mainnet.irys.xyz";
+pub const WEVM_OWNER_WALLET: &str = "5JUE58yemNynRDeQDyVECKbGVCQbnX7unPrBRqCPVn5Z";
 
 pub(crate) async fn check_block_existence(block_hash: &str) -> bool {
     let query = {
-        let query = "{\n  transactions(tags: [{name: \"Block-Hash\", values: [\"$block_hash\"]}]) {\n    edges {\n      node {\n        id\n        tags {\n          name\n          value\n        }\n        data {\n          size\n        }\n      }\n    }\n  }\n}\n";
+        let query = "query {\n    transactions(\n        order: DESC,\n        tags: [{\n            name: \"Block-Hash\",\n            values: [\"$block_hash\"]\n        }]\n        owners: [\"$owner_wallet\"]\n    ) {\n        edges {\n            node {\n                id\n                tags {\n                    name\n                    value\n                }\n            }\n        }\n    }\n}";
         let query = query.replace("$block_hash", block_hash);
+        let query = query.replace("$owner_wallet", WEVM_OWNER_WALLET);
         query
     };
 
@@ -25,11 +27,11 @@ mod tests {
     #[tokio::test]
     async fn test_check_block_existence() {
         let block_1 = check_block_existence(
-            "0xaf1c63505340e7c923a7cbc70b8353dfceab667100174943293896a9b75ea091",
+            "0xd579c6931a9d1744b2540eeb540540a5582f6befebc59871b1ba4a4d967bd794",
         )
         .await;
         let block_2 = check_block_existence(
-            "0xaf1c63505340e7c923a7cbc70b8353dfceab667100174943293896a9b75ea092",
+            "0xd579c6931a9d1744b2540eeb540540a5582f6befebc59871b1ba4a4d967bd793",
         )
         .await;
         assert!(block_1);

@@ -72,6 +72,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                     .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
                     .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
                     .set_tag("Block-Hash", block_hash)
+                    .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
                     .set_tag("Network", get_network_tag())
                     .set_data(brotli_borsh)
                     .send_with_provider(&irys_provider)
