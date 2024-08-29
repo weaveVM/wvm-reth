@@ -9105,6 +9105,7 @@ dependencies = [
  "reth-primitives",
  "reth-tracing",
  "serde_json",
+ "tokio",
  "types",
  "wevm-borsh",
 ]

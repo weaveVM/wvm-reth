@@ -25,3 +25,4 @@ lambda = { path = "../lambda" }
 irys = { path = "../irys" }
 precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
+tokio.workspace = true

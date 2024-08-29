@@ -30,7 +30,7 @@ pub struct Tag {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Node {
     pub id: String,
-    pub data: NodeData,
+    pub data: Option<NodeData>,
     pub tags: Option<Vec<Tag>>,
 }
 
