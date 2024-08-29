@@ -1,13 +1,13 @@
 use precompiles::inner::graphql_util::send_graphql;
 
 pub const AR_GRAPHQL_GATEWAY: &str = "https://arweave.mainnet.irys.xyz";
-pub const WEVM_OWNER_WALLET: &str = "5JUE58yemNynRDeQDyVECKbGVCQbnX7unPrBRqCPVn5Z";
+pub const WVM_OWNER_WALLET: &str = "5JUE58yemNynRDeQDyVECKbGVCQbnX7unPrBRqCPVn5Z";
 
 pub(crate) async fn check_block_existence(block_hash: &str) -> bool {
     let query = {
-        let query = "query {\n    transactions(\n        order: DESC,\n        tags: [{\n            name: \"Block-Hash\",\n            values: [\"$block_hash\"]\n        }]\n        owners: [\"$owner_wallet\"]\n    ) {\n        edges {\n            node {\n                id\n                tags {\n                    name\n                    value\n                }\n            }\n        }\n    }\n}";
+        let query = "query {\n    transactions(\n        order: DESC,\n        tags: [{\n            name: \"Block-Hash\",\n            values: [\"$block_hash\"]\n        }, {\n            name: \"Protocol\",\n            values: [\"WeaveVM-ExEx\"]\n        }]\n        owners: [\"$owner_wallet\"]\n    ) {\n        edges {\n            node {\n                id\n                tags {\n                    name\n                    value\n                }\n            }\n        }\n    }\n}";
         let query = query.replace("$block_hash", block_hash);
-        let query = query.replace("$owner_wallet", WEVM_OWNER_WALLET);
+        let query = query.replace("$owner_wallet", WVM_OWNER_WALLET);
         query
     };
 
