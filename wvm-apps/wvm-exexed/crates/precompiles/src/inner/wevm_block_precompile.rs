@@ -10,6 +10,7 @@ use reth::primitives::{
 };
 use revm_primitives::{PrecompileError, PrecompileErrors};
 use wevm_borsh::block::BorshSealedBlockWithSenders;
+use crate::inner::graphql_util::build_transaction_query;
 
 pub const WEVM_BLOCK_PC: Precompile = Precompile::Standard(wevm_read_block_pc);
 
@@ -59,8 +60,10 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                     async {
                         let clean_gateway = clean_gateway_url(gateway.as_str());
                         let query = {
-                            let query = "{\n  transactions(tags: [{name: \"Block-Number\", values: [\"$block_id\"]}]) {\n    edges {\n      node {\n        id\n        tags {\n          name\n          value\n        }\n        data {\n          size\n        }\n      }\n    }\n  }\n}\n";
-                            let query = query.replace("$block_id", block_id.as_str());
+                            let query = build_transaction_query(None, Some(&[
+                                ("Block-Number".to_string(), vec![block_id.to_string()])
+                            ]), None, None, true);
+
                             query
                         };
 
@@ -196,7 +199,7 @@ mod arweave_read_pc_tests {
         assert_eq!(bytes.len(), 66);
         assert_eq!(
             bytes.to_vec(),
-            "0xb69e1a4a19c665b0573f74b2bf8e4824cb5b54176f4ad45b730f047e880cf5cc"
+            "0xaf1c63505340e7c923a7cbc70b8353dfceab667100174943293896a9b75ea091"
                 .as_bytes()
                 .to_vec()
         );

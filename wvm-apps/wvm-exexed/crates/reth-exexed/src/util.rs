@@ -1,15 +1,19 @@
-use precompiles::inner::graphql_util::send_graphql;
+use precompiles::inner::graphql_util::{build_transaction_query, send_graphql};
 
 pub const AR_GRAPHQL_GATEWAY: &str = "https://arweave.mainnet.irys.xyz";
 pub const WVM_OWNER_WALLET: &str = "5JUE58yemNynRDeQDyVECKbGVCQbnX7unPrBRqCPVn5Z";
 
 pub(crate) async fn check_block_existence(block_hash: &str) -> bool {
-    let query = {
-        let query = "query {\n    transactions(\n        order: DESC,\n        tags: [{\n            name: \"Block-Hash\",\n            values: [\"$block_hash\"]\n        }, {\n            name: \"Protocol\",\n            values: [\"WeaveVM-ExEx\"]\n        }]\n        owners: [\"$owner_wallet\"]\n    ) {\n        edges {\n            node {\n                id\n                tags {\n                    name\n                    value\n                }\n            }\n        }\n    }\n}";
-        let query = query.replace("$block_hash", block_hash);
-        let query = query.replace("$owner_wallet", WVM_OWNER_WALLET);
-        query
-    };
+    let query = build_transaction_query(
+        None,
+        Some(&[
+            ("Block-Hash".to_string(), vec![block_hash.to_string()]),
+            ("Protocol".to_string(), vec!["WeaveVM-ExEx".to_string()]),
+        ]),
+        Some(&[WVM_OWNER_WALLET.to_string()]),
+        Some("DESC".to_string()),
+        false,
+    );
 
     let data = send_graphql(AR_GRAPHQL_GATEWAY, query.as_str()).await;
     if let Ok(data) = data {
