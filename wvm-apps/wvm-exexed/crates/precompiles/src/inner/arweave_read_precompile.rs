@@ -7,6 +7,7 @@ use reth::primitives::{
     Bytes,
 };
 use serde::{Deserialize, Serialize};
+use crate::inner::graphql_util::build_transaction_query;
 
 pub const ARWEAVE_PC_READ_BASE: u64 = 10_000;
 
@@ -78,11 +79,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
                 async {
                     let clean_gateway = clean_gateway_url(gateway.as_str());
-                    let query = {
-                        let mut query = "{\n  transactions(ids: [\"$id\"]) {\n    edges {\n      node {\n        id\n        data {\n          size\n        }\n      }\n    }\n  }\n}\n";
-                        let query = query.replace("$id", tx_id.as_str());
-                        query
-                    };
+                    let query = build_transaction_query(Some(&[tx_id.clone()]), None, None, None, true);
                     let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
 
                     let tx_size = if let Ok(data) = data {

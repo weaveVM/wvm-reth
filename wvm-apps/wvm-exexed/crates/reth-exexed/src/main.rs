@@ -2,6 +2,8 @@
 
 #![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
+mod constant;
+mod network_tag;
 mod util;
 
 use bigquery::client::BigQueryConfig;
@@ -13,6 +15,7 @@ use reth::{api::FullNodeComponents, builder::Node};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use std::env;
 
+use crate::network_tag::get_network_tag;
 use crate::util::check_block_existence;
 use rbrotli::to_brotli;
 use reth_node_ethereum::{
@@ -23,14 +26,6 @@ use reth_tracing::tracing::info;
 use serde_json::to_string;
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
-
-pub fn get_network_tag() -> &'static str {
-    let devnet_flag = env::var("DEVNET").unwrap_or(String::from("false")).to_lowercase();
-    if devnet_flag == "true" {
-        return "Devnet v0.2.0";
-    }
-    "Alphanet v0.1.0"
-}
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -76,7 +71,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                     .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
                     .set_tag("Block-Hash", block_hash)
                     .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
-                    .set_tag("Network", get_network_tag())
+                    .set_tag("Network", get_network_tag().as_str())
                     .set_tag("WeaveVM:Internal-Chain", notification_type)
                     .set_data(brotli_borsh)
                     .send_with_provider(&irys_provider)

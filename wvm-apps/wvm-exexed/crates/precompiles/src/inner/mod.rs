@@ -1,7 +1,7 @@
 use crate::inner::{
     arweave_precompile::ARWEAVE_UPLOAD_PC, arweave_read_precompile::ARWEAVE_READ_PC,
     kyve_precompile::KYVE_READ_PC, test_precompile::HELLO_WORLD_PC,
-    wevm_block_precompile::WEVM_BLOCK_PC,
+    wevm_block_precompile::WVM_BLOCK_PC,
 };
 use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 
@@ -23,7 +23,7 @@ pub fn wvm_precompiles() -> impl Iterator<Item = PrecompileWithAddress> {
     // ORDER OF THINGS MATTER
 
     let pcs_funcs =
-        [ARWEAVE_UPLOAD_PC, ARWEAVE_READ_PC, HELLO_WORLD_PC, WEVM_BLOCK_PC, KYVE_READ_PC];
+        [ARWEAVE_UPLOAD_PC, ARWEAVE_READ_PC, HELLO_WORLD_PC, WVM_BLOCK_PC, KYVE_READ_PC];
     let mut pcs = vec![];
 
     // IT MATTERS BC OF THIS
