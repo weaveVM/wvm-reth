@@ -1,7 +1,7 @@
 use precompiles::inner::graphql_util::{build_transaction_query, send_graphql};
+use precompiles::WVM_DATA_PUBLISHERS;
 
 pub const AR_GRAPHQL_GATEWAY: &str = "https://arweave.mainnet.irys.xyz";
-pub const WVM_DATA_PUBLISHERS: &str = "5JUE58yemNynRDeQDyVECKbGVCQbnX7unPrBRqCPVn5Z";
 
 pub(crate) async fn check_block_existence(block_hash: &str) -> bool {
     let query = build_transaction_query(
@@ -10,7 +10,7 @@ pub(crate) async fn check_block_existence(block_hash: &str) -> bool {
             ("Block-Hash".to_string(), vec![block_hash.to_string()]),
             ("Protocol".to_string(), vec!["WeaveVM-ExEx".to_string()]),
         ]),
-        Some(&[WVM_DATA_PUBLISHERS.to_string()]),
+        Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
         Some("DESC".to_string()),
         false,
     );

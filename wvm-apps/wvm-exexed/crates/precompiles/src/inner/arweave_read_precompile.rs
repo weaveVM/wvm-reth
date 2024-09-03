@@ -1,3 +1,4 @@
+use crate::inner::graphql_util::build_transaction_query;
 use crate::inner::{
     graphql_util::send_graphql,
     util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
@@ -7,7 +8,6 @@ use reth::primitives::{
     Bytes,
 };
 use serde::{Deserialize, Serialize};
-use crate::inner::graphql_util::build_transaction_query;
 
 pub const ARWEAVE_PC_READ_BASE: u64 = 10_000;
 
@@ -79,7 +79,8 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
                 async {
                     let clean_gateway = clean_gateway_url(gateway.as_str());
-                    let query = build_transaction_query(Some(&[tx_id.clone()]), None, None, None, true);
+                    let query =
+                        build_transaction_query(Some(&[tx_id.clone()]), None, None, None, true);
                     let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
 
                     let tx_size = if let Ok(data) = data {

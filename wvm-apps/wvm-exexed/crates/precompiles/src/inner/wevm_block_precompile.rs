@@ -1,8 +1,10 @@
+use crate::inner::graphql_util::build_transaction_query;
 use crate::inner::{
     graphql_util::send_graphql,
     string_block::Block,
     util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
 };
+use crate::WVM_DATA_PUBLISHERS;
 use rbrotli::from_brotli;
 use reth::primitives::{
     revm_primitives::{Precompile, PrecompileOutput, PrecompileResult},
@@ -10,7 +12,6 @@ use reth::primitives::{
 };
 use revm_primitives::{PrecompileError, PrecompileErrors};
 use wevm_borsh::block::BorshSealedBlockWithSenders;
-use crate::inner::graphql_util::build_transaction_query;
 
 pub const WVM_BLOCK_PC: Precompile = Precompile::Standard(wevm_read_block_pc);
 
@@ -56,13 +57,20 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                     "A field must be specified".to_string(),
                 )))
             } else {
-                tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
-                    async {
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap()
+                    .block_on(async {
                         let clean_gateway = clean_gateway_url(gateway.as_str());
                         let query = {
-                            let query = build_transaction_query(None, Some(&[
-                                ("Block-Number".to_string(), vec![block_id.to_string()])
-                            ]), None, None, true);
+                            let query = build_transaction_query(
+                                None,
+                                Some(&[("Block-Number".to_string(), vec![block_id.to_string()])]),
+                                Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
+                                None,
+                                true,
+                            );
 
                             query
                         };
@@ -78,14 +86,15 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                                     None
                                 }
                             }
-                            Err(_) => {
-                                None
-                            }
+                            Err(_) => None,
                         };
 
                         if let Some(edge) = edge {
                             let tags = edge.node.tags.unwrap();
-                            let encoding = tags.iter().find(|i| i.name == String::from("WeaveVM:Encoding")).unwrap();
+                            let encoding = tags
+                                .iter()
+                                .find(|i| i.name == String::from("WeaveVM:Encoding"))
+                                .unwrap();
                             let get_data = download_tx(gas_used, clean_gateway, edge.node.id).await;
 
                             let output = match get_data {
@@ -94,91 +103,107 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                                     match encoding.value.as_str() {
                                         "Borsh-Brotli" => {
                                             let unbrotli = from_brotli(bytes);
-                                            let unborsh = borsh::from_slice::<BorshSealedBlockWithSenders>(unbrotli.as_slice()).unwrap();
+                                            let unborsh =
+                                                borsh::from_slice::<BorshSealedBlockWithSenders>(
+                                                    unbrotli.as_slice(),
+                                                )
+                                                .unwrap();
                                             let str_block = Block::from(unborsh);
 
                                             let data = match field.as_str() {
-                                                "base_fee_per_gas" => {
-                                                    Some(str_block.base_fee_per_gas.unwrap().into_bytes())
-                                                },
-                                                "blob_gas_used" => {
-                                                    Some(str_block.blob_gas_used.unwrap().into_bytes())
-                                                },
+                                                "base_fee_per_gas" => Some(
+                                                    str_block
+                                                        .base_fee_per_gas
+                                                        .unwrap()
+                                                        .into_bytes(),
+                                                ),
+                                                "blob_gas_used" => Some(
+                                                    str_block.blob_gas_used.unwrap().into_bytes(),
+                                                ),
                                                 "difficulty" => {
                                                     Some(str_block.difficulty.unwrap().into_bytes())
-                                                },
-                                                "excess_blob_gas" => {
-                                                    Some(str_block.excess_blob_gas.unwrap().into_bytes())
-                                                },
+                                                }
+                                                "excess_blob_gas" => Some(
+                                                    str_block.excess_blob_gas.unwrap().into_bytes(),
+                                                ),
                                                 "extra_data" => {
                                                     Some(str_block.extra_data.unwrap().into_bytes())
-                                                },
+                                                }
                                                 "gas_limit" => {
                                                     Some(str_block.gas_limit.unwrap().into_bytes())
-                                                },
+                                                }
                                                 "gas_used" => {
                                                     Some(str_block.gas_used.unwrap().into_bytes())
-                                                },
+                                                }
                                                 "hash" => {
                                                     Some(str_block.hash.unwrap().into_bytes())
-                                                },
+                                                }
                                                 "logs_bloom" => {
                                                     Some(str_block.logs_bloom.unwrap().into_bytes())
-                                                },
+                                                }
                                                 "mix_hash" => {
                                                     Some(str_block.mix_hash.unwrap().into_bytes())
-                                                },
+                                                }
                                                 "nonce" => {
                                                     Some(str_block.nonce.unwrap().into_bytes())
-                                                },
-                                                "parent_beacon_block_root" => {
-                                                    Some(str_block.parent_beacon_block_root.unwrap().into_bytes())
-                                                },
-                                                "parent_hash" => {
-                                                    Some(str_block.parent_hash.unwrap().into_bytes())
-                                                },
-                                                "receipts_root" => {
-                                                    Some(str_block.receipts_root.unwrap().into_bytes())
-                                                },
+                                                }
+                                                "parent_beacon_block_root" => Some(
+                                                    str_block
+                                                        .parent_beacon_block_root
+                                                        .unwrap()
+                                                        .into_bytes(),
+                                                ),
+                                                "parent_hash" => Some(
+                                                    str_block.parent_hash.unwrap().into_bytes(),
+                                                ),
+                                                "receipts_root" => Some(
+                                                    str_block.receipts_root.unwrap().into_bytes(),
+                                                ),
                                                 "size" => {
                                                     Some(str_block.size.unwrap().into_bytes())
-                                                },
+                                                }
                                                 "state_root" => {
                                                     Some(str_block.state_root.unwrap().into_bytes())
-                                                },
+                                                }
                                                 "timestamp" => {
                                                     Some(str_block.timestamp.unwrap().into_bytes())
-                                                },
-                                                "transactions" => {
-                                                    Some(str_block.transactions.join(",").into_bytes())
-                                                },
-                                                _ => {
-                                                    None
                                                 }
+                                                "transactions" => Some(
+                                                    str_block.transactions.join(",").into_bytes(),
+                                                ),
+                                                _ => None,
                                             };
 
                                             if let Some(valid_data) = data {
-                                                Ok(PrecompileOutput::new(gas_used, valid_data.into()))
+                                                Ok(PrecompileOutput::new(
+                                                    gas_used,
+                                                    valid_data.into(),
+                                                ))
                                             } else {
-                                                Err(PrecompileErrors::Error(PrecompileError::Other("Unknown field".to_string())))
+                                                Err(PrecompileErrors::Error(
+                                                    PrecompileError::Other(
+                                                        "Unknown field".to_string(),
+                                                    ),
+                                                ))
                                             }
-                                        },
-                                        _ => {
-                                            Err(PrecompileErrors::Error(PrecompileError::Other("Unknown encoding".to_string())))
                                         }
+                                        _ => Err(PrecompileErrors::Error(PrecompileError::Other(
+                                            "Unknown encoding".to_string(),
+                                        ))),
                                     }
                                 }
-                                Err(_) => {
-                                    Err(PrecompileErrors::Error(PrecompileError::Other("Invalid data".to_string())))
-                                }
+                                Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
+                                    "Invalid data".to_string(),
+                                ))),
                             };
 
                             output
                         } else {
-                            Err(PrecompileErrors::Error(PrecompileError::Other("Unknown Block".to_string())))
+                            Err(PrecompileErrors::Error(PrecompileError::Other(
+                                "Unknown Block".to_string(),
+                            )))
                         }
-                    }
-                )
+                    })
             }
         }
         Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
