@@ -64,8 +64,8 @@ jobs:
       - name: Build
         uses: docker/build-push-action@v6
         with:
-          push: false
-          tags: wevm:local,us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }},wevm:local us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
+          load: true
+          tags: wevm:local,us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }},us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
           cache-from: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
           cache-to: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }},mode=max
 
@@ -85,6 +85,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: wevm:local,us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }},wevm:local us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
+          tags: wevm:local,us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }},us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
           cache-from: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
           cache-to: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }},mode=max
