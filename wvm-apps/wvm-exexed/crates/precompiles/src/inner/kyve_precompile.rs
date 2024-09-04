@@ -52,11 +52,16 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let field = field.unwrap();
 
     tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+        println!("{}", format!(
+            "{}/ethereum/beacon/blob_sidecars?block_height={}",
+            KYVE_API_URL, blk_number
+        ));
         let req = reqwest::get(format!(
             "{}/ethereum/beacon/blob_sidecars?block_height={}",
             KYVE_API_URL, blk_number
-        ))
+        ).as_str())
         .await;
+
 
         match req {
             Ok(resp) => match resp.json::<serde_json::Value>().await {
@@ -95,9 +100,15 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                     "Invalid Response from server".to_string(),
                 ))),
             },
-            Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
-                "Could not connect with KYVE".to_string(),
-            ))),
+            Err(e) => {
+                println!("{:?}", e);
+                println!("{}", e.url().unwrap());
+                println!("{}", e.status().unwrap());
+                println!("{}", e.to_string());
+                Err(PrecompileErrors::Error(PrecompileError::Other(
+                    "Could not connect with KYVE".to_string(),
+                )))
+            },
         }
     })
 }
