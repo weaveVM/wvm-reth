@@ -9,6 +9,7 @@ use reth::{
 };
 use reth_revm::{precompile::PrecompileErrors, primitives::B256};
 use std::str::FromStr;
+use rbrotli::to_brotli;
 
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
@@ -19,6 +20,7 @@ pub const SOLANA_SILLY_PRIVATE_KEY: &str =
     "kNykCXNxgePDjFbDWjPNvXQRa8U12Ywc19dFVaQ7tebUj3m7H4sF4KKdJwM7yxxb3rqxchdjezX9Szh8bLcQAjb";
 
 fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
+    let input = to_brotli(input.to_vec());
     let data_size = input.len();
     let gas_used: u64 = (10_000 + data_size * 3) as u64;
 
@@ -45,8 +47,9 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                 .set_private_key(SOLANA_SILLY_PRIVATE_KEY.to_string())
                 .set_tag("Content-Type", "application/octet-stream")
                 .set_tag("WeaveVM:Precompile", "true")
+                .set_tag("WeaveVM:Encoding", "Brotli")
                 .set_tag("WeaveVM:Precompile-Address", PC_ADDRESS.to_string().as_str())
-                .set_data(input.0.to_vec())
+                .set_data(input)
                 .send()
                 .await
         },
