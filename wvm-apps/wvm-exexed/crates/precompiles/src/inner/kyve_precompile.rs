@@ -65,7 +65,7 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         match req {
             Ok(resp) => match resp.json::<serde_json::Value>().await {
                 Ok(json_val) => {
-                    let main_val = json_val.get("value").and_then(|v| v.get("value")).unwrap();
+                    let main_val = json_val.get("value").unwrap();
 
                     let slot = main_val.get("slot").and_then(|s| s.as_u64()).unwrap().to_string();
 
