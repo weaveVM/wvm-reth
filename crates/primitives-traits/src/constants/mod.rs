@@ -2,6 +2,7 @@
 
 use alloy_primitives::{address, b256, Address, B256, U256};
 use core::time::Duration;
+use std::cell::LazyCell;
 
 /// Gas units, for example [`GIGAGAS`].
 pub mod gas_units;
@@ -35,7 +36,14 @@ pub const BEACON_NONCE: u64 = 0u64;
 // TODO: This should be a chain spec parameter.
 /// See <https://github.com/paradigmxyz/reth/issues/3233>.
 /// WVM: we set 300kk gas limit
-pub const ETHEREUM_BLOCK_GAS_LIMIT: u64 = 300_000_000; // WVM: 300_000_000 gas limit
+pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
+    let env_gas_limit = std::env::var("ETHEREUM_BLOCK_GAS_LIMIT");
+    if let Ok(gas_limit) = env_gas_limit {
+        gas_limit.as_str().parse::<u64>().unwrap()
+    } else {
+        300_000_000
+    }
+}); // WVM: 300_000_000 gas limit
 
 /// The minimum tx fee below which the txpool will reject the transaction.
 ///

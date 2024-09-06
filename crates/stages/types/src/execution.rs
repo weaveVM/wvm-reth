@@ -26,7 +26,7 @@ impl Default for ExecutionStageThresholds {
             max_blocks: Some(500_000),
             max_changes: Some(5_000_000),
             // WVM: 50k full blocks of 300M gas
-            max_cumulative_gas: Some(ETHEREUM_BLOCK_GAS_LIMIT * 50_000),
+            max_cumulative_gas: Some((*ETHEREUM_BLOCK_GAS_LIMIT) * 50_000),
             // 10 minutes
             max_duration: Some(Duration::from_secs(10 * 60)),
         }

@@ -33,7 +33,7 @@ pub static OP_SEPOLIA: Lazy<Arc<OpChainSpec>> = Lazy::new(|| {
                 ]
                 .into(),
             ),
-            max_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+            max_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             prune_delete_limit: 10000,
             ..Default::default()
         },

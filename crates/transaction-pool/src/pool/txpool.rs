@@ -1705,7 +1705,7 @@ impl<T: PoolTransaction> Default for AllTransactions<T> {
         Self {
             max_account_slots: TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER,
             minimal_protocol_basefee: MIN_PROTOCOL_BASE_FEE,
-            block_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+            block_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             by_hash: Default::default(),
             txs: Default::default(),
             tx_counter: Default::default(),
