@@ -246,7 +246,7 @@ impl Default for ExecutionConfig {
             max_changes: Some(5_000_000),
             // 50k full blocks of 30M gas
             // WVM: 300kk
-            max_cumulative_gas: Some(ETHEREUM_BLOCK_GAS_LIMIT * 50_000),
+            max_cumulative_gas: Some((*ETHEREUM_BLOCK_GAS_LIMIT) * 50_000),
             // 10 minutes
             max_duration: Some(Duration::from_secs(10 * 60)),
         }

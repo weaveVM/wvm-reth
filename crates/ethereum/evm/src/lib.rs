@@ -82,7 +82,7 @@ impl ConfigureEvmEnv for EthEvmConfig {
             // Explicitly set nonce to None so revm does not do any nonce checks
             nonce: None,
             // WVM: 300_000_000 gas limit
-            gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+            gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             value: U256::ZERO,
             data,
             // Setting the gas price to zero enforces that no value is transferred as part of the
