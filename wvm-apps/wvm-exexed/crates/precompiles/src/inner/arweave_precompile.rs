@@ -1,4 +1,5 @@
 use irys::irys::IrysRequest;
+use rbrotli::to_brotli;
 use reth::{
     primitives::{
         hex,
@@ -9,7 +10,6 @@ use reth::{
 };
 use reth_revm::{precompile::PrecompileErrors, primitives::B256};
 use std::str::FromStr;
-use rbrotli::to_brotli;
 
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;

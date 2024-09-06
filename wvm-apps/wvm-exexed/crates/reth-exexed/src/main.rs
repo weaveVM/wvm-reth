@@ -15,8 +15,7 @@ use reth::{api::FullNodeComponents, builder::Node};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use std::env;
 
-use crate::network_tag::get_network_tag;
-use crate::util::check_block_existence;
+use crate::{network_tag::get_network_tag, util::check_block_existence};
 use rbrotli::to_brotli;
 use reth_node_ethereum::{
     node::{EthereumAddOns, EthereumExecutorBuilder},

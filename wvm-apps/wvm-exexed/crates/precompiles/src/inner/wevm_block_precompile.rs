@@ -1,10 +1,11 @@
-use crate::inner::graphql_util::build_transaction_query;
-use crate::inner::{
-    graphql_util::send_graphql,
-    string_block::Block,
-    util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
+use crate::{
+    inner::{
+        graphql_util::{build_transaction_query, send_graphql},
+        string_block::Block,
+        util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
+    },
+    WVM_DATA_PUBLISHERS,
 };
-use crate::WVM_DATA_PUBLISHERS;
 use rbrotli::from_brotli;
 use reth::primitives::{
     revm_primitives::{Precompile, PrecompileOutput, PrecompileResult},

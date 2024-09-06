@@ -1,5 +1,7 @@
-use precompiles::inner::graphql_util::{build_transaction_query, send_graphql};
-use precompiles::WVM_DATA_PUBLISHERS;
+use precompiles::{
+    inner::graphql_util::{build_transaction_query, send_graphql},
+    WVM_DATA_PUBLISHERS,
+};
 
 pub const AR_GRAPHQL_GATEWAY: &str = "https://arweave.mainnet.irys.xyz";
 
