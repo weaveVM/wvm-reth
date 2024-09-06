@@ -1,6 +1,5 @@
-use crate::inner::graphql_util::build_transaction_query;
 use crate::inner::{
-    graphql_util::send_graphql,
+    graphql_util::{build_transaction_query, send_graphql},
     util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
 };
 use reth::primitives::{
