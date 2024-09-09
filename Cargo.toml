@@ -414,13 +414,13 @@ reth-trie-db = { path = "crates/trie/db" }
 reth-trie-parallel = { path = "crates/trie/parallel" }
 
 # revm
-revm = { version = "14.0.0", features = [
+revm = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features = [
     "std",
     "secp256k1",
     "blst",
 ], default-features = false }
-revm-inspectors = "0.6"
-revm-primitives = { version = "9.0.0", features = [
+revm-inspectors = { git = "https://github.com/weaveVM/revm-inspectors?v", branch = "main" }
+revm-primitives = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features = [
     "std",
 ], default-features = false }
 
