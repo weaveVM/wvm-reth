@@ -23,6 +23,7 @@ use reth_node_ethereum::{
 };
 use reth_tracing::tracing::info;
 use serde_json::to_string;
+use exex_archiver::{DefaultWvmDataSettler, WvmDataSettler};
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
@@ -53,10 +54,9 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         }
 
         if let Some(committed_chain) = notification.committed_chain() {
+            let data_settler = DefaultWvmDataSettler;
             let sealed_block_with_senders = committed_chain.tip();
-            let clone_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
-            let borsh_data = borsh::to_vec(&clone_block)?;
-            let brotli_borsh = to_brotli(borsh_data);
+            let brotli_borsh = data_settler.process_block(sealed_block_with_senders)?;
             let json_str = to_string(&sealed_block_with_senders)?;
 
             let blk_str_hash = sealed_block_with_senders.block.hash().to_string();
