@@ -33,11 +33,11 @@ mod tests {
     #[tokio::test]
     async fn test_check_block_existence() {
         let block_1 = check_block_existence(
-            "0xd579c6931a9d1744b2540eeb540540a5582f6befebc59871b1ba4a4d967bd794",
+            "0x2685fbb2e5b93cea32e7e51334d3cc746e1a6790b901eddb3df8214be18899a1",
         )
         .await;
         let block_2 = check_block_existence(
-            "0xd579c6931a9d1744b2540eeb540540a5582f6befebc59871b1ba4a4d967bd793",
+            "0x2685fbb2e5b93cea32e7e51334d3cc746e1a6790b901eddb3df8214be18899a2",
         )
         .await;
         assert!(block_1);
