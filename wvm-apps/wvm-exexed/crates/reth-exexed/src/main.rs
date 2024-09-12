@@ -23,7 +23,7 @@ use reth_node_ethereum::{
 };
 use reth_tracing::tracing::info;
 use serde_json::to_string;
-use exex_archiver::{DefaultWvmDataSettler, WvmDataSettler};
+use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 

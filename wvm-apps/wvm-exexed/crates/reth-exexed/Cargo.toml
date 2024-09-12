@@ -16,7 +16,7 @@ reth-primitives.workspace = true
 eyre.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
-exex-archiver = { path = "../exex-archiver" }
+exex-wvm-da = { path = "../exex-wvm-da" }
 wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
 repository = { path = "../repository" }
 bigquery = { path = "../bigquery" }

@@ -4059,7 +4059,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "exex-archiver"
+name = "exex-etl"
+version = "1.0.6"
+
+[[package]]
+name = "exex-wvm-da"
 version = "1.0.6"
 dependencies = [
  "async-trait",
@@ -4073,6 +4077,7 @@ dependencies = [
  "reth-chainspec",
  "reth-ethereum-engine-primitives",
  "reth-exex",
+ "reth-exex-test-utils",
  "reth-node-ethereum",
  "reth-revm",
  "reth-tracing",
@@ -4084,10 +4089,6 @@ dependencies = [
  "wevm-borsh",
  "wvm-archiver",
 ]
-
-[[package]]
-name = "exex-etl"
-version = "1.0.6"
 
 [[package]]
 name = "eyre"
@@ -9936,8 +9937,8 @@ dependencies = [
  "bigquery",
  "borsh 1.5.1",
  "brotlic",
- "exex-archiver",
  "exex-etl",
+ "exex-wvm-da",
  "eyre",
  "irys",
  "lambda",
@@ -14835,7 +14836,7 @@ dependencies = [
 [[package]]
 name = "wvm-archiver"
 version = "0.1.3"
-source = "git+https://github.com/weaveVM/wvm-archiver?a=true?branch=main#6ee4f1639a2d2108ed75d5886b2bde9509503f91"
+source = "git+https://github.com/weaveVM/wvm-archiver?a=true?branch=main#003ce5acb219fc54a28db045df7dc7bc7d584334"
 dependencies = [
  "anyhow",
  "axum 0.7.5",
@@ -14862,8 +14863,8 @@ dependencies = [
  "bigquery",
  "borsh 1.5.1",
  "brotlic",
- "exex-archiver",
  "exex-etl",
+ "exex-wvm-da",
  "eyre",
  "futures",
  "gcp-bigquery-client 0.17.1",

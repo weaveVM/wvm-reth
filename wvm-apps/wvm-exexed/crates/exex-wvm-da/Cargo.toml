@@ -1,5 +1,5 @@
 [package]
-name = "exex-archiver"
+name = "exex-wvm-da"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -28,3 +28,6 @@ wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
 borsh.workspace = true
 async-trait = "0.1.82"
 wvm-archiver = { git = "https://github.com/weaveVM/wvm-archiver?a=true", branch = "main" }
+
+[dev-dependencies]
+reth-exex-test-utils.workspace = true
