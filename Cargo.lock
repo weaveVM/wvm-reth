@@ -14836,7 +14836,7 @@ dependencies = [
 [[package]]
 name = "wvm-archiver"
 version = "0.1.3"
-source = "git+https://github.com/weaveVM/wvm-archiver?a=true?branch=main#003ce5acb219fc54a28db045df7dc7bc7d584334"
+source = "git+https://github.com/weaveVM/wvm-archiver?a=true?branch=main#3c3a4631b2bfb75be7a42bae88c488c1cbef8e22"
 dependencies = [
  "anyhow",
  "axum 0.7.5",
