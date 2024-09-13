@@ -23,7 +23,7 @@ use crate::args::{
 pub(crate) const RPC_DEFAULT_MAX_SUBS_PER_CONN: u32 = 1024;
 
 /// Default max request size in MB.
-pub(crate) const RPC_DEFAULT_MAX_REQUEST_SIZE_MB: u32 = 15;
+pub(crate) const RPC_DEFAULT_MAX_REQUEST_SIZE_MB: u32 = 37;
 
 /// Default max response size in MB.
 ///
