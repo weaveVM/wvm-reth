@@ -21,7 +21,7 @@ pub fn get_irys_pk() -> Result<String, env::VarError> {
 
 async fn init_bundlr(private_key: Option<String>) -> eyre::Result<Bundlr<Solana>> {
     let irys_wallet_pk: String = get_irys_pk().unwrap_or_else(|e| private_key.unwrap());
-    let url = Url::parse("https://node1.bundlr.network").unwrap();
+    let url = Url::parse("https://turbo.ardrive.io").unwrap();
 
     let currency = SolanaBuilder::new().wallet(&irys_wallet_pk).build().map_err(|e| {
         eyre::eyre!(
