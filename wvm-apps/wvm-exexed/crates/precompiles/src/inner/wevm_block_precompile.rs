@@ -13,6 +13,7 @@ use reth::primitives::{
 };
 use revm_primitives::{PrecompileError, PrecompileErrors};
 use wevm_borsh::block::BorshSealedBlockWithSenders;
+use crate::inner::graphql_util::Edge;
 
 pub const WVM_BLOCK_PC: Precompile = Precompile::Standard(wevm_read_block_pc);
 
@@ -32,6 +33,35 @@ pub fn parse_req_input(input: &str) -> (String, String, String) {
     let third_part = parts.next().unwrap_or("").to_string();
 
     (endpoint, second_part, third_part)
+}
+
+async fn send_and_get_edge(gateway: &str, query: &str) -> Option<Edge> {
+    let data = send_graphql(gateway, query).await;
+
+    match data {
+        Ok(res) => {
+            let resp = res.data.transactions.edges.get(0);
+            if let Some(&ref tx) = resp {
+                Some(tx.clone())
+            } else {
+                None
+            }
+        }
+        Err(e) => {
+            println!("{}", e);
+            None
+        }
+    }
+}
+
+async fn fetch_with_fallback(primary_gateway: &str, fallback_gateway: &str, query: &str) -> Option<Edge> {
+    // Try the primary gateway first
+    if let Some(edge) = send_and_get_edge(primary_gateway, query).await {
+        return Some(edge);
+    }
+
+    // If the primary gateway fails, try the fallback gateway
+    send_and_get_edge(fallback_gateway, query).await
 }
 
 fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
@@ -69,29 +99,14 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                                 None,
                                 Some(&[("Block-Number".to_string(), vec![block_id.to_string()])]),
                                 Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
-                                Some("DESC".to_string()),
+                                None,
                                 false,
                             );
 
                             query
                         };
 
-                        let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
-
-                        let edge = match data {
-                            Ok(res) => {
-                                let resp = res.data.transactions.edges.get(0);
-                                if let Some(&ref tx) = resp {
-                                    Some(tx.clone())
-                                } else {
-                                    None
-                                }
-                            }
-                            Err(e) => {
-                                println!("{}", e);
-                                None
-                            }
-                        };
+                        let edge = fetch_with_fallback(clean_gateway.as_str(), "https://arweave.mainnet.irys.xyz", query.as_str()).await;
 
                         if let Some(edge) = edge {
                             let tags = edge.node.tags.unwrap();
@@ -224,6 +239,19 @@ mod arweave_read_pc_tests {
     #[test]
     pub fn test_read_wvm_block() {
         let input = Bytes::from("https://arweave.mainnet.irys.xyz;1127975;hash".as_bytes());
+        let PrecompileOutput { gas_used, bytes } = wevm_read_block_pc(&input, 100_000).unwrap();
+        assert_eq!(bytes.len(), 66);
+        assert_eq!(
+            bytes.to_vec(),
+            "0xe0201f1e284fbe6fa0c90e811194a11a694a08d240f4691996b9182f2e767fee"
+                .as_bytes()
+                .to_vec()
+        );
+    }
+
+    #[test]
+    pub fn test_read_wvm_block_arweave_fallback() {
+        let input = Bytes::from("https://arweave.net;1127975;hash".as_bytes());
         let PrecompileOutput { gas_used, bytes } = wevm_read_block_pc(&input, 100_000).unwrap();
         assert_eq!(bytes.len(), 66);
         assert_eq!(
