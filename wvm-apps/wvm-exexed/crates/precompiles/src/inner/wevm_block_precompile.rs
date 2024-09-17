@@ -69,12 +69,14 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                                 None,
                                 Some(&[("Block-Number".to_string(), vec![block_id.to_string()])]),
                                 Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
-                                Some("DESC".to_string()),
+                                None,
                                 false,
                             );
 
                             query
                         };
+
+                        println!("{}", query);
 
                         let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
 
@@ -224,6 +226,19 @@ mod arweave_read_pc_tests {
     #[test]
     pub fn test_read_wvm_block() {
         let input = Bytes::from("https://arweave.mainnet.irys.xyz;1127975;hash".as_bytes());
+        let PrecompileOutput { gas_used, bytes } = wevm_read_block_pc(&input, 100_000).unwrap();
+        assert_eq!(bytes.len(), 66);
+        assert_eq!(
+            bytes.to_vec(),
+            "0xe0201f1e284fbe6fa0c90e811194a11a694a08d240f4691996b9182f2e767fee"
+                .as_bytes()
+                .to_vec()
+        );
+    }
+
+    #[test]
+    pub fn test_read_wvm_block_arweave() {
+        let input = Bytes::from("https://arweave.net;1399390;hash".as_bytes());
         let PrecompileOutput { gas_used, bytes } = wevm_read_block_pc(&input, 100_000).unwrap();
         assert_eq!(bytes.len(), 66);
         assert_eq!(

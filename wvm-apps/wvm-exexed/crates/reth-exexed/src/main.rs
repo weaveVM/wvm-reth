@@ -61,7 +61,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
             let blk_str_hash = sealed_block_with_senders.block.hash().to_string();
             let block_hash = blk_str_hash.as_str();
-            let does_block_exist = check_block_existence(block_hash).await;
+            let does_block_exist = check_block_existence(block_hash, false).await;
 
             if !does_block_exist {
                 let arweave_id = IrysRequest::new()
