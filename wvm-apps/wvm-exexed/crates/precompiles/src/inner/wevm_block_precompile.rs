@@ -76,8 +76,6 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                             query
                         };
 
-                        println!("{}", query);
-
                         let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
 
                         let edge = match data {
