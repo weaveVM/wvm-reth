@@ -90,7 +90,7 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                             Err(e) => {
                                 println!("{}", e);
                                 None
-                            },
+                            }
                         };
 
                         if let Some(edge) = edge {

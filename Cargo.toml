@@ -423,7 +423,7 @@ revm = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features 
     "secp256k1",
     "blst",
 ], default-features = false }
-revm-inspectors = { git = "https://github.com/weaveVM/revm-inspectors?v", branch = "sync-upstream" }
+revm-inspectors = { git = "https://github.com/weaveVM/revm-inspectors?v", branch = "main" }
 revm-primitives = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features = [
     "std",
 ], default-features = false }

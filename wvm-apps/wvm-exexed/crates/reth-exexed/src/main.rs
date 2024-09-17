@@ -16,6 +16,7 @@ use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use std::env;
 
 use crate::{network_tag::get_network_tag, util::check_block_existence};
+use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use rbrotli::to_brotli;
 use reth_node_ethereum::{
     node::{EthereumAddOns, EthereumExecutorBuilder},
@@ -23,7 +24,6 @@ use reth_node_ethereum::{
 };
 use reth_tracing::tracing::info;
 use serde_json::to_string;
-use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 

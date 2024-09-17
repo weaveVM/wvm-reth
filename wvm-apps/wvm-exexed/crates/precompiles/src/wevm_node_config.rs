@@ -13,12 +13,11 @@ use reth::{
         ContextPrecompile, ContextPrecompiles, Database, Evm, EvmBuilder, GetInspector,
     },
 };
+use reth_chainspec::{Chain, ChainSpec};
 use reth_node_ethereum::EthEvmConfig;
 use revm_primitives::EnvWithHandlerCfg;
 use schnellru::{ByLength, LruMap};
 use std::{collections::HashMap, sync::Arc};
-use reth_chainspec::{Chain, ChainSpec};
-
 
 /// Type alias for the LRU cache used within the [`PrecompileCache`].
 type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResult>;
@@ -86,7 +85,7 @@ impl WvmEthEvmConfig {
     {
         let exts: Vec<PrecompileWithAddress> = precompiles_ext.collect();
 
-        Self {evm_config: EthEvmConfig::new(chain_spec), precompile_cache, exts }
+        Self { evm_config: EthEvmConfig::new(chain_spec), precompile_cache, exts }
     }
 
     /// Sets the precompiles to the EVM handler
