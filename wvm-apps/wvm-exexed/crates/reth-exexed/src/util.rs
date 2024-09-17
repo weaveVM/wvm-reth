@@ -48,12 +48,12 @@ mod tests {
     async fn test_check_block_existence() {
         let block_1 = check_block_existence(
             "0x2685fbb2e5b93cea32e7e51334d3cc746e1a6790b901eddb3df8214be18899a1",
-            false
+            false,
         )
         .await;
         let block_2 = check_block_existence(
             "0x2685fbb2e5b93cea32e7e51334d3cc746e1a6790b901eddb3df8214be18899a2",
-            false
+            false,
         )
         .await;
         assert!(block_1);
