@@ -17,6 +17,8 @@ use reth_node_ethereum::{
     EthEngineTypes, EthEvmConfig, EthExecutorProvider,
 };
 
+use reth_chainspec::MAINNET;
+
 /// Type configuration for a regular Ethereum node.
 #[derive(Debug, Default, Clone, Copy)]
 #[non_exhaustive]
@@ -96,7 +98,7 @@ where
         ctx: &BuilderContext<Node>,
     ) -> eyre::Result<(Self::EVM, Self::Executor)> {
         let evm_config =
-            WvmEthEvmConfig::new(EthEvmConfig::default(), Default::default(), wvm_precompiles());
+            WvmEthEvmConfig::new(ctx.chain_spec(), Default::default(), wvm_precompiles());
         let executor = EthExecutorProvider::new(ctx.chain_spec(), evm_config.clone());
 
         Ok((evm_config, executor))

@@ -13,7 +13,7 @@ use reth::{
         ContextPrecompile, ContextPrecompiles, Database, Evm, EvmBuilder, GetInspector,
     },
 };
-use reth_chainspec::ChainSpec;
+use reth_chainspec::{Chain, ChainSpec};
 use reth_node_ethereum::EthEvmConfig;
 use revm_primitives::EnvWithHandlerCfg;
 use schnellru::{ByLength, LruMap};
@@ -32,7 +32,7 @@ pub struct PrecompileCache {
 }
 
 /// Ethereum-related EVM configuration.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct WvmEthEvmConfig {
     pub evm_config: EthEvmConfig,
@@ -67,17 +67,16 @@ impl ConfigureEvmEnv for WvmEthEvmConfig {
     fn fill_cfg_env(
         &self,
         cfg_env: &mut CfgEnvWithHandlerCfg,
-        chain_spec: &ChainSpec,
         header: &Header,
         total_difficulty: U256,
     ) {
-        self.evm_config.fill_cfg_env(cfg_env, chain_spec, header, total_difficulty);
+        self.evm_config.fill_cfg_env(cfg_env, header, total_difficulty);
     }
 }
 
 impl WvmEthEvmConfig {
     pub fn new<PCI>(
-        evm_config: EthEvmConfig,
+        chain_spec: Arc<ChainSpec>,
         precompile_cache: Arc<RwLock<PrecompileCache>>,
         precompiles_ext: PCI,
     ) -> Self
@@ -86,7 +85,7 @@ impl WvmEthEvmConfig {
     {
         let exts: Vec<PrecompileWithAddress> = precompiles_ext.collect();
 
-        Self { evm_config, precompile_cache, exts }
+        Self { evm_config: EthEvmConfig::new(chain_spec), precompile_cache, exts }
     }
 
     /// Sets the precompiles to the EVM handler

@@ -61,7 +61,7 @@ docker compose up --no-start
 ### Copy Genesis Files
 ```bash
 cd /code/testnet/
-cp /home/reth-node/code/wvm-reth/crates/primitives/res/genesis/weave_wm_testnet_v0.json genesis.json
+cp /home/reth-node/code/wvm-reth/crates/primitives/res/genesis/weave_vm_testnet_v0.json genesis.json
 cp /home/reth-node/code/wvm-reth/etc/weave_vm_testnet/prysm_config/config.yml .
 ```
 

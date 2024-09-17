@@ -1,4 +1,4 @@
-use eyre::{Error};
+use eyre::Error;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
