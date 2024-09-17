@@ -2,6 +2,7 @@
 
 use std::{sync::Arc, thread::available_parallelism};
 
+use alloy_primitives::{BlockNumber, B256};
 use eyre::Context;
 use rayon::ThreadPoolBuilder;
 use reth_auto_seal_consensus::MiningMode;
@@ -17,6 +18,8 @@ use reth_db_common::init::{init_genesis, InitDatabaseError};
 use reth_downloaders::{bodies::noop::NoopBodiesDownloader, headers::noop::NoopHeaderDownloader};
 use reth_engine_tree::tree::{InvalidBlockHook, InvalidBlockHooks, NoopInvalidBlockHook};
 use reth_evm::noop::NoopBlockExecutorProvider;
+use reth_fs_util as fs;
+use reth_invalid_block_hooks::InvalidBlockWitnessHook;
 use reth_network_p2p::headers::client::HeadersClient;
 use reth_node_api::{FullNodeTypes, NodeTypes, NodeTypesWithDB};
 use reth_node_core::{
@@ -28,15 +31,17 @@ use reth_node_core::{
     },
 };
 use reth_node_metrics::{
+    chain::ChainSpecInfo,
     hooks::Hooks,
     server::{MetricServer, MetricServerConfig},
     version::VersionInfo,
 };
-use reth_primitives::{BlockNumber, Head, B256};
+use reth_primitives::Head;
 use reth_provider::{
     providers::{BlockchainProvider, BlockchainProvider2, StaticFileProvider},
-    BlockHashReader, CanonStateNotificationSender, ProviderFactory, ProviderResult,
-    StageCheckpointReader, StaticFileProviderFactory, TreeViewer,
+    BlockHashReader, CanonStateNotificationSender, ChainSpecProvider, ProviderFactory,
+    ProviderResult, StageCheckpointReader, StateProviderFactory, StaticFileProviderFactory,
+    TreeViewer,
 };
 use reth_prune::{PruneModes, PrunerBuilder};
 use reth_rpc_builder::config::RethRpcServerConfig;
@@ -504,6 +509,7 @@ where
                     target_triple: VERGEN_CARGO_TARGET_TRIPLE,
                     build_profile: BUILD_PROFILE_NAME,
                 },
+                ChainSpecInfo { name: self.left().config.chain.chain.to_string() },
                 self.task_executor().clone(),
                 Hooks::new(self.database().clone(), self.static_file_provider()),
             );
@@ -516,13 +522,13 @@ where
 
     /// Convenience function to [`Self::init_genesis`]
     pub fn with_genesis(self) -> Result<Self, InitDatabaseError> {
-        init_genesis(self.provider_factory().clone())?;
+        init_genesis(self.provider_factory())?;
         Ok(self)
     }
 
     /// Write the genesis block and state if it has not already been written
     pub fn init_genesis(&self) -> Result<B256, InitDatabaseError> {
-        init_genesis(self.provider_factory().clone())
+        init_genesis(self.provider_factory())
     }
 
     /// Creates a new `WithMeteredProvider` container and attaches it to the
@@ -614,7 +620,7 @@ where
     /// If the database is empty, returns the genesis block.
     pub fn lookup_head(&self) -> eyre::Result<Head> {
         self.node_config()
-            .lookup_head(self.provider_factory().clone())
+            .lookup_head(self.provider_factory())
             .wrap_err("the head block is missing")
     }
 
@@ -665,11 +671,11 @@ where
         let consensus: Arc<dyn Consensus> = Arc::new(components.consensus().clone());
 
         let tree_externals = TreeExternals::new(
-            self.provider_factory().clone(),
+            self.provider_factory().clone().with_prune_modes(self.prune_modes()),
             consensus.clone(),
             components.block_executor().clone(),
         );
-        let tree = BlockchainTree::new(tree_externals, *self.tree_config(), self.prune_modes())?
+        let tree = BlockchainTree::new(tree_externals, *self.tree_config())?
             .with_sync_metrics_tx(self.sync_metrics_tx())
             // Note: This is required because we need to ensure that both the components and the
             // tree are using the same channel for canon state notifications. This will be removed
@@ -738,7 +744,7 @@ where
     }
 
     /// Creates a new [`StaticFileProducer`] with the attached database.
-    pub fn static_file_producer(&self) -> StaticFileProducer<T::Types> {
+    pub fn static_file_producer(&self) -> StaticFileProducer<ProviderFactory<T::Types>> {
         StaticFileProducer::new(self.provider_factory().clone(), self.prune_modes())
     }
 
@@ -837,17 +843,34 @@ where
     pub const fn components(&self) -> &CB::Components {
         &self.node_adapter().components
     }
+}
 
+impl<T, CB> LaunchContextWith<Attached<WithConfigs, WithComponents<T, CB>>>
+where
+    T: FullNodeTypes<
+        Provider: WithTree + StateProviderFactory + ChainSpecProvider<ChainSpec = ChainSpec>,
+        Types: NodeTypes<ChainSpec = ChainSpec>,
+    >,
+    CB: NodeComponentsBuilder<T>,
+{
     /// Returns the [`InvalidBlockHook`] to use for the node.
     pub fn invalid_block_hook(&self) -> eyre::Result<Box<dyn InvalidBlockHook>> {
         Ok(if let Some(ref hook) = self.node_config().debug.invalid_block_hook {
+            let output_directory = self.data_dir().invalid_block_hooks();
             let hooks = hook
                 .iter()
                 .copied()
                 .map(|hook| {
+                    let output_directory = output_directory.join(hook.to_string());
+                    fs::create_dir_all(&output_directory)?;
+
                     Ok(match hook {
                         reth_node_core::args::InvalidBlockHook::Witness => {
-                            Box::new(reth_invalid_block_hooks::witness) as Box<dyn InvalidBlockHook>
+                            Box::new(InvalidBlockWitnessHook::new(
+                                output_directory,
+                                self.blockchain_db().clone(),
+                                self.components().evm_config().clone(),
+                            )) as Box<dyn InvalidBlockHook>
                         }
                         reth_node_core::args::InvalidBlockHook::PreState |
                         reth_node_core::args::InvalidBlockHook::Opcode => {
@@ -979,8 +1002,29 @@ mod tests {
     fn test_save_prune_config() {
         with_tempdir("prune-store-test", |config_path| {
             let mut reth_config = Config::default();
-            let node_config =
-                NodeConfig { pruning: PruningArgs { full: true }, ..NodeConfig::test() };
+            let node_config = NodeConfig {
+                pruning: PruningArgs {
+                    full: true,
+                    block_interval: 0,
+                    sender_recovery_full: false,
+                    sender_recovery_distance: None,
+                    sender_recovery_before: None,
+                    transaction_lookup_full: false,
+                    transaction_lookup_distance: None,
+                    transaction_lookup_before: None,
+                    receipts_full: false,
+                    receipts_distance: None,
+                    receipts_before: None,
+                    account_history_full: false,
+                    account_history_distance: None,
+                    account_history_before: None,
+                    storage_history_full: false,
+                    storage_history_distance: None,
+                    storage_history_before: None,
+                    receipts_log_filter: vec![],
+                },
+                ..NodeConfig::test()
+            };
             LaunchContext::save_pruning_config_if_full_node(
                 &mut reth_config,
                 &node_config,

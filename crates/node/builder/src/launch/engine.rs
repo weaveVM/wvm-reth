@@ -24,7 +24,10 @@ use reth_node_core::{
     dirs::{ChainPath, DataDirPath},
     exit::NodeExitFuture,
     primitives::Head,
-    rpc::eth::{helpers::AddDevSigners, FullEthApiServer},
+    rpc::{
+        eth::{helpers::AddDevSigners, FullEthApiServer},
+        types::AnyTransactionReceipt,
+    },
     version::{CARGO_PKG_VERSION, CLIENT_CODE, NAME_CLIENT, VERGEN_GIT_SHA},
 };
 use reth_node_events::{cl::ConsensusLayerHealthEvents, node};
@@ -33,7 +36,7 @@ use reth_rpc_engine_api::{capabilities::EngineCapabilities, EngineApi};
 use reth_rpc_types::{engine::ClientVersionV1, WithOtherFields};
 use reth_tasks::TaskExecutor;
 use reth_tokio_util::EventSender;
-use reth_tracing::tracing::{debug, error, info, warn};
+use reth_tracing::tracing::{debug, error, info};
 use std::sync::Arc;
 use tokio::sync::{mpsc::unbounded_channel, oneshot};
 use tokio_stream::wrappers::UnboundedReceiverStream;
@@ -71,6 +74,7 @@ where
                     + FullEthApiServer<
             NetworkTypes: alloy_network::Network<
                 TransactionResponse = WithOtherFields<reth_rpc_types::Transaction>,
+                ReceiptResponse = AnyTransactionReceipt,
             >,
         > + AddDevSigners,
     >,
@@ -204,11 +208,6 @@ where
         let pruner_events = pruner.events();
         info!(target: "reth::cli", prune_config=?ctx.prune_config().unwrap_or_default(), "Pruner initialized");
 
-        // TODO: implement methods which convert this value into an actual function
-        if let Some(ref hook_type) = ctx.node_config().debug.invalid_block_hook {
-            warn!(target: "reth::cli", ?hook_type, "Invalid block hooks are not implemented yet! The `debug.invalid-block-hook` flag will do nothing for now.");
-        }
-
         // Configure the consensus engine
         let mut eth_service = EngineService::new(
             ctx.consensus(),
@@ -224,6 +223,7 @@ where
             ctx.components().payload_builder().clone(),
             TreeConfig::default(),
             ctx.invalid_block_hook()?,
+            ctx.sync_metrics_tx(),
         );
 
         let event_sender = EventSender::default();
@@ -268,6 +268,7 @@ where
             ctx.chain_spec(),
             beacon_engine_handle,
             ctx.components().payload_builder().clone().into(),
+            ctx.components().pool().clone(),
             Box::new(ctx.task_executor().clone()),
             client,
             EngineCapabilities::default(),
