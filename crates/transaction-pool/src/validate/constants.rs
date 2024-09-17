@@ -11,8 +11,10 @@ pub const TX_SLOT_BYTE_SIZE: usize = 32 * 1024;
 /// which defaults to 32 KiB, so 128 KiB.
 pub const DEFAULT_MAX_TX_INPUT_BYTES: usize = 4 * TX_SLOT_BYTE_SIZE; // 128KB
 
+pub const DEFAULT_MULTIPLY_VAL_FOR_CODE_SIZE: usize = 2;
+
 /// Maximum bytecode to permit for a contract.
-pub const MAX_CODE_BYTE_SIZE: usize = 24576;
+pub const MAX_CODE_BYTE_SIZE: usize = 24576 * DEFAULT_MULTIPLY_VAL_FOR_CODE_SIZE;
 
 /// Maximum initcode to permit in a creation transaction and create instructions.
 pub const MAX_INIT_CODE_BYTE_SIZE: usize = 2 * MAX_CODE_BYTE_SIZE;
