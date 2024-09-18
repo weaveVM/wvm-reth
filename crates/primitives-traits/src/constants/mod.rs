@@ -24,7 +24,7 @@ pub const EPOCH_SLOTS: u64 = 32;
 ///
 /// This is the time period of 12 seconds in which a randomly chosen validator has time to propose a
 /// block.
-pub const SLOT_DURATION: Duration = Duration::from_secs(12);
+pub const SLOT_DURATION: Duration = Duration::from_secs(1); // Wevm #356: 1s per block
 
 /// An EPOCH is a series of 32 slots (~6.4min).
 pub const EPOCH_DURATION: Duration = Duration::from_secs(12 * EPOCH_SLOTS);

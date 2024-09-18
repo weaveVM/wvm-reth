@@ -109,7 +109,7 @@ where
         if let Some(timestamp) = timestamp {
             block_env.timestamp = U256::from(timestamp);
         } else {
-            block_env.timestamp += U256::from(12);
+            block_env.timestamp += U256::from(1); // Wevm #356: 1s per block
         }
 
         if let Some(difficulty) = difficulty {
