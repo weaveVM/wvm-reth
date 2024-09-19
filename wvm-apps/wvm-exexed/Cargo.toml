@@ -8,6 +8,7 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
+exex-wvm-da.workspace = true
 reth-revm.workspace = true
 reth-ethereum-engine-primitives.workspace = true
 reth-primitives.workspace = true
@@ -31,8 +32,6 @@ indexmap = "2.0.0"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 brotlic.workspace = true
-
-exex-wvm-da = { path = "crates/exex-wvm-da" }
 repository = { path = "crates/repository" }
 bigquery = { path = "crates/bigquery" }
 lambda = { path = "crates/lambda" }
