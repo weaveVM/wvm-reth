@@ -4085,29 +4085,13 @@ version = "1.0.6"
 
 [[package]]
 name = "exex-wvm-da"
-version = "1.0.6"
+version = "1.0.0"
+source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#b36fa564add079fc6481e78ee9cf0d2ab874f408"
 dependencies = [
  "async-trait",
  "borsh 1.5.1",
+ "brotlic",
  "eyre",
- "parking_lot 0.12.3",
- "rbrotli",
- "reqwest 0.12.7",
- "reqwest-graphql",
- "reth",
- "reth-chainspec",
- "reth-ethereum-engine-primitives",
- "reth-exex",
- "reth-exex-test-utils",
- "reth-node-ethereum",
- "reth-revm",
- "reth-tracing",
- "revm-primitives",
- "schnellru",
- "serde",
- "serde_json",
- "tokio",
- "wevm-borsh",
  "wvm-archiver",
 ]
 
@@ -8318,7 +8302,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "syn 2.0.77",
@@ -15073,7 +15057,7 @@ dependencies = [
 [[package]]
 name = "wvm-archiver"
 version = "0.1.3"
-source = "git+https://github.com/weaveVM/wvm-archiver?a=true?branch=main#3c3a4631b2bfb75be7a42bae88c488c1cbef8e22"
+source = "git+https://github.com/weaveVM/wvm-archiver?branch=main#3c3a4631b2bfb75be7a42bae88c488c1cbef8e22"
 dependencies = [
  "anyhow",
  "axum 0.7.5",

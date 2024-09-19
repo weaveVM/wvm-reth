@@ -56,7 +56,8 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         if let Some(committed_chain) = notification.committed_chain() {
             let data_settler = DefaultWvmDataSettler;
             let sealed_block_with_senders = committed_chain.tip();
-            let brotli_borsh = data_settler.process_block(sealed_block_with_senders)?;
+            let borsh_sealed_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
+            let brotli_borsh = data_settler.process_block(&borsh_sealed_block)?;
             let json_str = to_string(&sealed_block_with_senders)?;
 
             let blk_str_hash = sealed_block_with_senders.block.hash().to_string();

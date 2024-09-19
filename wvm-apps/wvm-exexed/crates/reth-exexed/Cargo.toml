@@ -16,7 +16,6 @@ reth-primitives.workspace = true
 eyre.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
-exex-wvm-da = { path = "../exex-wvm-da" }
 wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
 repository = { path = "../repository" }
 bigquery = { path = "../bigquery" }
@@ -27,3 +26,4 @@ arweave-upload = { path = "../arweave-upload" }
 precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
 tokio.workspace = true
+exex-wvm-da.workspace = true
