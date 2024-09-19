@@ -7,7 +7,6 @@ mod network_tag;
 mod util;
 
 use bigquery::client::BigQueryConfig;
-use irys::irys::IrysRequest;
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;
 use repository::state_repository;
@@ -16,6 +15,7 @@ use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use std::env;
 
 use crate::{network_tag::get_network_tag, util::check_block_existence};
+use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use rbrotli::to_brotli;
 use reth_node_ethereum::{
@@ -30,7 +30,7 @@ use wevm_borsh::block::BorshSealedBlockWithSenders;
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
     state_repository: state_repository::StateRepository,
-    irys_provider: irys::irys::IrysProvider,
+    irys_provider: UploaderProvider,
     _state_processor: exex_etl::state_processor::StateProcessor,
 ) -> eyre::Result<()> {
     while let Some(notification) = ctx.notifications.recv().await {
@@ -64,7 +64,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             let does_block_exist = check_block_existence(block_hash, false).await;
 
             if !does_block_exist {
-                let arweave_id = IrysRequest::new()
+                let arweave_id = ArweaveRequest::new()
                     .set_tag("Content-Type", "application/octet-stream")
                     .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
                     .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
@@ -128,9 +128,9 @@ fn main() -> eyre::Result<()> {
                     let state_processor = exex_etl::state_processor::StateProcessor::new();
 
                     // init irys provider
-                    let irys_provider = irys::irys::IrysProvider::new(None);
+                    let ar_uploader_provider = UploaderProvider::new(None);
 
-                    Ok(exex_etl_processor(ctx, state_repo, irys_provider, state_processor))
+                    Ok(exex_etl_processor(ctx, state_repo, ar_uploader_provider, state_processor))
                 })
                 .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
         }

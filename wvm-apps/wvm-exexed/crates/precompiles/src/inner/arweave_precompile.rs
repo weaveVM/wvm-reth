@@ -1,4 +1,3 @@
-use irys::irys::IrysRequest;
 use rbrotli::to_brotli;
 use reth::{
     primitives::{
@@ -10,6 +9,7 @@ use reth::{
 };
 use reth_revm::{precompile::PrecompileErrors, primitives::B256};
 use std::str::FromStr;
+use arweave_upload::ArweaveRequest;
 
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
@@ -43,7 +43,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
     let res = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
         async {
-            IrysRequest::new()
+            ArweaveRequest::new()
                 .set_private_key(SOLANA_SILLY_PRIVATE_KEY.to_string())
                 .set_tag("Content-Type", "application/octet-stream")
                 .set_tag("WeaveVM:Precompile", "true")
@@ -62,7 +62,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 }
 
 #[cfg(test)]
-mod irys_pc_tests {
+mod arupload_pc_tests {
     use crate::inner::arweave_precompile::{arweave_upload, SOLANA_SILLY_PRIVATE_KEY};
     use reth::primitives::{revm_primitives::PrecompileOutput, Bytes};
     use std::env;

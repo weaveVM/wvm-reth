@@ -23,7 +23,7 @@ bigquery = { path = "../bigquery" }
 exex-etl = { path = "../exex-etl" }
 types = { path = "../types" }
 lambda = { path = "../lambda" }
-irys = { path = "../irys" }
+arweave-upload = { path = "../arweave-upload" }
 precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
 tokio.workspace = true

@@ -36,7 +36,7 @@ exex-wvm-da = { path = "crates/exex-wvm-da" }
 repository = { path = "crates/repository" }
 bigquery = { path = "crates/bigquery" }
 lambda = { path = "crates/lambda" }
-irys = { path = "crates/irys" }
+arweave-upload = { path = "crates/arweave-upload" }
 precompiles = { path = "crates/precompiles" }
 wevm-borsh = { path = "crates/wevm-borsh" }
 exex-etl = { path = "crates/exex-etl" }

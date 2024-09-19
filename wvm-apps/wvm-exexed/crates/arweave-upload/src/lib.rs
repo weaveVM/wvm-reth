@@ -1,3 +1,4 @@
+use std::cell::LazyCell;
 use bundlr_sdk::{
     currency::solana::{Solana, SolanaBuilder},
     tags::Tag,
@@ -8,8 +9,12 @@ use eyre::eyre;
 use reqwest::Url;
 use std::env;
 
+pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<String> = LazyCell::new(|| {
+    env::var("BUNDLR_API_URL").unwrap_or("https://turbo.ardrive.io".to_string())
+});
+
 #[derive(Clone, Debug)]
-pub struct IrysProvider {
+pub struct UploaderProvider {
     private_key: Option<String>,
 }
 
@@ -21,7 +26,7 @@ pub fn get_irys_pk() -> Result<String, env::VarError> {
 
 async fn init_bundlr(private_key: Option<String>) -> eyre::Result<Bundlr<Solana>> {
     let irys_wallet_pk: String = get_irys_pk().unwrap_or_else(|e| private_key.unwrap());
-    let url = Url::parse("https://turbo.ardrive.io").unwrap();
+    let url = Url::parse(ETHEREUM_BLOCK_GAS_LIMIT.as_str()).unwrap();
 
     let currency = SolanaBuilder::new().wallet(&irys_wallet_pk).build().map_err(|e| {
         eyre::eyre!(
@@ -42,12 +47,12 @@ async fn init_bundlr(private_key: Option<String>) -> eyre::Result<Bundlr<Solana>
     Ok(bundlr)
 }
 
-impl IrysProvider {
-    pub fn new(private_key: Option<String>) -> IrysProvider {
-        IrysProvider { private_key }
+impl UploaderProvider {
+    pub fn new(private_key: Option<String>) -> UploaderProvider {
+        UploaderProvider { private_key }
     }
 
-    pub async fn upload_data_to_irys(
+    pub async fn upload_data(
         &self,
         data: Vec<u8>,
         param_tags: Vec<Tag>,
@@ -87,38 +92,38 @@ impl IrysProvider {
 }
 
 #[derive(Clone, Debug)]
-pub struct IrysRequest {
+pub struct ArweaveRequest {
     tags: Vec<Tag>,
     data: Vec<u8>,
     private_key: Option<String>,
 }
 
-impl IrysRequest {
+impl ArweaveRequest {
     pub fn new() -> Self {
-        IrysRequest { tags: vec![], data: vec![], private_key: None }
+        ArweaveRequest { tags: vec![], data: vec![], private_key: None }
     }
 
-    pub fn set_tag(&mut self, name: &str, value: &str) -> &mut IrysRequest {
+    pub fn set_tag(&mut self, name: &str, value: &str) -> &mut ArweaveRequest {
         self.tags.push(Tag::new(name, value));
         self
     }
 
-    pub fn set_data(&mut self, data: Vec<u8>) -> &mut IrysRequest {
+    pub fn set_data(&mut self, data: Vec<u8>) -> &mut ArweaveRequest {
         self.data = data;
         self
     }
 
-    pub fn set_private_key(&mut self, data: String) -> &mut IrysRequest {
+    pub fn set_private_key(&mut self, data: String) -> &mut ArweaveRequest {
         self.private_key = Some(data);
         self
     }
 
     pub async fn send(&self) -> eyre::Result<String> {
-        let provider = IrysProvider::new(self.private_key.clone());
+        let provider = UploaderProvider::new(self.private_key.clone());
         self.send_with_provider(&provider).await
     }
 
-    pub async fn send_with_provider(&self, provider: &IrysProvider) -> eyre::Result<String> {
-        provider.upload_data_to_irys(self.data.clone(), self.tags.clone()).await
+    pub async fn send_with_provider(&self, provider: &UploaderProvider) -> eyre::Result<String> {
+        provider.upload_data(self.data.clone(), self.tags.clone()).await
     }
 }
