@@ -1105,6 +1105,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "arweave-upload"
+version = "1.0.6"
+dependencies = [
+ "borsh 1.5.1",
+ "bundlr-sdk",
+ "dotenv",
+ "eyre",
+ "reqwest 0.12.7",
+ "reth",
+ "reth-exex",
+ "reth-node-ethereum",
+ "reth-tracing",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "ascii-canvas"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5564,24 +5582,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "irys"
-version = "1.0.6"
-dependencies = [
- "borsh 1.5.1",
- "bundlr-sdk",
- "dotenv",
- "eyre",
- "reqwest 0.12.7",
- "reth",
- "reth-exex",
- "reth-node-ethereum",
- "reth-tracing",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "is-terminal"
 version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8020,9 +8020,9 @@ dependencies = [
 name = "precompiles"
 version = "1.0.6"
 dependencies = [
+ "arweave-upload",
  "borsh 1.5.1",
  "eyre",
- "irys",
  "parking_lot 0.12.3",
  "rbrotli",
  "reqwest 0.12.7",
@@ -10019,13 +10019,13 @@ dependencies = [
 name = "reth-exexed"
 version = "1.0.6"
 dependencies = [
+ "arweave-upload",
  "bigquery",
  "borsh 1.5.1",
  "brotlic",
  "exex-etl",
  "exex-wvm-da",
  "eyre",
- "irys",
  "lambda",
  "precompiles",
  "rbrotli",
@@ -15097,6 +15097,7 @@ name = "wvm-exexed"
 version = "1.0.0"
 dependencies = [
  "alloy-primitives",
+ "arweave-upload",
  "bigquery",
  "borsh 1.5.1",
  "brotlic",
@@ -15106,7 +15107,6 @@ dependencies = [
  "futures",
  "gcp-bigquery-client 0.17.1",
  "indexmap 2.5.0",
- "irys",
  "lambda",
  "parking_lot 0.12.3",
  "precompiles",

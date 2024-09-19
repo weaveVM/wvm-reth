@@ -21,7 +21,7 @@ serde_json.workspace = true
 serde.workspace = true
 reqwest.workspace = true
 eyre.workspace = true
-irys = { path = "../irys" }
+arweave-upload = { path = "../arweave-upload" }
 tokio.workspace = true
 reqwest-graphql = "1.0.0"
 rbrotli = { path = "../brotli" }
