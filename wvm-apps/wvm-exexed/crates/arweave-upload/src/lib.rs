@@ -9,7 +9,7 @@ use eyre::eyre;
 use reqwest::Url;
 use std::env;
 
-pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<String> = LazyCell::new(|| {
+pub const BUNDLR_API_URL: LazyCell<String> = LazyCell::new(|| {
     env::var("BUNDLR_API_URL").unwrap_or("https://turbo.ardrive.io".to_string())
 });
 
@@ -26,7 +26,7 @@ pub fn get_irys_pk() -> Result<String, env::VarError> {
 
 async fn init_bundlr(private_key: Option<String>) -> eyre::Result<Bundlr<Solana>> {
     let irys_wallet_pk: String = get_irys_pk().unwrap_or_else(|e| private_key.unwrap());
-    let url = Url::parse(ETHEREUM_BLOCK_GAS_LIMIT.as_str()).unwrap();
+    let url = Url::parse(BUNDLR_API_URL.as_str()).unwrap();
 
     let currency = SolanaBuilder::new().wallet(&irys_wallet_pk).build().map_err(|e| {
         eyre::eyre!(
