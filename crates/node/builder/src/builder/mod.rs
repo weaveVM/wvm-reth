@@ -158,7 +158,7 @@ pub struct NodeBuilder<DB> {
     /// All settings for how the node should be configured.
     config: NodeConfig,
     /// The configured database for the node.
-    database: DB,
+    pub database: DB,
 }
 
 impl NodeBuilder<()> {
@@ -270,6 +270,11 @@ where
     /// Returns a reference to the node builder's config.
     pub const fn config(&self) -> &NodeConfig {
         self.builder.config()
+    }
+
+    /// Returns a reference to the node builder's config.
+    pub const fn db(&self) -> &DB {
+        &self.builder.database
     }
 
     /// Configures the types of the node.

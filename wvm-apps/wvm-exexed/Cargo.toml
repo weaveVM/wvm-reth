@@ -43,6 +43,8 @@ types = { path = "crates/types" }
 rbrotli = { path = "crates/brotli" }
 borsh.workspace = true
 
+parse_duration.workspace = true
+
 [dev-dependencies]
 reth-exex-test-utils.workspace = true
 reth-testing-utils.workspace = true

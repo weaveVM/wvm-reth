@@ -2,6 +2,7 @@
 *
 
 # include source files
+!/conf
 !/bin
 !/crates
 !/testing
