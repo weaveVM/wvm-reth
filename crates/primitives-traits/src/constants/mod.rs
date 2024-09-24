@@ -22,7 +22,7 @@ pub const EPOCH_SLOTS: u64 = 32;
 
 /// The duration of a slot in seconds.
 ///
-/// This is the time period of 12 seconds in which a randomly chosen validator has time to propose a
+/// This is the time period of 1 seconds in which a randomly chosen validator has time to propose a
 /// block.
 pub const SLOT_DURATION: Duration = Duration::from_secs(1); // Wevm #356: 1s per block
 

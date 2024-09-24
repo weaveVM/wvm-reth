@@ -27,3 +27,4 @@ precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
 tokio.workspace = true
 exex-wvm-da.workspace = true
+parse_duration.workspace = true

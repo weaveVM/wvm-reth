@@ -32,19 +32,6 @@ RUN cargo chef cook --profile $BUILD_PROFILE --features "$FEATURES" --recipe-pat
 
 # Build application
 COPY . .
-
-# If the node is a prune node, we move the file in the image.
-ARG PRUNE_NODE=0
-RUN if [ "$PRUNE_NODE" = "1" ]; then \
-      if [ -d "$XDG_DATA_HOME/reth/" ]; then \
-        mkdir -p $XDG_DATA_HOME/reth/ && cp /app/conf/reth.toml $XDG_DATA_HOME/reth/; \
-      elif [ -d "$HOME/.local/share/reth/" ]; then \
-        mkdir -p $HOME/.local/share/reth/ && cp /app/conf/reth.toml $HOME/.local/share/reth/; \
-      else \
-        mkdir -p $HOME/.local/share/reth/ && cp /app/conf/reth.toml $HOME/.local/share/reth/; \
-      fi; \
-    fi
-
 RUN cd /app/wvm-apps/wvm-exexed
 WORKDIR /app/wvm-apps/wvm-exexed
 RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --locked --bin reth

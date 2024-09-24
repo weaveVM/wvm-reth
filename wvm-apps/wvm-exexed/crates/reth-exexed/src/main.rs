@@ -13,7 +13,8 @@ use repository::state_repository;
 use reth::{api::FullNodeComponents, builder::Node};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use std::env;
-
+use std::ops::Mul;
+use std::sync::Arc;
 use crate::{network_tag::get_network_tag, util::check_block_existence};
 use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
@@ -24,6 +25,9 @@ use reth_node_ethereum::{
 };
 use reth_tracing::tracing::info;
 use serde_json::to_string;
+use reth::args::PruningArgs;
+use reth::builder::NodeBuilder;
+use reth_primitives::constants::SLOT_DURATION;
 use types::types::ExecutionTipState;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
@@ -96,7 +100,21 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
-        let mut handle = builder
+        // Original config
+        let mut config = builder.config().clone();
+        let pruning_args = config.pruning.clone();
+        let prune_node = std::env::var("WVM_PRUNE");
+
+        if let Ok(prune_conf) = prune_node {
+           config = config.with_pruning(PruningArgs {
+               block_interval: parse_prune_config(prune_conf.as_str()),
+               ..pruning_args
+           });
+        }
+
+        let mut handle = NodeBuilder::new(config)
+            .with_database(builder.db().clone())
+            .with_launch_context(builder.task_executor().clone())
             .with_types::<EthereumNode>()
             .with_components(EthereumNode::components().executor(WvmEthExecutorBuilder::default()))
             .with_add_ons::<EthereumAddOns>();
@@ -139,4 +157,35 @@ fn main() -> eyre::Result<()> {
 
         handle.wait_for_node_exit().await
     })
+}
+
+fn parse_prune_config(prune_conf: &str) -> u64 {
+    let mut d = "";
+    if prune_conf == "true" {
+        d = "30d"
+    } else {
+        d = prune_conf;
+    }
+
+    let duration = parse_duration::parse(d).unwrap();
+    let secs = duration.as_secs();
+    SLOT_DURATION.as_secs() * secs
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parse_prune_config;
+
+    #[test]
+    pub fn check_prune_config() {
+        let true_prune = parse_prune_config("true");
+        assert_eq!(true_prune, 2_592_000);
+
+        let thirty_days_prune = parse_prune_config("30d");
+        assert_eq!(thirty_days_prune, 2_592_000);
+
+        let thirty_days_prune = parse_prune_config("15d");
+        assert_eq!(thirty_days_prune, 1296000);
+    }
+
 }

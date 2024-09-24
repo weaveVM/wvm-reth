@@ -604,3 +604,5 @@ exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?a", branch = "m
 tikv-jemalloc-ctl = "0.6"
 tikv-jemallocator = "0.6"
 tracy-client = "0.17.3"
+
+parse_duration = "2.1.1"
