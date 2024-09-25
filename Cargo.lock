@@ -1479,24 +1479,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a8241f3ebb85c056b509d4327ad0358fbbba6ffb340bf388f26350aeda225b1"
 
 [[package]]
-name = "bigquery"
-version = "1.0.6"
-dependencies = [
- "async-trait",
- "chrono",
- "eyre",
- "gcp-bigquery-client 0.20.0",
- "indexmap 2.5.0",
- "once_cell",
- "phf",
- "polars",
- "reth",
- "serde",
- "serde_json",
- "types",
-]
-
-[[package]]
 name = "bimap"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4084,9 +4066,26 @@ name = "exex-etl"
 version = "1.0.6"
 
 [[package]]
+name = "exex-wvm-bigquery"
+version = "1.0.0"
+source = "git+https://github.com/weaveVM/exex-templates?b?branch=main#5be378bfef4ea67101749d9d0428823cf5a3d1cd"
+dependencies = [
+ "alloy-primitives",
+ "chrono",
+ "eyre",
+ "gcp-bigquery-client 0.20.0",
+ "indexmap 2.5.0",
+ "once_cell",
+ "phf",
+ "polars",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "exex-wvm-da"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#b36fa564add079fc6481e78ee9cf0d2ab874f408"
+source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#5be378bfef4ea67101749d9d0428823cf5a3d1cd"
 dependencies = [
  "async-trait",
  "borsh 1.5.1",
@@ -8723,15 +8722,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "repository"
-version = "1.0.6"
-dependencies = [
- "bigquery",
- "eyre",
- "types",
-]
-
-[[package]]
 name = "reqwest"
 version = "0.11.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10051,17 +10041,16 @@ name = "reth-exexed"
 version = "1.0.6"
 dependencies = [
  "arweave-upload",
- "bigquery",
  "borsh 1.5.1",
  "brotlic",
  "exex-etl",
+ "exex-wvm-bigquery",
  "exex-wvm-da",
  "eyre",
  "lambda",
  "parse_duration",
  "precompiles",
  "rbrotli",
- "repository",
  "reth",
  "reth-exex",
  "reth-node-ethereum",
@@ -10069,7 +10058,6 @@ dependencies = [
  "reth-tracing",
  "serde_json",
  "tokio",
- "types",
  "wevm-borsh",
 ]
 
@@ -14242,15 +14230,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
-name = "types"
-version = "1.0.6"
-dependencies = [
- "alloy-primitives",
- "reth",
- "serde",
-]
-
-[[package]]
 name = "ucd-trie"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15130,10 +15109,10 @@ version = "1.0.0"
 dependencies = [
  "alloy-primitives",
  "arweave-upload",
- "bigquery",
  "borsh 1.5.1",
  "brotlic",
  "exex-etl",
+ "exex-wvm-bigquery",
  "exex-wvm-da",
  "eyre",
  "futures",
@@ -15144,7 +15123,6 @@ dependencies = [
  "parse_duration",
  "precompiles",
  "rbrotli",
- "repository",
  "reth",
  "reth-chainspec",
  "reth-ethereum-engine-primitives",
@@ -15160,7 +15138,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
- "types",
  "wevm-borsh",
 ]
 
