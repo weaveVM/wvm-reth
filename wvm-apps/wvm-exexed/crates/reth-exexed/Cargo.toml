@@ -17,10 +17,7 @@ eyre.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
 wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
-repository = { path = "../repository" }
-bigquery = { path = "../bigquery" }
 exex-etl = { path = "../exex-etl" }
-types = { path = "../types" }
 lambda = { path = "../lambda" }
 arweave-upload = { path = "../arweave-upload" }
 precompiles = { path = "../precompiles" }
@@ -28,3 +25,4 @@ rbrotli = { path = "../brotli" }
 tokio.workspace = true
 exex-wvm-da.workspace = true
 parse_duration.workspace = true
+exex-wvm-bigquery.workspace = true

@@ -6,34 +6,33 @@ mod constant;
 mod network_tag;
 mod util;
 
-use bigquery::client::BigQueryConfig;
-use lambda::lambda::exex_lambda_processor;
-use precompiles::node::WvmEthExecutorBuilder;
-use repository::state_repository;
-use reth::{api::FullNodeComponents, builder::Node};
-use reth_exex::{ExExContext, ExExEvent, ExExNotification};
-use std::env;
-use std::ops::Mul;
-use std::sync::Arc;
 use crate::{network_tag::get_network_tag, util::check_block_existence};
 use arweave_upload::{ArweaveRequest, UploaderProvider};
+use exex_wvm_bigquery::repository::StateRepository;
+use exex_wvm_bigquery::{init_bigquery_db, BigQueryConfig};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
+use lambda::lambda::exex_lambda_processor;
+use precompiles::node::WvmEthExecutorBuilder;
 use rbrotli::to_brotli;
+use reth::args::PruningArgs;
+use reth::builder::NodeBuilder;
+use reth::{api::FullNodeComponents, builder::Node};
+use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::{
     node::{EthereumAddOns, EthereumExecutorBuilder},
     EthereumNode,
 };
+use reth_primitives::constants::SLOT_DURATION;
 use reth_tracing::tracing::info;
 use serde_json::to_string;
-use reth::args::PruningArgs;
-use reth::builder::NodeBuilder;
-use reth_primitives::constants::SLOT_DURATION;
-use types::types::ExecutionTipState;
+use std::env;
+use std::ops::Mul;
+use std::sync::Arc;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
-    state_repository: state_repository::StateRepository,
+    state_repository: StateRepository,
     irys_provider: UploaderProvider,
     _state_processor: exex_etl::state_processor::StateProcessor,
 ) -> eyre::Result<()> {
@@ -83,13 +82,13 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
                 println!("irys id: {}", arweave_id);
 
-                state_repository
-                    .save(ExecutionTipState {
-                        block_number: committed_chain.tip().block.number,
-                        arweave_id: arweave_id.clone(),
-                        sealed_block_with_senders_serialized: json_str,
-                    })
-                    .await?;
+                exex_wvm_bigquery::save_block(
+                    &state_repository,
+                    &sealed_block_with_senders,
+                    committed_chain.tip().block.number,
+                    arweave_id.clone(),
+                )
+                .await?;
             }
         }
     }
@@ -106,10 +105,10 @@ fn main() -> eyre::Result<()> {
         let prune_node = std::env::var("WVM_PRUNE");
 
         if let Ok(prune_conf) = prune_node {
-           config = config.with_pruning(PruningArgs {
-               block_interval: parse_prune_config(prune_conf.as_str()),
-               ..pruning_args
-           });
+            config = config.with_pruning(PruningArgs {
+                block_interval: parse_prune_config(prune_conf.as_str()),
+                ..pruning_args
+            });
         }
 
         let mut handle = NodeBuilder::new(config)
@@ -135,14 +134,13 @@ fn main() -> eyre::Result<()> {
                         serde_json::from_reader(reader).expect("bigquery config read from file");
 
                     // init bigquery client
-                    let bigquery_client = bigquery::client::init_bigquery_db(&bq_config)
-                        .await
-                        .expect("bigquery client initialized");
+                    let bigquery_client =
+                        init_bigquery_db(&bq_config).await.expect("bigquery client initialized");
 
                     println!("bigquery client initialized");
 
                     // init state repository
-                    let state_repo = state_repository::StateRepository::new(bigquery_client);
+                    let state_repo = StateRepository::new(bigquery_client);
                     // init state processor
                     let state_processor = exex_etl::state_processor::StateProcessor::new();
 
@@ -187,5 +185,4 @@ mod tests {
         let thirty_days_prune = parse_prune_config("15d");
         assert_eq!(thirty_days_prune, 1296000);
     }
-
 }

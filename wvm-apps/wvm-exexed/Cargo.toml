@@ -8,6 +8,7 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
+exex-wvm-bigquery.workspace = true
 exex-wvm-da.workspace = true
 reth-revm.workspace = true
 reth-ethereum-engine-primitives.workspace = true
@@ -32,14 +33,11 @@ indexmap = "2.0.0"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 brotlic.workspace = true
-repository = { path = "crates/repository" }
-bigquery = { path = "crates/bigquery" }
 lambda = { path = "crates/lambda" }
 arweave-upload = { path = "crates/arweave-upload" }
 precompiles = { path = "crates/precompiles" }
 wevm-borsh = { path = "crates/wevm-borsh" }
 exex-etl = { path = "crates/exex-etl" }
-types = { path = "crates/types" }
 rbrotli = { path = "crates/brotli" }
 borsh.workspace = true
 
