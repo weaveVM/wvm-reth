@@ -50,7 +50,9 @@ pub const DEFAULT_ETH_PROOF_WINDOW: u64 = 0;
 
 /// Maximum eth historical proof window. Equivalent to roughly one and a half months of data on a 12
 /// second block time, and a week on a 2 second block time.
-pub const MAX_ETH_PROOF_WINDOW: u64 = 7 * 24 * 60 * 60 / 2;
+/// WVM: we set this value to be consistent with 1s block time of our L1 wvm chain so it should be: 3,888,000
+/// 45 days in seconds
+pub const MAX_ETH_PROOF_WINDOW: u64 = 45 * 24 * 60 * 60;
 
 /// GPO specific constants
 pub mod gas_oracle {
