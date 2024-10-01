@@ -2,7 +2,7 @@
 
 use alloy_primitives::{Address, B256};
 use rand::distributions::Uniform;
-use reth_primitives::constants::MIN_PROTOCOL_BASE_FEE;
+use reth_primitives::constants::{get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE};
 use reth_transaction_pool::{
     error::PoolErrorKind,
     test_utils::{
@@ -66,7 +66,7 @@ async fn only_blobs_eviction() {
             // we need to set the max fee to at least the min protocol base fee, or transactions
             // generated could be rejected
             max_fee: Uniform::from(
-                MIN_PROTOCOL_BASE_FEE as u128..(block_info.pending_basefee as u128 + 2000),
+                get_latest_min_protocol_base_fee() as u128..(block_info.pending_basefee as u128 + 2000),
             ),
             max_fee_blob: Uniform::from(pending_blob_fee..(pending_blob_fee + 1000)),
         };
