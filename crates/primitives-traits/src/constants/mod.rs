@@ -211,10 +211,12 @@ mod tests {
 
     #[tokio::test]
     pub async fn test_wvm_fee_manager() {
+        std::env::set_var("ETHEREUM_BLOCK_GAS_LIMIT", "500000000");
         let init = &*WVM_FEE_MANAGER;
         tokio::time::sleep(Duration::from_secs(10)).await;
         let latest_gas = get_latest_min_protocol_base_fee();
         assert!(&latest_gas > &630000000);
+        println!("{}", latest_gas);
         assert!(&latest_gas < &650000000);
     }
 
