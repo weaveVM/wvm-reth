@@ -599,6 +599,10 @@ brotlic = "0.8.2"
 exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?a", branch = "main" }
 exex-wvm-bigquery = { git = "https://github.com/weaveVM/exex-templates?b", branch = "main" }
 
+# miscalleneous
+fees = { git = "https://github.com/weaveVM/miscalleneous?e", branch = "main" }
+atomic_float = "1.1.0"
+
 tikv-jemalloc-ctl = "0.6"
 tikv-jemallocator = "0.6"
 tracy-client = "0.17.3"

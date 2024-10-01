@@ -4,7 +4,7 @@
 use crate::{AsEthApiError, FromEthApiError, FromEvmError, IntoEthApiError};
 use alloy_primitives::{Bytes, TxKind, B256, U256};
 use futures::Future;
-use reth_chainspec::MIN_TRANSACTION_GAS;
+use reth_chainspec::{get_latest_gas_fee, MIN_TRANSACTION_GAS};
 use reth_evm::{ConfigureEvm, ConfigureEvmEnv};
 use reth_primitives::{
     revm_primitives::{
@@ -592,10 +592,10 @@ pub trait Call: LoadState + SpawnBlocking {
                         // field combos that bump the price up, so we try executing the function
                         // with the minimum gas limit to make sure.
                         let mut env = env.clone();
-                        env.tx.gas_limit = MIN_TRANSACTION_GAS;
+                        env.tx.gas_limit = get_latest_gas_fee();
                         if let Ok((res, _)) = self.transact(&mut db, env) {
                             if res.result.is_success() {
-                                return Ok(U256::from(MIN_TRANSACTION_GAS))
+                                return Ok(U256::from(get_latest_gas_fee()))
                             }
                         }
                     }
