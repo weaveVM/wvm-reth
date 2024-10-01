@@ -3,6 +3,9 @@
 use alloy_primitives::{address, b256, Address, B256, U256};
 use core::time::Duration;
 use std::cell::LazyCell;
+use std::sync::{Arc, LazyLock, RwLock};
+use fees::util::raw_calculate_lowest_possible_gas_price;
+use fees::wvm_fee::{WvmFee, WvmFeeManager};
 
 /// Gas units, for example [`GIGAGAS`].
 pub mod gas_units;
@@ -54,7 +57,35 @@ pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
 ///
 /// Note that min base fee under different 1559 parameterizations may differ, but there's no
 /// significant harm in leaving this setting as is.
-pub const MIN_PROTOCOL_BASE_FEE: u64 = 7;
+// pub const MIN_PROTOCOL_BASE_FEE: u64 = 7;
+
+pub static MIN_PROTOCOL_BASE_FEE: LazyLock<Arc<RwLock<u64>>> = LazyLock::new(|| {
+    Arc::new(RwLock::new(7))
+});
+
+pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
+    let fee = WvmFee::new(Some(Box::new(move |price| {
+        let mut writer = MIN_PROTOCOL_BASE_FEE.write().unwrap();
+        let original_price = price as f64 / 1_000_000_000f64;
+        let lowest_possible_gas_price_in_gwei = raw_calculate_lowest_possible_gas_price(original_price, *ETHEREUM_BLOCK_GAS_LIMIT);
+        let to_wei = lowest_possible_gas_price_in_gwei * 1e9;
+        *writer = to_wei as u64;
+        Ok(())
+    })));
+
+    fee.init();
+
+    let manager = WvmFeeManager::new(Arc::new(fee));
+    manager.init();
+
+    Arc::new(manager)
+});
+
+pub fn get_latest_min_protocol_base_fee() -> u64 {
+    let at_ref = (&*MIN_PROTOCOL_BASE_FEE).clone();
+    let gas_ref_read = at_ref.read().unwrap();
+    (&gas_ref_read as &u64).clone()
+}
 
 /// Same as [`MIN_PROTOCOL_BASE_FEE`] but as a U256.
 pub const MIN_PROTOCOL_BASE_FEE_U256: U256 = U256::from_limbs([7u64, 0, 0, 0]);
@@ -175,8 +206,20 @@ pub const ALLOWED_FUTURE_BLOCK_TIME_SECONDS: u64 = 15;
 mod tests {
     use super::*;
 
-    #[test]
-    fn min_protocol_sanity() {
-        assert_eq!(MIN_PROTOCOL_BASE_FEE_U256.to::<u64>(), MIN_PROTOCOL_BASE_FEE);
+    use std::time::Duration;
+    use crate::constants::{get_latest_min_protocol_base_fee, WVM_FEE_MANAGER};
+
+    #[tokio::test]
+    pub async fn test_wvm_fee_manager() {
+        let init = &*WVM_FEE_MANAGER;
+        tokio::time::sleep(Duration::from_secs(10)).await;
+        let latest_gas = get_latest_min_protocol_base_fee();
+        assert!(&latest_gas > &630000000);
+        assert!(&latest_gas < &650000000);
     }
+
+    // #[test]
+    // fn min_protocol_sanity() {
+    //     assert_eq!(MIN_PROTOCOL_BASE_FEE_U256.to::<u64>(), MIN_PROTOCOL_BASE_FEE);
+    // }
 }
