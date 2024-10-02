@@ -88,7 +88,7 @@ pub fn get_latest_min_protocol_base_fee() -> u64 {
 }
 
 /// Same as [`MIN_PROTOCOL_BASE_FEE`] but as a U256.
-pub const MIN_PROTOCOL_BASE_FEE_U256: U256 = U256::from_limbs([7u64, 0, 0, 0]);
+pub const MIN_PROTOCOL_BASE_FEE_U256: U256 = U256::from_limbs([640_000_000u64, 0u64, 0u64, 0u64]);
 
 /// Initial base fee as defined in [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)
 pub const EIP1559_INITIAL_BASE_FEE: u64 = 1_000_000_000;
@@ -220,8 +220,11 @@ mod tests {
         assert!(&latest_gas < &650000000);
     }
 
-    // #[test]
-    // fn min_protocol_sanity() {
-    //     assert_eq!(MIN_PROTOCOL_BASE_FEE_U256.to::<u64>(), MIN_PROTOCOL_BASE_FEE);
-    // }
+    #[tokio::test]
+    async fn min_protocol_sanity() {
+        std::env::set_var("ETHEREUM_BLOCK_GAS_LIMIT", "500000000");
+        let init = &*WVM_FEE_MANAGER;
+        tokio::time::sleep(Duration::from_secs(10)).await;
+        assert_eq!(MIN_PROTOCOL_BASE_FEE_U256.to::<u64>(), get_latest_min_protocol_base_fee());
+    }
 }
