@@ -6,6 +6,7 @@ use reth_primitives::{
     constants::MIN_PROTOCOL_BASE_FEE, sign_message, AccessList, Bytes, Transaction,
     TransactionSigned, TxEip1559, TxEip4844, TxKind, TxLegacy,
 };
+use reth_primitives::constants::get_latest_min_protocol_base_fee;
 
 /// A generator for transactions for testing purposes.
 #[derive(Debug)]
@@ -31,7 +32,7 @@ impl<R: Rng> TransactionGenerator<R> {
         Self {
             rng,
             signer_keys: (0..num_signers).map(|_| B256::random()).collect(),
-            base_fee: MIN_PROTOCOL_BASE_FEE as u128,
+            base_fee: get_latest_min_protocol_base_fee() as u128,
             gas_limit: 300_000,
         }
     }

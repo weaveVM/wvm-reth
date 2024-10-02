@@ -19,9 +19,7 @@ use crate::{
     ValidPoolTransaction, U256,
 };
 use alloy_primitives::{Address, TxHash, B256};
-use reth_primitives::constants::{
-    eip4844::BLOB_TX_MIN_BLOB_GASPRICE, ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE,
-};
+use reth_primitives::constants::{eip4844::BLOB_TX_MIN_BLOB_GASPRICE, ETHEREUM_BLOCK_GAS_LIMIT, get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE};
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 use std::{
@@ -1705,7 +1703,7 @@ impl<T: PoolTransaction> Default for AllTransactions<T> {
     fn default() -> Self {
         Self {
             max_account_slots: TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER,
-            minimal_protocol_basefee: MIN_PROTOCOL_BASE_FEE,
+            minimal_protocol_basefee: get_latest_min_protocol_base_fee(),
             block_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             by_hash: Default::default(),
             txs: Default::default(),

@@ -23,6 +23,7 @@ use reth_primitives::{
 };
 
 use std::{ops::Range, sync::Arc, time::Instant, vec::IntoIter};
+use reth_primitives::constants::get_latest_min_protocol_base_fee;
 
 /// A transaction pool implementation using [`MockOrdering`] for transaction ordering.
 ///
@@ -255,8 +256,8 @@ impl MockTransaction {
             hash: B256::random(),
             sender: Address::random(),
             nonce: 0,
-            max_fee_per_gas: MIN_PROTOCOL_BASE_FEE as u128,
-            max_priority_fee_per_gas: MIN_PROTOCOL_BASE_FEE as u128,
+            max_fee_per_gas: get_latest_min_protocol_base_fee() as u128,
+            max_priority_fee_per_gas: get_latest_min_protocol_base_fee() as u128,
             gas_limit: 0,
             to: Address::random().into(),
             value: Default::default(),
@@ -273,8 +274,8 @@ impl MockTransaction {
             hash: B256::random(),
             sender: Address::random(),
             nonce: 0,
-            max_fee_per_gas: MIN_PROTOCOL_BASE_FEE as u128,
-            max_priority_fee_per_gas: MIN_PROTOCOL_BASE_FEE as u128,
+            max_fee_per_gas: get_latest_min_protocol_base_fee() as u128,
+            max_priority_fee_per_gas: get_latest_min_protocol_base_fee() as u128,
             max_fee_per_blob_gas: DATA_GAS_PER_BLOB as u128,
             gas_limit: 0,
             to: Address::random(),
