@@ -4,6 +4,8 @@ use alloy_primitives::{address, b256, Address, B256, U256};
 use core::time::Duration;
 use std::cell::LazyCell;
 use std::sync::{Arc, LazyLock, RwLock};
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering::SeqCst;
 use fees::util::raw_calculate_lowest_possible_gas_price;
 use fees::wvm_fee::{WvmFee, WvmFeeManager};
 
@@ -59,17 +61,16 @@ pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
 /// significant harm in leaving this setting as is.
 // pub const MIN_PROTOCOL_BASE_FEE: u64 = 7;
 
-pub static MIN_PROTOCOL_BASE_FEE: LazyLock<Arc<RwLock<u64>>> = LazyLock::new(|| {
-    Arc::new(RwLock::new(7))
+pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> = LazyLock::new(|| {
+    AtomicU64::new(7)
 });
 
 pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
     let fee = WvmFee::new(Some(Box::new(move |price| {
-        let mut writer = MIN_PROTOCOL_BASE_FEE.write().unwrap();
         let original_price = price as f64 / 1_000_000_000f64;
         let lowest_possible_gas_price_in_gwei = raw_calculate_lowest_possible_gas_price(original_price, *ETHEREUM_BLOCK_GAS_LIMIT);
         let to_wei = lowest_possible_gas_price_in_gwei * 1e9;
-        *writer = to_wei as u64;
+        MIN_PROTOCOL_BASE_FEE.store(to_wei as u64, SeqCst);
         Ok(())
     })));
 
@@ -82,9 +83,7 @@ pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(
 });
 
 pub fn get_latest_min_protocol_base_fee() -> u64 {
-    let at_ref = (&*MIN_PROTOCOL_BASE_FEE).clone();
-    let gas_ref_read = at_ref.read().unwrap();
-    (&gas_ref_read as &u64).clone()
+    MIN_PROTOCOL_BASE_FEE.load(SeqCst)
 }
 
 /// Same as [`MIN_PROTOCOL_BASE_FEE`] but as a U256.
