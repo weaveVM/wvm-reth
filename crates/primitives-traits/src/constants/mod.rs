@@ -2,12 +2,17 @@
 
 use alloy_primitives::{address, b256, Address, B256, U256};
 use core::time::Duration;
-use std::cell::LazyCell;
-use std::sync::{Arc, LazyLock, RwLock};
-use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering::SeqCst;
-use fees::util::raw_calculate_lowest_possible_gas_price;
-use fees::wvm_fee::{WvmFee, WvmFeeManager};
+use fees::{
+    util::raw_calculate_lowest_possible_gas_price,
+    wvm_fee::{WvmFee, WvmFeeManager},
+};
+use std::{
+    cell::LazyCell,
+    sync::{
+        atomic::{AtomicU64, Ordering::SeqCst},
+        Arc, LazyLock, RwLock,
+    },
+};
 
 /// Gas units, for example [`GIGAGAS`].
 pub mod gas_units;
@@ -61,14 +66,13 @@ pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
 /// significant harm in leaving this setting as is.
 // pub const MIN_PROTOCOL_BASE_FEE: u64 = 7;
 
-pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> = LazyLock::new(|| {
-    AtomicU64::new(7)
-});
+pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> = LazyLock::new(|| AtomicU64::new(7));
 
 pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
     let fee = WvmFee::new(Some(Box::new(move |price| {
         let original_price = price as f64 / 1_000_000_000f64;
-        let lowest_possible_gas_price_in_gwei = raw_calculate_lowest_possible_gas_price(original_price, *ETHEREUM_BLOCK_GAS_LIMIT);
+        let lowest_possible_gas_price_in_gwei =
+            raw_calculate_lowest_possible_gas_price(original_price, *ETHEREUM_BLOCK_GAS_LIMIT);
         let to_wei = lowest_possible_gas_price_in_gwei * 1e9;
         MIN_PROTOCOL_BASE_FEE.store(to_wei as u64, SeqCst);
         Ok(())
@@ -205,8 +209,8 @@ pub const ALLOWED_FUTURE_BLOCK_TIME_SECONDS: u64 = 15;
 mod tests {
     use super::*;
 
-    use std::time::Duration;
     use crate::constants::{get_latest_min_protocol_base_fee, WVM_FEE_MANAGER};
+    use std::time::Duration;
 
     #[tokio::test]
     pub async fn test_wvm_fee_manager() {

@@ -10090,6 +10090,7 @@ dependencies = [
  "reth-tracing",
  "serde_json",
  "tokio",
+ "tracing",
  "wevm-borsh",
 ]
 
@@ -15193,6 +15194,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
  "wevm-borsh",
 ]
 

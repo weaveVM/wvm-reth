@@ -3,10 +3,10 @@ use alloy_primitives::{Address, B256, U256};
 use rand::Rng;
 use reth_chainspec::MAINNET;
 use reth_primitives::{
-    constants::MIN_PROTOCOL_BASE_FEE, sign_message, AccessList, Bytes, Transaction,
-    TransactionSigned, TxEip1559, TxEip4844, TxKind, TxLegacy,
+    constants::{get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE},
+    sign_message, AccessList, Bytes, Transaction, TransactionSigned, TxEip1559, TxEip4844, TxKind,
+    TxLegacy,
 };
-use reth_primitives::constants::get_latest_min_protocol_base_fee;
 
 /// A generator for transactions for testing purposes.
 #[derive(Debug)]

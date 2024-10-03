@@ -1,6 +1,6 @@
 use crate::{
     inner::{
-        graphql_util::{build_transaction_query, send_graphql},
+        graphql_util::{build_transaction_query, send_graphql, Edge},
         string_block::Block,
         util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
     },
@@ -13,7 +13,6 @@ use reth::primitives::{
 };
 use revm_primitives::{PrecompileError, PrecompileErrors};
 use wevm_borsh::block::BorshSealedBlockWithSenders;
-use crate::inner::graphql_util::Edge;
 
 pub const WVM_BLOCK_PC: Precompile = Precompile::Standard(wevm_read_block_pc);
 
@@ -54,7 +53,11 @@ async fn send_and_get_edge(gateway: &str, query: &str) -> Option<Edge> {
     }
 }
 
-async fn fetch_with_fallback(primary_gateway: &str, fallback_gateway: &str, query: &str) -> Option<Edge> {
+async fn fetch_with_fallback(
+    primary_gateway: &str,
+    fallback_gateway: &str,
+    query: &str,
+) -> Option<Edge> {
     // Try the primary gateway first
     if let Some(edge) = send_and_get_edge(primary_gateway, query).await {
         return Some(edge);
@@ -106,7 +109,12 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                             query
                         };
 
-                        let edge = fetch_with_fallback(clean_gateway.as_str(), "https://arweave.mainnet.irys.xyz", query.as_str()).await;
+                        let edge = fetch_with_fallback(
+                            clean_gateway.as_str(),
+                            "https://arweave.mainnet.irys.xyz",
+                            query.as_str(),
+                        )
+                        .await;
 
                         if let Some(edge) = edge {
                             let tags = edge.node.tags.unwrap();
