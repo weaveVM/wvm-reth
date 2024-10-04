@@ -66,7 +66,8 @@ async fn only_blobs_eviction() {
             // we need to set the max fee to at least the min protocol base fee, or transactions
             // generated could be rejected
             max_fee: Uniform::from(
-                get_latest_min_protocol_base_fee() as u128..(block_info.pending_basefee as u128 + 2000),
+                get_latest_min_protocol_base_fee() as u128..
+                    (block_info.pending_basefee as u128 + 2000),
             ),
             max_fee_blob: Uniform::from(pending_blob_fee..(pending_blob_fee + 1000)),
         };

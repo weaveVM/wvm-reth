@@ -26,3 +26,4 @@ tokio.workspace = true
 exex-wvm-da.workspace = true
 parse_duration.workspace = true
 exex-wvm-bigquery.workspace = true
+tracing.workspace = true

@@ -6152,7 +6152,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -10090,6 +10090,7 @@ dependencies = [
  "reth-tracing",
  "serde_json",
  "tokio",
+ "tracing",
  "wevm-borsh",
 ]
 
@@ -11698,7 +11699,7 @@ dependencies = [
 [[package]]
 name = "revm"
 version = "14.0.1"
-source = "git+https://github.com/weaveVM/wvm-revm?branch=main#09433668b8fd8deac47422d851eb49553db8d43e"
+source = "git+https://github.com/weaveVM/wvm-revm?branch=main#186313cca1f44ce26160e0e73048917f93657a93"
 dependencies = [
  "auto_impl",
  "cfg-if",
@@ -11732,7 +11733,7 @@ dependencies = [
 [[package]]
 name = "revm-interpreter"
 version = "10.0.1"
-source = "git+https://github.com/weaveVM/wvm-revm?branch=main#09433668b8fd8deac47422d851eb49553db8d43e"
+source = "git+https://github.com/weaveVM/wvm-revm?branch=main#186313cca1f44ce26160e0e73048917f93657a93"
 dependencies = [
  "revm-primitives",
  "serde",
@@ -11741,7 +11742,7 @@ dependencies = [
 [[package]]
 name = "revm-precompile"
 version = "11.0.1"
-source = "git+https://github.com/weaveVM/wvm-revm?branch=main#09433668b8fd8deac47422d851eb49553db8d43e"
+source = "git+https://github.com/weaveVM/wvm-revm?branch=main#186313cca1f44ce26160e0e73048917f93657a93"
 dependencies = [
  "aurora-engine-modexp",
  "blst",
@@ -11760,7 +11761,7 @@ dependencies = [
 [[package]]
 name = "revm-primitives"
 version = "9.0.1"
-source = "git+https://github.com/weaveVM/wvm-revm?branch=main#09433668b8fd8deac47422d851eb49553db8d43e"
+source = "git+https://github.com/weaveVM/wvm-revm?branch=main#186313cca1f44ce26160e0e73048917f93657a93"
 dependencies = [
  "alloy-eips",
  "alloy-primitives",
@@ -14782,7 +14783,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -15193,6 +15194,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
  "wevm-borsh",
 ]
 

@@ -19,7 +19,10 @@ use crate::{
     ValidPoolTransaction, U256,
 };
 use alloy_primitives::{Address, TxHash, B256};
-use reth_primitives::constants::{eip4844::BLOB_TX_MIN_BLOB_GASPRICE, ETHEREUM_BLOCK_GAS_LIMIT, get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE};
+use reth_primitives::constants::{
+    eip4844::BLOB_TX_MIN_BLOB_GASPRICE, get_latest_min_protocol_base_fee, ETHEREUM_BLOCK_GAS_LIMIT,
+    MIN_PROTOCOL_BASE_FEE,
+};
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 use std::{

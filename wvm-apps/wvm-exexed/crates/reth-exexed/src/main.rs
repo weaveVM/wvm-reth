@@ -8,26 +8,15 @@ mod util;
 
 use crate::{network_tag::get_network_tag, util::check_block_existence};
 use arweave_upload::{ArweaveRequest, UploaderProvider};
-use exex_wvm_bigquery::repository::StateRepository;
-use exex_wvm_bigquery::{init_bigquery_db, BigQueryConfig};
+use exex_wvm_bigquery::{init_bigquery_db, repository::StateRepository, BigQueryConfig};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;
-use rbrotli::to_brotli;
-use reth::args::PruningArgs;
-use reth::builder::NodeBuilder;
-use reth::{api::FullNodeComponents, builder::Node};
+use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
-use reth_node_ethereum::{
-    node::{EthereumAddOns, EthereumExecutorBuilder},
-    EthereumNode,
-};
+use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use reth_primitives::constants::SLOT_DURATION;
-use reth_tracing::tracing::info;
-use serde_json::to_string;
-use std::env;
-use std::ops::Mul;
-use std::sync::Arc;
+use tracing::{error, info};
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
@@ -53,22 +42,37 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         };
 
         if let Some(committed_chain) = notification.committed_chain() {
-            ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().number))?;
+            if let Err(err) =
+                ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().number))
+            {
+                error!(
+                    target: "wvm::exex",
+                    %err,
+                    "Failed to send FinishedHeight event for block {}",
+                    committed_chain.tip().number
+                );
+                continue;
+            }
         }
 
         if let Some(committed_chain) = notification.committed_chain() {
             let data_settler = DefaultWvmDataSettler;
             let sealed_block_with_senders = committed_chain.tip();
             let borsh_sealed_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
-            let brotli_borsh = data_settler.process_block(&borsh_sealed_block)?;
-            let json_str = to_string(&sealed_block_with_senders)?;
+            let brotli_borsh = match data_settler.process_block(&borsh_sealed_block) {
+                Ok(data) => data,
+                Err(err) => {
+                    error!(target: "wvm::exex", %err, "Failed to do brotli encoding for block {}", sealed_block_with_senders.number);
+                    continue;
+                }
+            };
 
             let blk_str_hash = sealed_block_with_senders.block.hash().to_string();
             let block_hash = blk_str_hash.as_str();
             let does_block_exist = check_block_existence(block_hash, false).await;
 
             if !does_block_exist {
-                let arweave_id = ArweaveRequest::new()
+                let res = ArweaveRequest::new()
                     .set_tag("Content-Type", "application/octet-stream")
                     .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
                     .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
@@ -78,17 +82,29 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                     .set_tag("WeaveVM:Internal-Chain", notification_type)
                     .set_data(brotli_borsh)
                     .send_with_provider(&irys_provider)
-                    .await?;
+                    .await;
 
-                println!("irys id: {}", arweave_id);
+                let arweave_id = match res {
+                    Ok(arweave_id) => arweave_id,
+                    Err(err) => {
+                        error!(target: "wvm::exex", %err, "Failed to construct arweave_id for block {}", sealed_block_with_senders.number);
+                        continue;
+                    }
+                };
 
-                exex_wvm_bigquery::save_block(
+                info!(target: "wvm::exex", "irys id: {}, for block: {}", arweave_id, sealed_block_with_senders.number);
+
+                if let Err(err) = exex_wvm_bigquery::save_block(
                     &state_repository,
                     &sealed_block_with_senders,
                     committed_chain.tip().block.number,
                     arweave_id.clone(),
                 )
-                .await?;
+                .await
+                {
+                    error!(target: "wvm::exex", %err, "Failed to write to bigquery, block {}", sealed_block_with_senders.number);
+                    continue;
+                };
             }
         }
     }
@@ -124,7 +140,7 @@ fn main() -> eyre::Result<()> {
                 .install_exex("exex-etl", |ctx| async move {
                     let config_path: String =
                         std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
-                    println!("config: {}", config_path);
+                    info!(target: "wvm::exex","launch config applied from: {}", config_path);
 
                     let config_file =
                         std::fs::File::open(config_path).expect("bigquery config path exists");
@@ -137,7 +153,7 @@ fn main() -> eyre::Result<()> {
                     let bigquery_client =
                         init_bigquery_db(&bq_config).await.expect("bigquery client initialized");
 
-                    println!("bigquery client initialized");
+                    info!(target: "wvm::exex", "bigquery client initialized");
 
                     // init state repository
                     let state_repo = StateRepository::new(bigquery_client);

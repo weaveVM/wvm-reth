@@ -1,4 +1,3 @@
-use std::cell::LazyCell;
 use bundlr_sdk::{
     currency::solana::{Solana, SolanaBuilder},
     tags::Tag,
@@ -7,11 +6,10 @@ use bundlr_sdk::{
 use dotenv::dotenv;
 use eyre::eyre;
 use reqwest::Url;
-use std::env;
+use std::{cell::LazyCell, env};
 
-pub const BUNDLR_API_URL: LazyCell<String> = LazyCell::new(|| {
-    env::var("BUNDLR_API_URL").unwrap_or("https://turbo.ardrive.io".to_string())
-});
+pub const BUNDLR_API_URL: LazyCell<String> =
+    LazyCell::new(|| env::var("BUNDLR_API_URL").unwrap_or("https://turbo.ardrive.io".to_string()));
 
 #[derive(Clone, Debug)]
 pub struct UploaderProvider {
@@ -52,11 +50,7 @@ impl UploaderProvider {
         UploaderProvider { private_key }
     }
 
-    pub async fn upload_data(
-        &self,
-        data: Vec<u8>,
-        param_tags: Vec<Tag>,
-    ) -> eyre::Result<String> {
+    pub async fn upload_data(&self, data: Vec<u8>, param_tags: Vec<Tag>) -> eyre::Result<String> {
         let mut tags = vec![
             Tag::new("Protocol", "WeaveVM-ExEx"),
             Tag::new("ExEx-Type", "Arweave-Data-Uploader"),
