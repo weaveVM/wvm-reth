@@ -4,7 +4,8 @@ use crate::{
     bloom::BorshBloom,
 };
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::{Bytes, Header, SealedHeader};
+use reth::primitives::{Header, SealedHeader};
+use alloy_primitives::{B64, Bytes};
 use std::io::{Read, Write};
 
 pub struct BorshHeader(pub Header);
@@ -77,7 +78,7 @@ impl BorshDeserialize for BorshHeader {
             gas_used,
             timestamp,
             mix_hash: mix_hash.0,
-            nonce,
+            nonce: B64::from(nonce),
             base_fee_per_gas,
             blob_gas_used,
             excess_blob_gas,

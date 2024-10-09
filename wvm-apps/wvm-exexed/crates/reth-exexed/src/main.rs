@@ -43,7 +43,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
         if let Some(committed_chain) = notification.committed_chain() {
             if let Err(err) =
-                ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().number))
+                ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().num_hash()))
             {
                 error!(
                     target: "wvm::exex",

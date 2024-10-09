@@ -7,7 +7,7 @@ use crate::{
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{
-    Request, Requests, SealedBlock, SealedBlockWithSenders, Withdrawal, Withdrawals,
+    Request, Requests, SealedBlock, BlockBody, SealedBlockWithSenders, Withdrawal, Withdrawals,
 };
 use std::io::{Read, Write};
 
@@ -18,16 +18,16 @@ impl BorshSerialize for BorshSealedBlock {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
         let borsh_sealed_header = BorshSealedHeader(self.0.header.clone());
         let borsh_transactions: Vec<BorshTransactionSigned> =
-            self.0.body.clone().into_iter().map(BorshTransactionSigned).collect();
+            self.0.body.clone().transactions.into_iter().map(BorshTransactionSigned).collect();
         let borsh_ommers: Vec<BorshHeader> =
-            self.0.ommers.clone().into_iter().map(BorshHeader).collect();
-        let withdrawal = self.0.withdrawals.clone().map(|i| {
+            self.0.body.clone().ommers.clone().into_iter().map(BorshHeader).collect();
+        let withdrawal = self.0.body.clone().withdrawals.clone().map(|i| {
             let withdrawals: Vec<BorshWithdrawal> =
                 i.into_inner().into_iter().map(BorshWithdrawal).collect();
 
             withdrawals
         });
-        let requests = self.0.requests.clone().map(|i| {
+        let requests = self.0.body.clone().requests.clone().map(|i| {
             let reqs: Vec<BorshRequest> = i.0.into_iter().map(BorshRequest).collect();
             reqs
         });
@@ -53,21 +53,23 @@ impl BorshDeserialize for BorshSealedBlock {
 
         let sealed_block = SealedBlock {
             header: sealed_header.0,
-            body: borsh_transactions.into_iter().map(|i| i.0).collect(),
-            ommers: borsh_ommers.into_iter().map(|i| i.0).collect(),
-            withdrawals: withdrawal
-                .map(|i| {
-                    let original_withdrawals: Vec<Withdrawal> =
-                        i.into_iter().map(|e| e.0).collect();
-                    original_withdrawals
-                })
-                .map(|i| Withdrawals::new(i)),
-            requests: requests
-                .map(|i| {
-                    let original_reqs: Vec<Request> = i.into_iter().map(|e| e.0).collect();
-                    original_reqs
-                })
-                .map(|i| Requests(i)),
+            body: BlockBody {
+                transactions: borsh_transactions.into_iter().map(|i| i.0).collect(),
+                ommers: borsh_ommers.into_iter().map(|i| i.0).collect(),
+                withdrawals: withdrawal
+                    .map(|i| {
+                        let original_withdrawals: Vec<Withdrawal> =
+                            i.into_iter().map(|e| e.0).collect();
+                        original_withdrawals
+                    })
+                    .map(|i| Withdrawals::new(i)),
+                requests: requests
+                    .map(|i| {
+                        let original_reqs: Vec<Request> = i.into_iter().map(|e| e.0).collect();
+                        original_reqs
+                    })
+                    .map(|i| Requests(i)),
+            }
         };
 
         Ok(BorshSealedBlock(sealed_block))

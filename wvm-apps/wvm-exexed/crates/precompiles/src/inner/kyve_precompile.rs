@@ -1,4 +1,4 @@
-use reth::primitives::Bytes;
+use alloy_primitives::Bytes;
 use revm_primitives::{
     Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
 };
@@ -115,7 +115,7 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 #[cfg(test)]
 mod kyve_tests {
     use crate::inner::kyve_precompile::kyve_read;
-    use reth::primitives::Bytes;
+    use alloy_primitives::Bytes;
 
     #[test]
     pub fn test_kyve_precompile() {

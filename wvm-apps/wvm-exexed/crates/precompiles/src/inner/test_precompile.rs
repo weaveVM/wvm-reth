@@ -1,7 +1,7 @@
 use reth::primitives::{
     revm_primitives::{Precompile, PrecompileOutput, PrecompileResult},
-    Bytes,
 };
+use alloy_primitives::Bytes;
 
 pub const HELLO_WORLD_PC: Precompile = Precompile::Standard(hello_world_pc);
 

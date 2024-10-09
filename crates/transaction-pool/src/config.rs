@@ -3,8 +3,13 @@ use crate::{
     PoolSize, TransactionOrigin,
 };
 use alloy_primitives::Address;
-use reth_primitives::EIP4844_TX_TYPE_ID;
+use reth_primitives::{
+    constants::{ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE},
+    EIP4844_TX_TYPE_ID,
+};
 use std::collections::HashSet;
+use std::sync::atomic::Ordering::SeqCst;
+
 /// Guarantees max transactions for one sender, compatible with geth/erigon
 pub const TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER: usize = 16;
 
@@ -42,8 +47,12 @@ pub struct PoolConfig {
     pub max_account_slots: usize,
     /// Price bump (in %) for the transaction pool underpriced check.
     pub price_bumps: PriceBumpConfig,
+    /// Minimum base fee required by the protocol.
+    pub minimal_protocol_basefee: u64,
+    /// The max gas limit for transactions in the pool
+    pub gas_limit: u64,
     /// How to handle locally received transactions:
-    /// [`TransactionOrigin::Local`](crate::TransactionOrigin).
+    /// [`TransactionOrigin::Local`](TransactionOrigin).
     pub local_transactions_config: LocalTransactionConfig,
     /// Bound on number of pending transactions from `reth_network::TransactionsManager` to buffer.
     pub pending_tx_listener_buffer_size: usize,
@@ -52,7 +61,7 @@ pub struct PoolConfig {
 }
 
 impl PoolConfig {
-    /// Returns whether or not the size and amount constraints in any sub-pools are exceeded.
+    /// Returns whether the size and amount constraints in any sub-pools are exceeded.
     #[inline]
     pub const fn is_exceeded(&self, pool_size: PoolSize) -> bool {
         self.blob_limit.is_exceeded(pool_size.blob, pool_size.blob_size) ||
@@ -71,6 +80,8 @@ impl Default for PoolConfig {
             blob_limit: Default::default(),
             max_account_slots: TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER,
             price_bumps: Default::default(),
+            minimal_protocol_basefee: MIN_PROTOCOL_BASE_FEE.load(SeqCst),
+            gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             local_transactions_config: Default::default(),
             pending_tx_listener_buffer_size: PENDING_TX_LISTENER_BUFFER_SIZE,
             new_tx_listener_buffer_size: NEW_TX_LISTENER_BUFFER_SIZE,
@@ -141,7 +152,7 @@ impl Default for PriceBumpConfig {
 }
 
 /// Configuration options for the locally received transactions:
-/// [`TransactionOrigin::Local`](crate::TransactionOrigin)
+/// [`TransactionOrigin::Local`](TransactionOrigin)
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct LocalTransactionConfig {
     /// Apply no exemptions to the locally received transactions.
@@ -260,7 +271,7 @@ mod tests {
     #[test]
     fn test_contains_local_address() {
         let address = Address::new([1; 20]);
-        let mut local_addresses = HashSet::new();
+        let mut local_addresses = HashSet::default();
         local_addresses.insert(address);
 
         let config = LocalTransactionConfig { local_addresses, ..Default::default() };
@@ -277,7 +288,7 @@ mod tests {
         let address = Address::new([1; 20]);
         let config = LocalTransactionConfig {
             no_exemptions: true,
-            local_addresses: HashSet::new(),
+            local_addresses: HashSet::default(),
             ..Default::default()
         };
 
@@ -288,7 +299,7 @@ mod tests {
     #[test]
     fn test_is_local_without_no_exemptions() {
         let address = Address::new([1; 20]);
-        let mut local_addresses = HashSet::new();
+        let mut local_addresses = HashSet::default();
         local_addresses.insert(address);
 
         let config =

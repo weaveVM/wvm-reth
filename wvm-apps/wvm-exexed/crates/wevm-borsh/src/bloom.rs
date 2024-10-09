@@ -1,5 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::Bloom;
+use alloy_primitives::Bloom;
 use std::io::{Read, Write};
 
 pub struct BorshBloom(pub Bloom);
@@ -22,7 +22,7 @@ impl BorshDeserialize for BorshBloom {
 #[cfg(test)]
 mod bloom_tests {
     use crate::bloom::BorshBloom;
-    use reth::primitives::Bloom;
+    use alloy_primitives::Bloom;
 
     #[test]
     pub fn test_bloom_ser_der() {

@@ -1,5 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::{B256, U256};
+use alloy_primitives::{B256, U256};
 use std::io::{Read, Write};
 
 pub struct BorshB256(pub B256);
@@ -37,7 +37,7 @@ impl BorshDeserialize for BorshU256 {
 #[cfg(test)]
 mod b256_tests {
     use crate::b256::{BorshB256, BorshU256};
-    use reth::primitives::{B256, U256};
+    use alloy_primitives::{B256, U256};
 
     #[test]
     pub fn test_borsh_b256_ser_der() {

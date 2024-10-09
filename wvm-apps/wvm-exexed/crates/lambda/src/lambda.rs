@@ -1,7 +1,10 @@
 use reth::{
     api::FullNodeComponents,
-    primitives::{Address, TransactionSigned},
+    primitives::{TransactionSigned},
 };
+
+use alloy_primitives::Address;
+
 use reth_exex::ExExContext;
 use serde_json::{self, json};
 
@@ -40,7 +43,7 @@ pub async fn exex_lambda_processor<Node: FullNodeComponents>(
             let client = reqwest::Client::new();
             let last_block = committed_chain.tip();
 
-            for tx in last_block.body.iter() {
+            for tx in last_block.body.transactions.iter() {
                 let potential_hash = process_tx_sequencer(tx);
                 if let Some(tx_hash) = potential_hash {
                     txs.push(tx_hash);
@@ -67,7 +70,7 @@ pub async fn exex_lambda_processor<Node: FullNodeComponents>(
 #[cfg(test)]
 mod tests {
     use crate::lambda::is_transaction_to_sequencer;
-    use reth::primitives::address;
+    use alloy_primitives::address;
 
     #[test]
     fn check_for_seq_address() {
