@@ -12,6 +12,7 @@ pub mod withdrawal;
 mod tests {
     use crate::block::BorshSealedBlock;
     use reth::primitives::{SealedBlock, Withdrawals};
+    use reth_primitives::BlockBody;
 
     #[test]
     fn test_borsh_block() {
@@ -19,10 +20,12 @@ mod tests {
 
         let block = SealedBlock {
             header: Default::default(),
-            body: vec![Default::default()],
-            ommers: Default::default(),
-            withdrawals: Some(withdrawals),
-            requests: None,
+            body: BlockBody {
+                transactions: vec![Default::default()],
+                ommers: Default::default(),
+                withdrawals: Some(withdrawals),
+                requests: None,
+            },
         };
 
         let borsh_block = BorshSealedBlock(block.clone());
@@ -41,10 +44,12 @@ mod tests {
 
         let block = SealedBlock {
             header: Default::default(),
-            body: vec![Default::default()],
-            ommers: Default::default(),
-            withdrawals: Some(withdrawals),
-            requests: None,
+            body: BlockBody {
+                transactions: vec![Default::default()],
+                ommers: Default::default(),
+                withdrawals: Some(withdrawals),
+                requests: None,
+            },
         };
 
         let borsh_block = BorshSealedBlock(block.clone());

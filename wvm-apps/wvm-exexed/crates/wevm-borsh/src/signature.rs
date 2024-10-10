@@ -1,5 +1,5 @@
+use alloy_primitives::{Parity, Signature, U256};
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::{Signature, U256};
 use std::io::{Error, ErrorKind, Read, Write};
 
 pub struct BorshSignature(pub Signature);
@@ -17,16 +17,16 @@ pub fn to_signature(bytes: &[u8]) -> std::io::Result<Signature> {
 
     let r = U256::from_be_bytes(r_bytes);
     let s = U256::from_be_bytes(s_bytes);
-    let odd_y_parity = bytes[64] - 27;
 
-    let signature = Signature { r, s, odd_y_parity: odd_y_parity != 0 };
+    let odd_y_parity = bytes[64] - 27;
+    let signature = Signature::new(r, s, Parity::Parity(odd_y_parity != 0));
 
     Ok(signature)
 }
 
 impl BorshSerialize for BorshSignature {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        self.0.to_bytes().to_vec().serialize(writer)
+        self.0.as_bytes().to_vec().serialize(writer)
     }
 }
 
@@ -45,7 +45,7 @@ mod signature_tests {
 
     #[test]
     pub fn test_sealed_header() {
-        let data = Signature::default();
+        let data = Signature::test_signature();
         let borsh_data = BorshSignature(data.clone());
         let to_borsh = borsh::to_vec(&borsh_data).unwrap();
         let from_borsh: BorshSignature = borsh::from_slice(to_borsh.as_slice()).unwrap();

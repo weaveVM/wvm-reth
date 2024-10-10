@@ -11,13 +11,11 @@ use reth_chainspec::ChainSpec;
 use reth_ethereum_engine_primitives::EthPayloadAttributes;
 use reth_node_ethereum::{
     node::{
-        EthereumAddOns, EthereumConsensusBuilder, EthereumNetworkBuilder, EthereumPayloadBuilder,
-        EthereumPoolBuilder,
+        EthereumAddOns, EthereumConsensusBuilder, EthereumEngineValidatorBuilder,
+        EthereumNetworkBuilder, EthereumPayloadBuilder, EthereumPoolBuilder,
     },
-    EthEngineTypes, EthEvmConfig, EthExecutorProvider,
+    EthEngineTypes, EthExecutorProvider,
 };
-
-use reth_chainspec::MAINNET;
 
 /// Type configuration for a regular Ethereum node.
 #[derive(Debug, Default, Clone, Copy)]
@@ -33,6 +31,7 @@ impl WvmEthereumNode {
         EthereumNetworkBuilder,
         WvmEthExecutorBuilder,
         EthereumConsensusBuilder,
+        EthereumEngineValidatorBuilder,
     >
     where
         Node: FullNodeTypes<Types: NodeTypes<ChainSpec = ChainSpec>>,
@@ -49,6 +48,7 @@ impl WvmEthereumNode {
             .network(EthereumNetworkBuilder::default())
             .executor(WvmEthExecutorBuilder::default())
             .consensus(EthereumConsensusBuilder::default())
+            .engine_validator(EthereumEngineValidatorBuilder::default())
     }
 }
 
@@ -73,6 +73,7 @@ where
         EthereumNetworkBuilder,
         WvmEthExecutorBuilder,
         EthereumConsensusBuilder,
+        EthereumEngineValidatorBuilder,
     >;
     type AddOns = EthereumAddOns;
 

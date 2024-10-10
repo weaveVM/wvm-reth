@@ -6,11 +6,9 @@ use crate::{
     },
     WVM_DATA_PUBLISHERS,
 };
+use alloy_primitives::Bytes;
 use rbrotli::from_brotli;
-use reth::primitives::{
-    revm_primitives::{Precompile, PrecompileOutput, PrecompileResult},
-    Bytes,
-};
+use reth::primitives::revm_primitives::{Precompile, PrecompileOutput, PrecompileResult};
 use revm_primitives::{PrecompileError, PrecompileErrors};
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
@@ -242,7 +240,8 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 #[cfg(test)]
 mod arweave_read_pc_tests {
     use crate::inner::wevm_block_precompile::wevm_read_block_pc;
-    use reth::primitives::{revm_primitives::PrecompileOutput, Bytes};
+    use alloy_primitives::Bytes;
+    use reth::primitives::revm_primitives::PrecompileOutput;
 
     #[test]
     pub fn test_read_wvm_block() {

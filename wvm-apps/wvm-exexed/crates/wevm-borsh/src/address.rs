@@ -1,6 +1,6 @@
 use crate::b256::BorshB256;
+use alloy_primitives::Address;
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::Address;
 use std::io::{Read, Write};
 
 pub struct BorshAddress(pub Address);
@@ -21,7 +21,7 @@ impl BorshDeserialize for BorshAddress {
 #[cfg(test)]
 mod address_tests {
     use crate::address::BorshAddress;
-    use reth::primitives::Address;
+    use alloy_primitives::Address;
 
     #[test]
     pub fn test_sealed_header() {
