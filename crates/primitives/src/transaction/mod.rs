@@ -1779,7 +1779,11 @@ pub mod serde_bincode_compat {
 
 #[cfg(test)]
 mod tests {
-    use crate::{transaction::{signature::Signature, TxEip1559, TxKind, TxLegacy}, Transaction, transaction, TransactionSigned, TransactionSignedEcRecovered, TransactionSignedNoHash};
+    use crate::{
+        transaction,
+        transaction::{signature::Signature, TxEip1559, TxKind, TxLegacy},
+        Transaction, TransactionSigned, TransactionSignedEcRecovered, TransactionSignedNoHash,
+    };
     use alloy_eips::eip2718::{Decodable2718, Encodable2718};
     use alloy_primitives::{address, b256, bytes, hex, Address, Bytes, Parity, B256, U256};
     use alloy_rlp::{Decodable, Encodable, Error as RlpError};
@@ -1935,8 +1939,8 @@ mod tests {
         // WVM: fixed hex bytes, MIN_TRANSACTION_GAS changed to 500k
 
         // let mut buf = vec![];
-        // let expected = TransactionSigned::from_transaction_and_signature(transaction.clone(), signature);
-        // expected.encode(&mut buf);
+        // let expected = TransactionSigned::from_transaction_and_signature(transaction.clone(),
+        // signature); expected.encode(&mut buf);
         // let out = hex::encode(buf);
         // println!("{}",out);
 

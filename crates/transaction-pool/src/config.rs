@@ -7,8 +7,7 @@ use reth_primitives::{
     constants::{ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE},
     EIP4844_TX_TYPE_ID,
 };
-use std::collections::HashSet;
-use std::sync::atomic::Ordering::SeqCst;
+use std::{collections::HashSet, sync::atomic::Ordering::SeqCst};
 
 /// Guarantees max transactions for one sender, compatible with geth/erigon
 pub const TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER: usize = 16;

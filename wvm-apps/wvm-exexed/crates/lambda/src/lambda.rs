@@ -1,7 +1,4 @@
-use reth::{
-    api::FullNodeComponents,
-    primitives::{TransactionSigned},
-};
+use reth::{api::FullNodeComponents, primitives::TransactionSigned};
 
 use alloy_primitives::Address;
 

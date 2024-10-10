@@ -1,13 +1,11 @@
+use alloy_primitives::Bytes;
 use arweave_upload::ArweaveRequest;
 use rbrotli::to_brotli;
-use reth::{
-    primitives::{
-        revm_primitives::{Precompile, PrecompileError, PrecompileOutput, PrecompileResult},
-    },
+use reth::primitives::revm_primitives::{
+    Precompile, PrecompileError, PrecompileOutput, PrecompileResult,
 };
-use reth_revm::{precompile::PrecompileErrors};
+use reth_revm::precompile::PrecompileErrors;
 use std::str::FromStr;
-use alloy_primitives::{Bytes};
 
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
@@ -62,10 +60,9 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 #[cfg(test)]
 mod arupload_pc_tests {
     use crate::inner::arweave_precompile::{arweave_upload, SOLANA_SILLY_PRIVATE_KEY};
-    use reth::primitives::{revm_primitives::PrecompileOutput};
+    use alloy_primitives::Bytes;
+    use reth::primitives::revm_primitives::PrecompileOutput;
     use std::env;
-    use alloy_primitives::{Bytes};
-
 
     #[test]
     pub fn test_arweave_precompile() {

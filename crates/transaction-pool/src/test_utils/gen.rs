@@ -5,7 +5,8 @@ use alloy_primitives::{Address, Bytes, TxKind, B256, U256};
 use rand::Rng;
 use reth_chainspec::MAINNET;
 use reth_primitives::{
-    constants::{MIN_PROTOCOL_BASE_FEE,get_latest_min_protocol_base_fee}, sign_message, Transaction, TransactionSigned,
+    constants::{get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE},
+    sign_message, Transaction, TransactionSigned,
 };
 
 /// A generator for transactions for testing purposes.

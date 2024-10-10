@@ -1,6 +1,5 @@
 //! Transaction pool arguments
 
-use std::sync::atomic::Ordering::SeqCst;
 use crate::cli::config::RethTransactionPoolConfig;
 use alloy_primitives::Address;
 use clap::Args;
@@ -14,6 +13,7 @@ use reth_transaction_pool::{
     TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER, TXPOOL_SUBPOOL_MAX_SIZE_MB_DEFAULT,
     TXPOOL_SUBPOOL_MAX_TXS_DEFAULT,
 };
+use std::sync::atomic::Ordering::SeqCst;
 /// Parameters for debugging purposes
 #[derive(Debug, Clone, Args, PartialEq, Eq)]
 #[command(next_help_heading = "TxPool")]

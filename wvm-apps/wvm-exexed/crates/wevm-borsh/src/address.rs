@@ -1,6 +1,6 @@
 use crate::b256::BorshB256;
-use borsh::{BorshDeserialize, BorshSerialize};
 use alloy_primitives::Address;
+use borsh::{BorshDeserialize, BorshSerialize};
 use std::io::{Read, Write};
 
 pub struct BorshAddress(pub Address);

@@ -2,11 +2,11 @@ use crate::inner::{
     graphql_util::{build_transaction_query, send_graphql},
     util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
 };
-use reth::primitives::{
-    revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult},
+use alloy_primitives::Bytes;
+use reth::primitives::revm_primitives::{
+    Precompile, PrecompileError, PrecompileErrors, PrecompileResult,
 };
 use serde::{Deserialize, Serialize};
-use alloy_primitives::Bytes;
 
 pub const ARWEAVE_PC_READ_BASE: u64 = 10_000;
 
@@ -117,8 +117,8 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 #[cfg(test)]
 mod arweave_read_pc_tests {
     use crate::inner::arweave_read_precompile::{arweave_read, parse_gateway_content};
-    use reth::primitives::{revm_primitives::PrecompileOutput};
     use alloy_primitives::Bytes;
+    use reth::primitives::revm_primitives::PrecompileOutput;
 
     #[test]
     pub fn test_arweave_read_precompile() {

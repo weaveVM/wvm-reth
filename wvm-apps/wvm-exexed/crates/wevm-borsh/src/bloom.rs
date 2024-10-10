@@ -1,5 +1,5 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use alloy_primitives::Bloom;
+use borsh::{BorshDeserialize, BorshSerialize};
 use std::io::{Read, Write};
 
 pub struct BorshBloom(pub Bloom);

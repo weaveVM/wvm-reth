@@ -1,5 +1,5 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use alloy_primitives::{B256, U256};
+use borsh::{BorshDeserialize, BorshSerialize};
 use std::io::{Read, Write};
 
 pub struct BorshB256(pub B256);

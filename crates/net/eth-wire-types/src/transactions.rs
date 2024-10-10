@@ -76,15 +76,13 @@ impl FromIterator<PooledTransactionsElement> for PooledTransactions {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Deref;
     use crate::{message::RequestPair, GetPooledTransactions, PooledTransactions};
     use alloy_consensus::{TxEip1559, TxLegacy};
-    use alloy_primitives::{hex, Parity, TxKind, U256};
+    use alloy_primitives::{hex, hex::Buffer, Parity, TxKind, U256};
     use alloy_rlp::{Decodable, Encodable};
     use reth_chainspec::MIN_TRANSACTION_GAS;
     use reth_primitives::{PooledTransactionsElement, Signature, Transaction, TransactionSigned};
-    use std::str::FromStr;
-    use alloy_primitives::hex::Buffer;
+    use std::{ops::Deref, str::FromStr};
 
     #[test]
     // Test vector from: https://eips.ethereum.org/EIPS/eip-2481
@@ -385,8 +383,6 @@ mod tests {
             request_id: 0,
             message: PooledTransactions(message),
         };
-
-
 
         let decoded_transactions =
             RequestPair::<PooledTransactions>::decode(&mut &data[..]).unwrap();

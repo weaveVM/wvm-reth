@@ -2,7 +2,9 @@
 
 use alloy_primitives::{Address, B256};
 use rand::distributions::Uniform;
-use reth_primitives::constants::{get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE, ETHEREUM_BLOCK_GAS_LIMIT};
+use reth_primitives::constants::{
+    get_latest_min_protocol_base_fee, ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE,
+};
 use reth_transaction_pool::{
     error::PoolErrorKind,
     test_utils::{

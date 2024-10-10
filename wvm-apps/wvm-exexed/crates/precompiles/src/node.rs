@@ -11,8 +11,8 @@ use reth_chainspec::ChainSpec;
 use reth_ethereum_engine_primitives::EthPayloadAttributes;
 use reth_node_ethereum::{
     node::{
-        EthereumAddOns, EthereumConsensusBuilder, EthereumNetworkBuilder, EthereumPayloadBuilder,
-        EthereumPoolBuilder, EthereumEngineValidatorBuilder,
+        EthereumAddOns, EthereumConsensusBuilder, EthereumEngineValidatorBuilder,
+        EthereumNetworkBuilder, EthereumPayloadBuilder, EthereumPoolBuilder,
     },
     EthEngineTypes, EthExecutorProvider,
 };

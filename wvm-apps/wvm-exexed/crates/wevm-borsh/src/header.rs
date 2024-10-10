@@ -3,9 +3,9 @@ use crate::{
     b256::{BorshB256, BorshU256},
     bloom::BorshBloom,
 };
+use alloy_primitives::{Bytes, B64};
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{Header, SealedHeader};
-use alloy_primitives::{B64, Bytes};
 use std::io::{Read, Write};
 
 pub struct BorshHeader(pub Header);

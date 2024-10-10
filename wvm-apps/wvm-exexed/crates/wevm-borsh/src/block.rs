@@ -7,7 +7,7 @@ use crate::{
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{
-    Request, Requests, SealedBlock, BlockBody, SealedBlockWithSenders, Withdrawal, Withdrawals,
+    BlockBody, Request, Requests, SealedBlock, SealedBlockWithSenders, Withdrawal, Withdrawals,
 };
 use std::io::{Read, Write};
 
@@ -69,7 +69,7 @@ impl BorshDeserialize for BorshSealedBlock {
                         original_reqs
                     })
                     .map(|i| Requests(i)),
-            }
+            },
         };
 
         Ok(BorshSealedBlock(sealed_block))

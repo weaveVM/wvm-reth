@@ -1,3 +1,4 @@
+use alloy_primitives::{Address, Bytes, U256};
 use parking_lot::RwLock;
 use reth::{
     api::{ConfigureEvm, ConfigureEvmEnv},
@@ -13,18 +14,18 @@ use reth::{
         ContextPrecompile, ContextPrecompiles, Database, Evm, EvmBuilder, GetInspector,
     },
 };
-use alloy_primitives::{Bytes, Address, U256};
 
-use reth_evm_ethereum::{revm_spec_by_timestamp_after_merge};
+use reth_evm_ethereum::revm_spec_by_timestamp_after_merge;
 
-use reth_chainspec::{ChainSpec};
+use reth::{
+    api::NextBlockEnvAttributes, chainspec::EthereumHardfork,
+    primitives::constants::EIP1559_INITIAL_BASE_FEE,
+};
+use reth_chainspec::ChainSpec;
 use reth_node_ethereum::EthEvmConfig;
 use revm_primitives::{BlobExcessGasAndPrice, BlockEnv, CfgEnv, EnvWithHandlerCfg};
 use schnellru::{ByLength, LruMap};
 use std::{collections::HashMap, sync::Arc};
-use reth::api::NextBlockEnvAttributes;
-use reth::chainspec::EthereumHardfork;
-use reth::primitives::constants::EIP1559_INITIAL_BASE_FEE;
 
 /// Type alias for the LRU cache used within the [`PrecompileCache`].
 type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResult>;
@@ -82,7 +83,6 @@ impl ConfigureEvmEnv for WvmEthEvmConfig {
         self.evm_config.fill_cfg_env(cfg_env, header, total_difficulty);
     }
 
-
     fn next_cfg_and_block_env(
         &self,
         parent: &Self::Header,
@@ -92,7 +92,8 @@ impl ConfigureEvmEnv for WvmEthEvmConfig {
         let cfg = CfgEnv::default().with_chain_id(self.evm_config.chain_spec().chain().id());
 
         // ensure we're not missing any timestamp based hardforks
-        let spec_id = revm_spec_by_timestamp_after_merge(&self.evm_config.chain_spec(), attributes.timestamp);
+        let spec_id =
+            revm_spec_by_timestamp_after_merge(&self.evm_config.chain_spec(), attributes.timestamp);
 
         // if the parent block did not have excess blob gas (i.e. it was pre-cancun), but it is
         // cancun now, we need to set the excess blob gas to the default value
@@ -116,9 +117,15 @@ impl ConfigureEvmEnv for WvmEthEvmConfig {
 
         // If we are on the London fork boundary, we need to multiply the parent's gas limit by the
         // elasticity multiplier to get the new gas limit.
-        if self.evm_config.chain_spec().fork(EthereumHardfork::London).transitions_at_block(parent.number + 1) {
+        if self
+            .evm_config
+            .chain_spec()
+            .fork(EthereumHardfork::London)
+            .transitions_at_block(parent.number + 1)
+        {
             let elasticity_multiplier = self
-                .evm_config.chain_spec()
+                .evm_config
+                .chain_spec()
                 .base_fee_params_at_timestamp(attributes.timestamp)
                 .elasticity_multiplier;
 
