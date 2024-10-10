@@ -1779,10 +1779,7 @@ pub mod serde_bincode_compat {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        transaction::{signature::Signature, TxEip1559, TxKind, TxLegacy},
-        Transaction, TransactionSigned, TransactionSignedEcRecovered, TransactionSignedNoHash,
-    };
+    use crate::{transaction::{signature::Signature, TxEip1559, TxKind, TxLegacy}, Transaction, transaction, TransactionSigned, TransactionSignedEcRecovered, TransactionSignedNoHash};
     use alloy_eips::eip2718::{Decodable2718, Encodable2718};
     use alloy_primitives::{address, b256, bytes, hex, Address, Bytes, Parity, B256, U256};
     use alloy_rlp::{Decodable, Encodable, Error as RlpError};
@@ -1935,7 +1932,15 @@ mod tests {
         );
         test_decode_and_encode(&bytes, transaction, signature, None);
 
-        let bytes = hex!("b87502f872041a8459682f008459682f0d8252089461815774383099e24810ab832a5b2a5425c154d58829a2241af62c000080c001a059e6b67f48fb32e7e570dfb11e042b5ad2e55e3ce3ce9cd989c7e06e07feeafda0016b83f4f980694ed2eee4d10667242b1f40dc406901b34125b008d334d47469");
+        // WVM: fixed hex bytes, MIN_TRANSACTION_GAS changed to 500k
+
+        // let mut buf = vec![];
+        // let expected = TransactionSigned::from_transaction_and_signature(transaction.clone(), signature);
+        // expected.encode(&mut buf);
+        // let out = hex::encode(buf);
+        // println!("{}",out);
+
+        let bytes = hex!("b87602f873041a8459682f008459682f0d8307a1209461815774383099e24810ab832a5b2a5425c154d58829a2241af62c000080c001a059e6b67f48fb32e7e570dfb11e042b5ad2e55e3ce3ce9cd989c7e06e07feeafda0016b83f4f980694ed2eee4d10667242b1f40dc406901b34125b008d334d47469");
         let transaction = Transaction::Eip1559(TxEip1559 {
             chain_id: 4,
             nonce: 26,
@@ -1954,6 +1959,7 @@ mod tests {
                 .unwrap(),
             Parity::Parity(true),
         );
+
         test_decode_and_encode(&bytes, transaction, signature, None);
 
         let bytes = hex!("f8650f84832156008287fb94cf7f9e66af820a19257a2108375b180b0ec491678204d2802ca035b7bfeb9ad9ece2cbafaaf8e202e706b4cfaeb233f46198f00b44d4a566a981a0612638fb29427ca33b9a3be2a0a561beecfe0269655be160d35e72d366a6a860");
