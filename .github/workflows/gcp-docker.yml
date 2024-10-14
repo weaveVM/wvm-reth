@@ -23,7 +23,7 @@ jobs:
 
       - id: auth
         name: Authenticate with Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v4
         with:
           token_format: access_token
           credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
@@ -44,7 +44,7 @@ jobs:
 
       - name: Get tag
         id: get-tag
-        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+        run: echo "short_ref=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Set Docker Tag
         id: tag
@@ -58,7 +58,7 @@ jobs:
           else
             tag=${GITHUB_REF#refs/heads/}
           fi
-          echo "::set-output name=tag::${tag}"
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
           echo "Docker tag: ${tag}"
 
       - name: Build
