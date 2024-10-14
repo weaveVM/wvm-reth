@@ -1,3 +1,4 @@
+use reth::primitives::SealedBlockWithSenders;
 use serde::{Deserialize, Serialize};
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
@@ -29,33 +30,44 @@ pub struct Block {
     pub transactions: Vec<String>,                // "transactions" as an array of strings
 }
 
+fn from_sealed_block_senders(sealed_block: SealedBlockWithSenders) -> Block {
+    Block {
+        base_fee_per_gas: sealed_block.base_fee_per_gas.map(|i| i.to_string()),
+        blob_gas_used: sealed_block.blob_gas_used.map(|i| i.to_string()),
+        difficulty: Some(sealed_block.difficulty.to_string()),
+        excess_blob_gas: sealed_block.excess_blob_gas.map(|i| i.to_string()),
+        extra_data: Some(sealed_block.extra_data.to_string()),
+        gas_limit: Some(sealed_block.gas_limit.to_string()),
+        gas_used: Some(sealed_block.gas_used.to_string()),
+        hash: Some(sealed_block.hash().to_string()),
+        logs_bloom: Some(sealed_block.logs_bloom.to_string()),
+        miner: None,
+        mix_hash: Some(sealed_block.mix_hash.to_string()),
+        nonce: Some(sealed_block.nonce.to_string()),
+        number: Some(sealed_block.number.to_string()),
+        parent_beacon_block_root: sealed_block.parent_beacon_block_root.map(|i| i.to_string()),
+        parent_hash: Some(sealed_block.parent_hash.to_string()),
+        receipts_root: Some(sealed_block.receipts_root.to_string()),
+        seal_fields: vec![],
+        sha3_uncles: None,
+        size: Some(sealed_block.size().to_string()),
+        state_root: Some(sealed_block.state_root.to_string()),
+        timestamp: Some(sealed_block.timestamp.to_string()),
+        total_difficulty: None,
+        transactions: sealed_block.transactions().map(|i| i.hash.to_string()).collect(),
+    }
+}
+
 impl From<BorshSealedBlockWithSenders> for Block {
     fn from(value: BorshSealedBlockWithSenders) -> Self {
         let sealed_block = value.0;
-        Block {
-            base_fee_per_gas: sealed_block.base_fee_per_gas.map(|i| i.to_string()),
-            blob_gas_used: sealed_block.blob_gas_used.map(|i| i.to_string()),
-            difficulty: Some(sealed_block.difficulty.to_string()),
-            excess_blob_gas: sealed_block.excess_blob_gas.map(|i| i.to_string()),
-            extra_data: Some(sealed_block.extra_data.to_string()),
-            gas_limit: Some(sealed_block.gas_limit.to_string()),
-            gas_used: Some(sealed_block.gas_used.to_string()),
-            hash: Some(sealed_block.hash().to_string()),
-            logs_bloom: Some(sealed_block.logs_bloom.to_string()),
-            miner: None,
-            mix_hash: Some(sealed_block.mix_hash.to_string()),
-            nonce: Some(sealed_block.nonce.to_string()),
-            number: Some(sealed_block.number.to_string()),
-            parent_beacon_block_root: sealed_block.parent_beacon_block_root.map(|i| i.to_string()),
-            parent_hash: Some(sealed_block.parent_hash.to_string()),
-            receipts_root: Some(sealed_block.receipts_root.to_string()),
-            seal_fields: vec![],
-            sha3_uncles: None,
-            size: Some(sealed_block.size().to_string()),
-            state_root: Some(sealed_block.state_root.to_string()),
-            timestamp: Some(sealed_block.timestamp.to_string()),
-            total_difficulty: None,
-            transactions: sealed_block.transactions().map(|i| i.hash.to_string()).collect(),
-        }
+        from_sealed_block_senders(sealed_block)
+    }
+}
+
+impl From<String> for Block {
+    fn from(value: String) -> Self {
+        let block = serde_json::from_str::<SealedBlockWithSenders>(&value).unwrap();
+        from_sealed_block_senders(block)
     }
 }

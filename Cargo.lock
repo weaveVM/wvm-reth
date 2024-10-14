@@ -4223,12 +4223,12 @@ version = "1.0.8"
 [[package]]
 name = "exex-wvm-bigquery"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?b?branch=main#9922fac314825ad6ac8155be367318ff5d2f9c98"
+source = "git+https://github.com/weaveVM/exex-templates?b?branch=main#9425cd8d39df10a7eb09eb7ed2fa17335f1c6331"
 dependencies = [
  "alloy-primitives",
  "chrono",
  "eyre",
- "gcp-bigquery-client 0.20.0",
+ "gcp-bigquery-client",
  "indexmap 2.5.0",
  "once_cell",
  "phf",
@@ -4240,7 +4240,7 @@ dependencies = [
 [[package]]
 name = "exex-wvm-da"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#9922fac314825ad6ac8155be367318ff5d2f9c98"
+source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#9425cd8d39df10a7eb09eb7ed2fa17335f1c6331"
 dependencies = [
  "async-trait",
  "borsh 1.5.1",
@@ -4614,29 +4614,6 @@ dependencies = [
 
 [[package]]
 name = "gcp-bigquery-client"
-version = "0.17.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "576b349942a1b96327b1b2e50d271d3d54dc9669eb38271c830916168e753820"
-dependencies = [
- "async-stream",
- "async-trait",
- "dyn-clone",
- "hyper 0.14.30",
- "hyper-rustls 0.24.2",
- "log",
- "reqwest 0.11.27",
- "serde",
- "serde_json",
- "thiserror",
- "time",
- "tokio",
- "tokio-stream",
- "url",
- "yup-oauth2 8.3.2",
-]
-
-[[package]]
-name = "gcp-bigquery-client"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc3e5c4b8a072ca074ab0d4f53dc6b04f45eb9bc0cc046a4a1428c8498af71e"
@@ -4654,7 +4631,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "url",
- "yup-oauth2 9.0.0",
+ "yup-oauth2",
 ]
 
 [[package]]
@@ -5216,9 +5193,7 @@ dependencies = [
  "futures-util",
  "http 0.2.12",
  "hyper 0.14.30",
- "log",
  "rustls 0.21.12",
- "rustls-native-certs 0.6.3",
  "tokio",
  "tokio-rustls 0.24.1",
 ]
@@ -6322,7 +6297,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -7203,12 +7178,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.20.1"
+version = "1.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82881c4be219ab5faaf2ad5e5e5ecdff8c66bd7402ca3160975c93b24961afd1"
-dependencies = [
- "portable-atomic",
-]
+checksum = "1261fe7e33c73b354eab43b1273a57c8f967d0391e80353e51f764ac02cf6775"
 
 [[package]]
 name = "oorandom"
@@ -8287,6 +8259,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "wevm-borsh",
+ "wevm-static",
 ]
 
 [[package]]
@@ -10352,6 +10325,7 @@ dependencies = [
  "tokio",
  "tracing",
  "wevm-borsh",
+ "wevm-static",
 ]
 
 [[package]]
@@ -12438,18 +12412,6 @@ dependencies = [
 
 [[package]]
 name = "rustls-native-certs"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
-dependencies = [
- "openssl-probe",
- "rustls-pemfile 1.0.4",
- "schannel",
- "security-framework",
-]
-
-[[package]]
-name = "rustls-native-certs"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5bfb394eeed242e909609f56089eecfe5fda225042e8b171791b9c95f5931e5"
@@ -14184,6 +14146,8 @@ dependencies = [
  "futures-core",
  "futures-io",
  "futures-sink",
+ "futures-util",
+ "hashbrown 0.14.5",
  "pin-project-lite",
  "slab",
  "tokio",
@@ -15093,6 +15057,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "wevm-static"
+version = "1.0.8"
+dependencies = [
+ "exex-wvm-bigquery",
+ "eyre",
+ "once_cell",
+ "serde_json",
+ "tokio",
+ "tokio-util 0.7.12",
+ "tracing",
+]
+
+[[package]]
 name = "widestring"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15120,7 +15097,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -15499,7 +15476,6 @@ dependencies = [
  "exex-wvm-da",
  "eyre",
  "futures",
- "gcp-bigquery-client 0.17.1",
  "indexmap 2.5.0",
  "lambda",
  "parking_lot 0.12.3",
@@ -15524,6 +15500,7 @@ dependencies = [
  "tokio",
  "tracing",
  "wevm-borsh",
+ "wevm-static",
 ]
 
 [[package]]
@@ -15584,33 +15561,6 @@ dependencies = [
  "quote",
  "syn 2.0.79",
  "synstructure 0.13.1",
-]
-
-[[package]]
-name = "yup-oauth2"
-version = "8.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b61da40aeb0907a65f7fb5c1de83c5a224d6a9ebb83bf918588a2bb744d636b8"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64 0.21.7",
- "futures",
- "http 0.2.12",
- "hyper 0.14.30",
- "hyper-rustls 0.24.2",
- "itertools 0.12.1",
- "log",
- "percent-encoding",
- "rustls 0.22.4",
- "rustls-pemfile 1.0.4",
- "seahash",
- "serde",
- "serde_json",
- "time",
- "tokio",
- "tower-service",
- "url",
 ]
 
 [[package]]

@@ -29,7 +29,6 @@ alloy-primitives.workspace = true
 tokio.workspace = true
 
 # bigquery dependencies
-gcp-bigquery-client = "0.17.0"
 indexmap = "2.0.0"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -40,6 +39,7 @@ precompiles = { path = "crates/precompiles" }
 wevm-borsh = { path = "crates/wevm-borsh" }
 exex-etl = { path = "crates/exex-etl" }
 rbrotli = { path = "crates/brotli" }
+wevm-static = { path = "crates/static" }
 borsh.workspace = true
 
 parse_duration.workspace = true

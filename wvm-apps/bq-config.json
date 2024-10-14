@@ -1,0 +1,6 @@
+{
+  "dropTableBeforeSync": false,
+  "projectId": "promising-rock-414216",
+  "datasetId": "wvm",
+  "credentialsPath": "./../../../../key.json"
+}

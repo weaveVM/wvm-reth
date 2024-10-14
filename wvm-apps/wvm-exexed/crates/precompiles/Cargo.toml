@@ -29,3 +29,4 @@ wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
 borsh.workspace = true
 alloy-primitives.workspace = true
 reth-evm-ethereum.workspace = true
+wevm-static = { path = "../static" }
