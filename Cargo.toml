@@ -154,7 +154,7 @@ members = [
     "wvm-apps/wvm-exexed/crates/exex-etl/",
     "wvm-apps/wvm-exexed/crates/lambda/",
     "wvm-apps/wvm-exexed/crates/precompiles/",
-    "wvm-apps/wvm-exexed/crates/wevm-borsh/",
+    "wvm-apps/wvm-exexed/crates/wvm-borsh/",
     "wvm-apps/wvm-exexed/crates/brotli/",
 ]
 default-members = ["bin/reth"]

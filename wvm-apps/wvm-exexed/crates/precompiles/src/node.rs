@@ -1,4 +1,4 @@
-use crate::{inner::wvm_precompiles, wevm_node_config::WvmEthEvmConfig};
+use crate::{inner::wvm_precompiles, wvm_node_config::WvmEthEvmConfig};
 use reth::{
     api::{FullNodeTypes, NodeTypes, PayloadTypes},
     builder::{

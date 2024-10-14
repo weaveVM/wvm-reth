@@ -17,7 +17,7 @@ use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use reth_primitives::constants::SLOT_DURATION;
 use tracing::{error, info};
-use wevm_borsh::block::BorshSealedBlockWithSenders;
+use wvm_borsh::block::BorshSealedBlockWithSenders;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,

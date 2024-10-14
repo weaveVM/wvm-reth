@@ -1,5 +1,5 @@
 [package]
-name = "wevm-borsh"
+name = "wvm-borsh"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

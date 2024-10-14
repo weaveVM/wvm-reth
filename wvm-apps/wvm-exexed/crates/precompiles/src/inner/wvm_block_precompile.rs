@@ -10,9 +10,9 @@ use alloy_primitives::Bytes;
 use rbrotli::from_brotli;
 use reth::primitives::revm_primitives::{Precompile, PrecompileOutput, PrecompileResult};
 use revm_primitives::{PrecompileError, PrecompileErrors};
-use wevm_borsh::block::BorshSealedBlockWithSenders;
+use wvm_borsh::block::BorshSealedBlockWithSenders;
 
-pub const WVM_BLOCK_PC: Precompile = Precompile::Standard(wevm_read_block_pc);
+pub const WVM_BLOCK_PC: Precompile = Precompile::Standard(wvm_read_block_pc);
 
 pub const WVM_BLOCK_PC_READ_BASE: u64 = 10_000;
 
@@ -65,7 +65,7 @@ async fn fetch_with_fallback(
     send_and_get_edge(fallback_gateway, query).await
 }
 
-fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
+fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let data_size = input.len();
     let gas_used: u64 = (WVM_BLOCK_PC_READ_BASE as usize + data_size * 3) as u64;
 
@@ -239,14 +239,14 @@ fn wevm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
 #[cfg(test)]
 mod arweave_read_pc_tests {
-    use crate::inner::wevm_block_precompile::wevm_read_block_pc;
+    use crate::inner::wvm_block_precompile::wvm_read_block_pc;
     use alloy_primitives::Bytes;
     use reth::primitives::revm_primitives::PrecompileOutput;
 
     #[test]
     pub fn test_read_wvm_block() {
         let input = Bytes::from("https://arweave.mainnet.irys.xyz;1127975;hash".as_bytes());
-        let PrecompileOutput { gas_used, bytes } = wevm_read_block_pc(&input, 100_000).unwrap();
+        let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
         assert_eq!(bytes.len(), 66);
         assert_eq!(
             bytes.to_vec(),
@@ -259,7 +259,7 @@ mod arweave_read_pc_tests {
     #[test]
     pub fn test_read_wvm_block_arweave_fallback() {
         let input = Bytes::from("https://arweave.net;1127975;hash".as_bytes());
-        let PrecompileOutput { gas_used, bytes } = wevm_read_block_pc(&input, 100_000).unwrap();
+        let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
         assert_eq!(bytes.len(), 66);
         assert_eq!(
             bytes.to_vec(),

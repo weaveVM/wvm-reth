@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use wevm_borsh::block::BorshSealedBlockWithSenders;
+use wvm_borsh::block::BorshSealedBlockWithSenders;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
