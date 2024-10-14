@@ -22,7 +22,7 @@ pub fn from_brotli(data: Vec<u8>) -> Vec<u8> {
 mod brotlic_tests {
     use crate::{from_brotli, to_brotli};
     use reth::primitives::SealedBlockWithSenders;
-    use wevm_borsh::block::BorshSealedBlockWithSenders;
+    use wvm_borsh::block::BorshSealedBlockWithSenders;
 
     #[test]
     pub fn test_brotlic_block() {

@@ -1,7 +1,7 @@
 use crate::inner::{
     arweave_precompile::ARWEAVE_UPLOAD_PC, arweave_read_precompile::ARWEAVE_READ_PC,
     kyve_precompile::KYVE_READ_PC, test_precompile::HELLO_WORLD_PC,
-    wevm_block_precompile::WVM_BLOCK_PC,
+    wvm_block_precompile::WVM_BLOCK_PC,
 };
 use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
 
@@ -12,7 +12,7 @@ mod kyve_precompile;
 mod string_block;
 mod test_precompile;
 mod util;
-mod wevm_block_precompile;
+mod wvm_block_precompile;
 
 fn hex_to_u64(hex_str: &str) -> u64 {
     u64::from_str_radix(&hex_str[2..], 16).unwrap()

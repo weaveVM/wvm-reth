@@ -8286,7 +8286,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
- "wevm-borsh",
+ "wvm-borsh",
 ]
 
 [[package]]
@@ -8831,7 +8831,7 @@ dependencies = [
  "brotlic",
  "reth",
  "serde_json",
- "wevm-borsh",
+ "wvm-borsh",
 ]
 
 [[package]]
@@ -10351,7 +10351,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
- "wevm-borsh",
+ "wvm-borsh",
 ]
 
 [[package]]
@@ -15073,26 +15073,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wevm-borsh"
-version = "1.0.8"
-dependencies = [
- "alloy-eips 0.4.2",
- "alloy-primitives",
- "borsh 1.5.1",
- "dotenv",
- "eyre",
- "reqwest 0.12.8",
- "reth",
- "reth-exex",
- "reth-node-ethereum",
- "reth-primitives",
- "reth-tracing",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "widestring"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15487,6 +15467,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "wvm-borsh"
+version = "1.0.8"
+dependencies = [
+ "alloy-eips 0.4.2",
+ "alloy-primitives",
+ "borsh 1.5.1",
+ "dotenv",
+ "eyre",
+ "reqwest 0.12.8",
+ "reth",
+ "reth-exex",
+ "reth-node-ethereum",
+ "reth-primitives",
+ "reth-tracing",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "wvm-exexed"
 version = "1.0.0"
 dependencies = [
@@ -15523,7 +15523,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
- "wevm-borsh",
+ "wvm-borsh",
 ]
 
 [[package]]

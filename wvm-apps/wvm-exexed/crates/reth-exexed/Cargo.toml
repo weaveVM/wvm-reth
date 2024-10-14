@@ -16,7 +16,7 @@ reth-primitives.workspace = true
 eyre.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
-wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
+wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
 exex-etl = { path = "../exex-etl" }
 lambda = { path = "../lambda" }
 arweave-upload = { path = "../arweave-upload" }

@@ -37,7 +37,7 @@ brotlic.workspace = true
 lambda = { path = "crates/lambda" }
 arweave-upload = { path = "crates/arweave-upload" }
 precompiles = { path = "crates/precompiles" }
-wevm-borsh = { path = "crates/wevm-borsh" }
+wvm-borsh = { path = "crates/wvm-borsh" }
 exex-etl = { path = "crates/exex-etl" }
 rbrotli = { path = "crates/brotli" }
 borsh.workspace = true
