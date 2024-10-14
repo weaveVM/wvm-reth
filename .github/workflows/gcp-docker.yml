@@ -27,7 +27,7 @@ jobs:
         with:
           token_format: access_token
           credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
-          access_token_lifetime: 300s
+          access_token_lifetime: 1800s
 
       - name: Configure container registry
         run: gcloud auth configure-docker us-east1-docker.pkg.dev
