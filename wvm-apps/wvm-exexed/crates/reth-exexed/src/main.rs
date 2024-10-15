@@ -18,6 +18,7 @@ use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use reth_primitives::constants::SLOT_DURATION;
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
+use std::sync::Arc;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -156,7 +157,7 @@ fn main() -> eyre::Result<()> {
                     info!(target: "wvm::exex", "bigquery client initialized");
 
                     // init state repository
-                    let state_repo = StateRepository::new(bigquery_client);
+                    let state_repo = StateRepository::new(Arc::new(bigquery_client));
                     // init state processor
                     let state_processor = exex_etl::state_processor::StateProcessor::new();
 
