@@ -1,9 +1,10 @@
 use crate::inner::arweave_read_precompile::ARWEAVE_PC_READ_BASE;
-use crate::inner::string_block::Block;
+use crate::inner::string_block::{from_sealed_block_senders, Block};
 use crate::inner::wevm_block_precompile::{
     process_block_to_field, process_pc_response_from_str_bytes,
 };
 use alloy_primitives::Bytes;
+use reth::primitives::SealedBlockWithSenders;
 use revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult};
 use wevm_static::WVM_BIGQUERY;
 
@@ -54,7 +55,12 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         PrecompileErrors::Error(PrecompileError::Other("Unknown block".to_string()))
     })?;
 
-    let block = Block::from(block_str);
+    let block = serde_json::from_str::<SealedBlockWithSenders>(&block_str).map_err(|_| {
+        PrecompileErrors::Error(PrecompileError::Other(
+            "Cannot deserialize block with senders".to_string(),
+        ))
+    })?;
+    let block = from_sealed_block_senders(block);
 
     let process_field = process_block_to_field(res.0.to_string(), block);
 

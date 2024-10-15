@@ -30,7 +30,7 @@ pub struct Block {
     pub transactions: Vec<String>,                // "transactions" as an array of strings
 }
 
-fn from_sealed_block_senders(sealed_block: SealedBlockWithSenders) -> Block {
+pub fn from_sealed_block_senders(sealed_block: SealedBlockWithSenders) -> Block {
     Block {
         base_fee_per_gas: sealed_block.base_fee_per_gas.map(|i| i.to_string()),
         blob_gas_used: sealed_block.blob_gas_used.map(|i| i.to_string()),
