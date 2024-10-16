@@ -1,5 +1,6 @@
 use reth::primitives::SealedBlockWithSenders;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use wevm_borsh::block::BorshSealedBlockWithSenders;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -55,6 +56,69 @@ pub fn from_sealed_block_senders(sealed_block: SealedBlockWithSenders) -> Block 
         timestamp: Some(sealed_block.timestamp.to_string()),
         total_difficulty: None,
         transactions: sealed_block.transactions().map(|i| i.hash.to_string()).collect(),
+    }
+}
+
+fn json_value_to_string(value: &Value) -> String {
+    match value {
+        Value::String(s) => s.clone(), // For strings, return the raw string
+        _ => value.to_string(),        // For other types, use the default serialization
+    }
+}
+
+pub fn from_sealed_block_senders_value(sealed_block: Value) -> Block {
+    Block {
+        base_fee_per_gas: sealed_block["block"]["header"]["header"]
+            .get("base_fee_per_gas")
+            .map(|i| json_value_to_string(i)),
+        blob_gas_used: sealed_block["block"]["header"]["header"]
+            .get("blob_gas_used")
+            .map(|i| json_value_to_string(i)),
+        difficulty: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["difficulty"],
+        )),
+        excess_blob_gas: sealed_block["block"]["header"]["header"]
+            .get("excess_blob_gas")
+            .map(|i| json_value_to_string(i)),
+        extra_data: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["extra_data"],
+        )),
+        gas_limit: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["gas_limit"],
+        )),
+        gas_used: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["gas_used"],
+        )),
+        hash: Some(json_value_to_string(&sealed_block["block"]["header"]["hash"])),
+        logs_bloom: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["logs_bloom"],
+        )),
+        miner: None,
+        mix_hash: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["mix_hash"],
+        )),
+        nonce: Some(json_value_to_string(&sealed_block["block"]["header"]["header"]["nonce"])),
+        number: Some(json_value_to_string(&sealed_block["block"]["header"]["header"]["number"])),
+        parent_beacon_block_root: sealed_block["block"]["header"]["header"]
+            .get("parent_beacon_block_root")
+            .map(|i| json_value_to_string(i)),
+        parent_hash: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["parent_hash"],
+        )),
+        receipts_root: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["receipts_root"],
+        )),
+        seal_fields: vec![],
+        sha3_uncles: None,
+        size: None,
+        state_root: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["state_root"],
+        )),
+        timestamp: Some(json_value_to_string(
+            &sealed_block["block"]["header"]["header"]["timestamp"],
+        )),
+        total_difficulty: None,
+        transactions: vec![],
     }
 }
 
