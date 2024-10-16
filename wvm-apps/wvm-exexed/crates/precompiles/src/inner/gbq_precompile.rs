@@ -80,5 +80,11 @@ mod tests {
         );
         let input = Bytes::from("253;hash".as_bytes());
         let result = gbq_read(&input, 100_000);
+        assert_eq!(
+            result.unwrap().bytes.to_vec(),
+            "0x79daa2736e6272f8ad4a3453cecc00db8f0cbcc03604cbd42cc13fec8b8214fb"
+                .as_bytes()
+                .to_vec()
+        );
     }
 }
