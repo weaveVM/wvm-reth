@@ -16,9 +16,10 @@ use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use reth_primitives::constants::SLOT_DURATION;
+use std::sync::Arc;
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
-use std::sync::Arc;
+use wvm_static::WVM_BIGQUERY;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -139,25 +140,10 @@ fn main() -> eyre::Result<()> {
         if run_exex == "true" {
             handle = handle
                 .install_exex("exex-etl", |ctx| async move {
-                    let config_path: String =
-                        std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
-                    info!(target: "wvm::exex","launch config applied from: {}", config_path);
-
-                    let config_file =
-                        std::fs::File::open(config_path).expect("bigquery config path exists");
-                    let reader = std::io::BufReader::new(config_file);
-
-                    let bq_config: BigQueryConfig =
-                        serde_json::from_reader(reader).expect("bigquery config read from file");
-
-                    // init bigquery client
-                    let bigquery_client =
-                        init_bigquery_db(&bq_config).await.expect("bigquery client initialized");
-
-                    info!(target: "wvm::exex", "bigquery client initialized");
+                    let big_query_client = (&*WVM_BIGQUERY).clone();
 
                     // init state repository
-                    let state_repo = StateRepository::new(Arc::new(bigquery_client));
+                    let state_repo = StateRepository::new(big_query_client);
                     // init state processor
                     let state_processor = exex_etl::state_processor::StateProcessor::new();
 

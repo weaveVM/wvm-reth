@@ -26,6 +26,7 @@ tokio.workspace = true
 reqwest-graphql = "1.0.0"
 rbrotli = { path = "../brotli" }
 wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
+wvm-static = { path = "../static" }
 borsh.workspace = true
 alloy-primitives.workspace = true
 reth-evm-ethereum.workspace = true

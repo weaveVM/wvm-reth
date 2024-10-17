@@ -135,82 +135,9 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                                                 .unwrap();
                                             let str_block = Block::from(unborsh);
 
-                                            let data = match field.as_str() {
-                                                "base_fee_per_gas" => Some(
-                                                    str_block
-                                                        .base_fee_per_gas
-                                                        .unwrap()
-                                                        .into_bytes(),
-                                                ),
-                                                "blob_gas_used" => Some(
-                                                    str_block.blob_gas_used.unwrap().into_bytes(),
-                                                ),
-                                                "difficulty" => {
-                                                    Some(str_block.difficulty.unwrap().into_bytes())
-                                                }
-                                                "excess_blob_gas" => Some(
-                                                    str_block.excess_blob_gas.unwrap().into_bytes(),
-                                                ),
-                                                "extra_data" => {
-                                                    Some(str_block.extra_data.unwrap().into_bytes())
-                                                }
-                                                "gas_limit" => {
-                                                    Some(str_block.gas_limit.unwrap().into_bytes())
-                                                }
-                                                "gas_used" => {
-                                                    Some(str_block.gas_used.unwrap().into_bytes())
-                                                }
-                                                "hash" => {
-                                                    Some(str_block.hash.unwrap().into_bytes())
-                                                }
-                                                "logs_bloom" => {
-                                                    Some(str_block.logs_bloom.unwrap().into_bytes())
-                                                }
-                                                "mix_hash" => {
-                                                    Some(str_block.mix_hash.unwrap().into_bytes())
-                                                }
-                                                "nonce" => {
-                                                    Some(str_block.nonce.unwrap().into_bytes())
-                                                }
-                                                "parent_beacon_block_root" => Some(
-                                                    str_block
-                                                        .parent_beacon_block_root
-                                                        .unwrap()
-                                                        .into_bytes(),
-                                                ),
-                                                "parent_hash" => Some(
-                                                    str_block.parent_hash.unwrap().into_bytes(),
-                                                ),
-                                                "receipts_root" => Some(
-                                                    str_block.receipts_root.unwrap().into_bytes(),
-                                                ),
-                                                "size" => {
-                                                    Some(str_block.size.unwrap().into_bytes())
-                                                }
-                                                "state_root" => {
-                                                    Some(str_block.state_root.unwrap().into_bytes())
-                                                }
-                                                "timestamp" => {
-                                                    Some(str_block.timestamp.unwrap().into_bytes())
-                                                }
-                                                "transactions" => Some(
-                                                    str_block.transactions.join(",").into_bytes(),
-                                                ),
-                                                _ => None,
-                                            };
+                                            let data = process_block_to_field(field, str_block);
 
-                                            if let Some(valid_data) = data {
-                                                Ok(PrecompileOutput::new(
-                                                    gas_used,
-                                                    valid_data.into(),
-                                                ))
-                                            } else {
-                                                Err(PrecompileErrors::Error(
-                                                    PrecompileError::Other(
-                                                        "Unknown field".to_string(),
-                                                    ),
-                                                ))
-                                            }
+                                            process_pc_response_from_str_bytes(gas_used, data)
                                         }
                                         _ => Err(PrecompileErrors::Error(PrecompileError::Other(
                                             "Unknown encoding".to_string(),
@@ -235,6 +162,44 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             "Block id could not be parsed".to_string(),
         ))),
     }
+}
+
+pub fn process_pc_response_from_str_bytes(
+    gas_used: u64,
+    data: Option<Vec<u8>>,
+) -> Result<PrecompileOutput, PrecompileErrors> {
+    if let Some(valid_data) = data {
+        Ok(PrecompileOutput::new(gas_used, valid_data.into()))
+    } else {
+        Err(PrecompileErrors::Error(PrecompileError::Other("Unknown field".to_string())))
+    }
+}
+
+pub fn process_block_to_field(field: String, str_block: Block) -> Option<Vec<u8>> {
+    let data = match field.as_str() {
+        "base_fee_per_gas" => Some(str_block.base_fee_per_gas.unwrap().into_bytes()),
+        "blob_gas_used" => Some(str_block.blob_gas_used.unwrap().into_bytes()),
+        "difficulty" => Some(str_block.difficulty.unwrap().into_bytes()),
+        "excess_blob_gas" => Some(str_block.excess_blob_gas.unwrap().into_bytes()),
+        "extra_data" => Some(str_block.extra_data.unwrap().into_bytes()),
+        "gas_limit" => Some(str_block.gas_limit.unwrap().into_bytes()),
+        "gas_used" => Some(str_block.gas_used.unwrap().into_bytes()),
+        "hash" => Some(str_block.hash.unwrap().into_bytes()),
+        "logs_bloom" => Some(str_block.logs_bloom.unwrap().into_bytes()),
+        "mix_hash" => Some(str_block.mix_hash.unwrap().into_bytes()),
+        "nonce" => Some(str_block.nonce.unwrap().into_bytes()),
+        "parent_beacon_block_root" => {
+            Some(str_block.parent_beacon_block_root.unwrap().into_bytes())
+        }
+        "parent_hash" => Some(str_block.parent_hash.unwrap().into_bytes()),
+        "receipts_root" => Some(str_block.receipts_root.unwrap().into_bytes()),
+        "size" => Some(str_block.size.unwrap().into_bytes()),
+        "state_root" => Some(str_block.state_root.unwrap().into_bytes()),
+        "timestamp" => Some(str_block.timestamp.unwrap().into_bytes()),
+        "transactions" => Some(str_block.transactions.join(",").into_bytes()),
+        _ => None,
+    };
+    data
 }
 
 #[cfg(test)]
