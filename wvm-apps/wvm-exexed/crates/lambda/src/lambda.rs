@@ -2,8 +2,10 @@ use reth::{api::FullNodeComponents, primitives::TransactionSigned};
 
 use alloy_primitives::Address;
 
+use futures::{Stream, StreamExt};
 use reth_exex::ExExContext;
 use serde_json::{self, json};
+use tracing::{error, info};
 
 pub const SEQ_ADDRESS: &str = "0x197f818c1313DC58b32D88078ecdfB40EA822614";
 pub const LAMBDA_ENDPOINT: &str = "https://wvm-lambda-0755acbdae90.herokuapp.com";
@@ -32,10 +34,21 @@ pub async fn exex_lambda_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
 ) -> eyre::Result<()> {
     let lambda_server = std::env::var("LAMBDA_ENDPOINT").unwrap_or(String::from(LAMBDA_ENDPOINT));
-
     let mut txs: Vec<String> = vec![];
 
-    while let Some(notification) = ctx.notifications.recv().await {
+    while let Some(notification_result) = ctx.notifications.next().await {
+        let notification = match notification_result {
+            Ok(notification) => notification,
+            Err(e) => {
+                error!(
+                    target: "wvm::exex",
+                    %e,
+                    "Failed to receive notification from exex stream",
+                );
+                continue;
+            }
+        };
+
         if let Some(committed_chain) = notification.committed_chain() {
             let client = reqwest::Client::new();
             let last_block = committed_chain.tip();
