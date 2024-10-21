@@ -157,7 +157,6 @@ members = [
     "wvm-apps/wvm-exexed/crates/wvm-borsh/",
     "wvm-apps/wvm-exexed/crates/static/",
     "wvm-apps/wvm-exexed/crates/brotli/",
-    "wvm-apps/wvm-exexed/crates/tx/",
 ]
 default-members = ["bin/reth"]
 exclude = ["book/sources"]
