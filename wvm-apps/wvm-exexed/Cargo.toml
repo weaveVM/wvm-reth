@@ -8,6 +8,8 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
+exex-wvm-bigquery.workspace = true
+exex-wvm-da.workspace = true
 reth-revm.workspace = true
 reth-ethereum-engine-primitives.workspace = true
 reth-primitives.workspace = true
@@ -19,6 +21,8 @@ reth-exex.workspace = true
 reth-node-api.workspace = true
 reth-node-ethereum.workspace = true
 reth-tracing.workspace = true
+reth-evm-ethereum.workspace = true
+tracing.workspace = true
 eyre.workspace = true
 futures.workspace = true
 alloy-primitives.workspace = true
@@ -30,17 +34,16 @@ indexmap = "2.0.0"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 brotlic.workspace = true
-
-repository = { path = "crates/repository" }
-bigquery = { path = "crates/bigquery" }
 lambda = { path = "crates/lambda" }
-irys = { path = "crates/irys" }
+arweave-upload = { path = "crates/arweave-upload" }
 precompiles = { path = "crates/precompiles" }
-wevm-borsh = { path = "crates/wevm-borsh" }
+wvm-borsh = { path = "crates/wvm-borsh" }
+wvm-static = { path = "crates/static" }
 exex-etl = { path = "crates/exex-etl" }
-types = { path = "crates/types" }
 rbrotli = { path = "crates/brotli" }
 borsh.workspace = true
+
+parse_duration.workspace = true
 
 [dev-dependencies]
 reth-exex-test-utils.workspace = true

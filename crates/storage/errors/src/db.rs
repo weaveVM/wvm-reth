@@ -1,14 +1,9 @@
-#[cfg(feature = "std")]
-use std::{fmt, fmt::Display, str::FromStr, string::String};
-
-#[cfg(not(feature = "std"))]
 use alloc::{
     boxed::Box,
     format,
     string::{String, ToString},
     vec::Vec,
 };
-#[cfg(not(feature = "std"))]
 use core::{
     fmt,
     fmt::{Debug, Display},
@@ -19,47 +14,46 @@ use core::{
 #[derive(Clone, Debug, PartialEq, Eq, derive_more::Display)]
 pub enum DatabaseError {
     /// Failed to open the database.
-    #[display(fmt = "failed to open the database: {_0}")]
+    #[display("failed to open the database: {_0}")]
     Open(DatabaseErrorInfo),
     /// Failed to create a table in the database.
-    #[display(fmt = "failed to create a table: {_0}")]
+    #[display("failed to create a table: {_0}")]
     CreateTable(DatabaseErrorInfo),
     /// Failed to write a value into a table.
     Write(Box<DatabaseWriteError>),
     /// Failed to read a value from a table.
-    #[display(fmt = "failed to read a value from a database table: {_0}")]
+    #[display("failed to read a value from a database table: {_0}")]
     Read(DatabaseErrorInfo),
     /// Failed to delete a `(key, value)` pair from a table.
-    #[display(fmt = "database delete error code: {_0}")]
+    #[display("database delete error code: {_0}")]
     Delete(DatabaseErrorInfo),
     /// Failed to commit transaction changes into the database.
-    #[display(fmt = "failed to commit transaction changes: {_0}")]
+    #[display("failed to commit transaction changes: {_0}")]
     Commit(DatabaseErrorInfo),
     /// Failed to initiate a transaction.
-    #[display(fmt = "failed to initialize a transaction: {_0}")]
+    #[display("failed to initialize a transaction: {_0}")]
     InitTx(DatabaseErrorInfo),
     /// Failed to initialize a cursor.
-    #[display(fmt = "failed to initialize a cursor: {_0}")]
+    #[display("failed to initialize a cursor: {_0}")]
     InitCursor(DatabaseErrorInfo),
     /// Failed to decode a key from a table.
-    #[display(fmt = "failed to decode a key from a table")]
+    #[display("failed to decode a key from a table")]
     Decode,
     /// Failed to get database stats.
-    #[display(fmt = "failed to get stats: {_0}")]
+    #[display("failed to get stats: {_0}")]
     Stats(DatabaseErrorInfo),
     /// Failed to use the specified log level, as it's not available.
-    #[display(fmt = "log level {_0:?} is not available")]
+    #[display("log level {_0:?} is not available")]
     LogLevelUnavailable(LogLevel),
     /// Other unspecified error.
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     Other(String),
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for DatabaseError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+impl core::error::Error for DatabaseError {
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
         match self {
-            Self::Write(err) => std::error::Error::source(err),
+            Self::Write(err) => core::error::Error::source(err),
             _ => Option::None,
         }
     }
@@ -67,7 +61,7 @@ impl std::error::Error for DatabaseError {
 
 /// Common error struct to propagate implementation-specific error information.
 #[derive(Debug, Clone, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "{message} ({code})")]
+#[display("{message} ({code})")]
 pub struct DatabaseErrorInfo {
     /// Human-readable error message.
     pub message: String,
@@ -111,15 +105,14 @@ impl fmt::Display for DatabaseWriteError {
             f,
             "write operation {:?} failed for key \"{}\" in table {}: {}",
             self.operation,
-            reth_primitives::hex::encode(&self.key),
+            alloy_primitives::hex::encode(&self.key),
             self.table_name,
             self.info
         )
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for DatabaseWriteError {}
+impl core::error::Error for DatabaseWriteError {}
 
 /// Database write operation type.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

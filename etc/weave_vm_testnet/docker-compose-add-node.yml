@@ -48,6 +48,7 @@ services:
       - --bootnodes=enode://e6592ab87a01aeb6425a494629355718984ce26f5f256f2e1c90615bd0c93d0afabcf87caddc0d058123f6e47f26503c937970833186647201f2ffda759dcc74@34.107.39.173:30303
       - --debug.tip=0xf55fd86dbd5df2149a9c5a0aa18e9aab2b76f1c1aeff8dd948eae16199cb0bac
       - -vvvv
+      - --rpc.eth-proof-window=3888000
 
   # default prometheus + grafana setup
   prometheus:

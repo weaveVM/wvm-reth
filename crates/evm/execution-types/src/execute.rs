@@ -1,4 +1,5 @@
-use reth_primitives::{Request, U256};
+use alloy_primitives::U256;
+use reth_primitives::Request;
 use revm::db::BundleState;
 
 /// A helper type for ethereum block inputs that consists of a block and the total difficulty.
@@ -26,8 +27,6 @@ impl<'a, Block> From<(&'a Block, U256)> for BlockExecutionInput<'a, Block> {
 /// The output of an ethereum block.
 ///
 /// Contains the state changes, transaction receipts, and total gas used in the block.
-///
-/// TODO(mattsse): combine with `ExecutionOutcome`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BlockExecutionOutput<T> {
     /// The changed state of the block after execution.

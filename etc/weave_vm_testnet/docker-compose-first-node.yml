@@ -45,6 +45,7 @@ services:
       - --enable-discv5-discovery
       - --discovery.v5.port=30304
       - -vvvv
+      - --rpc.eth-proof-window=3888000
 
   # default prometheus + grafana setup
   prometheus:

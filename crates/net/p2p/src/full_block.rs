@@ -5,10 +5,11 @@ use crate::{
     headers::client::{HeadersClient, SingleHeaderRequest},
     BlockClient,
 };
+use alloy_primitives::{Sealable, B256};
 use reth_consensus::{Consensus, ConsensusError};
 use reth_eth_wire_types::HeadersDirection;
 use reth_network_peers::WithPeerId;
-use reth_primitives::{BlockBody, GotExpected, Header, SealedBlock, SealedHeader, B256};
+use reth_primitives::{BlockBody, GotExpected, Header, SealedBlock, SealedHeader};
 use std::{
     cmp::Reverse,
     collections::{HashMap, VecDeque},
@@ -93,7 +94,7 @@ where
             client,
             headers: None,
             pending_headers: VecDeque::new(),
-            bodies: HashMap::new(),
+            bodies: HashMap::default(),
             consensus: Arc::clone(&self.consensus),
         }
     }
@@ -176,20 +177,30 @@ where
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
 
+        // preemptive yield point
+        let mut budget = 4;
+
         loop {
             match ready!(this.request.poll(cx)) {
                 ResponseResult::Header(res) => {
                     match res {
                         Ok(maybe_header) => {
-                            let (peer, maybe_header) =
-                                maybe_header.map(|h| h.map(|h| h.seal_slow())).split();
+                            let (peer, maybe_header) = maybe_header
+                                .map(|h| {
+                                    h.map(|h| {
+                                        let sealed = h.seal_slow();
+                                        let (header, seal) = sealed.into_parts();
+                                        SealedHeader::new(header, seal)
+                                    })
+                                })
+                                .split();
                             if let Some(header) = maybe_header {
-                                if header.hash() != this.hash {
+                                if header.hash() == this.hash {
+                                    this.header = Some(header);
+                                } else {
                                     debug!(target: "downloaders", expected=?this.hash, received=?header.hash(), "Received wrong header");
                                     // received a different header than requested
                                     this.client.report_bad_message(peer)
-                                } else {
-                                    this.header = Some(header);
                                 }
                             }
                         }
@@ -223,6 +234,14 @@ where
 
             if let Some(res) = this.take_block() {
                 return Poll::Ready(res)
+            }
+
+            // ensure we still have enough budget for another iteration
+            budget -= 1;
+            if budget == 0 {
+                // make sure we're woken up again
+                cx.waker().wake_by_ref();
+                return Poll::Pending
             }
         }
     }
@@ -482,8 +501,17 @@ where
     }
 
     fn on_headers_response(&mut self, headers: WithPeerId<Vec<Header>>) {
-        let (peer, mut headers_falling) =
-            headers.map(|h| h.into_iter().map(|h| h.seal_slow()).collect::<Vec<_>>()).split();
+        let (peer, mut headers_falling) = headers
+            .map(|h| {
+                h.into_iter()
+                    .map(|h| {
+                        let sealed = h.seal_slow();
+                        let (header, seal) = sealed.into_parts();
+                        SealedHeader::new(header, seal)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .split();
 
         // fill in the response if it's the correct length
         if headers_falling.len() == self.count as usize {
@@ -491,16 +519,12 @@ where
             headers_falling.sort_unstable_by_key(|h| Reverse(h.number));
 
             // check the starting hash
-            if headers_falling[0].hash() != self.start_hash {
-                // received a different header than requested
-                self.client.report_bad_message(peer);
-            } else {
+            if headers_falling[0].hash() == self.start_hash {
                 let headers_rising = headers_falling.iter().rev().cloned().collect::<Vec<_>>();
-                // ensure the downloaded headers are valid
+                // check if the downloaded headers are valid
                 if let Err(err) = self.consensus.validate_header_range(&headers_rising) {
                     debug!(target: "downloaders", %err, ?self.start_hash, "Received bad header response");
                     self.client.report_bad_message(peer);
-                    return
                 }
 
                 // get the bodies request so it can be polled later
@@ -517,6 +541,9 @@ where
 
                 // set the headers response
                 self.headers = Some(headers_falling);
+            } else {
+                // received a different header than requested
+                self.client.report_bad_message(peer);
             }
         }
     }
@@ -719,7 +746,10 @@ mod tests {
             header.parent_hash = hash;
             header.number += 1;
 
-            sealed_header = header.seal_slow();
+            let sealed = header.seal_slow();
+            let (header, seal) = sealed.into_parts();
+            sealed_header = SealedHeader::new(header, seal);
+
             client.insert(sealed_header.clone(), body.clone());
         }
 
@@ -757,6 +787,25 @@ mod tests {
 
         let received = client.get_full_block_range(header.hash(), 50).await;
         assert_eq!(received.len(), 50);
+        for (i, block) in received.iter().enumerate() {
+            let expected_number = header.number - i as u64;
+            assert_eq!(block.header.number, expected_number);
+        }
+    }
+
+    #[tokio::test]
+    async fn download_full_block_range_with_invalid_header() {
+        let client = TestFullBlockClient::default();
+        let range_length: usize = 3;
+        let (header, _) = insert_headers_into_client(&client, 0..range_length);
+
+        let test_consensus = reth_consensus::test_utils::TestConsensus::default();
+        test_consensus.set_fail_validation(true);
+        let client = FullBlockClient::new(client, Arc::new(test_consensus));
+
+        let received = client.get_full_block_range(header.hash(), range_length as u64).await;
+
+        assert_eq!(received.len(), range_length);
         for (i, block) in received.iter().enumerate() {
             let expected_number = header.number - i as u64;
             assert_eq!(block.header.number, expected_number);

@@ -12,15 +12,22 @@ reth.workspace = true
 reth-exex.workspace = true
 reth-node-ethereum.workspace = true
 reth-tracing.workspace = true
+reth-primitives.workspace = true
 eyre.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
-wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
-repository = { path = "../repository" }
-bigquery = { path = "../bigquery" }
+wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
 exex-etl = { path = "../exex-etl" }
-types = { path = "../types" }
 lambda = { path = "../lambda" }
-irys = { path = "../irys" }
+arweave-upload = { path = "../arweave-upload" }
 precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
+wvm-static = { path = "../static" }
+tokio.workspace = true
+exex-wvm-da.workspace = true
+exex-wvm-bigquery.workspace = true
+tracing.workspace = true
+parse_duration.workspace = true
+futures.workspace = true
+
+

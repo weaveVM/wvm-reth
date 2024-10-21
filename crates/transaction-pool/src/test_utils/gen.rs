@@ -1,9 +1,12 @@
 use crate::EthPooledTransaction;
+use alloy_consensus::{TxEip1559, TxEip4844, TxLegacy};
+use alloy_eips::{eip2718::Encodable2718, eip2930::AccessList};
+use alloy_primitives::{Address, Bytes, TxKind, B256, U256};
 use rand::Rng;
 use reth_chainspec::MAINNET;
 use reth_primitives::{
-    constants::MIN_PROTOCOL_BASE_FEE, sign_message, AccessList, Address, Bytes, Transaction,
-    TransactionSigned, TxEip1559, TxEip4844, TxKind, TxLegacy, B256, U256,
+    constants::{get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE},
+    sign_message, Transaction, TransactionSigned,
 };
 
 /// A generator for transactions for testing purposes.
@@ -30,7 +33,7 @@ impl<R: Rng> TransactionGenerator<R> {
         Self {
             rng,
             signer_keys: (0..num_signers).map(|_| B256::random()).collect(),
-            base_fee: MIN_PROTOCOL_BASE_FEE as u128,
+            base_fee: get_latest_min_protocol_base_fee() as u128,
             gas_limit: 300_000,
         }
     }
@@ -104,7 +107,7 @@ impl<R: Rng> TransactionGenerator<R> {
     /// Generates and returns a pooled EIP-4844 transaction with a random signer.
     pub fn gen_eip4844_pooled(&mut self) -> EthPooledTransaction {
         let tx = self.gen_eip4844().into_ecrecovered().unwrap();
-        let encoded_length = tx.length_without_header();
+        let encoded_length = tx.encode_2718_len();
         EthPooledTransaction::new(tx, encoded_length)
     }
 }
@@ -181,7 +184,6 @@ impl TransactionBuilder {
                 gas_limit: self.gas_limit,
                 max_fee_per_gas: self.max_fee_per_gas,
                 max_priority_fee_per_gas: self.max_priority_fee_per_gas,
-                placeholder: None,
                 to: match self.to {
                     TxKind::Call(to) => to,
                     TxKind::Create => Address::default(),

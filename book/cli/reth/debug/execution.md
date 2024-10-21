@@ -4,6 +4,8 @@ Debug the roundtrip execution of blocks as well as the generated data
 
 ```bash
 $ reth debug execution --help
+```
+```txt
 Usage: reth debug execution [OPTIONS] --to <TO>
 
 Options:
@@ -33,7 +35,7 @@ Datadir:
 
           [default: default]
 
-      --datadir.static_files <PATH>
+      --datadir.static-files <PATH>
           The absolute path to store static files in.
 
       --config <FILE>
@@ -80,6 +82,9 @@ Networking:
       --enable-discv5-discovery
           Enable Discv5 discovery
 
+      --disable-nat
+          Disable Nat discovery
+
       --discovery.addr <DISCOVERY_ADDR>
           The UDP address to use for devp2p peer discovery version 4
 
@@ -99,12 +104,12 @@ Networking:
       --discovery.v5.port <DISCOVERY_V5_PORT>
           The UDP IPv4 port to use for devp2p peer discovery version 5. Not used unless `--addr` is IPv4, or `--discovery.v5.addr` is set
 
-          [default: 9000]
+          [default: 9200]
 
       --discovery.v5.port.ipv6 <DISCOVERY_V5_PORT_IPV6>
           The UDP IPv6 port to use for devp2p peer discovery version 5. Not used unless `--addr` is IPv6, or `--discovery.addr.ipv6` is set
 
-          [default: 9000]
+          [default: 9200]
 
       --discovery.v5.lookup-interval <DISCOVERY_V5_LOOKUP_INTERVAL>
           The interval in seconds at which to carry out periodic lookup queries, for the whole run of the program
@@ -177,17 +182,27 @@ Networking:
       --max-inbound-peers <MAX_INBOUND_PEERS>
           Maximum number of inbound requests. default: 30
 
-      --max-pending-imports <COUNT>
-          Max number of transactions to import concurrently.
+      --max-tx-reqs <COUNT>
+          Max concurrent `GetPooledTransactions` requests.
 
-          [default: 4096]
+          [default: 130]
 
-      --max-seen-tx-history <MAX_SEEN_TX_HISTORY>
+      --max-tx-reqs-peer <COUNT>
+          Max concurrent `GetPooledTransactions` requests per peer.
+
+          [default: 1]
+
+      --max-seen-tx-history <COUNT>
           Max number of seen transactions to remember per peer.
 
           Default is 320 transaction hashes.
 
           [default: 320]
+
+      --max-pending-imports <COUNT>
+          Max number of transactions to import concurrently.
+
+          [default: 4096]
 
       --pooled-tx-response-soft-limit <BYTES>
           Experimental, for usage in research. Sets the max accumulated byte size of transactions
@@ -210,6 +225,16 @@ Networking:
           Default is 128 KiB.
 
           [default: 131072]
+
+      --max-tx-pending-fetch <COUNT>
+          Max capacity of cache of hashes for transactions pending fetch.
+
+          [default: 25600]
+
+      --net-if.experimental <IF_NAME>
+          Name of network interface used to communicate with peers.
+
+          If flag is set, but no value is passed, the default interface for docker `eth0` is tried.
 
       --to <TO>
           The maximum block height

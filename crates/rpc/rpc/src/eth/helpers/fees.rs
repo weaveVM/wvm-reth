@@ -1,5 +1,6 @@
 //! Contains RPC handler implementations for fee history.
 
+use reth_chainspec::EthereumHardforks;
 use reth_provider::{BlockIdReader, BlockReaderIdExt, ChainSpecProvider, HeaderProvider};
 
 use reth_rpc_eth_api::helpers::{EthFees, LoadBlock, LoadFee};
@@ -15,10 +16,12 @@ impl<Provider, Pool, Network, EvmConfig> EthFees for EthApi<Provider, Pool, Netw
 impl<Provider, Pool, Network, EvmConfig> LoadFee for EthApi<Provider, Pool, Network, EvmConfig>
 where
     Self: LoadBlock,
-    Provider: BlockReaderIdExt + HeaderProvider + ChainSpecProvider,
+    Provider: BlockReaderIdExt + HeaderProvider + ChainSpecProvider<ChainSpec: EthereumHardforks>,
 {
     #[inline]
-    fn provider(&self) -> impl BlockIdReader + HeaderProvider + ChainSpecProvider {
+    fn provider(
+        &self,
+    ) -> impl BlockIdReader + HeaderProvider + ChainSpecProvider<ChainSpec: EthereumHardforks> {
         self.inner.provider()
     }
 

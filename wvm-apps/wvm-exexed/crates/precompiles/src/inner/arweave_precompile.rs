@@ -1,13 +1,10 @@
-use irys::irys::IrysRequest;
-use reth::{
-    primitives::{
-        hex,
-        revm_primitives::{Precompile, PrecompileError, PrecompileOutput, PrecompileResult},
-        Bytes,
-    },
-    revm::precompile::{u64_to_address, PrecompileWithAddress},
+use alloy_primitives::Bytes;
+use arweave_upload::ArweaveRequest;
+use rbrotli::to_brotli;
+use reth::primitives::revm_primitives::{
+    Precompile, PrecompileError, PrecompileOutput, PrecompileResult,
 };
-use reth_revm::{precompile::PrecompileErrors, primitives::B256};
+use reth_revm::precompile::PrecompileErrors;
 use std::str::FromStr;
 
 pub const PC_ADDRESS: u64 = 0x17;
@@ -19,6 +16,7 @@ pub const SOLANA_SILLY_PRIVATE_KEY: &str =
     "kNykCXNxgePDjFbDWjPNvXQRa8U12Ywc19dFVaQ7tebUj3m7H4sF4KKdJwM7yxxb3rqxchdjezX9Szh8bLcQAjb";
 
 fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
+    let input = to_brotli(input.to_vec());
     let data_size = input.len();
     let gas_used: u64 = (10_000 + data_size * 3) as u64;
 
@@ -41,12 +39,13 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
     let res = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
         async {
-            IrysRequest::new()
+            ArweaveRequest::new()
                 .set_private_key(SOLANA_SILLY_PRIVATE_KEY.to_string())
                 .set_tag("Content-Type", "application/octet-stream")
                 .set_tag("WeaveVM:Precompile", "true")
+                .set_tag("WeaveVM:Encoding", "Brotli")
                 .set_tag("WeaveVM:Precompile-Address", PC_ADDRESS.to_string().as_str())
-                .set_data(input.0.to_vec())
+                .set_data(input)
                 .send()
                 .await
         },
@@ -59,15 +58,18 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 }
 
 #[cfg(test)]
-mod irys_pc_tests {
+mod arupload_pc_tests {
     use crate::inner::arweave_precompile::{arweave_upload, SOLANA_SILLY_PRIVATE_KEY};
-    use reth::primitives::{revm_primitives::PrecompileOutput, Bytes};
+    use alloy_primitives::Bytes;
+    use reth::primitives::revm_primitives::PrecompileOutput;
     use std::env;
 
     #[test]
     pub fn test_arweave_precompile() {
         let input = Bytes::from("Hello world".as_bytes());
-        env::set_var("irys_pk", SOLANA_SILLY_PRIVATE_KEY);
+        unsafe {
+            env::set_var("irys_pk", SOLANA_SILLY_PRIVATE_KEY);
+        }
         let PrecompileOutput { gas_used, bytes } = arweave_upload(&input, 100_000).unwrap();
         let tx_id = unsafe { String::from_utf8_unchecked(bytes.to_vec()) };
         println!("{}", tx_id)

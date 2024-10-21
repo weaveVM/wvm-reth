@@ -21,9 +21,12 @@ serde_json.workspace = true
 serde.workspace = true
 reqwest.workspace = true
 eyre.workspace = true
-irys = { path = "../irys" }
+arweave-upload = { path = "../arweave-upload" }
 tokio.workspace = true
 reqwest-graphql = "1.0.0"
 rbrotli = { path = "../brotli" }
-wevm-borsh = { path = "../wevm-borsh", name = "wevm-borsh" }
+wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
+wvm-static = { path = "../static" }
 borsh.workspace = true
+alloy-primitives.workspace = true
+reth-evm-ethereum.workspace = true

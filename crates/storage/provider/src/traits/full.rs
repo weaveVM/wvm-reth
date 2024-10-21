@@ -6,17 +6,18 @@ use crate::{
     StaticFileProviderFactory, TransactionsProvider,
 };
 use reth_chain_state::{CanonStateSubscriptions, ForkChoiceSubscriptions};
-use reth_db_api::database::Database;
+use reth_chainspec::EthereumHardforks;
+use reth_node_types::NodeTypesWithDB;
 
 /// Helper trait to unify all provider traits for simplicity.
-pub trait FullProvider<DB: Database>:
-    DatabaseProviderFactory<DB>
+pub trait FullProvider<N: NodeTypesWithDB>:
+    DatabaseProviderFactory<DB = N::DB>
     + StaticFileProviderFactory
     + BlockReaderIdExt
     + AccountReader
     + StateProviderFactory
     + EvmEnvProvider
-    + ChainSpecProvider
+    + ChainSpecProvider<ChainSpec = N::ChainSpec>
     + ChangeSetReader
     + CanonStateSubscriptions
     + ForkChoiceSubscriptions
@@ -27,14 +28,14 @@ pub trait FullProvider<DB: Database>:
 {
 }
 
-impl<T, DB: Database> FullProvider<DB> for T where
-    T: DatabaseProviderFactory<DB>
+impl<T, N: NodeTypesWithDB> FullProvider<N> for T where
+    T: DatabaseProviderFactory<DB = N::DB>
         + StaticFileProviderFactory
         + BlockReaderIdExt
         + AccountReader
         + StateProviderFactory
         + EvmEnvProvider
-        + ChainSpecProvider
+        + ChainSpecProvider<ChainSpec = N::ChainSpec>
         + ChangeSetReader
         + CanonStateSubscriptions
         + ForkChoiceSubscriptions
@@ -50,7 +51,7 @@ impl<T, DB: Database> FullProvider<DB> for T where
 pub trait FullRpcProvider:
     StateProviderFactory
     + EvmEnvProvider
-    + ChainSpecProvider
+    + ChainSpecProvider<ChainSpec: EthereumHardforks>
     + BlockReaderIdExt
     + HeaderProvider
     + TransactionsProvider
@@ -64,7 +65,7 @@ pub trait FullRpcProvider:
 impl<T> FullRpcProvider for T where
     T: StateProviderFactory
         + EvmEnvProvider
-        + ChainSpecProvider
+        + ChainSpecProvider<ChainSpec: EthereumHardforks>
         + BlockReaderIdExt
         + HeaderProvider
         + TransactionsProvider

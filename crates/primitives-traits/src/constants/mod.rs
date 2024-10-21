@@ -2,6 +2,17 @@
 
 use alloy_primitives::{address, b256, Address, B256, U256};
 use core::time::Duration;
+use fees::{
+    util::raw_calculate_lowest_possible_gas_price,
+    wvm_fee::{WvmFee, WvmFeeManager},
+};
+use std::{
+    cell::LazyCell,
+    sync::{
+        atomic::{AtomicU64, Ordering::SeqCst},
+        Arc, LazyLock, RwLock,
+    },
+};
 
 /// Gas units, for example [`GIGAGAS`].
 pub mod gas_units;
@@ -21,9 +32,9 @@ pub const EPOCH_SLOTS: u64 = 32;
 
 /// The duration of a slot in seconds.
 ///
-/// This is the time period of 12 seconds in which a randomly chosen validator has time to propose a
+/// This is the time period of 1 seconds in which a randomly chosen validator has time to propose a
 /// block.
-pub const SLOT_DURATION: Duration = Duration::from_secs(12);
+pub const SLOT_DURATION: Duration = Duration::from_secs(1); // wvm #356: 1s per block
 
 /// An EPOCH is a series of 32 slots (~6.4min).
 pub const EPOCH_DURATION: Duration = Duration::from_secs(12 * EPOCH_SLOTS);
@@ -35,7 +46,14 @@ pub const BEACON_NONCE: u64 = 0u64;
 // TODO: This should be a chain spec parameter.
 /// See <https://github.com/paradigmxyz/reth/issues/3233>.
 /// WVM: we set 300kk gas limit
-pub const ETHEREUM_BLOCK_GAS_LIMIT: u64 = 300_000_000; // WVM: 300_000_000 gas limit
+pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
+    let env_gas_limit = std::env::var("ETHEREUM_BLOCK_GAS_LIMIT");
+    if let Ok(gas_limit) = env_gas_limit {
+        gas_limit.as_str().parse::<u64>().unwrap()
+    } else {
+        300_000_000
+    }
+}); // WVM: 300_000_000 gas limit
 
 /// The minimum tx fee below which the txpool will reject the transaction.
 ///
@@ -46,10 +64,34 @@ pub const ETHEREUM_BLOCK_GAS_LIMIT: u64 = 300_000_000; // WVM: 300_000_000 gas l
 ///
 /// Note that min base fee under different 1559 parameterizations may differ, but there's no
 /// significant harm in leaving this setting as is.
-pub const MIN_PROTOCOL_BASE_FEE: u64 = 7;
+// pub const MIN_PROTOCOL_BASE_FEE: u64 = 7;
+
+pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> = LazyLock::new(|| AtomicU64::new(7));
+
+pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
+    let fee = WvmFee::new(Some(Box::new(move |price| {
+        let original_price = price as f64 / 1_000_000_000f64;
+        let lowest_possible_gas_price_in_gwei =
+            raw_calculate_lowest_possible_gas_price(original_price, *ETHEREUM_BLOCK_GAS_LIMIT);
+        let to_wei = lowest_possible_gas_price_in_gwei * 1e9;
+        MIN_PROTOCOL_BASE_FEE.store(to_wei as u64, SeqCst);
+        Ok(())
+    })));
+
+    fee.init();
+
+    let manager = WvmFeeManager::new(Arc::new(fee));
+    manager.init();
+
+    Arc::new(manager)
+});
+
+pub fn get_latest_min_protocol_base_fee() -> u64 {
+    MIN_PROTOCOL_BASE_FEE.load(SeqCst)
+}
 
 /// Same as [`MIN_PROTOCOL_BASE_FEE`] but as a U256.
-pub const MIN_PROTOCOL_BASE_FEE_U256: U256 = U256::from_limbs([7u64, 0, 0, 0]);
+pub const MIN_PROTOCOL_BASE_FEE_U256: U256 = U256::from_limbs([640_000_000u64, 0u64, 0u64, 0u64]);
 
 /// Initial base fee as defined in [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)
 pub const EIP1559_INITIAL_BASE_FEE: u64 = 1_000_000_000;
@@ -132,6 +174,9 @@ pub const EMPTY_ROOT_HASH: B256 =
 /// From address from Optimism system txs: `0xdeaddeaddeaddeaddeaddeaddeaddeaddead0001`
 pub const OP_SYSTEM_TX_FROM_ADDR: Address = address!("deaddeaddeaddeaddeaddeaddeaddeaddead0001");
 
+/// To address from Optimism system txs: `0x4200000000000000000000000000000000000015`
+pub const OP_SYSTEM_TX_TO_ADDR: Address = address!("4200000000000000000000000000000000000015");
+
 /// Transactions root of empty receipts set.
 pub const EMPTY_RECEIPTS: B256 = EMPTY_ROOT_HASH;
 
@@ -164,8 +209,25 @@ pub const ALLOWED_FUTURE_BLOCK_TIME_SECONDS: u64 = 15;
 mod tests {
     use super::*;
 
-    #[test]
-    fn min_protocol_sanity() {
-        assert_eq!(MIN_PROTOCOL_BASE_FEE_U256.to::<u64>(), MIN_PROTOCOL_BASE_FEE);
+    use crate::constants::{get_latest_min_protocol_base_fee, WVM_FEE_MANAGER};
+    use std::time::Duration;
+
+    #[tokio::test]
+    pub async fn test_wvm_fee_manager() {
+        std::env::set_var("ETHEREUM_BLOCK_GAS_LIMIT", "500000000");
+        let init = &*WVM_FEE_MANAGER;
+        tokio::time::sleep(Duration::from_secs(10)).await;
+        let latest_gas = get_latest_min_protocol_base_fee();
+        assert!(&latest_gas > &630000000);
+        println!("{}", latest_gas);
+        assert!(&latest_gas < &650000000);
+    }
+
+    #[tokio::test]
+    async fn min_protocol_sanity() {
+        std::env::set_var("ETHEREUM_BLOCK_GAS_LIMIT", "500000000");
+        let init = &*WVM_FEE_MANAGER;
+        tokio::time::sleep(Duration::from_secs(10)).await;
+        assert_eq!(MIN_PROTOCOL_BASE_FEE_U256.to::<u64>(), get_latest_min_protocol_base_fee());
     }
 }

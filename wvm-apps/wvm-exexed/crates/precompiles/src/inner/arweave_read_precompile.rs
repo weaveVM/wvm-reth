@@ -1,8 +1,10 @@
-use crate::inner::graphql_util::send_graphql;
-use crate::inner::util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT};
-use reth::primitives::{
-    revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult},
-    Bytes,
+use crate::inner::{
+    graphql_util::{build_transaction_query, send_graphql},
+    util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
+};
+use alloy_primitives::Bytes;
+use reth::primitives::revm_primitives::{
+    Precompile, PrecompileError, PrecompileErrors, PrecompileResult,
 };
 use serde::{Deserialize, Serialize};
 
@@ -76,18 +78,15 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
                 async {
                     let clean_gateway = clean_gateway_url(gateway.as_str());
-                    let query = {
-                        let mut query = "{\n  transactions(ids: [\"$id\"]) {\n    edges {\n      node {\n        id\n        data {\n          size\n        }\n      }\n    }\n  }\n}\n";
-                        let query = query.replace("$id", tx_id.as_str());
-                        query
-                    };
+                    let query =
+                        build_transaction_query(Some(&[tx_id.clone()]), None, None, None, true);
                     let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
 
                     let tx_size = if let Ok(data) = data {
                         let resp = data.data;
                         let tx = resp.transactions.edges.get(0);
                         if let Some(&ref tx) = tx {
-                            let tx_size = tx.clone().node.data.size;
+                            let tx_size = tx.clone().node.data.unwrap().size;
                             let tx_size = tx_size.parse::<usize>().unwrap();
                             tx_size
                         } else {
@@ -118,7 +117,8 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 #[cfg(test)]
 mod arweave_read_pc_tests {
     use crate::inner::arweave_read_precompile::{arweave_read, parse_gateway_content};
-    use reth::primitives::{revm_primitives::PrecompileOutput, Bytes};
+    use alloy_primitives::Bytes;
+    use reth::primitives::revm_primitives::PrecompileOutput;
 
     #[test]
     pub fn test_arweave_read_precompile() {

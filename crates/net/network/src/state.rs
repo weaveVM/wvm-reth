@@ -12,12 +12,13 @@ use std::{
     task::{Context, Poll},
 };
 
+use alloy_primitives::B256;
 use rand::seq::SliceRandom;
 use reth_eth_wire::{BlockHashNumber, Capabilities, DisconnectReason, NewBlockHashes, Status};
 use reth_network_api::{DiscoveredEvent, DiscoveryEvent, PeerRequest, PeerRequestSender};
 use reth_network_peers::PeerId;
 use reth_network_types::{PeerAddr, PeerKind};
-use reth_primitives::{ForkId, B256};
+use reth_primitives::ForkId;
 use tokio::sync::oneshot;
 use tracing::{debug, trace};
 
@@ -296,6 +297,11 @@ impl NetworkState {
         self.peers_manager.add_peer_kind(peer_id, kind, addr, None)
     }
 
+    /// Connects a peer and its address with the given kind
+    pub(crate) fn add_and_connect(&mut self, peer_id: PeerId, kind: PeerKind, addr: PeerAddr) {
+        self.peers_manager.add_and_connect_kind(peer_id, kind, addr, None)
+    }
+
     /// Removes a peer and its address with the given kind from the peerset.
     pub(crate) fn remove_peer_kind(&mut self, peer_id: PeerId, kind: PeerKind) {
         match kind {
@@ -437,7 +443,7 @@ impl NetworkState {
                     match response.poll(cx) {
                         Poll::Ready(res) => {
                             // check if the error is due to a closed channel to the session
-                            if res.err().map(|err| err.is_channel_closed()).unwrap_or_default() {
+                            if res.err().is_some_and(|err| err.is_channel_closed()) {
                                 debug!(
                                     target: "net",
                                     ?id,
@@ -545,11 +551,12 @@ mod tests {
         sync::{atomic::AtomicU64, Arc},
     };
 
+    use alloy_primitives::B256;
     use reth_eth_wire::{BlockBodies, Capabilities, Capability, EthVersion};
     use reth_network_api::PeerRequestSender;
     use reth_network_p2p::{bodies::client::BodiesClient, error::RequestError};
     use reth_network_peers::PeerId;
-    use reth_primitives::{BlockBody, Header, B256};
+    use reth_primitives::{BlockBody, Header};
     use reth_provider::test_utils::NoopProvider;
     use tokio::sync::mpsc;
     use tokio_stream::{wrappers::ReceiverStream, StreamExt};

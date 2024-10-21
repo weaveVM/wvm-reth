@@ -1,14 +1,12 @@
+use alloy_primitives::{BlockNumber, Sealable, B256};
 use reth_codecs::Compact;
 use reth_consensus::ConsensusError;
 use reth_db::tables;
-use reth_db_api::{
-    database::Database,
-    transaction::{DbTx, DbTxMut},
-};
-use reth_primitives::{BlockNumber, GotExpected, SealedHeader, B256};
+use reth_db_api::transaction::{DbTx, DbTxMut};
+use reth_primitives::{GotExpected, SealedHeader};
 use reth_provider::{
-    DatabaseProviderRW, HeaderProvider, ProviderError, StageCheckpointReader,
-    StageCheckpointWriter, StatsReader, TrieWriter,
+    DBProvider, HeaderProvider, ProviderError, StageCheckpointReader, StageCheckpointWriter,
+    StatsReader, TrieWriter,
 };
 use reth_stages_api::{
     BlockErrorKind, EntitiesCheckpoint, ExecInput, ExecOutput, MerkleCheckpoint, Stage,
@@ -98,9 +96,9 @@ impl MerkleStage {
     }
 
     /// Gets the hashing progress
-    pub fn get_execution_checkpoint<DB: Database>(
+    pub fn get_execution_checkpoint(
         &self,
-        provider: &DatabaseProviderRW<DB>,
+        provider: &impl StageCheckpointReader,
     ) -> Result<Option<MerkleCheckpoint>, StageError> {
         let buf =
             provider.get_stage_checkpoint_progress(StageId::MerkleExecute)?.unwrap_or_default();
@@ -114,9 +112,9 @@ impl MerkleStage {
     }
 
     /// Saves the hashing progress
-    pub fn save_execution_checkpoint<DB: Database>(
+    pub fn save_execution_checkpoint(
         &self,
-        provider: &DatabaseProviderRW<DB>,
+        provider: &impl StageCheckpointWriter,
         checkpoint: Option<MerkleCheckpoint>,
     ) -> Result<(), StageError> {
         let mut buf = vec![];
@@ -132,7 +130,15 @@ impl MerkleStage {
     }
 }
 
-impl<DB: Database> Stage<DB> for MerkleStage {
+impl<Provider> Stage<Provider> for MerkleStage
+where
+    Provider: DBProvider<Tx: DbTxMut>
+        + TrieWriter
+        + StatsReader
+        + HeaderProvider
+        + StageCheckpointReader
+        + StageCheckpointWriter,
+{
     /// Return the id of the stage
     fn id(&self) -> StageId {
         match self {
@@ -144,11 +150,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
     }
 
     /// Execute the stage.
-    fn execute(
-        &mut self,
-        provider: &DatabaseProviderRW<DB>,
-        input: ExecInput,
-    ) -> Result<ExecOutput, StageError> {
+    fn execute(&mut self, provider: &Provider, input: ExecInput) -> Result<ExecOutput, StageError> {
         let threshold = match self {
             Self::Unwind => {
                 info!(target: "sync::stages::merkle::unwind", "Stage is always skipped");
@@ -274,7 +276,10 @@ impl<DB: Database> Stage<DB> for MerkleStage {
         // Reset the checkpoint
         self.save_execution_checkpoint(provider, None)?;
 
-        validate_state_root(trie_root, target_block.seal_slow(), to_block)?;
+        let sealed = target_block.seal_slow();
+        let (header, seal) = sealed.into_parts();
+
+        validate_state_root(trie_root, SealedHeader::new(header, seal), to_block)?;
 
         Ok(ExecOutput {
             checkpoint: StageCheckpoint::new(to_block)
@@ -286,7 +291,7 @@ impl<DB: Database> Stage<DB> for MerkleStage {
     /// Unwind the stage.
     fn unwind(
         &mut self,
-        provider: &DatabaseProviderRW<DB>,
+        provider: &Provider,
         input: UnwindInput,
     ) -> Result<UnwindOutput, StageError> {
         let tx = provider.tx_ref();
@@ -316,7 +321,9 @@ impl<DB: Database> Stage<DB> for MerkleStage {
         }
 
         // Unwind trie only if there are transitions
-        if !range.is_empty() {
+        if range.is_empty() {
+            info!(target: "sync::stages::merkle::unwind", "Nothing to unwind");
+        } else {
             let (block_root, updates) = StateRoot::incremental_root_with_updates(tx, range)
                 .map_err(|e| StageError::Fatal(Box::new(e)))?;
 
@@ -324,14 +331,16 @@ impl<DB: Database> Stage<DB> for MerkleStage {
             let target = provider
                 .header_by_number(input.unwind_to)?
                 .ok_or_else(|| ProviderError::HeaderNotFound(input.unwind_to.into()))?;
-            validate_state_root(block_root, target.seal_slow(), input.unwind_to)?;
+
+            let sealed = target.seal_slow();
+            let (header, seal) = sealed.into_parts();
+
+            validate_state_root(block_root, SealedHeader::new(header, seal), input.unwind_to)?;
 
             // Validation passed, apply unwind changes to the database.
             provider.write_trie_updates(&updates)?;
 
             // TODO(alexey): update entities checkpoint
-        } else {
-            info!(target: "sync::stages::merkle::unwind", "Nothing to unwind");
         }
 
         Ok(UnwindOutput { checkpoint: StageCheckpoint::new(input.unwind_to) })
@@ -365,16 +374,15 @@ mod tests {
         stage_test_suite_ext, ExecuteStageTestRunner, StageTestRunner, StorageKind,
         TestRunnerError, TestStageDB, UnwindStageTestRunner,
     };
+    use alloy_primitives::{keccak256, U256};
     use assert_matches::assert_matches;
     use reth_db_api::cursor::{DbCursorRO, DbCursorRW, DbDupCursorRO};
-    use reth_primitives::{keccak256, SealedBlock, StaticFileSegment, StorageEntry, U256};
+    use reth_primitives::{SealedBlock, StaticFileSegment, StorageEntry};
     use reth_provider::{providers::StaticFileWriter, StaticFileProviderFactory};
     use reth_stages_api::StageUnitCheckpoint;
-    use reth_testing_utils::{
-        generators,
-        generators::{
-            random_block, random_block_range, random_changeset_range, random_contract_account_range,
-        },
+    use reth_testing_utils::generators::{
+        self, random_block, random_block_range, random_changeset_range,
+        random_contract_account_range, BlockParams, BlockRangeParams,
     };
     use reth_trie::test_utils::{state_root, state_root_prehashed};
     use std::collections::BTreeMap;
@@ -499,8 +507,11 @@ mod tests {
                 preblocks.append(&mut random_block_range(
                     &mut rng,
                     0..=stage_progress - 1,
-                    B256::ZERO,
-                    0..1,
+                    BlockRangeParams {
+                        parent: Some(B256::ZERO),
+                        tx_count: 0..1,
+                        ..Default::default()
+                    },
                 ));
                 self.db.insert_blocks(preblocks.iter(), StorageKind::Static)?;
             }
@@ -514,12 +525,10 @@ mod tests {
                 accounts.iter().map(|(addr, acc)| (*addr, (*acc, std::iter::empty()))),
             )?;
 
-            let SealedBlock { header, body, ommers, withdrawals, requests } = random_block(
+            let SealedBlock { header, body } = random_block(
                 &mut rng,
                 stage_progress,
-                preblocks.last().map(|b| b.hash()),
-                Some(0),
-                None,
+                BlockParams { parent: preblocks.last().map(|b| b.hash()), ..Default::default() },
             );
             let mut header = header.unseal();
 
@@ -529,12 +538,17 @@ mod tests {
                     .into_iter()
                     .map(|(address, account)| (address, (account, std::iter::empty()))),
             );
-            let sealed_head =
-                SealedBlock { header: header.seal_slow(), body, ommers, withdrawals, requests };
+            let sealed = header.seal_slow();
+            let (header, seal) = sealed.into_parts();
+            let sealed_head = SealedBlock { header: SealedHeader::new(header, seal), body };
 
             let head_hash = sealed_head.hash();
             let mut blocks = vec![sealed_head];
-            blocks.extend(random_block_range(&mut rng, start..=end, head_hash, 0..3));
+            blocks.extend(random_block_range(
+                &mut rng,
+                start..=end,
+                BlockRangeParams { parent: Some(head_hash), tx_count: 0..3, ..Default::default() },
+            ));
             let last_block = blocks.last().cloned().unwrap();
             self.db.insert_blocks(blocks.iter(), StorageKind::Static)?;
 
@@ -634,7 +648,7 @@ mod tests {
                             let storage_entry = storage_cursor
                                 .seek_by_key_subkey(hashed_address, hashed_slot)
                                 .unwrap();
-                            if storage_entry.map(|v| v.key == hashed_slot).unwrap_or_default() {
+                            if storage_entry.is_some_and(|v| v.key == hashed_slot) {
                                 storage_cursor.delete_current().unwrap();
                             }
 

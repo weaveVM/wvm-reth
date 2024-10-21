@@ -1,4 +1,5 @@
 name: Google Artifact Registry
+
 on:
   push:
     branches:
@@ -17,24 +18,29 @@ jobs:
       id-token: 'write'
 
     steps:
+      # 1. Checkout the Repository
       - id: checkout
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
+      # 2. Authenticate with Google Cloud
       - id: auth
         name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v2
         with:
           token_format: access_token
           credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
-          access_token_lifetime: 300s
+          access_token_lifetime: 1800s
 
+      # 3. Configure Docker to Use Google Artifact Registry
       - name: Configure container registry
         run: gcloud auth configure-docker us-east1-docker.pkg.dev
 
+      # 4. Set Up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 5. Login to Artifact Registry
       - name: Login to Artifact Registry
         uses: docker/login-action@v3
         with:
@@ -42,9 +48,10 @@ jobs:
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
+      # 6. Determine Docker Tag Based on Git Reference
       - name: Get tag
         id: get-tag
-        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+        run: echo "short_ref=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Set Docker Tag
         id: tag
@@ -58,26 +65,47 @@ jobs:
           else
             tag=${GITHUB_REF#refs/heads/}
           fi
-          echo "::set-output name=tag::${tag}"
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
           echo "Docker tag: ${tag}"
 
+      # 7. Build Docker Image (Load Locally Only)
+      - name: Build Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          push: false                  # Do not push in this step
+          load: true                   # Load the image into Docker cache
+          tags: |
+            wevm:local
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
+          cache-from: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
+          cache-to: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }},mode=max
+
+      # 8. Test Docker Image Using Local Tag
       - name: Test Docker
         run: |-
-          docker build . -t wevm:local
           mkdir -m 777 .testnet
           cd .testnet
           git clone https://github.com/weaveVM/wvm-docker-testnet.git .
           echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/key.json
           docker compose up -d
-          npm i
+          npm install
           SIGNER_KEY=${{ secrets.TEST_SIGNER_KEY }} node test.js
           docker compose down
           cd .. && sudo rm -rf .testnet
 
-      - name: Build and Push Container
-        run: |-
-          docker build . -t wevm
-          docker tag wevm us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}
-          docker tag wevm us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
-          docker push "us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}"
-          docker push "us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}"
+      # 9. Push Verified Docker Images to Artifact Registry
+      - name: Push to Artifact Registry
+        uses: docker/build-push-action@v6
+        with:
+          push: true                   # Enable pushing
+          tags: |
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.get-tag.outputs.short_ref }}
+            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
+          cache-from: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }}
+          cache-to: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wevm:${{ steps.tag.outputs.tag }},mode=max
+
+      # 10. Clean Up Local Docker Tags (Optional)
+      - name: Remove Local Tag
+        if: always()                   # Run regardless of previous step outcomes
+        run: docker rmi wevm:local || true

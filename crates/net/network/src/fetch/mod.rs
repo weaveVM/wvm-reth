@@ -13,6 +13,7 @@ use std::{
     task::{Context, Poll},
 };
 
+use alloy_primitives::B256;
 use futures::StreamExt;
 use reth_eth_wire::{GetBlockBodies, GetBlockHeaders};
 use reth_network_api::test_utils::PeersHandle;
@@ -23,7 +24,7 @@ use reth_network_p2p::{
 };
 use reth_network_peers::PeerId;
 use reth_network_types::ReputationChangeKind;
-use reth_primitives::{BlockBody, Header, B256};
+use reth_primitives::{BlockBody, Header};
 use tokio::sync::{mpsc, mpsc::UnboundedSender, oneshot};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
@@ -266,10 +267,8 @@ impl StateFetcher {
 
         let resp = self.inflight_headers_requests.remove(&peer_id);
 
-        let is_likely_bad_response = resp
-            .as_ref()
-            .map(|r| res.is_likely_bad_headers_response(&r.request))
-            .unwrap_or_default();
+        let is_likely_bad_response =
+            resp.as_ref().is_some_and(|r| res.is_likely_bad_headers_response(&r.request));
 
         if let Some(resp) = resp {
             // delegate the response
@@ -473,7 +472,8 @@ pub(crate) enum BlockResponseOutcome {
 mod tests {
     use super::*;
     use crate::{peers::PeersManager, PeersConfig};
-    use reth_primitives::{SealedHeader, B512};
+    use alloy_primitives::B512;
+    use reth_primitives::SealedHeader;
     use std::future::poll_fn;
 
     #[tokio::test(flavor = "multi_thread")]

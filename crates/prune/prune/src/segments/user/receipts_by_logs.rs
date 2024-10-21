@@ -1,10 +1,10 @@
 use crate::{
+    db_ext::DbTxPruneExt,
     segments::{PruneInput, Segment},
     PrunerError,
 };
-use reth_db::tables;
-use reth_db_api::database::Database;
-use reth_provider::{BlockReader, DatabaseProviderRW, PruneCheckpointWriter, TransactionsProvider};
+use reth_db::{tables, transaction::DbTxMut};
+use reth_provider::{BlockReader, DBProvider, PruneCheckpointWriter, TransactionsProvider};
 use reth_prune_types::{
     PruneCheckpoint, PruneMode, PruneProgress, PrunePurpose, PruneSegment, ReceiptsLogPruneConfig,
     SegmentOutput, MINIMUM_PRUNING_DISTANCE,
@@ -22,7 +22,10 @@ impl ReceiptsByLogs {
     }
 }
 
-impl<DB: Database> Segment<DB> for ReceiptsByLogs {
+impl<Provider> Segment<Provider> for ReceiptsByLogs
+where
+    Provider: DBProvider<Tx: DbTxMut> + PruneCheckpointWriter + TransactionsProvider + BlockReader,
+{
     fn segment(&self) -> PruneSegment {
         PruneSegment::ContractLogs
     }
@@ -36,11 +39,7 @@ impl<DB: Database> Segment<DB> for ReceiptsByLogs {
     }
 
     #[instrument(level = "trace", target = "pruner", skip(self, provider), ret)]
-    fn prune(
-        &self,
-        provider: &DatabaseProviderRW<DB>,
-        input: PruneInput,
-    ) -> Result<SegmentOutput, PrunerError> {
+    fn prune(&self, provider: &Provider, input: PruneInput) -> Result<SegmentOutput, PrunerError> {
         // Contract log filtering removes every receipt possible except the ones in the list. So,
         // for the other receipts it's as if they had a `PruneMode::Distance()` of
         // `MINIMUM_PRUNING_DISTANCE`.
@@ -143,7 +142,7 @@ impl<DB: Database> Segment<DB> for ReceiptsByLogs {
             // Delete receipts, except the ones in the inclusion list
             let mut last_skipped_transaction = 0;
             let deleted;
-            (deleted, done) = provider.prune_table_with_range::<tables::Receipts>(
+            (deleted, done) = provider.tx_ref().prune_table_with_range::<tables::Receipts>(
                 tx_range,
                 &mut limiter,
                 |(tx_num, receipt)| {
@@ -224,12 +223,11 @@ mod tests {
     use assert_matches::assert_matches;
     use reth_db::tables;
     use reth_db_api::{cursor::DbCursorRO, transaction::DbTx};
-    use reth_provider::{PruneCheckpointReader, TransactionsProvider};
+    use reth_provider::{DatabaseProviderFactory, PruneCheckpointReader, TransactionsProvider};
     use reth_prune_types::{PruneLimiter, PruneMode, PruneSegment, ReceiptsLogPruneConfig};
     use reth_stages::test_utils::{StorageKind, TestStageDB};
-    use reth_testing_utils::{
-        generators,
-        generators::{random_block_range, random_eoa_account, random_log, random_receipt},
+    use reth_testing_utils::generators::{
+        self, random_block_range, random_eoa_account, random_log, random_receipt, BlockRangeParams,
     };
     use std::collections::BTreeMap;
 
@@ -242,9 +240,21 @@ mod tests {
 
         let tip = 20000;
         let blocks = [
-            random_block_range(&mut rng, 0..=100, B256::ZERO, 1..5),
-            random_block_range(&mut rng, (100 + 1)..=(tip - 100), B256::ZERO, 0..1),
-            random_block_range(&mut rng, (tip - 100 + 1)..=tip, B256::ZERO, 1..5),
+            random_block_range(
+                &mut rng,
+                0..=100,
+                BlockRangeParams { parent: Some(B256::ZERO), tx_count: 1..5, ..Default::default() },
+            ),
+            random_block_range(
+                &mut rng,
+                (100 + 1)..=(tip - 100),
+                BlockRangeParams { parent: Some(B256::ZERO), tx_count: 0..1, ..Default::default() },
+            ),
+            random_block_range(
+                &mut rng,
+                (tip - 100 + 1)..=tip,
+                BlockRangeParams { parent: Some(B256::ZERO), tx_count: 1..5, ..Default::default() },
+            ),
         ]
         .concat();
         db.insert_blocks(blocks.iter(), StorageKind::Database(None)).expect("insert blocks");
@@ -253,11 +263,15 @@ mod tests {
 
         let (deposit_contract_addr, _) = random_eoa_account(&mut rng);
         for block in &blocks {
-            for (txi, transaction) in block.body.iter().enumerate() {
+            for (txi, transaction) in block.body.transactions.iter().enumerate() {
                 let mut receipt = random_receipt(&mut rng, transaction, Some(1));
                 receipt.logs.push(random_log(
                     &mut rng,
-                    if txi == (block.body.len() - 1) { Some(deposit_contract_addr) } else { None },
+                    if txi == (block.body.transactions.len() - 1) {
+                        Some(deposit_contract_addr)
+                    } else {
+                        None
+                    },
                     Some(1),
                 ));
                 receipts.push((receipts.len() as u64, receipt));
@@ -267,7 +281,7 @@ mod tests {
 
         assert_eq!(
             db.table::<tables::Transactions>().unwrap().len(),
-            blocks.iter().map(|block| block.body.len()).sum::<usize>()
+            blocks.iter().map(|block| block.body.transactions.len()).sum::<usize>()
         );
         assert_eq!(
             db.table::<tables::Transactions>().unwrap().len(),
@@ -275,7 +289,7 @@ mod tests {
         );
 
         let run_prune = || {
-            let provider = db.factory.provider_rw().unwrap();
+            let provider = db.factory.database_provider_rw().unwrap();
 
             let prune_before_block: usize = 20;
             let prune_mode = PruneMode::Before(prune_before_block as u64);
@@ -316,7 +330,7 @@ mod tests {
 
             assert_eq!(
                 db.table::<tables::Receipts>().unwrap().len(),
-                blocks.iter().map(|block| block.body.len()).sum::<usize>() -
+                blocks.iter().map(|block| block.body.transactions.len()).sum::<usize>() -
                     ((pruned_tx + 1) - unprunable) as usize
             );
 

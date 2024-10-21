@@ -1,5 +1,17 @@
-use std::{collections::HashSet, sync::Arc};
+use std::sync::Arc;
 
+use alloy_primitives::{map::HashSet, Bytes, B256, U256};
+use alloy_rpc_types::{
+    state::{EvmOverrides, StateOverride},
+    BlockOverrides, Index,
+};
+use alloy_rpc_types_eth::transaction::TransactionRequest;
+use alloy_rpc_types_trace::{
+    filter::TraceFilter,
+    opcode::{BlockOpcodeGas, TransactionOpcodeGas},
+    parity::*,
+    tracerequest::TraceCallRequest,
+};
 use async_trait::async_trait;
 use jsonrpsee::core::RpcResult;
 use reth_chainspec::EthereumHardforks;
@@ -7,7 +19,7 @@ use reth_consensus_common::calc::{
     base_block_reward, base_block_reward_pre_merge, block_reward, ommer_reward,
 };
 use reth_evm::ConfigureEvmEnv;
-use reth_primitives::{BlockId, Bytes, Header, B256, U256};
+use reth_primitives::{BlockId, Header};
 use reth_provider::{BlockReader, ChainSpecProvider, EvmEnvProvider, StateProviderFactory};
 use reth_revm::database::StateProviderDatabase;
 use reth_rpc_api::TraceApiServer;
@@ -16,16 +28,6 @@ use reth_rpc_eth_api::{
     FromEthApiError,
 };
 use reth_rpc_eth_types::{error::EthApiError, utils::recover_raw_transaction};
-use reth_rpc_types::{
-    state::{EvmOverrides, StateOverride},
-    trace::{
-        filter::TraceFilter,
-        opcode::{BlockOpcodeGas, TransactionOpcodeGas},
-        parity::*,
-        tracerequest::TraceCallRequest,
-    },
-    BlockOverrides, Index, TransactionRequest,
-};
 use reth_tasks::pool::BlockingTaskGuard;
 use revm::{
     db::{CacheDB, DatabaseCommit},
@@ -75,7 +77,11 @@ impl<Provider, Eth> TraceApi<Provider, Eth> {
 
 impl<Provider, Eth> TraceApi<Provider, Eth>
 where
-    Provider: BlockReader + StateProviderFactory + EvmEnvProvider + ChainSpecProvider + 'static,
+    Provider: BlockReader
+        + StateProviderFactory
+        + EvmEnvProvider
+        + ChainSpecProvider<ChainSpec: EthereumHardforks>
+        + 'static,
     Eth: TraceExt + 'static,
 {
     /// Executes the given call and returns a number of possible traces for it.
@@ -114,7 +120,7 @@ where
     ) -> Result<TraceResults, Eth::Error> {
         let tx = recover_raw_transaction(tx)?;
 
-        let (cfg, block, at) = self.inner.eth_api.evm_env_at(block_id.unwrap_or_default()).await?;
+        let (cfg, block, at) = self.eth_api().evm_env_at(block_id.unwrap_or_default()).await?;
 
         let env = EnvWithHandlerCfg::new_with_cfg_env(
             cfg,
@@ -124,8 +130,7 @@ where
 
         let config = TracingInspectorConfig::from_parity_config(&trace_types);
 
-        self.inner
-            .eth_api
+        self.eth_api()
             .spawn_trace_at_with_state(env, config, at, move |inspector, res, db| {
                 inspector
                     .into_parity_builder()
@@ -145,9 +150,8 @@ where
         block_id: Option<BlockId>,
     ) -> Result<Vec<TraceResults>, Eth::Error> {
         let at = block_id.unwrap_or(BlockId::pending());
-        let (cfg, block_env, at) = self.inner.eth_api.evm_env_at(at).await?;
+        let (cfg, block_env, at) = self.eth_api().evm_env_at(at).await?;
 
-        let gas_limit = self.inner.eth_api.call_gas_limit();
         let this = self.clone();
         // execute all transactions on top of each other and record the traces
         self.eth_api()
@@ -162,7 +166,6 @@ where
                         cfg.clone(),
                         block_env.clone(),
                         call,
-                        gas_limit,
                         &mut db,
                         Default::default(),
                     )?;
@@ -198,8 +201,7 @@ where
         trace_types: HashSet<TraceType>,
     ) -> Result<TraceResults, Eth::Error> {
         let config = TracingInspectorConfig::from_parity_config(&trace_types);
-        self.inner
-            .eth_api
+        self.eth_api()
             .spawn_trace_transaction_in_block(hash, config, move |_, inspector, res, db| {
                 let trace_res = inspector
                     .into_parity_builder()
@@ -209,7 +211,7 @@ where
             })
             .await
             .transpose()
-            .ok_or_else(|| EthApiError::TransactionNotFound)?
+            .ok_or(EthApiError::TransactionNotFound)?
     }
 
     /// Returns transaction trace objects at the given index
@@ -281,7 +283,7 @@ where
         let mut block_traces = Vec::with_capacity(blocks.len());
         for block in &blocks {
             let matcher = matcher.clone();
-            let traces = self.inner.eth_api.trace_block_until(
+            let traces = self.eth_api().trace_block_until(
                 block.number.into(),
                 None,
                 TracingInspectorConfig::default_parity(),
@@ -305,8 +307,11 @@ where
         // add reward traces for all blocks
         for block in &blocks {
             if let Some(base_block_reward) = self.calculate_base_block_reward(&block.header)? {
-                let mut traces =
-                    self.extract_reward_traces(&block.header, &block.ommers, base_block_reward);
+                let mut traces = self.extract_reward_traces(
+                    &block.header,
+                    &block.body.ommers,
+                    base_block_reward,
+                );
                 traces.retain(|trace| matcher.matches(&trace.trace));
                 all_traces.extend(traces);
             } else {
@@ -338,8 +343,7 @@ where
         &self,
         hash: B256,
     ) -> Result<Option<Vec<LocalizedTransactionTrace>>, Eth::Error> {
-        self.inner
-            .eth_api
+        self.eth_api()
             .spawn_trace_transaction_in_block(
                 hash,
                 TracingInspectorConfig::default_parity(),
@@ -357,7 +361,7 @@ where
         &self,
         block_id: BlockId,
     ) -> Result<Option<Vec<LocalizedTransactionTrace>>, Eth::Error> {
-        let traces = self.inner.eth_api.trace_block_with(
+        let traces = self.eth_api().trace_block_with(
             block_id,
             TracingInspectorConfig::default_parity(),
             |tx_info, inspector, _, _, _| {
@@ -367,7 +371,7 @@ where
             },
         );
 
-        let block = self.inner.eth_api.block(block_id);
+        let block = self.eth_api().block(block_id);
         let (maybe_traces, maybe_block) = futures::try_join!(traces, block)?;
 
         let mut maybe_traces =
@@ -377,7 +381,7 @@ where
             if let Some(base_block_reward) = self.calculate_base_block_reward(&block.header)? {
                 traces.extend(self.extract_reward_traces(
                     &block.header,
-                    &block.ommers,
+                    &block.body.ommers,
                     base_block_reward,
                 ));
             }
@@ -392,8 +396,7 @@ where
         block_id: BlockId,
         trace_types: HashSet<TraceType>,
     ) -> Result<Option<Vec<TraceResultsWithTransactionHash>>, Eth::Error> {
-        self.inner
-            .eth_api
+        self.eth_api()
             .trace_block_with(
                 block_id,
                 TracingInspectorConfig::from_parity_config(&trace_types),
@@ -424,8 +427,7 @@ where
         &self,
         tx_hash: B256,
     ) -> Result<Option<TransactionOpcodeGas>, Eth::Error> {
-        self.inner
-            .eth_api
+        self.eth_api()
             .spawn_trace_transaction_in_block_with_inspector(
                 tx_hash,
                 OpcodeGasInspector::default(),
@@ -449,8 +451,7 @@ where
         block_id: BlockId,
     ) -> Result<Option<BlockOpcodeGas>, Eth::Error> {
         let res = self
-            .inner
-            .eth_api
+            .eth_api()
             .trace_block_inspector(
                 block_id,
                 OpcodeGasInspector::default,
@@ -466,7 +467,7 @@ where
 
         let Some(transactions) = res else { return Ok(None) };
 
-        let Some(block) = self.inner.eth_api.block(block_id).await? else { return Ok(None) };
+        let Some(block) = self.eth_api().block(block_id).await? else { return Ok(None) };
 
         Ok(Some(BlockOpcodeGas {
             block_hash: block.hash(),
@@ -547,7 +548,11 @@ where
 #[async_trait]
 impl<Provider, Eth> TraceApiServer for TraceApi<Provider, Eth>
 where
-    Provider: BlockReader + StateProviderFactory + EvmEnvProvider + ChainSpecProvider + 'static,
+    Provider: BlockReader
+        + StateProviderFactory
+        + EvmEnvProvider
+        + ChainSpecProvider<ChainSpec: EthereumHardforks>
+        + 'static,
     Eth: TraceExt + 'static,
 {
     /// Executes the given call and returns a number of possible traces for it.

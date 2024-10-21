@@ -42,7 +42,7 @@ impl Default for PayloadBuilderArgs {
     fn default() -> Self {
         Self {
             extradata: default_extradata(),
-            max_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT,
+            max_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             interval: Duration::from_secs(1),
             deadline: SLOT_DURATION,
             max_payload_tasks: 3,
