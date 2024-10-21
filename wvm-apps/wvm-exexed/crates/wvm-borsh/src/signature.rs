@@ -6,7 +6,7 @@ pub struct BorshSignature(pub Signature);
 
 pub fn to_signature(bytes: &[u8]) -> std::io::Result<Signature> {
     if bytes.len() != 65 {
-        return Err(Error::from(ErrorKind::UnexpectedEof))
+        return Err(Error::from(ErrorKind::UnexpectedEof));
     }
 
     let mut r_bytes = [0u8; 32];
