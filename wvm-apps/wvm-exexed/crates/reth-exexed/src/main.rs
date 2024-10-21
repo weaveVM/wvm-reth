@@ -28,7 +28,19 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
     irys_provider: UploaderProvider,
     _state_processor: exex_etl::state_processor::StateProcessor,
 ) -> eyre::Result<()> {
-    while let Some(notification) = ctx.notifications.poll_next().await {
+    while let Some(notification_result) = ctx.notifications.next().await {
+        let notification = match notification_result {
+            Ok(notification) => notification,
+            Err(e) => {
+                error!(
+                    target: "wvm::exex",
+                    %e,
+                    "Failed to receive notification from exex stream",
+                );
+                continue;
+            }
+        };
+
         let mut notification_type = "";
         match &notification {
             ExExNotification::ChainCommitted { new } => {
@@ -137,7 +149,6 @@ fn main() -> eyre::Result<()> {
             .with_components(EthereumNode::components().executor(WvmEthExecutorBuilder::default()))
             .with_add_ons(EthereumAddOns::default());
 
-
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
         if run_exex == "true" {
             let big_query_client = (&*WVM_BIGQUERY).clone();
@@ -148,13 +159,13 @@ fn main() -> eyre::Result<()> {
             // init irys provider
             let ar_uploader_provider = UploaderProvider::new(None);
 
-             let handle = handle
+            let handle = handle
                 .install_exex("exex-etl", |ctx| async move {
                     Ok(exex_etl_processor(ctx, state_repo, ar_uploader_provider, state_processor))
                 })
-                 .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
-                 .launch()
-                 .await?;
+                .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
+                .launch()
+                .await?;
 
             handle.wait_for_node_exit().await
         } else {
