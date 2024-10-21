@@ -1,9 +1,7 @@
-use crate::inner::arweave_read_precompile::ARWEAVE_PC_READ_BASE;
-use crate::inner::string_block::{
-    from_sealed_block_senders, from_sealed_block_senders_value, Block,
-};
-use crate::inner::wvm_block_precompile::{
-    process_block_to_field, process_pc_response_from_str_bytes,
+use crate::inner::{
+    arweave_read_precompile::ARWEAVE_PC_READ_BASE,
+    string_block::{from_sealed_block_senders, from_sealed_block_senders_value, Block},
+    wvm_block_precompile::{process_block_to_field, process_pc_response_from_str_bytes},
 };
 use alloy_primitives::Bytes;
 use revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult};
@@ -71,9 +69,10 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
 #[cfg(test)]
 mod tests {
-    use crate::inner::gbq_precompile::gbq_read;
-    use crate::inner::string_block::from_sealed_block_senders_value;
-    use crate::inner::wvm_block_precompile::process_block_to_field;
+    use crate::inner::{
+        gbq_precompile::gbq_read, string_block::from_sealed_block_senders_value,
+        wvm_block_precompile::process_block_to_field,
+    };
     use alloy_primitives::Bytes;
     use reth::primitives::SealedBlockWithSenders;
     use serde_json::Value;

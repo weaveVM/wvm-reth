@@ -10,6 +10,7 @@ use crate::{network_tag::get_network_tag, util::check_block_existence};
 use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::{init_bigquery_db, repository::StateRepository, BigQueryConfig};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
+use futures::{Stream, StreamExt};
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;
 use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder};
@@ -27,7 +28,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
     irys_provider: UploaderProvider,
     _state_processor: exex_etl::state_processor::StateProcessor,
 ) -> eyre::Result<()> {
-    while let Some(notification) = ctx.notifications.recv().await {
+    while let Some(notification) = ctx.notifications.poll_next().await {
         let mut notification_type = "";
         match &notification {
             ExExNotification::ChainCommitted { new } => {
@@ -134,29 +135,32 @@ fn main() -> eyre::Result<()> {
             .with_launch_context(builder.task_executor().clone())
             .with_types::<EthereumNode>()
             .with_components(EthereumNode::components().executor(WvmEthExecutorBuilder::default()))
-            .with_add_ons::<EthereumAddOns>();
+            .with_add_ons(EthereumAddOns::default());
+
 
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
         if run_exex == "true" {
-            handle = handle
+            let big_query_client = (&*WVM_BIGQUERY).clone();
+            // init state repository
+            let state_repo = StateRepository::new(big_query_client);
+            // init state processor
+            let state_processor = exex_etl::state_processor::StateProcessor::new();
+            // init irys provider
+            let ar_uploader_provider = UploaderProvider::new(None);
+
+             let handle = handle
                 .install_exex("exex-etl", |ctx| async move {
-                    let big_query_client = (&*WVM_BIGQUERY).clone();
-
-                    // init state repository
-                    let state_repo = StateRepository::new(big_query_client);
-                    // init state processor
-                    let state_processor = exex_etl::state_processor::StateProcessor::new();
-
-                    // init irys provider
-                    let ar_uploader_provider = UploaderProvider::new(None);
-
                     Ok(exex_etl_processor(ctx, state_repo, ar_uploader_provider, state_processor))
                 })
-                .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
-        }
-        let handle = handle.launch().await?;
+                 .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
+                 .launch()
+                 .await?;
 
-        handle.wait_for_node_exit().await
+            handle.wait_for_node_exit().await
+        } else {
+            let handle = handle.launch().await?;
+            handle.wait_for_node_exit().await
+        }
     })
 }
 

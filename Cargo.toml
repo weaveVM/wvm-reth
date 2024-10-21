@@ -1,5 +1,5 @@
 [workspace.package]
-version = "1.0.8"
+version = "1.1.0"
 edition = "2021"
 rust-version = "1.81"
 license = "MIT OR Apache-2.0"
@@ -159,6 +159,7 @@ members = [
     "wvm-apps/wvm-exexed/crates/brotli/",
 ]
 default-members = ["bin/reth"]
+exclude = ["book/sources"]
 
 # Explicitly set the resolver to version 2, which is the default for packages with edition >= 2021
 # https://doc.rust-lang.org/edition-guide/rust-2021/default-cargo-resolver.html
@@ -430,7 +431,7 @@ revm-primitives = { git = "https://github.com/weaveVM/wvm-revm", branch = "main"
 # eth
 alloy-chains = "0.1.32"
 alloy-dyn-abi = "0.8.0"
-alloy-primitives = { version = "0.8.4", default-features = false }
+alloy-primitives = { version = "0.8.7", default-features = false }
 alloy-rlp = "0.3.4"
 alloy-sol-types = "0.8.0"
 alloy-trie = { version = "0.6", default-features = false }
@@ -470,10 +471,10 @@ alloy-transport-ipc = { version = "0.4.2", default-features = false }
 alloy-transport-ws = { version = "0.4.2", default-features = false }
 
 # op
-op-alloy-rpc-types = "0.3.2"
-op-alloy-rpc-types-engine = "0.3.2"
-op-alloy-network = "0.3.2"
-op-alloy-consensus = "0.3.2"
+op-alloy-rpc-types = "0.4"
+op-alloy-rpc-types-engine = "0.4"
+op-alloy-network = "0.4"
+op-alloy-consensus = "0.4"
 
 # misc
 aquamarine = "0.5"

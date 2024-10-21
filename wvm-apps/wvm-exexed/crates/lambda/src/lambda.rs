@@ -2,6 +2,7 @@ use reth::{api::FullNodeComponents, primitives::TransactionSigned};
 
 use alloy_primitives::Address;
 
+use futures::{Stream, StreamExt};
 use reth_exex::ExExContext;
 use serde_json::{self, json};
 
@@ -32,10 +33,9 @@ pub async fn exex_lambda_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
 ) -> eyre::Result<()> {
     let lambda_server = std::env::var("LAMBDA_ENDPOINT").unwrap_or(String::from(LAMBDA_ENDPOINT));
-
     let mut txs: Vec<String> = vec![];
 
-    while let Some(notification) = ctx.notifications.recv().await {
+    while let Some(notification) = ctx.notifications.poll_next().await {
         if let Some(committed_chain) = notification.committed_chain() {
             let client = reqwest::Client::new();
             let last_block = committed_chain.tip();

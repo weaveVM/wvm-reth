@@ -1,7 +1,6 @@
-use crate::inner::gbq_precompile::GBQ_READ_PC;
 use crate::inner::{
     arweave_precompile::ARWEAVE_UPLOAD_PC, arweave_read_precompile::ARWEAVE_READ_PC,
-    kyve_precompile::KYVE_READ_PC, test_precompile::HELLO_WORLD_PC,
+    gbq_precompile::GBQ_READ_PC, kyve_precompile::KYVE_READ_PC, test_precompile::HELLO_WORLD_PC,
     wvm_block_precompile::WVM_BLOCK_PC,
 };
 use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
