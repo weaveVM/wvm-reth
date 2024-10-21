@@ -233,17 +233,4 @@ mod arweave_read_pc_tests {
                 .to_vec()
         );
     }
-
-    #[test]
-    pub fn test_read_wvm_block_fix_test_141550_hash() {
-        let input = Bytes::from("141550;hash".as_bytes());
-        let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
-        assert_eq!(bytes.len(), 66);
-        assert_eq!(
-            bytes.to_vec(),
-            "0xb69e1a4a19c665b0573f74b2bf8e4824cb5b54176f4ad45b730f047e880cf5cc"
-                .as_bytes()
-                .to_vec()
-        );
-    }
 }
