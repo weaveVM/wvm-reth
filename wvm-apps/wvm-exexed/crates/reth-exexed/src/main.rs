@@ -159,19 +159,15 @@ fn main() -> eyre::Result<()> {
             // init irys provider
             let ar_uploader_provider = UploaderProvider::new(None);
 
-            let handle = handle
+            handle = handle
                 .install_exex("exex-etl", |ctx| async move {
                     Ok(exex_etl_processor(ctx, state_repo, ar_uploader_provider, state_processor))
                 })
-                .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) })
-                .launch()
-                .await?;
-
-            handle.wait_for_node_exit().await
-        } else {
-            let handle = handle.launch().await?;
-            handle.wait_for_node_exit().await
+                .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) });
         }
+        let handle = handle.launch().await?;
+
+        handle.wait_for_node_exit().await
     })
 }
 
