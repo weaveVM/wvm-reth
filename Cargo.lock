@@ -15485,6 +15485,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "wvm-tx",
 ]
 
 [[package]]
@@ -15526,6 +15527,7 @@ dependencies = [
  "tracing",
  "wvm-borsh",
  "wvm-static",
+ "wvm-tx",
 ]
 
 [[package]]
@@ -15539,6 +15541,20 @@ dependencies = [
  "tokio",
  "tokio-util 0.7.12",
  "tracing",
+]
+
+[[package]]
+name = "wvm-tx"
+version = "1.0.8"
+dependencies = [
+ "alloy-consensus 0.4.2",
+ "alloy-eips 0.4.2",
+ "alloy-primitives",
+ "alloy-serde 0.4.2",
+ "op-alloy-consensus",
+ "reth-primitives",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
