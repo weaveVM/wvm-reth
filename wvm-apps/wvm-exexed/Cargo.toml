@@ -41,6 +41,7 @@ wvm-borsh = { path = "crates/wvm-borsh" }
 wvm-static = { path = "crates/static" }
 exex-etl = { path = "crates/exex-etl" }
 rbrotli = { path = "crates/brotli" }
+wvm-tx = { path = "crates/tx" }
 borsh.workspace = true
 
 parse_duration.workspace = true
