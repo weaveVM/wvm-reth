@@ -34,7 +34,7 @@ RUN cargo chef cook --profile $BUILD_PROFILE --features "$FEATURES" --recipe-pat
 COPY . .
 RUN cd /app/wvm-apps/wvm-exexed
 WORKDIR /app/wvm-apps/wvm-exexed
-RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --locked --bin reth
+RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --bin reth
 
 # ARG is not resolved in COPY so we have to hack around it by copying the
 # binary to a temporary location
