@@ -47,8 +47,9 @@ pub struct TxPoolArgs {
     #[arg(long = "txpool.pricebump", default_value_t = DEFAULT_PRICE_BUMP)]
     pub price_bump: u128,
 
+    // WVM: 500_000
     /// Minimum base fee required by the protocol.
-    #[arg(long = "txpool.minimal-protocol-fee", default_value_t = MIN_PROTOCOL_BASE_FEE.load(SeqCst))]
+    #[arg(long = "txpool.minimal-protocol-fee", default_value_t = 500_000)]
     pub minimal_protocol_basefee: u64,
 
     /// The default enforced gas limit for transactions entering the pool
