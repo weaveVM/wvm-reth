@@ -47,13 +47,8 @@ pub const BEACON_NONCE: u64 = 0u64;
 /// See <https://github.com/paradigmxyz/reth/issues/3233>.
 /// WVM: we set 300kk gas limit
 pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
-    let env_gas_limit = std::env::var("ETHEREUM_BLOCK_GAS_LIMIT");
-    if let Ok(gas_limit) = env_gas_limit {
-        gas_limit.as_str().parse::<u64>().unwrap()
-    } else {
-        300_000_000
-    }
-}); // WVM: 300_000_000 gas limit
+    500_000_000
+}); // WVM: 500_000_000 gas limit
 
 /// The minimum tx fee below which the txpool will reject the transaction.
 ///
@@ -66,14 +61,19 @@ pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
 /// significant harm in leaving this setting as is.
 // pub const MIN_PROTOCOL_BASE_FEE: u64 = 7;
 
-pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> = LazyLock::new(|| AtomicU64::new(7));
+// WVM: min base fee 7 => 500k
+pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> = LazyLock::new(|| AtomicU64::new(500_000u64));
 
 pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
     let fee = WvmFee::new(Some(Box::new(move |price| {
         let original_price = price as f64 / 1_000_000_000f64;
         let lowest_possible_gas_price_in_gwei =
             raw_calculate_lowest_possible_gas_price(original_price, *ETHEREUM_BLOCK_GAS_LIMIT);
-        let to_wei = lowest_possible_gas_price_in_gwei * 1e9;
+        let mut to_wei = lowest_possible_gas_price_in_gwei * 1e9;
+        // WVM: minimum fee check
+        if to_wei < 500_000f64 {
+            to_wei = 500_000f64;
+        }
         MIN_PROTOCOL_BASE_FEE.store(to_wei as u64, SeqCst);
         Ok(())
     })));
