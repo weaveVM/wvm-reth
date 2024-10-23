@@ -46,9 +46,7 @@ pub const BEACON_NONCE: u64 = 0u64;
 // TODO: This should be a chain spec parameter.
 /// See <https://github.com/paradigmxyz/reth/issues/3233>.
 /// WVM: we set 300kk gas limit
-pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
-    500_000_000
-}); // WVM: 500_000_000 gas limit
+pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| 500_000_000); // WVM: 500_000_000 gas limit
 
 /// The minimum tx fee below which the txpool will reject the transaction.
 ///
@@ -62,7 +60,8 @@ pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| {
 // pub const MIN_PROTOCOL_BASE_FEE: u64 = 7;
 
 // WVM: min base fee 7 => 500k
-pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> = LazyLock::new(|| AtomicU64::new(500_000u64));
+pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> =
+    LazyLock::new(|| AtomicU64::new(500_000u64));
 
 pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
     let fee = WvmFee::new(Some(Box::new(move |price| {
@@ -214,7 +213,6 @@ mod tests {
 
     #[tokio::test]
     pub async fn test_wvm_fee_manager() {
-        std::env::set_var("ETHEREUM_BLOCK_GAS_LIMIT", "500000000");
         let init = &*WVM_FEE_MANAGER;
         tokio::time::sleep(Duration::from_secs(10)).await;
         let latest_gas = get_latest_min_protocol_base_fee();
@@ -225,7 +223,6 @@ mod tests {
 
     #[tokio::test]
     async fn min_protocol_sanity() {
-        std::env::set_var("ETHEREUM_BLOCK_GAS_LIMIT", "500000000");
         let init = &*WVM_FEE_MANAGER;
         tokio::time::sleep(Duration::from_secs(10)).await;
         assert_eq!(MIN_PROTOCOL_BASE_FEE_U256.to::<u64>(), get_latest_min_protocol_base_fee());
