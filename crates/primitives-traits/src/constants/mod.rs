@@ -70,8 +70,8 @@ pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(
             raw_calculate_lowest_possible_gas_price(original_price, *ETHEREUM_BLOCK_GAS_LIMIT);
         let mut to_wei = lowest_possible_gas_price_in_gwei * 1e9;
         // WVM: minimum fee check
-        if to_wei < 500_000f64  {
-            to_wei = 500_000f64 ;
+        if to_wei < 500_000f64 {
+            to_wei = 500_000f64;
         }
         MIN_PROTOCOL_BASE_FEE.store(to_wei as u64, SeqCst);
         Ok(())
