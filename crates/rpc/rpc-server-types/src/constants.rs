@@ -85,7 +85,8 @@ pub mod gas_oracle {
     /// This is different from the default to regular 30M block gas limit
     /// [`ETHEREUM_BLOCK_GAS_LIMIT`](reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT) to allow
     /// for more complex calls.
-    pub const RPC_DEFAULT_GAS_CAP: u64 = 50_000_000;
+    // WVM: 500_000_000
+    pub const RPC_DEFAULT_GAS_CAP: u64 = 500_000_000;
 
     /// Allowed error ratio for gas estimation
     /// Taken from Geth's implementation in order to pass the hive tests
