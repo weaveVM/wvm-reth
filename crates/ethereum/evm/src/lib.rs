@@ -74,7 +74,7 @@ impl ConfigureEvmEnv for EthEvmConfig {
             transact_to: TxKind::Call(contract),
             // Explicitly set nonce to None so revm does not do any nonce checks
             nonce: None,
-            // WVM: 300_000_000 gas limit
+            // WVM: 500_000_000 gas limit
             gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             value: U256::ZERO,
             data,
