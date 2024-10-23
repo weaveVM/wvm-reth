@@ -1,5 +1,4 @@
-use alloy_eips::eip2930::AccessList;
-use alloy_eips::eip7702::SignedAuthorization;
+use alloy_eips::{eip2930::AccessList, eip7702::SignedAuthorization};
 use alloy_primitives::{Address, Bytes, ChainId, TxKind, B256, U256};
 use reth_primitives::Transaction;
 use serde::{Deserialize, Serialize};
