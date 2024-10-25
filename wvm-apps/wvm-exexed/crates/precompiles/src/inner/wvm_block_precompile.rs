@@ -79,7 +79,7 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         )));
     }
 
-    let block_id = unsafe { String::from_utf8(input.0.to_vec()) };
+    let block_id = String::from_utf8(input.0.to_vec());
 
     match block_id {
         Ok(input_data) => {
