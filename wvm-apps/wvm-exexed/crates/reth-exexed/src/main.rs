@@ -131,6 +131,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
+    let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         // Original config
         let mut config = builder.config().clone();
