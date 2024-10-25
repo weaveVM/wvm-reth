@@ -63,7 +63,7 @@ pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| 500_000_000
 pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> =
     LazyLock::new(|| AtomicU64::new(500_000u64));
 
-pub(crate) static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
+pub static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
     let fee = WvmFee::new(Some(Box::new(move |price| {
         let original_price = price as f64 / 1_000_000_000f64;
         let lowest_possible_gas_price_in_gwei =
