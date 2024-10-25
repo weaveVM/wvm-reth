@@ -22,7 +22,15 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         return Err(PrecompileErrors::Error(PrecompileError::OutOfGas));
     }
 
-    let input_str = unsafe { String::from_utf8(input.0.to_vec()) }.unwrap();
+    let input_str = match String::from_utf8(input.0.to_vec()) {
+        Ok(s) => s,
+        Err(_) => {
+            return Err(PrecompileErrors::Error(PrecompileError::Other(
+                "Invalid input".to_string(),
+            )));
+        }
+    };
+
     let (block_number, field) = {
         let mut parts = input_str.split(";");
         let block_number = parts.next();
