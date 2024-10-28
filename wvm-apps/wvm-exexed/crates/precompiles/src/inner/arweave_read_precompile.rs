@@ -70,7 +70,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         )));
     }
 
-    let id_str = unsafe { String::from_utf8(input.0.to_vec()) };
+    let id_str = String::from_utf8(input.0.to_vec());
 
     let res = match id_str {
         Ok(id) => {

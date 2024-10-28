@@ -1,12 +1,12 @@
 use crate::inner::{
     arweave_read_precompile::ARWEAVE_PC_READ_BASE,
-    string_block::{from_sealed_block_senders, from_sealed_block_senders_value, Block},
+    string_block::from_sealed_block_senders_value,
     wvm_block_precompile::{process_block_to_field, process_pc_response_from_str_bytes},
 };
 use alloy_primitives::Bytes;
 use revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult};
 use serde_json::Value;
-use wvm_static::WVM_BIGQUERY;
+use wvm_static::PRECOMPILE_WVM_BIGQUERY_CLIENT;
 
 pub const GBQ_READ_PC: Precompile = Precompile::Standard(gbq_read);
 
@@ -24,7 +24,7 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         )));
     }
 
-    let id_str = unsafe { String::from_utf8(input.0.to_vec()) };
+    let id_str = String::from_utf8(input.0.to_vec());
 
     let res = match id_str {
         Ok(val) => {
@@ -37,7 +37,7 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             };
 
             // It needs to be obtained OUTSIDE the thread
-            let wvm_bgc = (&*WVM_BIGQUERY).clone();
+            let wvm_bgc = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
 
             let res_from_bgc = tokio::runtime::Builder::new_current_thread()
                 .enable_all()
@@ -79,10 +79,16 @@ mod tests {
 
     #[test]
     pub fn test_gbq_pc() {
-        std::env::set_var(
-            "CONFIG",
-            std::env::current_dir().unwrap().join("./../../../bq-config.json").to_str().unwrap(),
-        );
+        unsafe {
+            std::env::set_var(
+                "CONFIG",
+                std::env::current_dir()
+                    .unwrap()
+                    .join("./../../../bq-config.json")
+                    .to_str()
+                    .unwrap(),
+            );
+        }
         let input = Bytes::from("253;hash".as_bytes());
         let result = gbq_read(&input, 100_000);
         assert_eq!(

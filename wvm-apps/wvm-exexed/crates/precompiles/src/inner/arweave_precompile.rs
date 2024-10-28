@@ -1,11 +1,11 @@
 use alloy_primitives::Bytes;
 use arweave_upload::ArweaveRequest;
+use eyre::eyre;
 use rbrotli::to_brotli;
 use reth::primitives::revm_primitives::{
     Precompile, PrecompileError, PrecompileOutput, PrecompileResult,
 };
 use reth_revm::precompile::PrecompileErrors;
-use std::str::FromStr;
 
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
@@ -37,19 +37,26 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         )));
     }
 
-    let res = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
-        async {
-            ArweaveRequest::new()
-                .set_private_key(SOLANA_SILLY_PRIVATE_KEY.to_string())
-                .set_tag("Content-Type", "application/octet-stream")
-                .set_tag("WeaveVM:Precompile", "true")
-                .set_tag("WeaveVM:Encoding", "Brotli")
-                .set_tag("WeaveVM:Precompile-Address", PC_ADDRESS.to_string().as_str())
-                .set_data(input)
-                .send()
-                .await
-        },
-    );
+    let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+        Ok(r) => r,
+        Err(e) => {
+            return Err(PrecompileErrors::Error(PrecompileError::Other(
+                eyre!("Failed to build runtime to call arweave: {}", e).to_string(),
+            )));
+        }
+    };
+
+    let res = runtime.block_on(async {
+        ArweaveRequest::new()
+            .set_private_key(SOLANA_SILLY_PRIVATE_KEY.to_string())
+            .set_tag("Content-Type", "application/octet-stream")
+            .set_tag("WeaveVM:Precompile", "true")
+            .set_tag("WeaveVM:Encoding", "Brotli")
+            .set_tag("WeaveVM:Precompile-Address", PC_ADDRESS.to_string().as_str())
+            .set_data(input)
+            .send()
+            .await
+    });
 
     let byte_resp = if let Ok(tx_id) = res { tx_id.into_bytes() } else { vec![] };
 

@@ -8,9 +8,9 @@ mod util;
 
 use crate::{network_tag::get_network_tag, util::check_block_existence};
 use arweave_upload::{ArweaveRequest, UploaderProvider};
-use exex_wvm_bigquery::{init_bigquery_db, repository::StateRepository, BigQueryConfig};
+use exex_wvm_bigquery::repository::StateRepository;
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
-use futures::{Stream, StreamExt};
+use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;
 use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder};
@@ -20,7 +20,6 @@ use reth_primitives::constants::SLOT_DURATION;
 use std::sync::Arc;
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
-use wvm_static::WVM_BIGQUERY;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -64,7 +63,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                     target: "wvm::exex",
                     %err,
                     "Failed to send FinishedHeight event for block {}",
-                    committed_chain.tip().number
+                    committed_chain.tip().block.header.header().number
                 );
                 continue;
             }
@@ -77,7 +76,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             let brotli_borsh = match data_settler.process_block(&borsh_sealed_block) {
                 Ok(data) => data,
                 Err(err) => {
-                    error!(target: "wvm::exex", %err, "Failed to do brotli encoding for block {}", sealed_block_with_senders.number);
+                    error!(target: "wvm::exex", %err, "Failed to do brotli encoding for block {}", sealed_block_with_senders.block.header.header().number);
                     continue;
                 }
             };
@@ -90,7 +89,10 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                 let res = ArweaveRequest::new()
                     .set_tag("Content-Type", "application/octet-stream")
                     .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
-                    .set_tag("Block-Number", sealed_block_with_senders.number.to_string().as_str())
+                    .set_tag(
+                        "Block-Number",
+                        sealed_block_with_senders.block.header.header().number.to_string().as_str(),
+                    )
                     .set_tag("Block-Hash", block_hash)
                     .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
                     .set_tag("Network", get_network_tag().as_str())
@@ -102,22 +104,22 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                 let arweave_id = match res {
                     Ok(arweave_id) => arweave_id,
                     Err(err) => {
-                        error!(target: "wvm::exex", %err, "Failed to construct arweave_id for block {}", sealed_block_with_senders.number);
+                        error!(target: "wvm::exex", %err, "Failed to construct arweave_id for block {}", sealed_block_with_senders.block.header.header().number);
                         continue;
                     }
                 };
 
-                info!(target: "wvm::exex", "irys id: {}, for block: {}", arweave_id, sealed_block_with_senders.number);
+                info!(target: "wvm::exex", "irys id: {}, for block: {}", arweave_id, sealed_block_with_senders.block.header.header().number);
 
                 if let Err(err) = exex_wvm_bigquery::save_block(
                     &state_repository,
                     &sealed_block_with_senders,
-                    committed_chain.tip().block.number,
+                    committed_chain.tip().block.header.header().number,
                     arweave_id.clone(),
                 )
                 .await
                 {
-                    error!(target: "wvm::exex", %err, "Failed to write to bigquery, block {}", sealed_block_with_senders.number);
+                    error!(target: "wvm::exex", %err, "Failed to write to bigquery, block {}", sealed_block_with_senders.block.header.header().number);
                     continue;
                 };
             }
@@ -129,6 +131,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
+    let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         // Original config
         let mut config = builder.config().clone();
@@ -151,9 +154,9 @@ fn main() -> eyre::Result<()> {
 
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
         if run_exex == "true" {
-            let big_query_client = (&*WVM_BIGQUERY).clone();
-            // init state repository
-            let state_repo = StateRepository::new(big_query_client);
+            let big_query_client = new_etl_exex_biguery_client().await;
+            let state_repo = StateRepository::new(Arc::new(big_query_client));
+
             // init state processor
             let state_processor = exex_etl::state_processor::StateProcessor::new();
             // init irys provider
@@ -182,6 +185,26 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
     let duration = parse_duration::parse(d).unwrap();
     let secs = duration.as_secs();
     SLOT_DURATION.as_secs() * secs
+}
+
+use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
+async fn new_etl_exex_biguery_client() -> BigQueryClient {
+    let config_path: String =
+        std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
+
+    info!(target: "wvm::exex","etl exex big_query config applied from: {}", config_path);
+
+    let config_file = std::fs::File::open(config_path).expect("bigquery config path exists");
+    let reader = std::io::BufReader::new(config_file);
+
+    let bq_config: BigQueryConfig =
+        serde_json::from_reader(reader).expect("bigquery config read from file");
+
+    let bgc = BigQueryClient::new(&bq_config).await.unwrap();
+
+    info!(target: "wvm::exex", "etl exex bigquery client initialized");
+
+    bgc
 }
 
 #[cfg(test)]
