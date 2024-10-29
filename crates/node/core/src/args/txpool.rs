@@ -61,7 +61,7 @@ pub struct TxPoolArgs {
     pub blob_transaction_price_bump: u128,
 
     /// Max size in bytes of a single transaction allowed to enter the pool
-    #[arg(long = "txpool.max-tx-input-bytes", alias = "txpool.max_tx_input_bytes", default_value_t = DEFAULT_MAX_TX_INPUT_BYTES)]
+    #[arg(long = "txpool.max-tx-input-bytes", alias = "txpool.max_tx_input_bytes", default_value_t = internal_default_max_tx_bytes())]
     pub max_tx_input_bytes: usize,
 
     /// The maximum number of blobs to keep in the in memory blob cache.
@@ -90,6 +90,10 @@ pub struct TxPoolArgs {
     pub new_tx_listener_buffer_size: usize,
 }
 
+fn internal_default_max_tx_bytes() -> usize {
+    *DEFAULT_MAX_TX_INPUT_BYTES
+}
+
 impl Default for TxPoolArgs {
     fn default() -> Self {
         Self {
@@ -104,7 +108,7 @@ impl Default for TxPoolArgs {
             minimal_protocol_basefee: MIN_PROTOCOL_BASE_FEE.load(SeqCst),
             gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             blob_transaction_price_bump: REPLACE_BLOB_PRICE_BUMP,
-            max_tx_input_bytes: DEFAULT_MAX_TX_INPUT_BYTES,
+            max_tx_input_bytes: *DEFAULT_MAX_TX_INPUT_BYTES,
             max_cached_entries: DEFAULT_MAX_CACHED_BLOBS,
             no_locals: false,
             locals: Default::default(),
