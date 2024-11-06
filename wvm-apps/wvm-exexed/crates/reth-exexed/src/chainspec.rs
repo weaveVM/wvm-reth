@@ -44,10 +44,8 @@ pub(crate) const WVM_DEPOSIT_CONTRACT: DepositContract = DepositContract::new(
 pub static WVM_DEV: LazyLock<Arc<ChainSpec>> = LazyLock::new(|| {
     ChainSpec {
         chain: Chain::from_id(999777),
-        genesis: serde_json::from_str(include_str!(
-            "../../../../../etc/weave_vm_testnet/dev-genesis.json"
-        ))
-        .expect("Can't deserialize odyssey genesis json"),
+        genesis: serde_json::from_str(include_str!("../../../../etc/dev-genesis.json"))
+            .expect("Can't deserialize odyssey genesis json"),
         paris_block_and_final_difficulty: Some((0, U256::ZERO)),
         hardforks: WVM_DEV_FORKS.clone(),
         base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
@@ -88,7 +86,7 @@ mod tests {
     #[test]
     fn chainspec_parser_adds_prague() {
         let mut chainspec_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        chainspec_path.push("../../../../../etc/weave_vm_testnet/dev-genesis.json");
+        chainspec_path.push("../../../../etc/dev-genesis.json");
 
         WvmChainSpecParser::parse(&chainspec_path.to_string_lossy())
             .expect("could not parse chainspec");
