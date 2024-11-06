@@ -2,9 +2,11 @@
 
 #![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
+mod chainspec;
 mod constant;
 mod network_tag;
 mod util;
+mod wvm_evm;
 
 use crate::{network_tag::get_network_tag, util::check_block_existence};
 use arweave_upload::{ArweaveRequest, UploaderProvider};

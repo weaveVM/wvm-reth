@@ -14,8 +14,8 @@ reth-revm.workspace = true
 reth-ethereum-engine-primitives.workspace = true
 reth-primitives.workspace = true
 reth-chainspec.workspace = true
-parking_lot.workspace = true
-schnellru.workspace = true
+reth-cli.workspace = true
+
 reth.workspace = true
 reth-exex.workspace = true
 reth-node-api.workspace = true
@@ -27,6 +27,11 @@ eyre.workspace = true
 futures.workspace = true
 alloy-primitives.workspace = true
 tokio.workspace = true
+reth-evm.workspace = true
+revm-primitives.workspace = true
+
+parking_lot.workspace = true
+schnellru.workspace = true
 
 # bigquery dependencies
 gcp-bigquery-client = "0.17.0"
