@@ -1,3 +1,7 @@
+use std::cell::LazyCell;
+use std::env::VarError;
+use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
+
 /// [`TX_SLOT_BYTE_SIZE`] is used to calculate how many data slots a single transaction
 /// takes up based on its byte size. The slots are used as `DoS` protection, ensuring
 /// that validating a new transaction remains a constant operation (in reality
@@ -9,7 +13,25 @@ pub const TX_SLOT_BYTE_SIZE: usize = 32 * 1024;
 /// more expensive to propagate; larger transactions also take more resources
 /// to validate whether they fit into the pool or not. Default is 4 times [`TX_SLOT_BYTE_SIZE`],
 /// which defaults to 32 KiB, so 128 KiB.
-pub const DEFAULT_MAX_TX_INPUT_BYTES: usize = 4 * TX_SLOT_BYTE_SIZE; // 128KB
+pub const DEFAULT_MAX_TX_INPUT_BYTES: LazyCell<usize> = LazyCell::new(|| {
+    let default_value = {
+        // 20k (gas) ----> 128kb
+        // 500k (gas) ----> x // 3200
+        let gas_limit = (&*ETHEREUM_BLOCK_GAS_LIMIT).clone();
+
+        (((gas_limit * 128_000) / 20_000) / 1000) as usize // -> to bytes (3.2mb)
+    };
+
+    let env_var = std::env::var("WVM_DEFAULT_MAX_TX_INPUT_BYTES");
+    match env_var {
+        Ok(res) => {
+            res.parse::<usize>().unwrap_or(default_value)
+        }
+        Err(_) => {
+            default_value
+        }
+    }
+}); // 128KB
 
 /// This represents how big we want to allow a contract size to be in multiples of 24kb
 /// 2 = 48kb

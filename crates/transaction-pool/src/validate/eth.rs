@@ -521,7 +521,7 @@ impl EthTransactionValidatorBuilder {
             additional_tasks: 1,
             kzg_settings: EnvKzgSettings::Default,
             local_transactions_config: Default::default(),
-            max_tx_input_bytes: DEFAULT_MAX_TX_INPUT_BYTES,
+            max_tx_input_bytes: *DEFAULT_MAX_TX_INPUT_BYTES,
 
             // by default all transaction types are allowed
             eip2718: true,
