@@ -3,7 +3,7 @@ name: 'reth'
 services:
   reth:
     restart: unless-stopped
-    image: ghcr.io/paradigmxyz/reth
+    image: wvm:local
     ports:
       - '9001:9001' # metrics
       - '30303:30303' # eth/66 peering
@@ -21,7 +21,8 @@ services:
     # For Holesky, replace `--chain mainnet` with `--chain holesky`
     command: >
       node
-      --chain mainnet
+      --chain dev
+      --debug.tip=0xc3c71ff63ad6462ac18d0b015b87da5d78a73ad2a3badf4ddec7543045781df9
       --metrics 0.0.0.0:9001
       --log.file.directory /root/logs
       --authrpc.addr 0.0.0.0
@@ -29,6 +30,9 @@ services:
       --authrpc.jwtsecret /root/jwt/jwt.hex
       --http --http.addr 0.0.0.0 --http.port 8545
       --http.api "eth,net,web3"
+      --trusted-peers=enode://91ba9f22a6966b7ca6ec8e335e12a09aba863ec4fb14e5a2992f5094f60ae33c73ac002bc5b4ce84bedf2b430ff2bd001ee8b9181dd719cabda8c7c7b26274d4@34.107.39.173:30303
+      --bootnodes=enode://91ba9f22a6966b7ca6ec8e335e12a09aba863ec4fb14e5a2992f5094f60ae33c73ac002bc5b4ce84bedf2b430ff2bd001ee8b9181dd719cabda8c7c7b26274d4@34.107.39.173:30303
+      -vvv
 
   prometheus:
     restart: unless-stopped

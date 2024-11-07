@@ -29,6 +29,8 @@ alloy-primitives.workspace = true
 tokio.workspace = true
 reth-evm.workspace = true
 revm-primitives.workspace = true
+reth-provider.workspace = true
+reth-cli-commands.workspace = true
 
 parking_lot.workspace = true
 schnellru.workspace = true

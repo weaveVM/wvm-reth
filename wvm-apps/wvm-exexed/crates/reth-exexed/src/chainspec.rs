@@ -10,6 +10,7 @@ use reth_cli::chainspec::{parse_genesis, ChainSpecParser};
 
 use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
 use std::sync::Arc;
+use reth::chainspec::{chain_value_parser, SUPPORTED_CHAINS};
 
 /// WVM forks. Let's consider DEV at first.
 pub static WVM_DEV_FORKS: LazyLock<ChainHardforks> = LazyLock::new(|| {
@@ -56,8 +57,9 @@ pub static WVM_DEV: LazyLock<Arc<ChainSpec>> = LazyLock::new(|| {
     .into()
 });
 
-/// Odyssey chain specification parser.
+/// WVM chain specification parser.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct WvmChainSpecParser;
 
 impl ChainSpecParser for WvmChainSpecParser {

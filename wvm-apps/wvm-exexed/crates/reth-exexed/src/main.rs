@@ -14,14 +14,17 @@ use exex_wvm_bigquery::repository::StateRepository;
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
-use precompiles::node::WvmEthExecutorBuilder;
-use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder};
+use precompiles::node::{WvmEthExecutorBuilder, WvmEthereumNode};
+use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder, cli::Cli};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
-use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
+use reth_node_ethereum::EthereumNode;
 use reth_primitives::constants::SLOT_DURATION;
 use std::sync::Arc;
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
+use reth_cli_commands::{node::NoArgs};
+
+
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -131,9 +134,11 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
     Ok(())
 }
 
+use chainspec::WvmChainSpecParser;
+
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
-    reth::cli::Cli::parse_args().run(|builder, _| async move {
+    reth::cli::Cli::<WvmChainSpecParser, node::NoArgs>::parse().run(|builder, _| async move {
         let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
         // Original config
         let mut config = builder.config().clone();
@@ -151,7 +156,9 @@ fn main() -> eyre::Result<()> {
             .with_database(builder.db().clone())
             .with_launch_context(builder.task_executor().clone())
             .with_types::<EthereumNode>()
-            .with_components(EthereumNode::components().executor(WvmEthExecutorBuilder::default()))
+            .with_components(
+                WvmEthereumNode::components().executor(WvmEthExecutorBuilder::default()),
+            )
             .with_add_ons(EthereumAddOns::default());
 
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
@@ -190,6 +197,11 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
 }
 
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
+use reth::builder::exex::LaunchExEx;
+use reth_cli::chainspec::ChainSpecParser;
+use reth_cli_commands::node::NoArgs;
+use reth_node_ethereum::node::EthereumAddOns;
+
 async fn new_etl_exex_biguery_client() -> BigQueryClient {
     let config_path: String =
         std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());

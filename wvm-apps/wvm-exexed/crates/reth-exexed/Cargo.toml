@@ -15,7 +15,9 @@ reth-tracing.workspace = true
 reth-primitives.workspace = true
 reth-chainspec.workspace = true
 reth-cli.workspace = true
+reth-cli-commands.workspace = true
 reth-evm.workspace = true
+reth-provider.workspace = true
 
 alloy-primitives.workspace = true
 reth-node-api.workspace = true

@@ -27,6 +27,7 @@ services:
       --metrics --metrics-address 0.0.0.0
       --execution-jwt /root/jwt/jwt.hex
       --checkpoint-sync-url https://mainnet.checkpoint.sigp.io
+      
 
   metrics-exporter:
     restart: unless-stopped
