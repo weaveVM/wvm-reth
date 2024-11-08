@@ -6,6 +6,7 @@ use reth::primitives::revm_primitives::{
     Precompile, PrecompileError, PrecompileOutput, PrecompileResult,
 };
 use reth_revm::precompile::PrecompileErrors;
+use wvm_static::internal_block;
 
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
@@ -37,16 +38,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         )));
     }
 
-    let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
-        Ok(r) => r,
-        Err(e) => {
-            return Err(PrecompileErrors::Error(PrecompileError::Other(
-                eyre!("Failed to build runtime to call arweave: {}", e).to_string(),
-            )));
-        }
-    };
-
-    let res = runtime.block_on(async {
+    let res = internal_block(async {
         ArweaveRequest::new()
             .set_private_key(SOLANA_SILLY_PRIVATE_KEY.to_string())
             .set_tag("Content-Type", "application/octet-stream")
@@ -56,7 +48,12 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             .set_data(input)
             .send()
             .await
-    });
+    })
+    .map_err(|_| {
+        PrecompileErrors::Error(PrecompileError::Other(
+            eyre!("Failed to build runtime to call arweave").to_string(),
+        ))
+    })?;
 
     let byte_resp = if let Ok(tx_id) = res { tx_id.into_bytes() } else { vec![] };
 

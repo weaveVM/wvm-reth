@@ -132,7 +132,10 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     reth::cli::Cli::parse_args().run(|builder, _| async move {
+        // Initializations
         let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
+        let _rt = &*SUPERVISOR_RT;
+        let _bc = &*PRECOMPILE_WVM_BIGQUERY_CLIENT;
         // Original config
         let mut config = builder.config().clone();
         let pruning_args = config.pruning.clone();
@@ -188,6 +191,8 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
 }
 
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
+use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
+
 async fn new_etl_exex_biguery_client() -> BigQueryClient {
     let config_path: String =
         std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());

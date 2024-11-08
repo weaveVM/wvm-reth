@@ -11,6 +11,7 @@ use rbrotli::from_brotli;
 use reth::primitives::revm_primitives::{Precompile, PrecompileOutput, PrecompileResult};
 use revm_primitives::{PrecompileError, PrecompileErrors};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
+use wvm_static::internal_block;
 
 pub const WVM_BLOCK_PC: Precompile = Precompile::Standard(wvm_read_block_pc);
 
@@ -89,73 +90,74 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                     "A field must be specified".to_string(),
                 )))
             } else {
-                tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .unwrap()
-                    .block_on(async {
-                        let clean_gateway = clean_gateway_url(gateway.as_str());
-                        let query = {
-                            let query = build_transaction_query(
-                                None,
-                                Some(&[("Block-Number".to_string(), vec![block_id.to_string()])]),
-                                Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
-                                None,
-                                false,
-                            );
+                internal_block(async {
+                    let clean_gateway = clean_gateway_url(gateway.as_str());
+                    let query = {
+                        let query = build_transaction_query(
+                            None,
+                            Some(&[("Block-Number".to_string(), vec![block_id.to_string()])]),
+                            Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
+                            None,
+                            false,
+                        );
 
-                            query
+                        query
+                    };
+
+                    let edge = fetch_with_fallback(
+                        clean_gateway.as_str(),
+                        "https://arweave.mainnet.irys.xyz",
+                        query.as_str(),
+                    )
+                    .await;
+
+                    if let Some(edge) = edge {
+                        let tags = edge.node.tags.unwrap();
+                        let encoding = tags
+                            .iter()
+                            .find(|i| i.name == String::from("WeaveVM:Encoding"))
+                            .unwrap();
+                        let get_data = download_tx(gas_used, clean_gateway, edge.node.id).await;
+
+                        let output = match get_data {
+                            Ok(resp) => {
+                                let bytes = resp.bytes.to_vec();
+                                match encoding.value.as_str() {
+                                    "Borsh-Brotli" => {
+                                        let unbrotli = from_brotli(bytes);
+                                        let unborsh =
+                                            borsh::from_slice::<BorshSealedBlockWithSenders>(
+                                                unbrotli.as_slice(),
+                                            )
+                                            .unwrap();
+                                        let str_block = Block::from(unborsh);
+
+                                        let data = process_block_to_field(field, str_block);
+
+                                        process_pc_response_from_str_bytes(gas_used, data)
+                                    }
+                                    _ => Err(PrecompileErrors::Error(PrecompileError::Other(
+                                        "Unknown encoding".to_string(),
+                                    ))),
+                                }
+                            }
+                            Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
+                                "Invalid data".to_string(),
+                            ))),
                         };
 
-                        let edge = fetch_with_fallback(
-                            clean_gateway.as_str(),
-                            "https://arweave.mainnet.irys.xyz",
-                            query.as_str(),
-                        )
-                        .await;
-
-                        if let Some(edge) = edge {
-                            let tags = edge.node.tags.unwrap();
-                            let encoding = tags
-                                .iter()
-                                .find(|i| i.name == String::from("WeaveVM:Encoding"))
-                                .unwrap();
-                            let get_data = download_tx(gas_used, clean_gateway, edge.node.id).await;
-
-                            let output = match get_data {
-                                Ok(resp) => {
-                                    let bytes = resp.bytes.to_vec();
-                                    match encoding.value.as_str() {
-                                        "Borsh-Brotli" => {
-                                            let unbrotli = from_brotli(bytes);
-                                            let unborsh =
-                                                borsh::from_slice::<BorshSealedBlockWithSenders>(
-                                                    unbrotli.as_slice(),
-                                                )
-                                                .unwrap();
-                                            let str_block = Block::from(unborsh);
-
-                                            let data = process_block_to_field(field, str_block);
-
-                                            process_pc_response_from_str_bytes(gas_used, data)
-                                        }
-                                        _ => Err(PrecompileErrors::Error(PrecompileError::Other(
-                                            "Unknown encoding".to_string(),
-                                        ))),
-                                    }
-                                }
-                                Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
-                                    "Invalid data".to_string(),
-                                ))),
-                            };
-
-                            output
-                        } else {
-                            Err(PrecompileErrors::Error(PrecompileError::Other(
-                                "Unknown Block".to_string(),
-                            )))
-                        }
-                    })
+                        output
+                    } else {
+                        Err(PrecompileErrors::Error(PrecompileError::Other(
+                            "Unknown Block".to_string(),
+                        )))
+                    }
+                })
+                .map_err(|_| {
+                    PrecompileError::Other(
+                        "Tokio runtime could not block_on for operation".to_string(),
+                    )
+                })?
             }
         }
         Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(

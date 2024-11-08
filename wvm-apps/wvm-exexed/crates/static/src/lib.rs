@@ -1,9 +1,15 @@
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
+use once_cell::sync::Lazy;
+use std::future::Future;
 use std::sync::{Arc, LazyLock};
 use tracing::info;
 
+pub static SUPERVISOR_RT: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
+    tokio::runtime::Builder::new_multi_thread().enable_all().thread_name("wvm").build().unwrap()
+});
+
 pub static PRECOMPILE_WVM_BIGQUERY_CLIENT: LazyLock<Arc<BigQueryClient>> = LazyLock::new(|| {
-    tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
+    SUPERVISOR_RT.block_on(
         async move {
             let config_path: String =
                 std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
@@ -25,3 +31,18 @@ pub static PRECOMPILE_WVM_BIGQUERY_CLIENT: LazyLock<Arc<BigQueryClient>> = LazyL
         },
     )
 });
+
+pub fn internal_block<F: Future>(f: F) -> Result<F::Output, ()> {
+    let careful_tokio = std::env::var("CAREFUL_TOKIO").unwrap_or("true".to_string());
+    if careful_tokio == "true" {
+        let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+            Ok(r) => r,
+            Err(e) => return Err(()),
+        };
+
+        Ok(runtime.block_on(f))
+    } else {
+        info!(target: "wvm::precompile","Non-careful tokio has been called");
+        Ok(SUPERVISOR_RT.block_on(f))
+    }
+}

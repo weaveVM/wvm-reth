@@ -2,6 +2,7 @@ use alloy_primitives::Bytes;
 use revm_primitives::{
     Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
 };
+use wvm_static::internal_block;
 
 pub const KYVE_PC_BASE: u64 = 10_000;
 pub const KYVE_API_URL: &str = "https://data.services.kyve.network";
@@ -59,7 +60,7 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
     let field = field.unwrap();
 
-    tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+    internal_block(async {
         println!(
             "{}",
             format!("{}/ethereum/beacon/blob_sidecars?block_height={}", KYVE_API_URL, blk_number)
@@ -118,6 +119,9 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             }
         }
     })
+    .map_err(|_| {
+        PrecompileError::Other("Tokio runtime could not block_on for operation".to_string())
+    })?
 }
 
 #[cfg(test)]
