@@ -2,6 +2,7 @@ use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
 use once_cell::sync::Lazy;
 use std::future::Future;
 use std::sync::{Arc, LazyLock};
+use std::time::Instant;
 use tracing::info;
 
 pub static SUPERVISOR_RT: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
@@ -43,6 +44,9 @@ pub fn internal_block<F: Future>(f: F) -> Result<F::Output, ()> {
         Ok(runtime.block_on(f))
     } else {
         info!(target: "wvm::precompile","Non-careful tokio has been called");
-        Ok(SUPERVISOR_RT.block_on(f))
+        let now = Instant::now();
+        let a = Ok(SUPERVISOR_RT.block_on(f));
+        println!("Secs to run block {}", now.elapsed().as_secs());
+        a
     }
 }

@@ -131,11 +131,12 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
+    let _rt = &*SUPERVISOR_RT;
+    let _bc = &*PRECOMPILE_WVM_BIGQUERY_CLIENT;
+
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         // Initializations
         let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
-        let _rt = &*SUPERVISOR_RT;
-        let _bc = &*PRECOMPILE_WVM_BIGQUERY_CLIENT;
         // Original config
         let mut config = builder.config().clone();
         let pruning_args = config.pruning.clone();

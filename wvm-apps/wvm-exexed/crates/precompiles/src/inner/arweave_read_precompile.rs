@@ -1,3 +1,4 @@
+use std::time::Instant;
 use crate::inner::{
     graphql_util::{build_transaction_query, send_graphql},
     util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
@@ -79,7 +80,10 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             internal_block(async {
                 let clean_gateway = clean_gateway_url(gateway.as_str());
                 let query = build_transaction_query(Some(&[tx_id.clone()]), None, None, None, true);
+                println!("{}", query);
+                let now = Instant::now();
                 let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
+                println!("Secs to read Graphql {}", now.elapsed().as_secs());
 
                 let tx_size = if let Ok(data) = data {
                     let resp = data.data;
@@ -117,6 +121,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
 #[cfg(test)]
 mod arweave_read_pc_tests {
+    use std::time::Instant;
     use crate::inner::arweave_read_precompile::{arweave_read, parse_gateway_content};
     use alloy_primitives::Bytes;
     use reth::primitives::revm_primitives::PrecompileOutput;
@@ -125,7 +130,9 @@ mod arweave_read_pc_tests {
     pub fn test_arweave_read_precompile() {
         std::env::set_var("CAREFUL_TOKIO", "false");
         let input = Bytes::from("bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI".as_bytes());
+        let now = Instant::now();
         let PrecompileOutput { gas_used, bytes } = arweave_read(&input, 100_000).unwrap();
+        println!("Secs to run PC {}", now.elapsed().as_secs());
         assert_eq!(bytes.len(), 11);
         assert_eq!(bytes.to_vec(), "Hello world".as_bytes().to_vec());
     }
