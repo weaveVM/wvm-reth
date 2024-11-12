@@ -9,17 +9,7 @@ pub fn to_signature(bytes: &[u8]) -> std::io::Result<Signature> {
         return Err(Error::from(ErrorKind::UnexpectedEof));
     }
 
-    let mut r_bytes = [0u8; 32];
-    let mut s_bytes = [0u8; 32];
-
-    r_bytes.copy_from_slice(&bytes[..32]);
-    s_bytes.copy_from_slice(&bytes[32..64]);
-
-    let r = U256::from_be_bytes(r_bytes);
-    let s = U256::from_be_bytes(s_bytes);
-
-    let odd_y_parity = bytes[64] - 27;
-    let signature = Signature::new(r, s, Parity::Parity(odd_y_parity != 0));
+    let signature = Signature::try_from(bytes).unwrap();
 
     Ok(signature)
 }
@@ -40,15 +30,23 @@ impl BorshDeserialize for BorshSignature {
 
 #[cfg(test)]
 mod signature_tests {
+    use alloy_primitives::Parity;
     use crate::signature::BorshSignature;
     use reth::primitives::Signature;
 
     #[test]
     pub fn test_sealed_header() {
         let data = Signature::test_signature();
+        let b = data.as_bytes();
+        println!("{:?}", b);
         let borsh_data = BorshSignature(data.clone());
         let to_borsh = borsh::to_vec(&borsh_data).unwrap();
         let from_borsh: BorshSignature = borsh::from_slice(to_borsh.as_slice()).unwrap();
-        assert_eq!(data, from_borsh.0);
+        let from_bytes = from_borsh.0.as_bytes();
+        println!("{:?}", from_bytes);
+        assert_eq!(b, from_bytes);
+        let parity = Parity::try_from(from_bytes[64] as u64).unwrap();
+        assert_eq!(Parity::NonEip155(false), parity)
+
     }
 }
