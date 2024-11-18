@@ -15,23 +15,25 @@ use wvm_static::SUPERVISOR_RT;
 
 pub struct ArProcess {
     buffer_size: usize,
-    sender: Sender<(SealedBlockWithSenders, String)>,
+    pub sender: Sender<(SealedBlockWithSenders, String)>,
     thread: JoinHandle<()>,
 }
 
 impl ArProcess {
     pub fn new(buffer_size: usize) -> Self {
-        let (sender, mut receiver) = tokio::sync::mpsc::channel(buffer_size);
+        let (sender, mut receiver) =
+            tokio::sync::mpsc::channel::<(SealedBlockWithSenders, String)>(buffer_size);
 
         let thread = SUPERVISOR_RT.spawn(async move {
-            let irys_provider = UploaderProvider::new(None);
             let big_query_client = new_etl_exex_biguery_client().await;
-            let state_repo = StateRepository::new(Arc::new(big_query_client));
+            let state_repo = Arc::new(StateRepository::new(Arc::new(big_query_client)));
 
             while let Some(msg) = receiver.recv().await {
-                tokio::spawn(async {
-                    let sealed_block: SealedBlockWithSenders = msg.0;
-                    let notification_type: &str = msg.1.as_str();
+                let state_repo = state_repo.clone();
+                let irys_provider = UploaderProvider::new(None);
+                tokio::spawn(async move {
+                    let sealed_block = msg.0;
+                    let notification_type = msg.1.as_str();
 
                     let block_number = sealed_block.block.header.header().number;
                     let block_hash = sealed_block.block.hash().to_string();
@@ -46,14 +48,15 @@ impl ArProcess {
                     let does_block_exist = check_block_existence(block_hash.as_str(), false).await;
 
                     if !does_block_exist {
-                        let arweave_id = match Self::send_block_to_arweave(&irys_provider, notification_type, block_number, &block_hash, brotli_borsh).await {
+                        let provider = irys_provider.clone();
+                        let arweave_id = match Self::send_block_to_arweave(&provider, notification_type, block_number, &block_hash, brotli_borsh).await {
                             Some(ar_id) => ar_id,
                             None => return,
                         };
 
                         info!(target: "wvm::exex", "irys id: {}, for block: {}", arweave_id, block_number);
 
-                        let _ = Self::bigquery_task(&state_repo, &sealed_block, block_number, arweave_id);
+                        let _ = Self::bigquery_task(state_repo.clone(), sealed_block, block_number, arweave_id);
                     }
                 });
             }
@@ -63,14 +66,14 @@ impl ArProcess {
     }
 
     fn bigquery_task(
-        state_repo: &StateRepository,
-        sealed_block: &SealedBlockWithSenders,
+        state_repo: Arc<StateRepository>,
+        sealed_block: SealedBlockWithSenders,
         block_number: BlockNumber,
         arweave_id: String,
     ) -> Result<JoinHandle<()>, ()> {
-        Ok(tokio::spawn(async {
+        Ok(tokio::spawn(async move {
             if let Err(err) = exex_wvm_bigquery::save_block(
-                &state_repo,
+                state_repo,
                 &sealed_block,
                 block_number,
                 arweave_id.clone(),
@@ -114,12 +117,13 @@ impl ArProcess {
 
     fn serialize_block(msg: SealedBlockWithSenders) -> Option<Vec<u8>> {
         let data_settler = DefaultWvmDataSettler;
+        let block_number = msg.block.header.header().number;
 
         let borsh_sealed_block = BorshSealedBlockWithSenders(msg);
         let brotli_borsh = match data_settler.process_block(&borsh_sealed_block) {
             Ok(data) => data,
             Err(err) => {
-                error!(target: "wvm::exex", %err, "Failed to do brotli encoding for block {}", msg.block.header.header().number);
+                error!(target: "wvm::exex", %err, "Failed to do brotli encoding for block {}", block_number);
                 return None;
             }
         };
