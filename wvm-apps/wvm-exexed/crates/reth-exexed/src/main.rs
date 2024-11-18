@@ -71,7 +71,8 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         if let Some(committed_chain) = notification.committed_chain() {
             let sealed_block_with_senders = committed_chain.tip().clone();
             let _ =
-                ar_process.sender.send((sealed_block_with_senders, notification_type.to_string()));
+                ar_process.sender.send((sealed_block_with_senders, notification_type.to_string())).await;
+            info!(target: "wvm::exex", "Exex block has been streamed");
             // Handle recovery if `receiver` is dropped
         }
     }
