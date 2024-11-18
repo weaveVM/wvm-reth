@@ -16,7 +16,7 @@ use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use reth_primitives::{BlockId, BlockNumberOrTag};
 use reth_rpc_server_types::{result::internal_rpc_err, ToRpcResult};
 use tracing::trace;
-
+use reth_rpc_eth_types::wvm::WvmTransactionRequest;
 use crate::{
     helpers::{EthApiSpec, EthBlocks, EthCall, EthFees, EthState, EthTransactions, FullEthApi},
     RpcBlock, RpcReceipt, RpcTransaction,
@@ -331,6 +331,11 @@ pub trait EthApi<T: RpcObject, B: RpcObject, R: RpcObject> {
     /// transaction hash.
     #[method(name = "sendTransaction")]
     async fn send_transaction(&self, request: TransactionRequest) -> RpcResult<B256>;
+
+    /// Sends WVM transaction; will block waiting for signer to return the
+    /// transaction hash.
+    #[method(name = "sendWvmTransaction")]
+    async fn send_wvm_transaction(&self, request: WvmTransactionRequest) -> RpcResult<B256>;
 
     /// Sends signed transaction, returning its hash.
     #[method(name = "sendRawTransaction")]
@@ -765,6 +770,12 @@ where
     async fn send_transaction(&self, request: TransactionRequest) -> RpcResult<B256> {
         trace!(target: "rpc::eth", ?request, "Serving eth_sendTransaction");
         Ok(EthTransactions::send_transaction(self, request).await?)
+    }
+
+    /// Handler for: `eth_sendWvmTransaction`
+    async fn send_wvm_transaction(&self, request: WvmTransactionRequest) -> RpcResult<B256> {
+        trace!(target: "rpc::eth", ?request, "Serving eth_sendWvmTransaction");
+        Ok(EthTransactions::send_wvm_transaction(self, request).await?)
     }
 
     /// Handler for: `eth_sendRawTransaction`

@@ -21,6 +21,7 @@ pub mod revm_utils;
 pub mod simulate;
 pub mod transaction;
 pub mod utils;
+pub mod wvm;
 
 pub use builder::{
     config::{EthConfig, EthFilterConfig},

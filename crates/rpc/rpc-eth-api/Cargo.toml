@@ -56,6 +56,11 @@ auto_impl.workspace = true
 dyn-clone.workspace = true
 tracing.workspace = true
 
+# wvm
+wvm-static.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
 [features]
 js-tracer = ["revm-inspectors/js-tracer", "reth-rpc-eth-types/js-tracer"]
 client = ["jsonrpsee/client", "jsonrpsee/async-client"]

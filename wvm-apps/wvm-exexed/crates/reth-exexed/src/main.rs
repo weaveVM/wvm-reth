@@ -3,6 +3,7 @@
 #![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
 mod constant;
+mod exex;
 mod network_tag;
 mod util;
 

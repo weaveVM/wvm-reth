@@ -22,7 +22,7 @@ lambda = { path = "../lambda" }
 arweave-upload = { path = "../arweave-upload" }
 precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
-wvm-static = { path = "../static" }
+wvm-static = { path = "../../../../crates/wvm-static" }
 tokio.workspace = true
 exex-wvm-da.workspace = true
 exex-wvm-bigquery.workspace = true
