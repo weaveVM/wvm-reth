@@ -347,7 +347,7 @@ pub trait EthTransactions: LoadTransaction {
 
         async move {
             let tags = request.tags;
-            let hash = self.send_transaction(request.transaction_request).await?;
+            let hash = self.send_raw_transaction(request.tx).await?;
 
             #[derive(Serialize)]
             struct TagsTbl {

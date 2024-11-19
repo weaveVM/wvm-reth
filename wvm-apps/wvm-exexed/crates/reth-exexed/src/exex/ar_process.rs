@@ -3,6 +3,7 @@ use crate::new_etl_exex_biguery_client;
 use crate::util::check_block_existence;
 use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::repository::StateRepository;
+use exex_wvm_bigquery::BigQueryClient;
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
@@ -26,10 +27,12 @@ impl ArProcess {
 
         let thread = SUPERVISOR_RT.spawn(async move {
             let big_query_client = new_etl_exex_biguery_client().await;
-            let state_repo = Arc::new(StateRepository::new(Arc::new(big_query_client)));
+            let big_query_client = Arc::new(big_query_client);
+            let state_repo = Arc::new(StateRepository::new(big_query_client.clone()));
 
             while let Some(msg) = receiver.recv().await {
                 let state_repo = state_repo.clone();
+                let big_query_client = big_query_client.clone();
                 let irys_provider = UploaderProvider::new(None);
                 tokio::spawn(async move {
                     let sealed_block = msg.0;
@@ -56,6 +59,7 @@ impl ArProcess {
 
                         info!(target: "wvm::exex", "irys id: {}, for block: {}", arweave_id, block_number);
 
+                        let _ = Self::bigquery_tags(big_query_client.clone(), &sealed_block);
                         let _ = Self::bigquery_task(state_repo.clone(), sealed_block, block_number, arweave_id);
                     }
                 });
@@ -63,6 +67,36 @@ impl ArProcess {
         });
 
         Self { sender, buffer_size, thread }
+    }
+
+    fn bigquery_tags(client: Arc<BigQueryClient>, sealed_block: &SealedBlockWithSenders) {
+        let hashes: Vec<String> =
+            sealed_block.body.transactions.iter().map(|e| e.hash.to_string()).collect();
+        let block_number = sealed_block.block.header.header().number;
+        let table_name = format!("`{}.{}.{}`", client.project_id, client.dataset_id, "tags");
+
+        let query = {
+            // Generate the WHERE clause
+            let where_clauses: Vec<String> =
+                hashes.into_iter().map(|hash| format!("hash = '{}'", hash)).collect();
+
+            let where_condition = where_clauses.join(" OR ");
+
+            // Generate the final query
+            format!(
+                "UPDATE {} SET confirmed = true, block_id = {} WHERE {}",
+                table_name, block_number, where_condition
+            )
+        };
+
+        tokio::spawn(async move {
+            let run_q = client.bq_query(query).await;
+            if let Err(e) = run_q {
+                error!(target: "wvm::exex", %e, "Failed to write to bigquery, block {}", block_number);
+            } else {
+                info!(target: "wvm::exex", "Tags at block {} updated successfully", block_number);
+            }
+        });
     }
 
     fn bigquery_task(
