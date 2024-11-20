@@ -5,6 +5,7 @@ use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::repository::StateRepository;
 use exex_wvm_bigquery::BigQueryClient;
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
+use reth::primitives::revm_primitives::alloy_primitives::private::serde::Serialize;
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
 use std::sync::Arc;
@@ -74,7 +75,13 @@ impl ArProcess {
         let hashes: Vec<String> =
             sealed_block.body.transactions.iter().map(|e| e.hash.to_string()).collect();
         let block_number = sealed_block.block.header.header().number;
-        let table_name = format!("`{}.{}.{}`", client.project_id, client.dataset_id, "tags");
+        let confirmed_tags_tbl_name =
+            format!("`{}.{}.{}`", client.project_id, client.dataset_id, "confirmed_tags");
+        let tags_tbl_name = format!("`{}.{}.{}`", client.project_id, client.dataset_id, "tags");
+
+        if hashes.is_empty() {
+            return;
+        }
 
         let query = {
             // Generate the WHERE clause
@@ -84,10 +91,12 @@ impl ArProcess {
                 .collect::<Vec<String>>()
                 .join(", ");
 
+            let ms = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+
             // Generate the final query
             format!(
-                "UPDATE {} SET confirmed = true, block_id = {} WHERE hash IN({}) AND created_at <= {}",
-                table_name, block_number, in_clause, SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+                "INSERT INTO {} (tx_hash, tags, block_id, `timestamp`) SELECT t.hash, t.tags, {}, {} FROM {} t WHERE t.hash IN({}) AND t.created_at <= {}",
+                confirmed_tags_tbl_name, block_number, ms, tags_tbl_name, in_clause, ms
             )
         };
 
