@@ -35,7 +35,7 @@ impl ArProcess {
             while let Some(msg) = receiver.recv().await {
                 let state_repo = state_repo.clone();
                 let big_query_client = big_query_client.clone();
-                let irys_provider = UploaderProvider::new(None);
+                let ar_uploader_provider = UploaderProvider::new(None);
                 tokio::spawn(async move {
                     let sealed_block = msg.0;
                     let notification_type = msg.1.as_str();
@@ -45,7 +45,7 @@ impl ArProcess {
 
                     let sealed_block_clone = sealed_block.clone();
 
-                    let brotli_borsh = match Self::serialize_block(sealed_block_clone) {
+                    let borsh_brotli = match Self::serialize_block(sealed_block_clone) {
                         Some(value) => value,
                         None => return,
                     };
@@ -53,8 +53,8 @@ impl ArProcess {
                     let does_block_exist = check_block_existence(block_hash.as_str(), false).await;
 
                     if !does_block_exist {
-                        let provider = irys_provider.clone();
-                        let arweave_id = match Self::send_block_to_arweave(&provider, notification_type, block_number, &block_hash, brotli_borsh).await {
+                        let provider = ar_uploader_provider.clone();
+                        let arweave_id = match Self::send_block_to_arweave(&provider, notification_type, block_number, &block_hash, borsh_brotli).await {
                             Some(ar_id) => ar_id,
                             None => return,
                         };
@@ -131,7 +131,7 @@ impl ArProcess {
     }
 
     async fn send_block_to_arweave(
-        irys_provider: &UploaderProvider,
+        ar_uploader_provider: &UploaderProvider,
         notification_type: &str,
         block_number: BlockNumber,
         block_hash: &String,
@@ -146,7 +146,7 @@ impl ArProcess {
             .set_tag("Network", get_network_tag().as_str())
             .set_tag("WeaveVM:Internal-Chain", notification_type)
             .set_data(brotli_borsh)
-            .send_with_provider(&irys_provider)
+            .send_with_provider(&ar_uploader_provider)
             .await;
 
         let arweave_id = match res {

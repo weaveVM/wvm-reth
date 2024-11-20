@@ -339,6 +339,10 @@ pub trait EthTransactions: LoadTransaction {
         }
     }
 
+    /// WVM Exclusive
+    /// Sends a transaction to the blockchain (raw)
+    /// And saves the transaction with tags in GBQ.
+    /// Tags will be then be used for easier indexing of the chain transaction itself
     fn send_wvm_transaction(&self, mut request: WvmTransactionRequest) -> impl Future<Output = Result<B256, Self::Error>> + Send
     where
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call, {
