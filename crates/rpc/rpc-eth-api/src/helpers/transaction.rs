@@ -1,6 +1,7 @@
 //! Database access for `eth_` transaction RPC methods. Loads transaction and receipt data w.r.t.
 //! network.
 
+use std::time::{SystemTime, UNIX_EPOCH};
 use alloy_dyn_abi::TypedData;
 use alloy_eips::eip2718::Encodable2718;
 use alloy_network::TransactionBuilder;
@@ -348,16 +349,23 @@ pub trait EthTransactions: LoadTransaction {
         async move {
             let tags = request.tags;
             let hash = self.send_raw_transaction(request.tx).await?;
+            let created_at = {
+                let now = SystemTime::now();
+                let since_epoch = now.duration_since(UNIX_EPOCH).expect("Time went backwards");
+                since_epoch.as_millis()
+            };
 
             #[derive(Serialize)]
             struct TagsTbl {
                 hash: String,
-                tags: String
+                tags: String,
+                created_at: u128
             }
 
             bq_client.insert_generic("tags", None, TagsTbl {
                 hash: hash.to_string(),
-                tags: serde_json::to_string(&tags).unwrap()
+                tags: serde_json::to_string(&tags).unwrap(),
+                created_at
             }).await
                 .map_err(|_| EthApiError::InternalEthError)?;
 

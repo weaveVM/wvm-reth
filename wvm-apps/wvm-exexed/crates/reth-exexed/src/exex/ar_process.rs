@@ -8,6 +8,7 @@ use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use tracing::{error, info};
@@ -77,22 +78,23 @@ impl ArProcess {
 
         let query = {
             // Generate the WHERE clause
-            let where_clauses: Vec<String> =
-                hashes.into_iter().map(|hash| format!("hash = '{}'", hash)).collect();
-
-            let where_condition = where_clauses.join(" OR ");
+            let in_clause = hashes
+                .into_iter()
+                .map(|hash| format!("\"{}\"", hash))
+                .collect::<Vec<String>>()
+                .join(", ");
 
             // Generate the final query
             format!(
-                "UPDATE {} SET confirmed = true, block_id = {} WHERE {}",
-                table_name, block_number, where_condition
+                "UPDATE {} SET confirmed = true, block_id = {} WHERE hash IN({}) AND created_at <= {}",
+                table_name, block_number, in_clause, SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
             )
         };
 
         tokio::spawn(async move {
-            let run_q = client.bq_query(query).await;
+            let run_q = client.bq_query(query.clone()).await;
             if let Err(e) = run_q {
-                error!(target: "wvm::exex", %e, "Failed to write to bigquery, block {}", block_number);
+                error!(target: "wvm::exex", %e, "Failed to write to bigquery, block {}. Query: {}", block_number, query);
             } else {
                 info!(target: "wvm::exex", "Tags at block {} updated successfully", block_number);
             }
