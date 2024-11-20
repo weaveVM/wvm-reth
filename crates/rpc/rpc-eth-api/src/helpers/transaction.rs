@@ -1,6 +1,7 @@
 //! Database access for `eth_` transaction RPC methods. Loads transaction and receipt data w.r.t.
 //! network.
 
+use std::time::{SystemTime, UNIX_EPOCH};
 use alloy_dyn_abi::TypedData;
 use alloy_eips::eip2718::Encodable2718;
 use alloy_network::TransactionBuilder;
@@ -16,9 +17,11 @@ use reth_rpc_eth_types::{
     utils::{binary_search, recover_raw_transaction},
     EthApiError, EthStateCache, SignError, TransactionSource,
 };
+use reth_rpc_eth_types::wvm::WvmTransactionRequest;
 use reth_rpc_types_compat::transaction::{from_recovered, from_recovered_with_block_context};
 use reth_transaction_pool::{PoolTransaction, TransactionOrigin, TransactionPool};
-
+use serde::Serialize;
+use wvm_static::PRECOMPILE_WVM_BIGQUERY_CLIENT;
 use crate::{FromEthApiError, FullEthApiTypes, IntoEthApiError, RpcReceipt, RpcTransaction};
 
 use super::{
@@ -334,6 +337,45 @@ pub trait EthTransactions: LoadTransaction {
 
             Ok(hash)
         }
+    }
+
+    /// WVM Exclusive
+    /// Sends a transaction to the blockchain (raw)
+    /// And saves the transaction with tags in GBQ.
+    /// Tags will be then be used for easier indexing of the chain transaction itself
+    fn send_wvm_transaction(&self, mut request: WvmTransactionRequest) -> impl Future<Output = Result<B256, Self::Error>> + Send
+    where
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call, {
+
+        // WVM
+        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+
+        async move {
+            let tags = request.tags;
+            let hash = self.send_raw_transaction(request.tx).await?;
+            let created_at = {
+                let now = SystemTime::now();
+                let since_epoch = now.duration_since(UNIX_EPOCH).expect("Time went backwards");
+                since_epoch.as_millis()
+            };
+
+            #[derive(Serialize)]
+            struct TagsTbl {
+                hash: String,
+                tags: String,
+                created_at: u128
+            }
+
+            bq_client.insert_generic("tags", None, TagsTbl {
+                hash: hash.to_string(),
+                tags: serde_json::to_string(&tags).unwrap(),
+                created_at
+            }).await
+                .map_err(|_| EthApiError::InternalEthError)?;
+
+            Ok(hash)
+        }
+
     }
 
     /// Signs transaction with a matching signer, if any and submits the transaction to the pool.

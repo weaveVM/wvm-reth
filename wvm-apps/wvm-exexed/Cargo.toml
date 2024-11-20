@@ -38,7 +38,7 @@ lambda = { path = "crates/lambda" }
 arweave-upload = { path = "crates/arweave-upload" }
 precompiles = { path = "crates/precompiles" }
 wvm-borsh = { path = "crates/wvm-borsh" }
-wvm-static = { path = "crates/static" }
+wvm-static.workspace = true
 exex-etl = { path = "crates/exex-etl" }
 rbrotli = { path = "crates/brotli" }
 wvm-tx = { path = "crates/tx" }
