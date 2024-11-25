@@ -1,5 +1,7 @@
 use eyre::Error;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Response {
@@ -37,6 +39,20 @@ pub struct Node {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NodeData {
     pub size: String,
+}
+
+// Define a static OnceLock for the reqwest::Client
+static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
+
+fn get_client() -> &'static Client {
+    HTTP_CLIENT.get_or_init(|| {
+        Client::builder()
+            .tcp_keepalive(Some(std::time::Duration::from_secs(60)))
+            .http2_prior_knowledge()
+            .gzip(true)
+            .build()
+            .unwrap()
+    })
 }
 
 pub fn build_transaction_query(
@@ -95,21 +111,10 @@ pub fn build_transaction_query(
 }
 
 pub async fn send_graphql(gateway: &str, query: &str) -> Result<Response, Error> {
-    let query = serde_json::json!({
+    let res = ureq::post(format!("{}/{}", gateway, "graphql").as_str()).send_json(ureq::json!({
         "variables": {},
         "query": query
-    });
+    }));
 
-    // Create a client
-    let client = reqwest::Client::new();
-
-    // Send the request
-    let res = client
-        .post(format!("{}/{}", gateway, "graphql"))
-        .header("Content-Type", "application/json")
-        .json(&query)
-        .send()
-        .await?;
-
-    Ok(res.json::<Response>().await?)
+    res.unwrap().into_json::<Response>().map_err(|e| Error::new(e))
 }

@@ -80,10 +80,8 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             internal_block(async {
                 let clean_gateway = clean_gateway_url(gateway.as_str());
                 let query = build_transaction_query(Some(&[tx_id.clone()]), None, None, None, true);
-                println!("{}", query);
                 let now = Instant::now();
                 let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
-                println!("Secs to read Graphql {}", now.elapsed().as_secs());
 
                 let tx_size = if let Ok(data) = data {
                     let resp = data.data;
@@ -157,5 +155,53 @@ mod arweave_read_pc_tests {
         let parse_url_data = parse_gateway_content(input);
         assert_eq!(parse_url_data.0, "https://arweave.net/");
         assert_eq!(parse_url_data.1, "bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI");
+    }
+
+    #[tokio::test]
+    pub async fn test_graphql() {
+        let client = reqwest::Client::builder().build().unwrap();
+
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert("Content-Type", "application/json".parse().unwrap());
+
+        let data = r#"
+{
+    "query": "query {\n  transactions(ids: [\"bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI\"],\n) {\n    edges {\n      node {\n        id\n        data {\n          size\n        }\n      }\n    }\n  }\n}"
+}
+"#;
+        let json: serde_json::Value = serde_json::from_str(&data).unwrap();
+
+        let start_request = std::time::Instant::now();
+        let request = client
+            .request(reqwest::Method::POST, "http://arweave.net/graphql")
+            .headers(headers)
+            .json(&json);
+
+        let response = request.send().await.unwrap();
+        println!("Request sent: {:?}", start_request.elapsed());
+
+        println!("Response headers {:?}", &response.headers());
+        let start_read = std::time::Instant::now();
+        let body = response.text().await.unwrap();
+        println!("Response read: {:?}", start_read.elapsed());
+
+        println!("{}", body);
+    }
+
+    #[tokio::test]
+    pub async fn test_graphql_ureq() {
+        let data = r#"
+{
+    "query": "query {\n  transactions(ids: [\"bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI\"],\n) {\n    edges {\n      node {\n        id\n        data {\n          size\n        }\n      }\n    }\n  }\n}"
+}
+"#;
+        let json: serde_json::Value = serde_json::from_str(&data).unwrap();
+
+        let start_request = std::time::Instant::now();
+        let res = ureq::post("https://arweave.net/graphql").send_json(ureq::json!({
+    "query": "query {\n  transactions(ids: [\"bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI\"],\n) {\n    edges {\n      node {\n        id\n        data {\n          size\n        }\n      }\n    }\n  }\n}"
+})).unwrap();
+        println!("Request sent: {:?}", start_request.elapsed());
+        println!("{:?}", res.into_string().unwrap());
     }
 }
