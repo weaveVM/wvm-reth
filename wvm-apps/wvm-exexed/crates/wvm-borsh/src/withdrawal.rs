@@ -1,6 +1,6 @@
 use crate::address::BorshAddress;
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::Withdrawal;
+use alloy_eips::eip4895::Withdrawal;
 use std::io::{Read, Write};
 
 pub struct BorshWithdrawal(pub Withdrawal);
@@ -29,7 +29,7 @@ impl BorshDeserialize for BorshWithdrawal {
 #[cfg(test)]
 mod withdrawal_tests {
     use crate::withdrawal::BorshWithdrawal;
-    use reth::primitives::Withdrawal;
+    use alloy_eips::eip4895::Withdrawal;
 
     #[test]
     pub fn test_sealed_header() {
