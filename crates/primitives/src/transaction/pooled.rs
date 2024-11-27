@@ -7,15 +7,16 @@ use super::{
     TxEip7702,
 };
 use crate::{
-    BlobTransaction, BlobTransactionSidecar, Signature, Transaction, TransactionSigned,
-    TransactionSignedEcRecovered, EIP4844_TX_TYPE_ID,
+    BlobTransaction, BlobTransactionSidecar, Transaction, TransactionSigned,
+    TransactionSignedEcRecovered,
 };
 use alloy_consensus::{
+    constants::EIP4844_TX_TYPE_ID,
     transaction::{TxEip1559, TxEip2930, TxEip4844, TxLegacy},
     SignableTransaction, TxEip4844WithSidecar,
 };
 use alloy_eips::eip2718::{Decodable2718, Eip2718Result, Encodable2718};
-use alloy_primitives::{Address, TxHash, B256};
+use alloy_primitives::{Address, Signature, TxHash, B256};
 use alloy_rlp::{Decodable, Encodable, Error as RlpError, Header};
 use bytes::Buf;
 use derive_more::{AsRef, Deref};
@@ -263,7 +264,7 @@ impl PooledTransactionsElement {
     /// transaction.
     ///
     /// This is the number of blobs times the
-    /// [`DATA_GAS_PER_BLOB`](crate::constants::eip4844::DATA_GAS_PER_BLOB) a single blob consumes.
+    /// [`DATA_GAS_PER_BLOB`](alloy_eips::eip4844::DATA_GAS_PER_BLOB) a single blob consumes.
     pub fn blob_gas_used(&self) -> Option<u64> {
         self.as_eip4844().map(TxEip4844::blob_gas)
     }
