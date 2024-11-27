@@ -2013,7 +2013,6 @@ pub mod serde_bincode_compat {
 mod tests {
     use crate::{
         transaction::{TxEip1559, TxKind, TxLegacy},
-        transaction,
         Transaction, TransactionSigned, TransactionSignedEcRecovered, TransactionSignedNoHash,
     };
     use alloy_consensus::Transaction as _;

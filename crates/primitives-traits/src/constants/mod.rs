@@ -10,7 +10,7 @@ use std::{
     cell::LazyCell,
     sync::{
         atomic::{AtomicU64, Ordering::SeqCst},
-        Arc, LazyLock, RwLock,
+        Arc, LazyLock, 
     },
 };
 
@@ -63,6 +63,8 @@ pub const ETHEREUM_BLOCK_GAS_LIMIT: LazyCell<u64> = LazyCell::new(|| 500_000_000
 pub static MIN_PROTOCOL_BASE_FEE: LazyLock<AtomicU64> =
     LazyLock::new(|| AtomicU64::new(500_000u64));
 
+/// The WVM fee manager singleton that handles fee calculations and updates across the system.
+/// This manager maintains the dynamic fee state and provides fee calculation services.
 pub static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
     let fee = WvmFee::new(Some(Box::new(move |price| {
         let original_price = price as f64 / 1_000_000_000f64;
@@ -85,6 +87,7 @@ pub static WVM_FEE_MANAGER: LazyLock<Arc<WvmFeeManager>> = LazyLock::new(|| {
     Arc::new(manager)
 });
 
+/// Returns the current minimum protocol base fee
 pub fn get_latest_min_protocol_base_fee() -> u64 {
     MIN_PROTOCOL_BASE_FEE.load(SeqCst)
 }
