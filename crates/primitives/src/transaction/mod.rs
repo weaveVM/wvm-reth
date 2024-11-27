@@ -2014,7 +2014,6 @@ mod tests {
     use crate::{
         transaction::{TxEip1559, TxKind, TxLegacy},
         transaction,
-        transaction::{TxEip1559, TxKind, TxLegacy},
         Transaction, TransactionSigned, TransactionSignedEcRecovered, TransactionSignedNoHash,
     };
     use alloy_consensus::Transaction as _;

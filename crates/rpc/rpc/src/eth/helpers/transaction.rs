@@ -31,7 +31,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use alloy_eips::eip1559::ETHEREUM_BLOCK_GAS_LIMIT;
+    use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
     use alloy_primitives::{hex_literal::hex, Bytes};
     use reth_chainspec::ChainSpecProvider;
     use reth_evm_ethereum::EthEvmConfig;

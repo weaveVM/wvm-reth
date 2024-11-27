@@ -31,7 +31,7 @@ impl<Provider, Pool, Network, EvmConfig> LoadState for EthApi<Provider, Pool, Ne
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_eips::eip1559::ETHEREUM_BLOCK_GAS_LIMIT;
+    use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
     use alloy_primitives::{Address, StorageKey, StorageValue, U256};
     use reth_chainspec::MAINNET;
     use reth_evm_ethereum::EthEvmConfig;
