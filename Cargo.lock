@@ -8271,9 +8271,11 @@ dependencies = [
  "reth-ethereum-engine-primitives",
  "reth-evm-ethereum",
  "reth-exex",
+ "reth-node-builder",
  "reth-node-ethereum",
  "reth-revm",
  "reth-tracing",
+ "reth-trie-db",
  "revm-primitives",
  "schnellru",
  "serde",
@@ -15584,6 +15586,7 @@ dependencies = [
 name = "wvm-borsh"
 version = "1.1.1"
 dependencies = [
+ "alloy-consensus",
  "alloy-eips",
  "alloy-primitives",
  "borsh 1.5.1",

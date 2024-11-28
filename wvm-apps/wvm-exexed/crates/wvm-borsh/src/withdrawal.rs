@@ -1,6 +1,6 @@
 use crate::address::BorshAddress;
-use borsh::{BorshDeserialize, BorshSerialize};
 use alloy_eips::eip4895::Withdrawal;
+use borsh::{BorshDeserialize, BorshSerialize};
 use std::io::{Read, Write};
 
 pub struct BorshWithdrawal(pub Withdrawal);

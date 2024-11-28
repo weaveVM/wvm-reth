@@ -32,7 +32,7 @@ impl BorshSerialize for BorshHeader {
         self.0.blob_gas_used.serialize(writer)?;
         self.0.excess_blob_gas.serialize(writer)?;
         self.0.parent_beacon_block_root.map(|v| BorshB256(v)).serialize(writer)?;
-        self.0.requests_root.map(|v| BorshB256(v)).serialize(writer)?;
+        self.0.requests_hash.map(|v| BorshB256(v)).serialize(writer)?;
         self.0.extra_data.0.serialize(writer)?;
 
         Ok(())
@@ -60,7 +60,7 @@ impl BorshDeserialize for BorshHeader {
         let blob_gas_used: Option<u64> = Option::deserialize_reader(reader)?;
         let excess_blob_gas: Option<u64> = Option::deserialize_reader(reader)?;
         let parent_beacon_block_root: Option<BorshB256> = Option::deserialize_reader(reader)?;
-        let requests_root: Option<BorshB256> = Option::deserialize_reader(reader)?;
+        let requests_hash: Option<BorshB256> = Option::deserialize_reader(reader)?;
         let extra_data = Vec::<u8>::deserialize_reader(reader)?;
 
         let header = Header {
@@ -83,7 +83,7 @@ impl BorshDeserialize for BorshHeader {
             blob_gas_used,
             excess_blob_gas,
             parent_beacon_block_root: parent_beacon_block_root.map(|i| i.0),
-            requests_root: requests_root.map(|i| i.0),
+            requests_hash: requests_hash.map(|i| i.0),
             extra_data: Bytes::from(extra_data),
         };
 

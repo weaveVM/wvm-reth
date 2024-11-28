@@ -30,9 +30,8 @@ impl BorshDeserialize for BorshSignature {
 
 #[cfg(test)]
 mod signature_tests {
-    use alloy_primitives::Parity;
     use crate::signature::BorshSignature;
-    use reth::primitives::Signature;
+    use alloy_primitives::{Parity, Signature};
 
     #[test]
     pub fn test_sealed_header() {
@@ -47,6 +46,5 @@ mod signature_tests {
         assert_eq!(b, from_bytes);
         let parity = Parity::try_from(from_bytes[64] as u64).unwrap();
         assert_eq!(Parity::NonEip155(false), parity)
-
     }
 }

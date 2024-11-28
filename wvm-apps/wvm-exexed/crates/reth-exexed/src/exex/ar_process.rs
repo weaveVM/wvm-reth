@@ -1,17 +1,16 @@
-use crate::network_tag::get_network_tag;
-use crate::new_etl_exex_biguery_client;
-use crate::util::check_block_existence;
+use crate::{
+    network_tag::get_network_tag, new_etl_exex_biguery_client, util::check_block_existence,
+};
 use arweave_upload::{ArweaveRequest, UploaderProvider};
-use exex_wvm_bigquery::repository::StateRepository;
-use exex_wvm_bigquery::BigQueryClient;
+use exex_wvm_bigquery::{repository::StateRepository, BigQueryClient};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
-use reth::primitives::revm_primitives::alloy_primitives::private::serde::Serialize;
-use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
+use reth::primitives::revm_primitives::alloy_primitives::{private::serde::Serialize, BlockNumber};
 use reth_primitives::SealedBlockWithSenders;
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::mpsc::Sender;
-use tokio::task::JoinHandle;
+use std::{
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
+use tokio::{sync::mpsc::Sender, task::JoinHandle};
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
 use wvm_static::SUPERVISOR_RT;

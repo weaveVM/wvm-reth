@@ -20,9 +20,6 @@ tokio = "1.38.0"
 borsh.workspace = true
 reth-primitives.workspace = true
 alloy-primitives.workspace = true
-alloy-eips.workspace = true
 wvm-tx = { path = "../tx" }
-
-
-[dev-dependencies]
 alloy-eips.workspace = true
+alloy-consensus.workspace = true

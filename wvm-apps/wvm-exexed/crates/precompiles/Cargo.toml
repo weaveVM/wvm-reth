@@ -31,3 +31,5 @@ borsh.workspace = true
 alloy-primitives.workspace = true
 ureq = { version = "2.10.1", features = ["json"] }
 reth-evm-ethereum.workspace = true
+reth-trie-db.workspace = true
+reth-node-builder.workspace = true

@@ -8,6 +8,5 @@ use serde::Deserialize;
 pub struct WvmTransactionRequest {
     pub tx: Bytes,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub tags: Option<Vec<(String, String)>>
+    pub tags: Option<Vec<(String, String)>>,
 }
-

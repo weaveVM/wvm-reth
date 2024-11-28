@@ -4,9 +4,7 @@ use crate::{
 };
 use alloy_consensus::constants::EIP4844_TX_TYPE_ID;
 use alloy_primitives::Address;
-use reth_primitives::{
-    constants::{ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE},
-};
+use reth_primitives::constants::{ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE};
 use std::{collections::HashSet, ops::Mul, sync::atomic::Ordering::SeqCst};
 
 /// Guarantees max transactions for one sender, compatible with geth/erigon

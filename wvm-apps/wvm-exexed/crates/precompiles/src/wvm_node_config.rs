@@ -25,7 +25,7 @@ use reth_chainspec::ChainSpec;
 use reth_node_ethereum::EthEvmConfig;
 use revm_primitives::{BlobExcessGasAndPrice, BlockEnv, CfgEnv, EnvWithHandlerCfg};
 use schnellru::{ByLength, LruMap};
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, convert::Infallible, sync::Arc};
 
 /// Type alias for the LRU cache used within the [`PrecompileCache`].
 type PrecompileLRUCache = LruMap<(Bytes, u64), PrecompileResult>;
@@ -59,6 +59,7 @@ pub struct WrappedPrecompile {
 
 impl ConfigureEvmEnv for WvmEthEvmConfig {
     type Header = Header;
+    type Error = Infallible;
 
     fn fill_tx_env(&self, tx_env: &mut TxEnv, transaction: &TransactionSigned, sender: Address) {
         self.evm_config.fill_tx_env(tx_env, transaction, sender);

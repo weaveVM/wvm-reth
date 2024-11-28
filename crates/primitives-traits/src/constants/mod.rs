@@ -10,7 +10,7 @@ use std::{
     cell::LazyCell,
     sync::{
         atomic::{AtomicU64, Ordering::SeqCst},
-        Arc, LazyLock, 
+        Arc, LazyLock,
     },
 };
 

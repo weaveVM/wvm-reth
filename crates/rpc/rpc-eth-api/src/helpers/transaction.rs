@@ -1,7 +1,6 @@
 //! Database access for `eth_` transaction RPC methods. Loads transaction and receipt data w.r.t.
 //! network.
 
-use std::time::{SystemTime, UNIX_EPOCH};
 use alloy_consensus::Transaction;
 use alloy_dyn_abi::TypedData;
 use alloy_eips::{eip2718::Encodable2718, BlockId};
@@ -14,16 +13,22 @@ use reth_primitives::{Receipt, SealedBlockWithSenders, TransactionMeta, Transact
 use reth_provider::{BlockNumReader, BlockReaderIdExt, ReceiptProvider, TransactionsProvider};
 use reth_rpc_eth_types::{
     utils::{binary_search, recover_raw_transaction},
+    wvm::WvmTransactionRequest,
     EthApiError, SignError, TransactionSource,
 };
-use reth_rpc_eth_types::wvm::WvmTransactionRequest;
 use reth_rpc_types_compat::transaction::{from_recovered, from_recovered_with_block_context};
 use reth_transaction_pool::{PoolTransaction, TransactionOrigin, TransactionPool};
 use serde::Serialize;
-use std::sync::Arc;
+use std::{
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
+use crate::{
+    FromEthApiError, FullEthApiTypes, IntoEthApiError, RpcNodeCore, RpcNodeCoreExt, RpcReceipt,
+    RpcTransaction,
+};
 use wvm_static::PRECOMPILE_WVM_BIGQUERY_CLIENT;
-use crate::{FromEthApiError, FullEthApiTypes, IntoEthApiError,RpcNodeCore, RpcNodeCoreExt,  RpcReceipt, RpcTransaction};
 
 use super::{
     Call, EthApiSpec, EthSigner, LoadBlock, LoadPendingBlock, LoadReceipt, LoadState, SpawnBlocking,
@@ -347,10 +352,13 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
     /// Sends a transaction to the blockchain (raw)
     /// And saves the transaction with tags in GBQ.
     /// Tags will be then be used for easier indexing of the chain transaction itself
-    fn send_wvm_transaction(&self, mut request: WvmTransactionRequest) -> impl Future<Output = Result<B256, Self::Error>> + Send
+    fn send_wvm_transaction(
+        &self,
+        mut request: WvmTransactionRequest,
+    ) -> impl Future<Output = Result<B256, Self::Error>> + Send
     where
-        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call, {
-
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
+    {
         // WVM
         let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
 
@@ -367,19 +375,24 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
             struct TagsTbl {
                 hash: String,
                 tags: String,
-                created_at: u128
+                created_at: u128,
             }
 
-            bq_client.insert_generic("tags", None, TagsTbl {
-                hash: hash.to_string(),
-                tags: serde_json::to_string(&tags).unwrap(),
-                created_at
-            }).await
+            bq_client
+                .insert_generic(
+                    "tags",
+                    None,
+                    TagsTbl {
+                        hash: hash.to_string(),
+                        tags: serde_json::to_string(&tags).unwrap(),
+                        created_at,
+                    },
+                )
+                .await
                 .map_err(|_| EthApiError::InternalEthError)?;
 
             Ok(hash)
         }
-
     }
 
     /// Signs transaction with a matching signer, if any and submits the transaction to the pool.
