@@ -98,7 +98,7 @@ fn main() -> eyre::Result<()> {
 
         if let Ok(prune_conf) = prune_node {
             config = config.with_pruning(PruningArgs {
-                block_interval: parse_prune_config(prune_conf.as_str()),
+                block_interval: Some(parse_prune_config(prune_conf.as_str())),
                 ..pruning_args
             });
         }

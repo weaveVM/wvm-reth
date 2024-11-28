@@ -88,7 +88,7 @@ impl ConfigureEvmEnv for WvmEthEvmConfig {
         &self,
         parent: &Self::Header,
         attributes: NextBlockEnvAttributes,
-    ) -> (CfgEnvWithHandlerCfg, BlockEnv) {
+    ) -> Result<(CfgEnvWithHandlerCfg, BlockEnv), Infallible> {
         // configure evm env based on parent block
         let cfg = CfgEnv::default().with_chain_id(self.evm_config.chain_spec().chain().id());
 
@@ -150,7 +150,7 @@ impl ConfigureEvmEnv for WvmEthEvmConfig {
             blob_excess_gas_and_price,
         };
 
-        (CfgEnvWithHandlerCfg::new_with_spec_id(cfg, spec_id), block_env)
+        Ok((CfgEnvWithHandlerCfg::new_with_spec_id(cfg, spec_id), block_env))
     }
 }
 
