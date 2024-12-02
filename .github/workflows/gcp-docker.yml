@@ -6,7 +6,7 @@ on:
       - main
       - dev
     tags:
-      - '*'
+      - "*"
 
 jobs:
   docker-release:
@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
 
     steps:
       # 1. Checkout the Repository
@@ -72,8 +72,8 @@ jobs:
       - name: Build Docker Image
         uses: docker/build-push-action@v6
         with:
-          push: false                  # Do not push in this step
-          load: true                   # Load the image into Docker cache
+          push: false # Do not push in this step
+          load: true # Load the image into Docker cache
           tags: |
             wvm:local
             us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.get-tag.outputs.short_ref }}
@@ -88,6 +88,7 @@ jobs:
           cd .testnet
           git clone https://github.com/weaveVM/wvm-docker-testnet.git .
           echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/key.json
+          ./clean.sh
           docker compose up -d
           npm install
           SIGNER_KEY=${{ secrets.TEST_SIGNER_KEY }} node test.js
@@ -98,7 +99,7 @@ jobs:
       - name: Push to Artifact Registry
         uses: docker/build-push-action@v6
         with:
-          push: true                   # Enable pushing
+          push: true # Enable pushing
           tags: |
             us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.get-tag.outputs.short_ref }}
             us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.tag.outputs.tag }}
@@ -107,5 +108,6 @@ jobs:
 
       # 10. Clean Up Local Docker Tags (Optional)
       - name: Remove Local Tag
-        if: always()                   # Run regardless of previous step outcomes
+        if: always() # Run regardless of previous step outcomes
         run: docker rmi wvm:local || true
+
