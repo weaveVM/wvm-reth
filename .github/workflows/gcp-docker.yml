@@ -87,7 +87,7 @@ jobs:
           mkdir -m 777 .testnet
           cd .testnet
           git clone https://github.com/weaveVM/wvm-docker-testnet.git .
-          echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/key.json
+          echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/bq-config.json
           ./clean.sh
           docker compose up -d
           npm install
