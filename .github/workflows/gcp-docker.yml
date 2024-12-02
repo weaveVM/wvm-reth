@@ -89,8 +89,20 @@ jobs:
           git clone https://github.com/weaveVM/wvm-docker-testnet.git .
           echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/key.json
           ./clean.sh
-          docker compose up -d
-          docker compose logs -f & # Stream container logs in real-time
+          docker compose up -d || { 
+            echo "Docker Compose failed. Collecting logs...";
+            docker ps -a; # Show status of all containers
+            docker compose logs > compose_logs.txt;
+            docker logs testnet-reth-genesis-1 > reth-genesis.log 2>&1 || echo "No logs for testnet-reth-genesis-1";
+            docker logs testnet-create-beacon-chain-genesis-1 > beacon-genesis.log 2>&1 || echo "No logs for testnet-create-beacon-chain-genesis-1";
+            echo "Logs for reth-genesis:";
+            cat reth-genesis.log;
+            echo "Logs for beacon-genesis:";
+            cat beacon-genesis.log;
+            echo "All Docker Compose logs:";
+            cat compose_logs.txt;
+            exit 1;
+          }
           npm install
           SIGNER_KEY=${{ secrets.TEST_SIGNER_KEY }} node test.js
           docker compose down
