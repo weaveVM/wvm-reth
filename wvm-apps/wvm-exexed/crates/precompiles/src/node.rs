@@ -32,7 +32,7 @@ impl WvmEthereumNode {
         EthereumPoolBuilder,
         EthereumPayloadBuilder,
         EthereumNetworkBuilder,
-        EthereumExecutorBuilder,
+        WvmEthExecutorBuilder,
         EthereumConsensusBuilder,
     >
     where
@@ -48,7 +48,7 @@ impl WvmEthereumNode {
             .pool(EthereumPoolBuilder::default())
             .payload(EthereumPayloadBuilder::default())
             .network(EthereumNetworkBuilder::default())
-            .executor(EthereumExecutorBuilder::default())
+            .executor(WvmEthExecutorBuilder::default())
             .consensus(EthereumConsensusBuilder::default())
     }
 }
@@ -74,7 +74,7 @@ where
         EthereumPoolBuilder,
         EthereumPayloadBuilder,
         EthereumNetworkBuilder,
-        EthereumExecutorBuilder,
+        WvmEthExecutorBuilder,
         EthereumConsensusBuilder,
     >;
 
