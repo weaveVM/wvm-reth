@@ -1,7 +1,7 @@
 use crate::{b256::BorshB256, signature::BorshSignature};
 use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{Transaction, TransactionSigned};
-use serde_json::Value;
+
 use std::io::{Read, Write};
 use wvm_tx::WvmTransaction;
 
@@ -52,7 +52,8 @@ impl BorshDeserialize for BorshTransactionSigned {
 mod txs_tests {
     use crate::transaction::BorshTransactionSigned;
     use reth::primitives::TransactionSigned;
-    use reth_primitives::Transaction;
+
+    use reth::primitives::Transaction;
     use serde_json::Value;
     use wvm_tx::WvmTransaction;
 
@@ -99,7 +100,7 @@ mod txs_tests {
         let txs: (Transaction, Transaction) = (to_tx.into(), newer_tx.into());
         println!("{:?}", txs.0);
         println!("{:?}", txs.1);
-        assert_eq!(txs.0.chain_id().unwrap(), 9496);
-        assert_eq!(txs.1.chain_id().unwrap(), 9496);
+        assert_eq!(txs.0.as_legacy().unwrap().chain_id.unwrap(), 9496);
+        assert_eq!(txs.1.as_legacy().unwrap().chain_id.unwrap(), 9496);
     }
 }

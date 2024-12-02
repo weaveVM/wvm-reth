@@ -1,8 +1,10 @@
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
 use once_cell::sync::Lazy;
-use std::future::Future;
-use std::sync::{Arc, LazyLock};
-use std::time::Instant;
+use std::{
+    future::Future,
+    sync::{Arc, LazyLock},
+    time::Instant,
+};
 use tracing::info;
 
 pub static SUPERVISOR_RT: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {

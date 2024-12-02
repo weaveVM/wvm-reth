@@ -1,7 +1,11 @@
 //! Implementation of the [`jsonrpsee`] generated [`EthApiServer`] trait. Handles RPC requests for
 //! the `eth_` namespace.
+use crate::{
+    helpers::{EthApiSpec, EthBlocks, EthCall, EthFees, EthState, EthTransactions, FullEthApi},
+    RpcBlock, RpcReceipt, RpcTransaction,
+};
 use alloy_dyn_abi::TypedData;
-use alloy_eips::eip2930::AccessListResult;
+use alloy_eips::{eip2930::AccessListResult, BlockId, BlockNumberOrTag};
 use alloy_json_rpc::RpcObject;
 use alloy_primitives::{Address, Bytes, B256, B64, U256, U64};
 use alloy_rpc_types::{
@@ -13,14 +17,9 @@ use alloy_rpc_types::{
 };
 use alloy_rpc_types_eth::transaction::TransactionRequest;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use reth_primitives::{BlockId, BlockNumberOrTag};
+use reth_rpc_eth_types::wvm::WvmTransactionRequest;
 use reth_rpc_server_types::{result::internal_rpc_err, ToRpcResult};
 use tracing::trace;
-use reth_rpc_eth_types::wvm::WvmTransactionRequest;
-use crate::{
-    helpers::{EthApiSpec, EthBlocks, EthCall, EthFees, EthState, EthTransactions, FullEthApi},
-    RpcBlock, RpcReceipt, RpcTransaction,
-};
 
 /// Helper trait, unifies functionality that must be supported to implement all RPC methods for
 /// server.
@@ -507,7 +506,7 @@ where
         trace!(target: "rpc::eth", ?hash, "Serving eth_getTransactionByHash");
         Ok(EthTransactions::transaction_by_hash(self, hash)
             .await?
-            .map(|tx| tx.into_transaction::<T::TransactionCompat>()))
+            .map(|tx| tx.into_transaction(self.tx_resp_builder())))
     }
 
     /// Handler for: `eth_getRawTransactionByBlockHashAndIndex`
