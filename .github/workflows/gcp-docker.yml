@@ -132,13 +132,14 @@ jobs:
 
           echo "Tests completed successfully"
 
-      # Cleanup test environment
       - name: Cleanup test environment
         if: always()
         run: |
           cd .testnet || true
           docker compose down || true
-          cd .. && rm -rf .testnet
+          cd ..
+          # Use sudo to remove directories that might have root ownership
+          sudo rm -rf .testnet
 
       # Only push to registry if tests passed
       - name: Push to registry
