@@ -1,3 +1,4 @@
+name: Google Artifact Registry
 on:
   push:
     branches:
