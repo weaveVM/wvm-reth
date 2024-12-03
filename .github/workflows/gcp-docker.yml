@@ -88,7 +88,7 @@ jobs:
           mkdir -m 777 .testnet
           cd .testnet
           git clone https://github.com/weaveVM/wvm-docker-testnet.git .
-          echo ${{ secrets.GCP_CREDENTIALS_JSON }} > ./execution/key.json
+          echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > ./execution/key.json
           ./clean.sh
           docker compose up -d || {
             echo "Docker Compose failed. Collecting logs...";
