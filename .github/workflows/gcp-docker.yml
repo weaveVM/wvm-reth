@@ -88,9 +88,9 @@ jobs:
           mkdir -m 777 .testnet
           cd .testnet
           git clone https://github.com/weaveVM/wvm-docker-testnet.git .
-          echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/key.json
+          echo ${{ secrets.GCP_CREDENTIALS_JSON }} > ./execution/key.json
           ./clean.sh
-          docker compose up -d || { 
+          docker compose up -d || {
             echo "Docker Compose failed. Collecting logs...";
             docker ps -a; # Show status of all containers
             docker compose logs > compose_logs.txt;
@@ -124,4 +124,3 @@ jobs:
       - name: Remove Local Tag
         if: always() # Run regardless of previous step outcomes
         run: docker rmi wvm:local || true
-
