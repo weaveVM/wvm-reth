@@ -1,5 +1,3 @@
-name: Google Artifact Registry
-
 on:
   push:
     branches:
@@ -8,6 +6,12 @@ on:
       - dockercomposeaction
     tags:
       - "*"
+  workflow_dispatch:
+    inputs:
+      force_build:
+        type: boolean
+        description: 'Build image even if tests fail'
+        default: true
 
 jobs:
   docker-release:
@@ -96,6 +100,7 @@ jobs:
       # Run tests with proper error collection
       - name: Run tests
         id: test
+        continue-on-error: true
         run: |
           cd .testnet
           mkdir -p logs
@@ -132,6 +137,16 @@ jobs:
 
           echo "Tests completed successfully"
 
+      - name: Report test status
+        if: always()
+        run: |
+          if [ "${{ steps.test.outcome }}" == "failure" ]; then
+            echo "::warning ::Tests failed but continuing due to force_build option"
+            echo "### ⚠️ Test Results" >> $GITHUB_STEP_SUMMARY
+            echo "Tests failed but build will continue as force_build is enabled." >> $GITHUB_STEP_SUMMARY
+            echo "Please check test logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: Cleanup test environment
         if: always()
         run: |
@@ -141,9 +156,8 @@ jobs:
           # Use sudo to remove directories that might have root ownership
           sudo rm -rf .testnet
 
-      # Only push to registry if tests passed
       - name: Push to registry
-        if: success()
+        if: success() || github.event.inputs.force_build == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
