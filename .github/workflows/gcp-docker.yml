@@ -61,7 +61,6 @@ jobs:
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
-      # Build only for testing - load into local Docker
       - name: Build for testing
         id: build-test
         uses: docker/build-push-action@v6
@@ -72,10 +71,9 @@ jobs:
           tags: wvm:local
           cache-from: |
             type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache
-          cache-to: type=inline
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-
+            
       # Verify the test build
       - name: Verify local image
         run: |
