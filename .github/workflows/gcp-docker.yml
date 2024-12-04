@@ -11,8 +11,8 @@ on:
     inputs:
       force_build:
         type: boolean
-        description: 'Build image even if tests fail'
-        default: true
+        description: "Build image even if tests fail"
+        default: false
 
 jobs:
   docker-release:
@@ -78,7 +78,7 @@ jobs:
             type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-            
+
       # Verify the test build
       - name: Verify local image
         run: |
@@ -169,3 +169,4 @@ jobs:
             type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache
           cache-to: |
             type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache,mode=max
+
