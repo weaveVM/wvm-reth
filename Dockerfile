@@ -1,15 +1,22 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 WORKDIR /app
-
 LABEL org.opencontainers.image.source=https://github.com/weaveVM/wvm-reth
 LABEL org.opencontainers.image.licenses="MIT OR Apache-2.0"
-
 # Install system dependencies
 RUN apt-get update && apt-get -y upgrade && apt-get install -y libclang-dev pkg-config
 
 # Builds a cargo-chef plan
 FROM chef AS planner
-COPY . .
+WORKDIR /app
+
+# Create necessary directory structure first
+COPY Cargo.toml Cargo.lock ./
+COPY bin bin/
+COPY crates crates/
+COPY wvm-apps wvm-apps/
+COPY testing testing/
+COPY examples examples/
+
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -30,9 +37,8 @@ ENV FEATURES=$FEATURES
 # Builds dependencies
 RUN cargo chef cook --profile $BUILD_PROFILE --features "$FEATURES" --recipe-path recipe.json
 
-# Build application
+# Copy the entire repo for the actual build
 COPY . .
-RUN cd /app/wvm-apps/wvm-exexed
 WORKDIR /app/wvm-apps/wvm-exexed
 RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --bin reth
 
