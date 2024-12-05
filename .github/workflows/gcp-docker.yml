@@ -32,13 +32,9 @@ jobs:
         with:
           images: us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm
           tags: |
-            # Include latest for main branch and tagged releases
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || (github.ref_type == 'tag' && github.event.base_ref == 'refs/heads/main') }}
-            # Tag dev as nightly
             type=raw,value=nightly,enable=${{ github.ref == 'refs/heads/dev' }}
-            # Always include tag if it's a tag event
             type=ref,event=tag
-            # Include branch name for other branches
             type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev' }}
 
       - name: Authenticate with Google Cloud
@@ -66,20 +62,23 @@ jobs:
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
-      - name: Build for testing
-        id: build-test
+      # CHANGED: Combined build step for both local testing and registry images
+      - name: Build and export image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           push: false
           load: true
-          tags: wvm:local
+          tags: |
+            wvm:local
+            ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
-      # Verify the test build
       - name: Verify local image
         run: |
           if ! docker image inspect wvm:local >/dev/null 2>&1; then
@@ -88,7 +87,6 @@ jobs:
           fi
           echo "Local image verified successfully"
 
-      # Set up test environment
       - name: Setup test environment
         run: |
           mkdir -p .testnet
@@ -98,7 +96,6 @@ jobs:
           echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > ./execution/key.json
           chmod 600 ./execution/key.json
 
-      # Run tests with proper error collection
       - name: Run tests
         id: test
         continue-on-error: true
@@ -154,9 +151,9 @@ jobs:
           cd .testnet || true
           docker compose down || true
           cd ..
-          # Use sudo to remove directories that might have root ownership
           sudo rm -rf .testnet
 
+      # CHANGED: Modified push step to use existing image
       - name: Push to registry
         if: success() || github.event.inputs.force_build == 'true'
         uses: docker/build-push-action@v6
@@ -169,4 +166,3 @@ jobs:
             type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache
           cache-to: |
             type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache,mode=max
-
