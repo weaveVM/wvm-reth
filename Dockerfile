@@ -32,9 +32,7 @@ RUN cargo chef cook --profile $BUILD_PROFILE --features "$FEATURES" --recipe-pat
 
 # Build application
 COPY . .
-RUN cd /app/wvm-apps/wvm-exexed
-WORKDIR /app/wvm-apps/wvm-exexed
-RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --bin reth
+RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --locked --bin reth -p wvm-exexed
 
 # ARG is not resolved in COPY so we have to hack around it by copying the
 # binary to a temporary location
@@ -43,9 +41,6 @@ RUN cp /app/target/$BUILD_PROFILE/reth /app/reth
 # Use Ubuntu as the release image
 FROM ubuntu AS runtime
 WORKDIR /app
-
-# Install ca-certificates
-RUN apt-get update && apt-get install -y ca-certificates
 
 # Copy reth over from the build stage
 COPY --from=builder /app/reth /usr/local/bin
