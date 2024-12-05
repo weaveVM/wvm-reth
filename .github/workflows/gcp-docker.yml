@@ -5,6 +5,7 @@ on:
       - main
       - dev
       - dockercomposeaction
+      - feat/optimise-dockerfile
     tags:
       - "*"
   workflow_dispatch:
