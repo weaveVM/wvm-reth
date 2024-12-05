@@ -1,22 +1,15 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 WORKDIR /app
-LABEL org.opencontainers.image.source=https://github.com/weaveVM/wvm-reth
+
+LABEL org.opencontainers.image.source=https://github.com/paradigmxyz/reth
 LABEL org.opencontainers.image.licenses="MIT OR Apache-2.0"
+
 # Install system dependencies
 RUN apt-get update && apt-get -y upgrade && apt-get install -y libclang-dev pkg-config
 
 # Builds a cargo-chef plan
 FROM chef AS planner
-WORKDIR /app
-
-# Create necessary directory structure first
-COPY Cargo.toml Cargo.lock ./
-COPY bin bin/
-COPY crates crates/
-COPY wvm-apps wvm-apps/
-COPY testing testing/
-COPY examples examples/
-
+COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -37,10 +30,9 @@ ENV FEATURES=$FEATURES
 # Builds dependencies
 RUN cargo chef cook --profile $BUILD_PROFILE --features "$FEATURES" --recipe-path recipe.json
 
-# Copy the entire repo for the actual build
+# Build application
 COPY . .
-WORKDIR /app/wvm-apps/wvm-exexed
-RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --bin reth
+RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --locked --bin reth -p wvm-exexed
 
 # ARG is not resolved in COPY so we have to hack around it by copying the
 # binary to a temporary location
@@ -49,9 +41,6 @@ RUN cp /app/target/$BUILD_PROFILE/reth /app/reth
 # Use Ubuntu as the release image
 FROM ubuntu AS runtime
 WORKDIR /app
-
-# Install ca-certificates
-RUN apt-get update && apt-get install -y ca-certificates
 
 # Copy reth over from the build stage
 COPY --from=builder /app/reth /usr/local/bin
