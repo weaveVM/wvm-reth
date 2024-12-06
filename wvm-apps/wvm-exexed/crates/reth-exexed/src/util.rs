@@ -5,7 +5,7 @@ use precompiles::{
 
 pub const AR_GRAPHQL_GATEWAY: &str = "https://arweave.mainnet.irys.xyz";
 
-pub(crate) async fn check_block_existence(block_hash: &str, irys: bool) -> bool {
+pub(crate) fn check_block_existence(block_hash: &str, irys: bool) -> bool {
     let mut query = build_transaction_query(
         None,
         Some(&[
@@ -27,13 +27,13 @@ pub(crate) async fn check_block_existence(block_hash: &str, irys: bool) -> bool 
         }
     };
 
-    let data = send_graphql(gateway.as_str(), query.as_str()).await;
+    let data = send_graphql(gateway.as_str(), query.as_str());
     if let Ok(data) = data {
         let resp = data.data.transactions.edges.get(0);
         resp.is_some()
     } else {
         if !irys {
-            Box::pin(check_block_existence(block_hash, true)).await
+            check_block_existence(block_hash, true)
         } else {
             false
         }

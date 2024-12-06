@@ -110,7 +110,7 @@ pub fn build_transaction_query(
     query
 }
 
-pub async fn send_graphql(gateway: &str, query: &str) -> Result<Response, Error> {
+pub fn send_graphql(gateway: &str, query: &str) -> Result<Response, Error> {
     let res = ureq::post(format!("{}/{}", gateway, "graphql").as_str()).send_json(ureq::json!({
         "variables": {},
         "query": query
