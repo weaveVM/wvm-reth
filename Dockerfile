@@ -31,8 +31,8 @@ ENV FEATURES=$FEATURES
 RUN cargo chef cook --profile $BUILD_PROFILE --features "$FEATURES" --recipe-path recipe.json
 
 # Build application
-COPY . .
-RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --locked --bin reth -p  wvm-exexed
+
+RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --locked --bin reth -p wvm-exexed
 
 # ARG is not resolved in COPY so we have to hack around it by copying the
 # binary to a temporary location
