@@ -49,7 +49,7 @@ impl ArProcess {
                         None => return,
                     };
 
-                    let does_block_exist = check_block_existence(block_hash.as_str(), false).await;
+                    let does_block_exist = check_block_existence(block_hash.as_str(), false);
 
                     if !does_block_exist {
                         let provider = ar_uploader_provider.clone();

@@ -69,10 +69,8 @@ mod pc_inner_tests {
         let pcs = wvm_precompiles();
         let pcs: Vec<PrecompileWithAddress> = pcs.collect();
         assert_eq!(pcs.len(), 4);
-    }
 
-    #[test]
-    pub fn wvm_precompiles_test() {
+        std::env::remove_var("BLOCKED_PC");
         let mut get_pcs = wvm_precompiles();
         let first = get_pcs.next().unwrap();
         assert_eq!(first.0, u64_to_address(0x17));
