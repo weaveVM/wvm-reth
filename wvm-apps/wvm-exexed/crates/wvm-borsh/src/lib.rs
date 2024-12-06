@@ -3,16 +3,17 @@ pub mod b256;
 pub mod block;
 pub mod bloom;
 pub mod header;
-pub mod request;
+
 pub mod signature;
 pub mod transaction;
 pub mod withdrawal;
 
 #[cfg(test)]
 mod tests {
-    use crate::block::BorshSealedBlock;
+    use crate::block::{BorshSealedBlock, BorshSealedBlockWithSenders};
     use reth::primitives::{SealedBlock, Withdrawals};
     use reth_primitives::BlockBody;
+    use std::{fs::File, io::Read};
 
     #[test]
     fn test_borsh_block() {
@@ -24,7 +25,6 @@ mod tests {
                 transactions: vec![Default::default()],
                 ommers: Default::default(),
                 withdrawals: Some(withdrawals),
-                requests: None,
             },
         };
 
@@ -48,12 +48,19 @@ mod tests {
                 transactions: vec![Default::default()],
                 ommers: Default::default(),
                 withdrawals: Some(withdrawals),
-                requests: None,
             },
         };
 
         let borsh_block = BorshSealedBlock(block.clone());
         let borsh_serialize = borsh::to_vec(&borsh_block).unwrap();
         let _: BorshSealedBlock = borsh::from_slice(borsh_serialize.as_slice()).unwrap();
+    }
+
+    #[test]
+    fn test_0x28e879f8841b487323922bf741de88cc23afcbacd40e7b7754d92ef58518413d_bug() {
+        let mut fs = File::options().read(true).open(std::env::current_dir().unwrap().join("./test_cases/0x28e879f8841b487323922bf741de88cc23afcbacd40e7b7754d92ef58518413d.data")).unwrap();
+        let mut buffer = Vec::new();
+        fs.read_to_end(&mut buffer).unwrap();
+        let _block: BorshSealedBlockWithSenders = borsh::from_slice(&buffer).unwrap();
     }
 }

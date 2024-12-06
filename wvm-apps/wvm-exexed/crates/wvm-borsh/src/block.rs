@@ -1,14 +1,13 @@
 use crate::{
     address::BorshAddress,
     header::{BorshHeader, BorshSealedHeader},
-    request::BorshRequest,
     transaction::BorshTransactionSigned,
     withdrawal::BorshWithdrawal,
 };
+use alloy_eips::eip4895::Withdrawal;
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::{
-    BlockBody, Request, Requests, SealedBlock, SealedBlockWithSenders, Withdrawal, Withdrawals,
-};
+use reth::primitives::{BlockBody, SealedBlock, SealedBlockWithSenders, Withdrawals};
+
 use std::io::{Read, Write};
 
 pub struct BorshSealedBlock(pub SealedBlock);
@@ -27,16 +26,11 @@ impl BorshSerialize for BorshSealedBlock {
 
             withdrawals
         });
-        let requests = self.0.body.clone().requests.clone().map(|i| {
-            let reqs: Vec<BorshRequest> = i.0.into_iter().map(BorshRequest).collect();
-            reqs
-        });
 
         borsh_sealed_header.serialize(writer)?;
         borsh_transactions.serialize(writer)?;
         borsh_ommers.serialize(writer)?;
         withdrawal.serialize(writer)?;
-        requests.serialize(writer)?;
 
         Ok(())
     }
@@ -48,8 +42,6 @@ impl BorshDeserialize for BorshSealedBlock {
         let borsh_transactions = Vec::<BorshTransactionSigned>::deserialize_reader(reader)?;
         let borsh_ommers = Vec::<BorshHeader>::deserialize_reader(reader)?;
         let withdrawal = Option::<Vec<BorshWithdrawal>>::deserialize_reader(reader)?;
-
-        let requests = Option::<Vec<BorshRequest>>::deserialize_reader(reader)?;
 
         let sealed_block = SealedBlock {
             header: sealed_header.0,
@@ -63,12 +55,6 @@ impl BorshDeserialize for BorshSealedBlock {
                         original_withdrawals
                     })
                     .map(|i| Withdrawals::new(i)),
-                requests: requests
-                    .map(|i| {
-                        let original_reqs: Vec<Request> = i.into_iter().map(|e| e.0).collect();
-                        original_reqs
-                    })
-                    .map(|i| Requests(i)),
             },
         };
 

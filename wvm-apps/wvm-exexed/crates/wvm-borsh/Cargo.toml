@@ -21,7 +21,5 @@ borsh.workspace = true
 reth-primitives.workspace = true
 alloy-primitives.workspace = true
 wvm-tx = { path = "../tx" }
-
-
-[dev-dependencies]
 alloy-eips.workspace = true
+alloy-consensus.workspace = true

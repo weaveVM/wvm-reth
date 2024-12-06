@@ -1,6 +1,5 @@
-use std::cell::LazyCell;
-use std::env::VarError;
 use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
+use std::{cell::LazyCell, env::VarError};
 
 /// [`TX_SLOT_BYTE_SIZE`] is used to calculate how many data slots a single transaction
 /// takes up based on its byte size. The slots are used as `DoS` protection, ensuring
@@ -24,12 +23,8 @@ pub const DEFAULT_MAX_TX_INPUT_BYTES: LazyCell<usize> = LazyCell::new(|| {
 
     let env_var = std::env::var("WVM_DEFAULT_MAX_TX_INPUT_BYTES");
     match env_var {
-        Ok(res) => {
-            res.parse::<usize>().unwrap_or(default_value)
-        }
-        Err(_) => {
-            default_value
-        }
+        Ok(res) => res.parse::<usize>().unwrap_or(default_value),
+        Err(_) => default_value,
     }
 }); // 128KB
 

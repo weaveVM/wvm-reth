@@ -1,12 +1,14 @@
 //! Common conversions from alloy types.
 
 use crate::{
-    constants::EMPTY_TRANSACTIONS, transaction::extract_chain_id, Block, BlockBody, Signature,
-    Transaction, TransactionSigned, TransactionSignedEcRecovered, TransactionSignedNoHash, TxType,
+    transaction::extract_chain_id, Block, BlockBody, Transaction, TransactionSigned,
+    TransactionSignedEcRecovered, TransactionSignedNoHash, TxType,
 };
 use alloc::{string::ToString, vec::Vec};
-use alloy_consensus::{TxEip1559, TxEip2930, TxEip4844, TxLegacy};
-use alloy_primitives::{Parity, TxKind};
+use alloy_consensus::{
+    constants::EMPTY_TRANSACTIONS, Transaction as _, TxEip1559, TxEip2930, TxEip4844, TxLegacy,
+};
+use alloy_primitives::{Parity, Signature, TxKind};
 use alloy_rlp::Error as RlpError;
 use alloy_serde::WithOtherFields;
 use op_alloy_rpc_types as _;
@@ -46,9 +48,6 @@ impl TryFrom<alloy_rpc_types::Block<WithOtherFields<alloy_rpc_types::Transaction
                 transactions,
                 ommers: Default::default(),
                 withdrawals: block.withdrawals.map(Into::into),
-                // todo(onbjerg): we don't know if this is added to rpc yet, so for now we leave it
-                // as empty.
-                requests: None,
             },
         })
     }

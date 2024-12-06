@@ -87,7 +87,7 @@ When updating this, also update:
 - .github/workflows/lint.yml
 -->
 
-The Minimum Supported Rust Version (MSRV) of this project is [1.81.0](https://blog.rust-lang.org/2024/09/05/Rust-1.81.0.html).
+The Minimum Supported Rust Version (MSRV) of this project is [1.82.0](https://blog.rust-lang.org/2024/10/17/Rust-1.82.0.html).
 
 See the book for detailed instructions on how to [build from source](https://paradigmxyz.github.io/reth/installation/source.html).
 
@@ -153,3 +153,7 @@ The `NippyJar` and `Compact` encoding formats and their implementations are desi
 
 [book]: https://paradigmxyz.github.io/reth/
 [tg-url]: https://t.me/paradigm_reth
+
+--
+WVM
+--

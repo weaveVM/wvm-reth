@@ -4,10 +4,10 @@ use super::{
 };
 use crate::{
     to_range, BlockHashReader, BlockNumReader, BlockReader, BlockSource, HeaderProvider,
-    ReceiptProvider, RequestsProvider, StageCheckpointReader, StatsReader, TransactionVariant,
-    TransactionsProvider, TransactionsProviderExt, WithdrawalsProvider,
+    ReceiptProvider, StageCheckpointReader, StatsReader, TransactionVariant, TransactionsProvider,
+    TransactionsProviderExt, WithdrawalsProvider,
 };
-use alloy_eips::BlockHashOrNumber;
+use alloy_eips::{eip4895::Withdrawal, BlockHashOrNumber};
 use alloy_primitives::{keccak256, Address, BlockHash, BlockNumber, TxHash, TxNumber, B256, U256};
 use dashmap::DashMap;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
@@ -31,8 +31,7 @@ use reth_primitives::{
         DEFAULT_BLOCKS_PER_STATIC_FILE,
     },
     Block, BlockWithSenders, Header, Receipt, SealedBlock, SealedBlockWithSenders, SealedHeader,
-    StaticFileSegment, TransactionMeta, TransactionSigned, TransactionSignedNoHash, Withdrawal,
-    Withdrawals,
+    StaticFileSegment, TransactionMeta, TransactionSigned, TransactionSignedNoHash, Withdrawals,
 };
 use reth_stages_types::{PipelineTarget, StageId};
 use reth_storage_api::DBProvider;
@@ -143,6 +142,7 @@ impl StaticFileProvider {
                         // appending/truncating rows
                         for segment in event.paths {
                             // Ensure it's a file with the .conf extension
+                            #[allow(clippy::nonminimal_bool)]
                             if !segment
                                 .extension()
                                 .is_some_and(|s| s.to_str() == Some(CONFIG_FILE_EXTENSION))
@@ -222,7 +222,7 @@ impl StaticFileProviderInner {
     /// Creates a new [`StaticFileProviderInner`].
     fn new(path: impl AsRef<Path>, access: StaticFileAccess) -> ProviderResult<Self> {
         let _lock_file = if access.is_read_write() {
-            Some(StorageLock::try_acquire(path.as_ref())?)
+            StorageLock::try_acquire(path.as_ref())?.into()
         } else {
             None
         };
@@ -1363,13 +1363,13 @@ impl TransactionsProviderExt for StaticFileProvider {
         // chunks are too big, there will be idle threads waiting for work. Choosing an
         // arbitrary smaller value to make sure it doesn't happen.
         let chunk_size = 100;
-        let mut channels = Vec::new();
 
         // iterator over the chunks
         let chunks = tx_range
             .clone()
             .step_by(chunk_size)
             .map(|start| start..std::cmp::min(start + chunk_size as u64, tx_range.end));
+        let mut channels = Vec::with_capacity(tx_range_size.div_ceil(chunk_size));
 
         for chunk_range in chunks {
             let (channel_tx, channel_rx) = mpsc::channel();
@@ -1636,17 +1636,6 @@ impl WithdrawalsProvider for StaticFileProvider {
     }
 
     fn latest_withdrawal(&self) -> ProviderResult<Option<Withdrawal>> {
-        // Required data not present in static_files
-        Err(ProviderError::UnsupportedProvider)
-    }
-}
-
-impl RequestsProvider for StaticFileProvider {
-    fn requests_by_block(
-        &self,
-        _id: BlockHashOrNumber,
-        _timestamp: u64,
-    ) -> ProviderResult<Option<reth_primitives::Requests>> {
         // Required data not present in static_files
         Err(ProviderError::UnsupportedProvider)
     }

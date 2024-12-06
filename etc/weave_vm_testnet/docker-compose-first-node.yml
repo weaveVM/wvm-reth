@@ -20,6 +20,7 @@ services:
       - reth_genesis:/genesis:ro
       - logs:/root/logs
       - ./../jwttoken:/root/jwt:ro
+      - ./../bqconfig:/root/bqconfig:ro
     command:
       - node
       - --metrics=0.0.0.0:9001
@@ -46,6 +47,9 @@ services:
       - --discovery.v5.port=30304
       - -vvvv
       - --rpc.eth-proof-window=3888000
+    environment:
+      - BLOCKED_PC=17,18,19,20,21,22
+      - CONFIG=/root/bqconfig/bq-config.json
 
   # default prometheus + grafana setup
   prometheus:
@@ -101,34 +105,34 @@ services:
   beacon-chain:
     image: wvm-lighthouse:local
     ports:
-      - '5052:5052/tcp' # rpc
-      - '5053:5053/tcp'
-      - '5054:5054/tcp' # metrics
-      - '9000:9000/tcp' # p2p
-      - '9000:9000/udp' # p2p
-      - '9002:9002/udp' # quic
+      - "5052:5052/tcp" # rpc
+      - "5053:5053/tcp"
+      - "5054:5054/tcp" # metrics
+      - "9000:9000/tcp" # p2p
+      - "9000:9000/udp" # p2p
+      - "9002:9002/udp" # quic
     volumes:
       - lighthousedata:/data
       - testnetdata:/testnetdata
       - ./../jwttoken:/root/jwt:ro
     command: >
       lighthouse bn
-      --testnet-dir=/testnetdata/ 
-      --http 
-      --http-address 0.0.0.0 
-      --execution-endpoint http://reth:8551 
-      --metrics 
-      --metrics-address 0.0.0.0 
-      --execution-jwt /root/jwt/jwt.hex 
-      --staking 
-      --allow-insecure-genesis-sync 
-      --import-all-attestations 
-      --subscribe-all-subnets 
-      --http-allow-origin "*" 
-      --disable-packet-filter 
-      --http-allow-sync-stalled 
-      --enr-tcp-port 9000 
-      --enr-udp-port 9000 
+      --testnet-dir=/testnetdata/
+      --http
+      --http-address 0.0.0.0
+      --execution-endpoint http://reth:8551
+      --metrics
+      --metrics-address 0.0.0.0
+      --execution-jwt /root/jwt/jwt.hex
+      --staking
+      --allow-insecure-genesis-sync
+      --import-all-attestations
+      --subscribe-all-subnets
+      --http-allow-origin "*"
+      --disable-packet-filter
+      --http-allow-sync-stalled
+      --enr-tcp-port 9000
+      --enr-udp-port 9000
       --enr-address local_IP
       --libp2p-addresses "/ip4/10.156.0.10/udp/9000/p2p/16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU"
       --trusted-peers "16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU"
@@ -157,9 +161,8 @@ services:
     volumes:
       - testnetdata:/testnetdata
       - lighthousedata:/data
-    command:
-      lighthouse vc
-      --builder-proposals 
+    command: lighthouse vc
+      --builder-proposals
       --testnet-dir=/testnetdata/
       --beacon-nodes http://beacon-chain:5052
       --datadir=/data/custom/

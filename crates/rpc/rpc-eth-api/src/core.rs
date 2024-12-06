@@ -1,7 +1,11 @@
 //! Implementation of the [`jsonrpsee`] generated [`EthApiServer`] trait. Handles RPC requests for
 //! the `eth_` namespace.
+use crate::{
+    helpers::{EthApiSpec, EthBlocks, EthCall, EthFees, EthState, EthTransactions, FullEthApi},
+    RpcBlock, RpcReceipt, RpcTransaction,
+};
 use alloy_dyn_abi::TypedData;
-use alloy_eips::eip2930::AccessListResult;
+use alloy_eips::{eip2930::AccessListResult, BlockId, BlockNumberOrTag};
 use alloy_json_rpc::RpcObject;
 use alloy_primitives::{Address, Bytes, B256, B64, U256, U64};
 use alloy_rpc_types::{
@@ -13,14 +17,9 @@ use alloy_rpc_types::{
 };
 use alloy_rpc_types_eth::transaction::TransactionRequest;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use reth_primitives::{BlockId, BlockNumberOrTag};
+use reth_rpc_eth_types::wvm::WvmTransactionRequest;
 use reth_rpc_server_types::{result::internal_rpc_err, ToRpcResult};
 use tracing::trace;
-
-use crate::{
-    helpers::{EthApiSpec, EthBlocks, EthCall, EthFees, EthState, EthTransactions, FullEthApi},
-    RpcBlock, RpcReceipt, RpcTransaction,
-};
 
 /// Helper trait, unifies functionality that must be supported to implement all RPC methods for
 /// server.
@@ -332,6 +331,11 @@ pub trait EthApi<T: RpcObject, B: RpcObject, R: RpcObject> {
     #[method(name = "sendTransaction")]
     async fn send_transaction(&self, request: TransactionRequest) -> RpcResult<B256>;
 
+    /// Sends WVM transaction; will block waiting for signer to return the
+    /// transaction hash.
+    #[method(name = "sendWvmTransaction")]
+    async fn send_wvm_transaction(&self, request: WvmTransactionRequest) -> RpcResult<B256>;
+
     /// Sends signed transaction, returning its hash.
     #[method(name = "sendRawTransaction")]
     async fn send_raw_transaction(&self, bytes: Bytes) -> RpcResult<B256>;
@@ -502,7 +506,7 @@ where
         trace!(target: "rpc::eth", ?hash, "Serving eth_getTransactionByHash");
         Ok(EthTransactions::transaction_by_hash(self, hash)
             .await?
-            .map(|tx| tx.into_transaction::<T::TransactionCompat>()))
+            .map(|tx| tx.into_transaction(self.tx_resp_builder())))
     }
 
     /// Handler for: `eth_getRawTransactionByBlockHashAndIndex`
@@ -765,6 +769,12 @@ where
     async fn send_transaction(&self, request: TransactionRequest) -> RpcResult<B256> {
         trace!(target: "rpc::eth", ?request, "Serving eth_sendTransaction");
         Ok(EthTransactions::send_transaction(self, request).await?)
+    }
+
+    /// Handler for: `eth_sendWvmTransaction`
+    async fn send_wvm_transaction(&self, request: WvmTransactionRequest) -> RpcResult<B256> {
+        trace!(target: "rpc::eth", ?request, "Serving eth_sendWvmTransaction");
+        Ok(EthTransactions::send_wvm_transaction(self, request).await?)
     }
 
     /// Handler for: `eth_sendRawTransaction`

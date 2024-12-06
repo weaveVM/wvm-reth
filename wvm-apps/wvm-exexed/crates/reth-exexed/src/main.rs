@@ -3,6 +3,7 @@
 #![doc(issue_tracker_base_url = "https://github.com/weaveVM/wvm-reth/issues/")]
 
 mod constant;
+mod exex;
 mod network_tag;
 mod util;
 
@@ -23,9 +24,7 @@ use wvm_borsh::block::BorshSealedBlockWithSenders;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
-    state_repository: StateRepository,
-    irys_provider: UploaderProvider,
-    _state_processor: exex_etl::state_processor::StateProcessor,
+    ar_process: Arc<ArProcess>,
 ) -> eyre::Result<()> {
     while let Some(notification_result) = ctx.notifications.next().await {
         let notification = match notification_result {
@@ -70,59 +69,13 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         }
 
         if let Some(committed_chain) = notification.committed_chain() {
-            let data_settler = DefaultWvmDataSettler;
-            let sealed_block_with_senders = committed_chain.tip();
-            let borsh_sealed_block = BorshSealedBlockWithSenders(sealed_block_with_senders.clone());
-            let brotli_borsh = match data_settler.process_block(&borsh_sealed_block) {
-                Ok(data) => data,
-                Err(err) => {
-                    error!(target: "wvm::exex", %err, "Failed to do brotli encoding for block {}", sealed_block_with_senders.block.header.header().number);
-                    continue;
-                }
-            };
-
-            let blk_str_hash = sealed_block_with_senders.block.hash().to_string();
-            let block_hash = blk_str_hash.as_str();
-            let does_block_exist = check_block_existence(block_hash, false).await;
-
-            if !does_block_exist {
-                let res = ArweaveRequest::new()
-                    .set_tag("Content-Type", "application/octet-stream")
-                    .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
-                    .set_tag(
-                        "Block-Number",
-                        sealed_block_with_senders.block.header.header().number.to_string().as_str(),
-                    )
-                    .set_tag("Block-Hash", block_hash)
-                    .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
-                    .set_tag("Network", get_network_tag().as_str())
-                    .set_tag("WeaveVM:Internal-Chain", notification_type)
-                    .set_data(brotli_borsh)
-                    .send_with_provider(&irys_provider)
-                    .await;
-
-                let arweave_id = match res {
-                    Ok(arweave_id) => arweave_id,
-                    Err(err) => {
-                        error!(target: "wvm::exex", %err, "Failed to construct arweave_id for block {}", sealed_block_with_senders.block.header.header().number);
-                        continue;
-                    }
-                };
-
-                info!(target: "wvm::exex", "irys id: {}, for block: {}", arweave_id, sealed_block_with_senders.block.header.header().number);
-
-                if let Err(err) = exex_wvm_bigquery::save_block(
-                    &state_repository,
-                    &sealed_block_with_senders,
-                    committed_chain.tip().block.header.header().number,
-                    arweave_id.clone(),
-                )
-                .await
-                {
-                    error!(target: "wvm::exex", %err, "Failed to write to bigquery, block {}", sealed_block_with_senders.block.header.header().number);
-                    continue;
-                };
-            }
+            let sealed_block_with_senders = committed_chain.tip().clone();
+            let _ = ar_process
+                .sender
+                .send((sealed_block_with_senders, notification_type.to_string()))
+                .await;
+            info!(target: "wvm::exex", "Exex block has been streamed");
+            // Handle recovery if `receiver` is dropped
         }
     }
 
@@ -131,7 +84,12 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
+    let _rt = &*SUPERVISOR_RT;
+    let _bc = &*PRECOMPILE_WVM_BIGQUERY_CLIENT;
+    let ar_process = Arc::new(ArProcess::new(10));
+
     reth::cli::Cli::parse_args().run(|builder, _| async move {
+        // Initializations
         let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
         // Original config
         let mut config = builder.config().clone();
@@ -140,7 +98,7 @@ fn main() -> eyre::Result<()> {
 
         if let Ok(prune_conf) = prune_node {
             config = config.with_pruning(PruningArgs {
-                block_interval: parse_prune_config(prune_conf.as_str()),
+                block_interval: Some(parse_prune_config(prune_conf.as_str())),
                 ..pruning_args
             });
         }
@@ -154,17 +112,9 @@ fn main() -> eyre::Result<()> {
 
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();
         if run_exex == "true" {
-            let big_query_client = new_etl_exex_biguery_client().await;
-            let state_repo = StateRepository::new(Arc::new(big_query_client));
-
-            // init state processor
-            let state_processor = exex_etl::state_processor::StateProcessor::new();
-            // init irys provider
-            let ar_uploader_provider = UploaderProvider::new(None);
-
             handle = handle
                 .install_exex("exex-etl", |ctx| async move {
-                    Ok(exex_etl_processor(ctx, state_repo, ar_uploader_provider, state_processor))
+                    Ok(exex_etl_processor(ctx, ar_process.clone()))
                 })
                 .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) });
         }
@@ -187,7 +137,10 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
     SLOT_DURATION.as_secs() * secs
 }
 
+use crate::exex::ar_process::ArProcess;
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
+use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
+
 async fn new_etl_exex_biguery_client() -> BigQueryClient {
     let config_path: String =
         std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());

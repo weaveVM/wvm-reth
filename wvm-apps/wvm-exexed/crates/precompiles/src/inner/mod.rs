@@ -19,6 +19,10 @@ fn hex_to_u64(hex_str: &str) -> u64 {
     u64::from_str_radix(&hex_str[2..], 16).unwrap()
 }
 
+fn is_pc_blocked(block_list: &Vec<&str>, addr: i32) -> bool {
+    block_list.contains(&addr.to_string().as_str())
+}
+
 pub fn wvm_precompiles() -> impl Iterator<Item = PrecompileWithAddress> {
     // ORDER OF THINGS MATTER
     // ORDER OF THINGS MATTER
@@ -35,10 +39,14 @@ pub fn wvm_precompiles() -> impl Iterator<Item = PrecompileWithAddress> {
 
     // IT MATTERS BC OF THIS
     let mut start_addr = 17;
+    let blocked_pcs = std::env::var("BLOCKED_PC").unwrap_or("".to_string());
+    let blocked_pcs = blocked_pcs.split(",").collect::<Vec<&str>>();
 
     for pc in pcs_funcs.into_iter() {
-        let addr = hex_to_u64(format!("0x{}", start_addr).as_str());
-        pcs.push(PrecompileWithAddress(u64_to_address(addr), pc));
+        if !is_pc_blocked(&blocked_pcs, start_addr) {
+            let addr = hex_to_u64(format!("0x{}", start_addr).as_str());
+            pcs.push(PrecompileWithAddress(u64_to_address(addr), pc));
+        }
         start_addr = start_addr + 1;
     }
 
@@ -46,8 +54,22 @@ pub fn wvm_precompiles() -> impl Iterator<Item = PrecompileWithAddress> {
 }
 #[cfg(test)]
 mod pc_inner_tests {
-    use crate::inner::wvm_precompiles;
+    use crate::inner::{is_pc_blocked, wvm_precompiles};
     use reth::revm::precompile::u64_to_address;
+    use reth_revm::precompile::PrecompileWithAddress;
+
+    #[test]
+    pub fn test_verify_pc() {
+        std::env::set_var("BLOCKED_PC", "20,17");
+        let blocked_pcs = std::env::var("BLOCKED_PC").unwrap_or("".to_string());
+        let vec = blocked_pcs.split(",").collect::<Vec<&str>>();
+        assert!(is_pc_blocked(&vec, 20));
+        assert!(is_pc_blocked(&vec, 17));
+        assert!(!is_pc_blocked(&vec, 1));
+        let pcs = wvm_precompiles();
+        let pcs: Vec<PrecompileWithAddress> = pcs.collect();
+        assert_eq!(pcs.len(), 4);
+    }
 
     #[test]
     pub fn wvm_precompiles_test() {

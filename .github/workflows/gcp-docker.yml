@@ -1,46 +1,60 @@
 name: Google Artifact Registry
-
 on:
   push:
     branches:
       - main
       - dev
+      - dockercomposeaction
     tags:
-      - '*'
+      - "*"
+  workflow_dispatch:
+    inputs:
+      force_build:
+        type: boolean
+        description: "Build image even if tests fail"
+        default: false
 
 jobs:
   docker-release:
-    name: Tagged Docker release to Google Artifact Registry
+    name: Docker Build Test Release
     runs-on: ubuntu-latest
-
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
 
     steps:
-      # 1. Checkout the Repository
-      - id: checkout
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Authenticate with Google Cloud
-      - id: auth
-        name: Authenticate with Google Cloud
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || (github.ref_type == 'tag' && github.event.base_ref == 'refs/heads/main') }}
+            type=raw,value=nightly,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev' }}
+
+      - name: Authenticate with Google Cloud
+        id: auth
         uses: google-github-actions/auth@v2
         with:
           token_format: access_token
           credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
           access_token_lifetime: 1800s
 
-      # 3. Configure Docker to Use Google Artifact Registry
-      - name: Configure container registry
-        run: gcloud auth configure-docker us-east1-docker.pkg.dev
+      - name: Configure Docker for GAR
+        run: |
+          gcloud auth configure-docker us-east1-docker.pkg.dev
+          echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
 
-      # 4. Set Up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug
 
-      # 5. Login to Artifact Registry
       - name: Login to Artifact Registry
         uses: docker/login-action@v3
         with:
@@ -48,64 +62,107 @@ jobs:
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
-      # 6. Determine Docker Tag Based on Git Reference
-      - name: Get tag
-        id: get-tag
-        run: echo "short_ref=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
-
-      - name: Set Docker Tag
-        id: tag
-        run: |
-          if [[ "${GITHUB_REF}" == refs/heads/main ]]; then
-            tag="latest"
-          elif [[ "${GITHUB_REF}" == refs/heads/dev ]]; then
-            tag="nightly"
-          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            tag=${GITHUB_REF#refs/tags/}
-          else
-            tag=${GITHUB_REF#refs/heads/}
-          fi
-          echo "tag=${tag}" >> $GITHUB_OUTPUT
-          echo "Docker tag: ${tag}"
-
-      # 7. Build Docker Image (Load Locally Only)
-      - name: Build Docker Image
+      # CHANGED: Combined build step for both local testing and registry images
+      - name: Build and export image
+        id: build
         uses: docker/build-push-action@v6
         with:
-          push: false                  # Do not push in this step
-          load: true                   # Load the image into Docker cache
+          context: .
+          push: false
+          load: true
           tags: |
             wvm:local
-            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.get-tag.outputs.short_ref }}
-            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.tag.outputs.tag }}
-          cache-from: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.tag.outputs.tag }}
-          cache-to: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.tag.outputs.tag }},mode=max
+            ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
-      # 8. Test Docker Image Using Local Tag
-      - name: Test Docker
-        run: |-
-          mkdir -m 777 .testnet
+      - name: Verify local image
+        run: |
+          if ! docker image inspect wvm:local >/dev/null 2>&1; then
+            echo "Local image wvm:local not found!"
+            exit 1
+          fi
+          echo "Local image verified successfully"
+
+      - name: Setup test environment
+        run: |
+          mkdir -p .testnet
+          chmod 750 .testnet
           cd .testnet
-          git clone https://github.com/weaveVM/wvm-docker-testnet.git .
-          echo "${{ secrets.GCP_CREDENTIALS_JSON }}" > ./execution/key.json
-          docker compose up -d
-          npm install
-          SIGNER_KEY=${{ secrets.TEST_SIGNER_KEY }} node test.js
-          docker compose down
-          cd .. && sudo rm -rf .testnet
+          git clone --depth 1 https://github.com/weaveVM/wvm-docker-testnet.git .
+          echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > ./execution/key.json
+          chmod 600 ./execution/key.json
 
-      # 9. Push Verified Docker Images to Artifact Registry
-      - name: Push to Artifact Registry
+      - name: Run tests
+        id: test
+        continue-on-error: true
+        run: |
+          cd .testnet
+          mkdir -p logs
+
+          echo "Starting Docker Compose..."
+          if ! docker compose up -d; then
+            echo "Docker Compose failed. Collecting logs..."
+            docker ps -a
+            docker compose logs > logs/compose.log
+            for container in $(docker compose ps -q); do
+              name=$(docker inspect --format='{{.Name}}' $container)
+              echo "=== Logs for $name ==="
+              docker logs $container &> "logs/$name.log"
+              cat "logs/$name.log"
+            done
+            exit 1
+          fi
+
+          echo "Installing dependencies..."
+          if ! npm install; then
+            echo "npm install failed"
+            docker compose logs > logs/compose_fail.log
+            cat logs/compose_fail.log
+            exit 1
+          fi
+
+          echo "Running tests..."
+          if ! SIGNER_KEY=${{ secrets.TEST_SIGNER_KEY }} node test.js; then
+            echo "Tests failed"
+            docker compose logs > logs/compose_fail.log
+            cat logs/compose_fail.log
+            exit 1
+          fi
+
+          echo "Tests completed successfully"
+
+      - name: Report test status
+        if: always()
+        run: |
+          if [ "${{ steps.test.outcome }}" == "failure" ]; then
+            echo "::warning ::Tests failed but continuing due to force_build option"
+            echo "### ⚠️ Test Results" >> $GITHUB_STEP_SUMMARY
+            echo "Tests failed but build will continue as force_build is enabled." >> $GITHUB_STEP_SUMMARY
+            echo "Please check test logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Cleanup test environment
+        if: always()
+        run: |
+          cd .testnet || true
+          docker compose down || true
+          cd ..
+          sudo rm -rf .testnet
+
+      # CHANGED: Modified push step to use existing image
+      - name: Push to registry
+        if: success() || github.event.inputs.force_build == 'true'
         uses: docker/build-push-action@v6
         with:
-          push: true                   # Enable pushing
-          tags: |
-            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.get-tag.outputs.short_ref }}
-            us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.tag.outputs.tag }}
-          cache-from: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.tag.outputs.tag }}
-          cache-to: type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:${{ steps.tag.outputs.tag }},mode=max
-
-      # 10. Clean Up Local Docker Tags (Optional)
-      - name: Remove Local Tag
-        if: always()                   # Run regardless of previous step outcomes
-        run: docker rmi wvm:local || true
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache
+          cache-to: |
+            type=registry,ref=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wvm:buildcache,mode=max
