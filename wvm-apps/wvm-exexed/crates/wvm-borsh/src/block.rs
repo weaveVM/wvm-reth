@@ -85,6 +85,8 @@ impl BorshDeserialize for BorshSealedBlockWithSenders {
             senders: senders.into_iter().map(|i| i.0).collect(),
         };
 
+        println!("sealed_block_w_senders {:?}", sealed_block_w_senders);
+
         Ok(BorshSealedBlockWithSenders(sealed_block_w_senders))
     }
 }
