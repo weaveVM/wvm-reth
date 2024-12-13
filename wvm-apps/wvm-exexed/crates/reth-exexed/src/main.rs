@@ -7,10 +7,7 @@ mod exex;
 mod network_tag;
 mod util;
 
-use crate::{network_tag::get_network_tag, util::check_block_existence};
-use arweave_upload::{ArweaveRequest, UploaderProvider};
-use exex_wvm_bigquery::repository::StateRepository;
-use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
+use crate::exex::ar_process::ArActorError;
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;
@@ -20,11 +17,10 @@ use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use reth_primitives::constants::SLOT_DURATION;
 use std::sync::Arc;
 use tracing::{error, info};
-use wvm_borsh::block::BorshSealedBlockWithSenders;
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
-    ar_process: Arc<ArProcess>,
+    ar_actor_handle: Arc<ArweaveActorHandle>,
 ) -> eyre::Result<()> {
     while let Some(notification_result) = ctx.notifications.next().await {
         let notification = match notification_result {
@@ -55,6 +51,9 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         };
 
         if let Some(committed_chain) = notification.committed_chain() {
+            let block = committed_chain.tip().clone();
+            let block_number = block.number;
+
             if let Err(err) =
                 ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().num_hash()))
             {
@@ -66,19 +65,41 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                 );
                 continue;
             }
-        }
 
-        if let Some(committed_chain) = notification.committed_chain() {
-            let sealed_block_with_senders = committed_chain.tip().clone();
-            let _ = ar_process
-                .sender
-                .send((sealed_block_with_senders, notification_type.to_string()))
-                .await;
-            info!(target: "wvm::exex", "Exex block has been streamed");
-            // Handle recovery if `receiver` is dropped
+            // Then process the block
+            match ar_actor_handle.process_block(block, notification_type.to_string()).await {
+                Ok(arweave_id) => {
+                    info!(
+                        target: "wvm::exex",
+                        block_number = block_number,
+                        arweave_id = arweave_id,
+                        "Block processed successfully"
+                    );
+                }
+                Err(ArActorError::BlockExists) => {
+                    info!(
+                        target: "wvm::exex",
+                        block_number = block_number,
+                        "Block already exists"
+                    );
+                }
+                Err(e) => {
+                    error!(
+                        target: "wvm::exex",
+                        %e,
+                        block_number = block_number,
+                        "Failed to process block"
+                    );
+                }
+            }
         }
     }
 
+    info!(target: "wvm::exex", "ETL processor shutting down");
+    // Try to shutdown the actor gracefully
+    if let Err(e) = ar_actor_handle.shutdown().await {
+        error!(target: "wvm::exex", %e, "Failed to shutdown ArweaveActor gracefully");
+    }
     Ok(())
 }
 
@@ -86,10 +107,12 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 fn main() -> eyre::Result<()> {
     let _rt = &*SUPERVISOR_RT;
     let _bc = &*PRECOMPILE_WVM_BIGQUERY_CLIENT;
-    let ar_process = Arc::new(ArProcess::new(10));
+    //    let ar_process = Arc::new(ArProcess::new(10));
 
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         // Initializations
+        let ar_actor_handle = Arc::new(ArweaveActorHandle::new(1024).await);
+
         let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
         // Original config
         let mut config = builder.config().clone();
@@ -114,7 +137,7 @@ fn main() -> eyre::Result<()> {
         if run_exex == "true" {
             handle = handle
                 .install_exex("exex-etl", |ctx| async move {
-                    Ok(exex_etl_processor(ctx, ar_process.clone()))
+                    Ok(exex_etl_processor(ctx, ar_actor_handle))
                 })
                 .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) });
         }
@@ -137,7 +160,7 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
     SLOT_DURATION.as_secs() * secs
 }
 
-use crate::exex::ar_process::ArProcess;
+use exex::ar_process::{ArProcess, ArweaveActorHandle};
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
 use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
 
