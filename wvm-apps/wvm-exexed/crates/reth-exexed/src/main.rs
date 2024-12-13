@@ -7,7 +7,7 @@ mod exex;
 mod network_tag;
 mod util;
 
-use crate::exex::ar_process::ArActorError;
+use crate::exex::ar_actor::ArActorError;
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;
@@ -17,6 +17,10 @@ use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use reth_primitives::constants::SLOT_DURATION;
 use std::sync::Arc;
 use tracing::{error, info};
+
+use exex::ar_actor::ArweaveActorHandle;
+use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
+use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -107,11 +111,15 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 fn main() -> eyre::Result<()> {
     let _rt = &*SUPERVISOR_RT;
     let _bc = &*PRECOMPILE_WVM_BIGQUERY_CLIENT;
-    //    let ar_process = Arc::new(ArProcess::new(10));
 
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         // Initializations
-        let ar_actor_handle = Arc::new(ArweaveActorHandle::new(1024).await);
+        let arweave_actor_buffer_size = std::env::var("ARWEAVE_ACTOR_BUFFER_SIZE")
+            .unwrap_or_else(|_| "1024".to_string())
+            .parse::<usize>()
+            .unwrap_or(1024);
+
+        let ar_actor_handle = Arc::new(ArweaveActorHandle::new(arweave_actor_buffer_size).await);
 
         let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
         // Original config
@@ -159,11 +167,6 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
     let secs = duration.as_secs();
     SLOT_DURATION.as_secs() * secs
 }
-
-use exex::ar_process::{ArProcess, ArweaveActorHandle};
-use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
-use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
-
 async fn new_etl_exex_biguery_client() -> BigQueryClient {
     let config_path: String =
         std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
