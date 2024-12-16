@@ -47,8 +47,14 @@ services:
       - --discovery.v5.port=30304
       - --trusted-peers=enode://e6592ab87a01aeb6425a494629355718984ce26f5f256f2e1c90615bd0c93d0afabcf87caddc0d058123f6e47f26503c937970833186647201f2ffda759dcc74@34.107.39.173:30303
       - --bootnodes=enode://e6592ab87a01aeb6425a494629355718984ce26f5f256f2e1c90615bd0c93d0afabcf87caddc0d058123f6e47f26503c937970833186647201f2ffda759dcc74@34.107.39.173:30303
-      - -vvvv
       - --rpc.eth-proof-window=3888000
+      - --txpool.minimal-protocol-fee=500000
+      - --rpc.max-request-size=512
+      - --rpc.max-response-size=512
+      - --txpool.pending-max-size=20480
+      - --txpool.basefee-max-size=20480
+      - --txpool.queued-max-size=20480
+      - --txpool.max-tx-input-bytes=536870912
     environment:
       - BLOCKED_PC=17,18,19,20,21,22
       - CONFIG=/root/bqconfig/bq-config.json
@@ -145,7 +151,6 @@ services:
       --disable-peer-scoring
       --reconstruct-historic-states
       --genesis-backfill
-      --debug-level debug
       --disable-upnp
       --disable-enr-auto-update
       --disable-backfill-rate-limiting
