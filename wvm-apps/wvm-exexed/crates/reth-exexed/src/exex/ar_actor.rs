@@ -3,8 +3,9 @@ use crate::{network_tag::get_network_tag, new_etl_exex_biguery_client};
 use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::{repository::StateRepository, BigQueryClient};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
+use futures::{stream::FuturesUnordered, StreamExt};
 use std::fmt;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::mpsc;
 
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
@@ -16,11 +17,7 @@ use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
 
 enum ArActorMessage {
-    ProcessBlock {
-        block: SealedBlockWithSenders,
-        notification_type: String,
-        respond_to: oneshot::Sender<ArActorResponse>,
-    },
+    ProcessBlock { block: SealedBlockWithSenders, notification_type: String },
     Shutdown,
 }
 
@@ -71,6 +68,7 @@ impl fmt::Display for ArActorError {
         }
     }
 }
+
 /// Main actor struct that maintains state and processes messages
 struct ArActor {
     receiver: mpsc::Receiver<ArActorMessage>,
@@ -90,37 +88,85 @@ impl ArActor {
 
     async fn run(mut self) {
         info!(target: "wvm::exex", "ArActor started");
+        let mut in_flight = FuturesUnordered::new();
 
-        while let Some(msg) = self.receiver.recv().await {
-            match msg {
-                ArActorMessage::Shutdown => {
-                    info!(target: "wvm:exex:ArActor", "ArActor shutting down");
-                    break;
-                }
-                ArActorMessage::ProcessBlock { block, notification_type, respond_to } => {
-                    info!(target: "wvm::exex", "Starting to process block {}", block.number);
-                    let state_repo = self.state_repo.clone();
-                    let big_query_client = self.big_query_client.clone();
-                    let ar_uploader = self.ar_uploader.clone();
-                    let block_number = block.number;
-
-                    tokio::spawn(async move {
-                        let result = handle_block(
-                            block,
-                            &notification_type,
-                            state_repo,
-                            big_query_client,
-                            ar_uploader,
-                        )
-                        .await;
-
-                        if let Err(ref e) = result {
-                            error!(target: "wvm::exex", "Failed to process block {}: {:?}", block_number, e);
+        loop {
+            tokio::select! {
+                Some(msg) = self.receiver.recv() => {
+                    match msg {
+                        ArActorMessage::Shutdown => {
+                            info!(target: "wvm:exex:ArActor", "ArActor shutting down");
+                            break;
                         }
-                        let _ = respond_to.send(result);
-                    });
+                        ArActorMessage::ProcessBlock { block, notification_type } => {
+                            let state_repo = self.state_repo.clone();
+                            let big_query_client = self.big_query_client.clone();
+                            let ar_uploader = self.ar_uploader.clone();
+                            let block_number = block.number;
+
+                            in_flight.push(tokio::spawn(async move {
+                            match handle_block(
+                                block,
+                                &notification_type,
+                                state_repo,
+                                big_query_client,
+                                ar_uploader,
+                            ).await {
+                                Ok(arweave_id) => {
+                                    info!(
+                                        target: "wvm::exex",
+                                        block_number = block_number,
+                                        arweave_id = arweave_id,
+                                        "Block processed successfully"
+                                    );
+                                    Ok(block_number)
+                                }
+                                Err(ArActorError::BlockExists) => {
+                                    info!(
+                                        target: "wvm::exex",
+                                        block_number = block_number,
+                                        "Block already exists"
+                                    );
+                                    Ok(block_number)
+                                }
+                                Err(e) => {
+                                    error!(
+                                        target: "wvm::exex",
+                                        %e,
+                                        block_number = block_number,
+                                        "Failed to process block"
+                                    );
+                                    Err((block_number, e))
+                                }
+                            }
+                            }));
+                       }
+                    }
                 }
+                Some(result) = in_flight.next() => {
+                    match result {
+                        Ok(Ok(block_number)) => {
+                            info!(target: "wvm::exex", "Completed block {}", block_number);
+                        }
+                        Ok(Err((block_number, e))) => {
+                            error!(target: "wvm::exex", "Failed block {}: {:?}", block_number, e);
+                        }
+                        Err(e) => {
+                            error!(target: "wvm::exex", "Task panicked: {}", e);
+                        }
+                    }
+                }
+                else => break,
             }
+        }
+
+        let remaining = in_flight.len();
+        if remaining > 0 {
+            info!(
+                target: "wvm::exex",
+                "Shutting down with {} unfinished blocks",
+                remaining
+            );
         }
     }
 }
@@ -293,14 +339,11 @@ impl ArweaveActorHandle {
         &self,
         block: SealedBlockWithSenders,
         notification_type: String,
-    ) -> Result<String, ArActorError> {
-        let (send, recv) = oneshot::channel();
-
-        let msg = ArActorMessage::ProcessBlock { block, notification_type, respond_to: send };
-
-        self.sender.send(msg).await.map_err(|_| ArActorError::ActorUnavailable)?;
-
-        recv.await.map_err(|_| ArActorError::ResponseError)?
+    ) -> Result<(), ArActorError> {
+        self.sender
+            .send(ArActorMessage::ProcessBlock { block, notification_type })
+            .await
+            .map_err(|_| ArActorError::ActorUnavailable)
     }
 
     pub async fn shutdown(&self) -> Result<(), ArActorError> {

@@ -7,7 +7,6 @@ mod exex;
 mod network_tag;
 mod util;
 
-use crate::exex::ar_actor::ArActorError;
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;
@@ -65,36 +64,19 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                     target: "wvm::exex",
                     %err,
                     "Failed to send FinishedHeight event for block {}",
-                    committed_chain.tip().block.header.header().number
+                   block_number
                 );
                 continue;
             }
 
             // Then process the block
-            match ar_actor_handle.process_block(block, notification_type.to_string()).await {
-                Ok(arweave_id) => {
-                    info!(
-                        target: "wvm::exex",
-                        block_number = block_number,
-                        arweave_id = arweave_id,
-                        "Block processed successfully"
-                    );
-                }
-                Err(ArActorError::BlockExists) => {
-                    info!(
-                        target: "wvm::exex",
-                        block_number = block_number,
-                        "Block already exists"
-                    );
-                }
-                Err(e) => {
-                    error!(
-                        target: "wvm::exex",
-                        %e,
-                        block_number = block_number,
-                        "Failed to process block"
-                    );
-                }
+            if let Err(err) =
+                ar_actor_handle.process_block(block, notification_type.to_string()).await
+            {
+                error!(target: "wvm::exex",
+                    %err,
+                    "Failed to send block to arweave actor to process {}",
+                   block_number);
             }
         }
     }
