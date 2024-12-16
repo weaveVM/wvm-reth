@@ -1,6 +1,4 @@
-use crate::{
-    network_tag::get_network_tag, new_etl_exex_biguery_client, util::check_block_existence,
-};
+use crate::{network_tag::get_network_tag, new_etl_exex_biguery_client};
 
 use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::{repository::StateRepository, BigQueryClient};
@@ -14,7 +12,7 @@ use std::{
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
-use tracing::info;
+use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
 
 enum ArActorMessage {
@@ -100,94 +98,109 @@ impl ArActor {
                     break;
                 }
                 ArActorMessage::ProcessBlock { block, notification_type, respond_to } => {
-                    let result = self.handle_block(block, &notification_type).await;
-                    let _ = respond_to.send(result);
+                    info!(target: "wvm::exex", "Starting to process block {}", block.number);
+                    let state_repo = self.state_repo.clone();
+                    let big_query_client = self.big_query_client.clone();
+                    let ar_uploader = self.ar_uploader.clone();
+                    let block_number = block.number;
+
+                    tokio::spawn(async move {
+                        let result = handle_block(
+                            block,
+                            &notification_type,
+                            state_repo,
+                            big_query_client,
+                            ar_uploader,
+                        )
+                        .await;
+
+                        if let Err(ref e) = result {
+                            error!(target: "wvm::exex", "Failed to process block {}: {:?}", block_number, e);
+                        }
+                        let _ = respond_to.send(result);
+                    });
                 }
             }
         }
     }
+}
 
-    async fn handle_block(
-        &self,
-        sealed_block: SealedBlockWithSenders,
-        notification_type: &str,
-    ) -> ArActorResponse {
-        let block_hash_str = sealed_block.hash().to_string();
-        if check_block_existence(block_hash_str.as_str(), false).await {
-            return Err(ArActorError::BlockExists);
-        }
+// Keep in same file but separate from ArActor
+async fn handle_block(
+    block: SealedBlockWithSenders,
+    notification_type: &str,
+    state_repo: Arc<StateRepository>,
+    big_query_client: Arc<BigQueryClient>,
+    ar_uploader: UploaderProvider,
+) -> ArActorResponse {
+    let block_hash_str = block.hash().to_string();
+    let block_number = block.number();
 
-        // 1. Serialize block
-        let borsh_brotli = self.serialize_block(&sealed_block)?;
+    // 1. Serialize block
+    info!(target: "wvm::exex", "Block {} processing: starting serialization", block_number);
+    let borsh_brotli = serialize_block(&block)?;
+    // 2. Upload to Arweave
+    info!(target: "wvm::exex", "Block {} processing: starting Arweave upload", block_number);
+    let arweave_id = upload_to_arweave(
+        &ar_uploader,
+        &borsh_brotli,
+        notification_type,
+        block.number,
+        &block_hash_str,
+    )
+    .await?;
 
-        // 2. Upload to Arweave
-        let arweave_id = self
-            .upload_to_arweave(
-                &borsh_brotli,
-                notification_type,
-                sealed_block.number,
-                block_hash_str.as_str(),
-            )
-            .await?;
+    // 3. Update BigQuery
+    info!(target: "wvm::exex", "Block {} processing: starting BigQuery update", block_number);
+    update_bigquery(&state_repo, &big_query_client, &block, block.number, &arweave_id).await?;
 
-        // 3. Update BigQuery
-        self.update_bigquery(&sealed_block, sealed_block.number, &arweave_id).await?;
+    info!(target: "wvm::exex", "Block {} processing: completed", block_number);
+    Ok(arweave_id)
+}
 
-        Ok(arweave_id)
-    }
+fn serialize_block(sealed_block: &SealedBlockWithSenders) -> Result<Vec<u8>, ArActorError> {
+    let data_settler = DefaultWvmDataSettler;
+    let borsh_sealed_block = BorshSealedBlockWithSenders(sealed_block.clone());
 
-    fn serialize_block(
-        &self,
-        sealed_block: &SealedBlockWithSenders,
-    ) -> Result<Vec<u8>, ArActorError> {
-        let data_settler = DefaultWvmDataSettler;
-        let borsh_sealed_block = BorshSealedBlockWithSenders(sealed_block.clone());
+    data_settler.process_block(&borsh_sealed_block).map_err(|e| ArActorError::SerializationFailed {
+        block_number: sealed_block.number,
+        error: e.to_string(),
+    })
+}
 
-        data_settler.process_block(&borsh_sealed_block).map_err(|e| {
-            ArActorError::SerializationFailed {
-                block_number: sealed_block.number,
-                error: e.to_string(),
-            }
-        })
-    }
+async fn upload_to_arweave(
+    ar_uploader: &UploaderProvider,
+    data: &[u8],
+    notification_type: &str,
+    block_number: BlockNumber,
+    block_hash: &str,
+) -> Result<String, ArActorError> {
+    ArweaveRequest::new()
+        .set_tag("Content-Type", "application/octet-stream")
+        .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
+        .set_tag("Block-Number", block_number.to_string().as_str())
+        .set_tag("Block-Hash", block_hash)
+        .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
+        .set_tag("Network", get_network_tag().as_str())
+        .set_tag("WeaveVM:Internal-Chain", notification_type)
+        .set_data(data.to_vec())
+        .send_with_provider(ar_uploader)
+        .await
+        .map_err(|e| ArActorError::ArweaveUploadFailed { block_number, error: e.to_string() })
+}
 
-    async fn upload_to_arweave(
-        &self,
-        data: &[u8],
-        notification_type: &str,
-        block_number: BlockNumber,
-        block_hash: &str,
-    ) -> Result<String, ArActorError> {
-        ArweaveRequest::new()
-            .set_tag("Content-Type", "application/octet-stream")
-            .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
-            .set_tag("Block-Number", block_number.to_string().as_str())
-            .set_tag("Block-Hash", block_hash)
-            .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
-            .set_tag("Network", get_network_tag().as_str())
-            .set_tag("WeaveVM:Internal-Chain", notification_type)
-            .set_data(data.to_vec())
-            .send_with_provider(&self.ar_uploader)
-            .await
-            .map_err(|e| ArActorError::ArweaveUploadFailed { block_number, error: e.to_string() })
-    }
+async fn update_bigquery(
+    state_repo: &Arc<StateRepository>,
+    big_query_client: &Arc<BigQueryClient>,
+    block: &SealedBlockWithSenders,
+    block_number: BlockNumber,
+    arweave_id: &str,
+) -> Result<(), ArActorError> {
+    // Update tags
+    update_bigquery_tags(big_query_client, block).await?;
 
-    async fn update_bigquery(
-        &self,
-        block: &SealedBlockWithSenders,
-        block_number: BlockNumber,
-        arweave_id: &str,
-    ) -> Result<(), ArActorError> {
-        // Update tags
-        self.update_bigquery_tags(block).await?;
-
-        // Then save block
-        exex_wvm_bigquery::save_block(
-            self.state_repo.clone(),
-            block,
-            block_number,
-            arweave_id.to_string(),
-        )
+    // Then save block
+    exex_wvm_bigquery::save_block(state_repo.clone(), block, block_number, arweave_id.to_string())
         .await
         .map_err(|e| ArActorError::BigQueryError {
             block_number,
@@ -195,77 +208,65 @@ impl ArActor {
             error: e.to_string(),
         })?;
 
-        Ok(())
+    Ok(())
+}
+
+async fn update_bigquery_tags(
+    big_query_client: &Arc<BigQueryClient>,
+    sealed_block: &SealedBlockWithSenders,
+) -> Result<(), ArActorError> {
+    let hashes: Vec<String> =
+        sealed_block.body.transactions.iter().map(|e| e.hash.to_string()).collect();
+
+    if hashes.is_empty() {
+        return Ok(());
     }
 
-    async fn update_bigquery_tags(
-        &self,
-        sealed_block: &SealedBlockWithSenders,
-    ) -> Result<(), ArActorError> {
-        let hashes: Vec<String> =
-            sealed_block.body.transactions.iter().map(|e| e.hash.to_string()).collect();
+    let query = generate_tags_query(big_query_client, hashes, sealed_block.number)?;
 
-        if hashes.is_empty() {
-            return Ok(());
-        }
+    big_query_client.bq_query(query.clone()).await.map_err(|e| ArActorError::BigQueryError {
+        block_number: sealed_block.number,
+        operation: "tags",
+        error: e.to_string(),
+    })?;
 
-        // Generate BigQuery update query
-        let query = self.generate_tags_query(hashes, sealed_block.number)?;
+    info!(
+        target: "wvm::exex",
+        "Tags at block {} updated successfully",
+        sealed_block.number
+    );
 
-        self.big_query_client.bq_query(query.clone()).await.map_err(|e| {
-            ArActorError::BigQueryError {
-                block_number: sealed_block.number,
-                operation: "tags",
-                error: e.to_string(),
-            }
-        })?;
+    Ok(())
+}
 
-        info!(
-            target: "wvm::exex",
-            "Tags at block {} updated successfully",
-            sealed_block.number
-        );
+fn generate_tags_query(
+    big_query_client: &Arc<BigQueryClient>,
+    hashes: Vec<String>,
+    block_number: BlockNumber,
+) -> Result<String, ArActorError> {
+    let confirmed_tags_tbl_name = format!(
+        "`{}.{}.{}`",
+        big_query_client.project_id, big_query_client.dataset_id, "confirmed_tags"
+    );
+    let tags_tbl_name =
+        format!("`{}.{}.{}`", big_query_client.project_id, big_query_client.dataset_id, "tags");
 
-        Ok(())
-    }
+    let in_clause =
+        hashes.into_iter().map(|hash| format!("\"{}\"", hash)).collect::<Vec<String>>().join(", ");
 
-    fn generate_tags_query(
-        &self,
-        hashes: Vec<String>,
-        block_number: BlockNumber,
-    ) -> Result<String, ArActorError> {
-        let confirmed_tags_tbl_name = format!(
-            "`{}.{}.{}`",
-            self.big_query_client.project_id, self.big_query_client.dataset_id, "confirmed_tags"
-        );
-        let tags_tbl_name = format!(
-            "`{}.{}.{}`",
-            self.big_query_client.project_id, self.big_query_client.dataset_id, "tags"
-        );
+    let ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| ArActorError::BigQueryError {
+            block_number,
+            operation: "tags",
+            error: format!("Time error: {}", e),
+        })?
+        .as_millis();
 
-        // Generate the WHERE clause
-        let in_clause = hashes
-            .into_iter()
-            .map(|hash| format!("\"{}\"", hash))
-            .collect::<Vec<String>>()
-            .join(", ");
-
-        let ms = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_err(|e| ArActorError::BigQueryError {
-                block_number,
-                operation: "tags",
-                error: format!("Time error: {}", e),
-            })?
-            .as_millis();
-
-        // Generate the final query
-        Ok(
-            format!(
-                "INSERT INTO {} (tx_hash, tags, block_id, `timestamp`) SELECT t.hash, t.tags, {}, {} FROM {} t WHERE t.hash IN({}) AND t.created_at <= {}",
-                confirmed_tags_tbl_name, block_number, ms, tags_tbl_name, in_clause, ms
-            ))
-    }
+    Ok(format!(
+        "INSERT INTO {} (tx_hash, tags, block_id, `timestamp`) SELECT t.hash, t.tags, {}, {} FROM {} t WHERE t.hash IN({}) AND t.created_at <= {}",
+        confirmed_tags_tbl_name, block_number, ms, tags_tbl_name, in_clause, ms
+    ))
 }
 
 // Actor Handle
