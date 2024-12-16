@@ -56,8 +56,10 @@ services:
       - --txpool.queued-max-size=20480
       - --txpool.max-tx-input-bytes=536870912
     environment:
+      - WVM_DEFAULT_MAX_TX_INPUT_BYTES=536870912
       - BLOCKED_PC=17,18,19,20,21,22
       - CONFIG=/root/bqconfig/bq-config.json
+      - RUN_EXEX=false
 
   # default prometheus + grafana setup
   prometheus:
