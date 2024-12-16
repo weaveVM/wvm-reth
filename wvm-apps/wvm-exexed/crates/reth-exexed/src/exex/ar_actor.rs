@@ -134,7 +134,7 @@ async fn handle_block(
     ar_uploader: UploaderProvider,
 ) -> ArActorResponse {
     let block_hash_str = block.hash().to_string();
-    let block_number = block.number();
+    let block_number = block.number;
 
     // 1. Serialize block
     info!(target: "wvm::exex", "Block {} processing: starting serialization", block_number);
@@ -145,7 +145,7 @@ async fn handle_block(
         &ar_uploader,
         &borsh_brotli,
         notification_type,
-        block.number,
+        block_number,
         &block_hash_str,
     )
     .await?;
