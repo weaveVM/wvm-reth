@@ -4211,7 +4211,7 @@ version = "1.1.1"
 [[package]]
 name = "exex-wvm-bigquery"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?e?branch=main#b5108ed904a84e04e1099c68d89327b4cbdab1e1"
+source = "git+https://github.com/weaveVM/exex-templates?e?branch=main#e591a8ebf6087867278cc89635cc04a885364236"
 dependencies = [
  "alloy-primitives",
  "chrono",
@@ -4228,7 +4228,7 @@ dependencies = [
 [[package]]
 name = "exex-wvm-da"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#b5108ed904a84e04e1099c68d89327b4cbdab1e1"
+source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#e591a8ebf6087867278cc89635cc04a885364236"
 dependencies = [
  "async-trait",
  "borsh 1.5.1",
@@ -8284,6 +8284,7 @@ dependencies = [
  "ureq",
  "wvm-borsh",
  "wvm-static",
+ "wvm-tx",
 ]
 
 [[package]]
@@ -10395,6 +10396,7 @@ dependencies = [
  "tracing",
  "wvm-borsh",
  "wvm-static",
+ "wvm-tx",
 ]
 
 [[package]]
@@ -15667,7 +15669,10 @@ dependencies = [
  "alloy-eips",
  "alloy-primitives",
  "alloy-serde",
+ "derive_more 0.99.18",
+ "enum-as-inner",
  "op-alloy-consensus",
+ "paste",
  "reth-primitives",
  "serde",
  "serde_json",

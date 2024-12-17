@@ -14,6 +14,8 @@ use tokio::{sync::mpsc::Sender, task::JoinHandle};
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
 use wvm_static::SUPERVISOR_RT;
+use wvm_tx::wvm::v1::V1WvmSealedBlockWithSenders;
+use wvm_tx::wvm::WvmSealedBlockWithSenders;
 
 pub struct ArProcess {
     buffer_size: usize,
@@ -163,7 +165,9 @@ impl ArProcess {
         let data_settler = DefaultWvmDataSettler;
         let block_number = msg.block.header.header().number;
 
-        let borsh_sealed_block = BorshSealedBlockWithSenders(msg);
+        let data = WvmSealedBlockWithSenders::V1(V1WvmSealedBlockWithSenders::from(msg));
+
+        let borsh_sealed_block = BorshSealedBlockWithSenders(data);
         let brotli_borsh = match data_settler.process_block(&borsh_sealed_block) {
             Ok(data) => data,
             Err(err) => {

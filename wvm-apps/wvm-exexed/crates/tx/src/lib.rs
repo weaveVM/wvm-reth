@@ -1,9 +1,11 @@
+pub mod wvm;
+
 use alloy_eips::{eip2930::AccessList, eip7702::SignedAuthorization};
 use alloy_primitives::{Address, Bytes, ChainId, TxKind, B256, U256};
 use reth_primitives::Transaction;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TxLegacy {
     #[serde(default, with = "alloy_serde::quantity::opt", skip_serializing_if = "Option::is_none")]
@@ -23,7 +25,7 @@ pub struct TxLegacy {
     pub input: Bytes,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TxEip7702 {
     #[serde(with = "alloy_serde::quantity")]
@@ -50,7 +52,7 @@ pub struct TxEip7702 {
     pub input: Bytes,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TxEip4844 {
     #[serde(rename = "chainId", alias = "chain_id")]
@@ -85,7 +87,7 @@ pub struct TxEip4844 {
     pub input: Bytes,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TxEip2930 {
     #[serde(with = "alloy_serde::quantity")]
@@ -107,7 +109,7 @@ pub struct TxEip2930 {
     pub input: Bytes,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TxEip1559 {
     #[serde(with = "alloy_serde::quantity")]
@@ -132,7 +134,7 @@ pub struct TxEip1559 {
     pub input: Bytes,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TxDeposit {
     #[serde(rename = "sourceHash", alias = "source_hash")]
@@ -155,7 +157,7 @@ pub struct TxDeposit {
     pub input: Bytes,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum WvmTransaction {
     Legacy(TxLegacy),
     Eip2930(TxEip2930),
@@ -226,6 +228,79 @@ impl Into<Transaction> for WvmTransaction {
             }),
             #[cfg(feature = "optimism")]
             WvmTransaction::Deposit(data) => Transaction::Deposit(op_alloy_consensus::TxDeposit {
+                source_hash: data.source_hash,
+                gas_limit: data.gas_limit,
+                to: data.to,
+                mint: data.mint,
+                value: data.value,
+                input: data.input,
+                from: data.from,
+                is_system_transaction: data.is_system_transaction,
+            }),
+        }
+    }
+}
+
+impl From<Transaction> for WvmTransaction {
+    fn from(value: Transaction) -> Self {
+        match value {
+            Transaction::Legacy(data) => WvmTransaction::Legacy(TxLegacy {
+                chain_id: data.chain_id,
+                nonce: data.nonce,
+                gas_price: data.gas_price,
+                gas_limit: data.gas_limit,
+                to: data.to,
+                value: data.value,
+                input: data.input,
+            }),
+            Transaction::Eip2930(data) => WvmTransaction::Eip2930(TxEip2930 {
+                chain_id: data.chain_id,
+                nonce: data.nonce,
+                gas_price: data.gas_price,
+                gas_limit: data.gas_limit,
+                to: data.to,
+                value: data.value,
+                access_list: data.access_list,
+                input: data.input,
+            }),
+            Transaction::Eip1559(data) => WvmTransaction::Eip1559(TxEip1559 {
+                chain_id: data.chain_id,
+                nonce: data.nonce,
+                gas_limit: data.gas_limit,
+                max_fee_per_gas: data.max_fee_per_gas,
+                max_priority_fee_per_gas: data.max_priority_fee_per_gas,
+                to: data.to,
+                value: data.value,
+                access_list: data.access_list,
+                input: data.input,
+            }),
+            Transaction::Eip4844(data) => WvmTransaction::Eip4844(TxEip4844 {
+                chain_id: data.chain_id,
+                nonce: data.nonce,
+                gas_limit: data.gas_limit,
+                max_fee_per_gas: data.max_fee_per_gas,
+                max_priority_fee_per_gas: data.max_priority_fee_per_gas,
+                to: data.to,
+                value: data.value,
+                access_list: data.access_list,
+                blob_versioned_hashes: data.blob_versioned_hashes,
+                max_fee_per_blob_gas: data.max_fee_per_blob_gas,
+                input: data.input,
+            }),
+            Transaction::Eip7702(data) => WvmTransaction::Eip7702(TxEip7702 {
+                chain_id: data.chain_id,
+                nonce: data.nonce,
+                gas_limit: data.gas_limit,
+                max_fee_per_gas: data.max_fee_per_gas,
+                max_priority_fee_per_gas: data.max_priority_fee_per_gas,
+                to: data.to,
+                value: data.value,
+                access_list: data.access_list,
+                authorization_list: data.authorization_list,
+                input: data.input,
+            }),
+            #[cfg(feature = "optimism")]
+            Transaction::Deposit(data) => WvmTransaction::Deposit(TxDeposit {
                 source_hash: data.source_hash,
                 gas_limit: data.gas_limit,
                 to: data.to,

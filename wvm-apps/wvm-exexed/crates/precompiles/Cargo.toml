@@ -27,6 +27,7 @@ reqwest-graphql = "1.0.0"
 rbrotli = { path = "../brotli" }
 wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
 wvm-static = { path = "../../../../crates/wvm-static" }
+wvm-tx = { path = "../tx" }
 borsh.workspace = true
 alloy-primitives.workspace = true
 ureq = { version = "2.10.1", features = ["json"] }
