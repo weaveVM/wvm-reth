@@ -16,7 +16,7 @@ pub struct TxLegacy {
     #[serde(rename = "gasPrice", alias = "gas_price")]
     #[serde(with = "alloy_serde::quantity")]
     pub gas_price: u128,
-    #[serde(rename = "gasLimit", alias = "gas")]
+    #[serde(rename = "gasLimit", alias = "gas", alias = "gas_limit")]
     #[serde(with = "alloy_serde::quantity")]
     pub gas_limit: u64,
     #[serde(default, skip_serializing_if = "TxKind::is_create")]
