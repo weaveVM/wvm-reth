@@ -5,39 +5,42 @@ use precompiles::{
 
 pub const AR_GRAPHQL_GATEWAY: &str = "https://arweave.mainnet.irys.xyz";
 
+// TODO: Fix
 pub(crate) fn check_block_existence(block_hash: &str, irys: bool) -> bool {
-    let mut query = build_transaction_query(
-        None,
-        Some(&[
-            ("Block-Hash".to_string(), vec![block_hash.to_string()]),
-            ("Protocol".to_string(), vec!["WeaveVM-ExEx".to_string()]),
-        ]),
-        Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
-        Some("DESC".to_string()),
-        false,
-    );
+    // let mut query = build_transaction_query(
+    //     None,
+    //     Some(&[
+    //         ("Block-Hash".to_string(), vec![block_hash.to_string()]),
+    //         ("Protocol".to_string(), vec!["WeaveVM-ExEx".to_string()]),
+    //     ]),
+    //     Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
+    //     Some("DESC".to_string()),
+    //     false,
+    // );
+    //
+    // let gateway = {
+    //     if !irys {
+    //         query = query.replace("order:", "sort:");
+    //         query = query.replace("DESC", "HEIGHT_DESC");
+    //         String::from("https://arweave.net")
+    //     } else {
+    //         String::from(AR_GRAPHQL_GATEWAY)
+    //     }
+    // };
+    //
+    // let data = send_graphql(gateway.as_str(), query.as_str());
+    // if let Ok(data) = data {
+    //     let resp = data.data.transactions.edges.get(0);
+    //     resp.is_some()
+    // } else {
+    //     if !irys {
+    //         check_block_existence(block_hash, true)
+    //     } else {
+    //         false
+    //     }
+    // }
 
-    let gateway = {
-        if !irys {
-            query = query.replace("order:", "sort:");
-            query = query.replace("DESC", "HEIGHT_DESC");
-            String::from("https://arweave.net")
-        } else {
-            String::from(AR_GRAPHQL_GATEWAY)
-        }
-    };
-
-    let data = send_graphql(gateway.as_str(), query.as_str());
-    if let Ok(data) = data {
-        let resp = data.data.transactions.edges.get(0);
-        resp.is_some()
-    } else {
-        if !irys {
-            check_block_existence(block_hash, true)
-        } else {
-            false
-        }
-    }
+    false
 }
 
 // TODO: Uncomment test when gateways issues go away.
