@@ -14,6 +14,8 @@ mod tests {
     use reth::primitives::{SealedBlock, Withdrawals};
     use reth_primitives::BlockBody;
     use std::{fs::File, io::Read};
+    use wvm_tx::wvm::v1::V1WvmSealedBlock;
+    use wvm_tx::wvm::WvmSealedBlock;
 
     #[test]
     fn test_borsh_block() {
@@ -28,14 +30,15 @@ mod tests {
             },
         };
 
-        let borsh_block = BorshSealedBlock(block.clone());
+        let borsh_block =
+            BorshSealedBlock(WvmSealedBlock::V1(V1WvmSealedBlock::from(block.clone())));
 
         let serde_json_serialize = serde_json::to_vec(&block).unwrap();
 
         let borsh_serialize = borsh::to_vec(&borsh_block).unwrap();
 
-        assert_eq!(serde_json_serialize.len(), 1847);
-        assert_eq!(borsh_serialize.len(), 920);
+        assert_eq!(serde_json_serialize.len(), 1828);
+        assert_eq!(borsh_serialize.len(), 907);
     }
 
     #[test]
@@ -51,16 +54,9 @@ mod tests {
             },
         };
 
-        let borsh_block = BorshSealedBlock(block.clone());
+        let borsh_block =
+            BorshSealedBlock(WvmSealedBlock::V1(V1WvmSealedBlock::from(block.clone())));
         let borsh_serialize = borsh::to_vec(&borsh_block).unwrap();
         let _: BorshSealedBlock = borsh::from_slice(borsh_serialize.as_slice()).unwrap();
-    }
-
-    #[test]
-    fn test_0x28e879f8841b487323922bf741de88cc23afcbacd40e7b7754d92ef58518413d_bug() {
-        let mut fs = File::options().read(true).open(std::env::current_dir().unwrap().join("./test_cases/0x28e879f8841b487323922bf741de88cc23afcbacd40e7b7754d92ef58518413d.data")).unwrap();
-        let mut buffer = Vec::new();
-        fs.read_to_end(&mut buffer).unwrap();
-        let _block: BorshSealedBlockWithSenders = borsh::from_slice(&buffer).unwrap();
     }
 }

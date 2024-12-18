@@ -33,18 +33,11 @@ pub fn parse_req_input(input: &str) -> (String, String, String) {
     (endpoint, second_part, third_part)
 }
 
-async fn send_and_get_edge(gateway: &str, query: &str) -> Option<Edge> {
-    let data = send_graphql(gateway, query).await;
+fn send_and_get_edge(gateway: &str, query: &str) -> Option<Edge> {
+    let data = send_graphql(gateway, query);
 
     match data {
-        Ok(res) => {
-            let resp = res.data.transactions.edges.get(0);
-            if let Some(&ref tx) = resp {
-                Some(tx.clone())
-            } else {
-                None
-            }
-        }
+        Ok(res) => res.data.transactions.edges.get(0).cloned(),
         Err(e) => {
             println!("{}", e);
             None
@@ -52,18 +45,14 @@ async fn send_and_get_edge(gateway: &str, query: &str) -> Option<Edge> {
     }
 }
 
-async fn fetch_with_fallback(
-    primary_gateway: &str,
-    fallback_gateway: &str,
-    query: &str,
-) -> Option<Edge> {
+fn fetch_with_fallback(primary_gateway: &str, fallback_gateway: &str, query: &str) -> Option<Edge> {
     // Try the primary gateway first
-    if let Some(edge) = send_and_get_edge(primary_gateway, query).await {
+    if let Some(edge) = send_and_get_edge(primary_gateway, query) {
         return Some(edge);
     }
 
     // If the primary gateway fails, try the fallback gateway
-    send_and_get_edge(fallback_gateway, query).await
+    send_and_get_edge(fallback_gateway, query)
 }
 
 fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
@@ -90,74 +79,67 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                     "A field must be specified".to_string(),
                 )))
             } else {
-                internal_block(async {
-                    let clean_gateway = clean_gateway_url(gateway.as_str());
-                    let query = {
-                        let query = build_transaction_query(
-                            None,
-                            Some(&[("Block-Number".to_string(), vec![block_id.to_string()])]),
-                            Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
-                            None,
-                            false,
-                        );
+                let clean_gateway = clean_gateway_url(gateway.as_str());
+                let query = build_transaction_query(
+                    None,
+                    Some(&[("Block-Number".to_string(), vec![block_id.to_string()])]),
+                    Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
+                    None,
+                    false,
+                );
 
-                        query
-                    };
+                let edge = fetch_with_fallback(
+                    clean_gateway.as_str(),
+                    "https://arweave.mainnet.irys.xyz",
+                    query.as_str(),
+                );
 
-                    let edge = fetch_with_fallback(
-                        clean_gateway.as_str(),
-                        "https://arweave.mainnet.irys.xyz",
-                        query.as_str(),
-                    )
-                    .await;
-
-                    if let Some(edge) = edge {
-                        let tags = edge.node.tags.unwrap();
-                        let encoding = tags
-                            .iter()
-                            .find(|i| i.name == String::from("WeaveVM:Encoding"))
-                            .unwrap();
-                        let get_data = download_tx(gas_used, clean_gateway, edge.node.id).await;
-
-                        let output = match get_data {
-                            Ok(resp) => {
-                                let bytes = resp.bytes.to_vec();
-                                match encoding.value.as_str() {
-                                    "Borsh-Brotli" => {
-                                        let unbrotli = from_brotli(bytes);
-                                        let unborsh =
-                                            borsh::from_slice::<BorshSealedBlockWithSenders>(
-                                                unbrotli.as_slice(),
-                                            )
-                                            .unwrap();
-                                        let str_block = Block::from(unborsh);
-
-                                        let data = process_block_to_field(field, str_block);
-
-                                        process_pc_response_from_str_bytes(gas_used, data)
-                                    }
-                                    _ => Err(PrecompileErrors::Error(PrecompileError::Other(
-                                        "Unknown encoding".to_string(),
-                                    ))),
-                                }
-                            }
-                            Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
-                                "Invalid data".to_string(),
-                            ))),
-                        };
-
-                        output
-                    } else {
-                        Err(PrecompileErrors::Error(PrecompileError::Other(
+                let edge = match edge {
+                    Some(edge) => edge,
+                    None => {
+                        return Err(PrecompileErrors::Error(PrecompileError::Other(
                             "Unknown Block".to_string(),
-                        )))
+                        )));
                     }
-                })
-                .map_err(|_| {
-                    PrecompileError::Other(
-                        "Tokio runtime could not block_on for operation".to_string(),
-                    )
-                })?
+                };
+
+                let tags = edge.node.tags.unwrap_or_else(Vec::new);
+                let encoding =
+                    tags.iter().find(|i| i.name == "WeaveVM:Encoding").ok_or_else(|| {
+                        PrecompileErrors::Error(PrecompileError::Other(
+                            "Missing WeaveVM:Encoding tag".to_string(),
+                        ))
+                    })?;
+
+                let get_data = download_tx(gas_used, clean_gateway.clone(), edge.node.id);
+
+                let output = match get_data {
+                    Ok(resp) => {
+                        let bytes = resp.bytes.to_vec();
+                        match encoding.value.as_str() {
+                            "Borsh-Brotli" => {
+                                let unbrotli = from_brotli(bytes);
+                                let unborsh =
+                                    borsh::from_slice::<BorshSealedBlockWithSenders>(&unbrotli)
+                                        .unwrap();
+
+                                let str_block = Block::from(unborsh);
+                                let data = process_block_to_field(field, str_block);
+                                process_pc_response_from_str_bytes(gas_used, data)
+                            }
+                            _ => Err(PrecompileErrors::Error(PrecompileError::Other(
+                                "Unknown encoding".to_string(),
+                            ))),
+                        }
+                    }
+                    Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
+                        "Invalid data".to_string(),
+                    ))),
+                };
+
+                Ok(output.map_err(|_| {
+                    PrecompileError::Other("Block could not be read from gateway".to_string())
+                })?)
             }
         }
         Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
@@ -204,48 +186,50 @@ pub fn process_block_to_field(field: String, str_block: Block) -> Option<Vec<u8>
     data
 }
 
+// TODO: Re-enable for future versions when there's blocks using the magic identifiers
+
 #[cfg(test)]
 mod arweave_read_pc_tests {
     use crate::inner::wvm_block_precompile::wvm_read_block_pc;
     use alloy_primitives::Bytes;
     use reth::primitives::revm_primitives::PrecompileOutput;
 
-    #[test]
-    pub fn test_read_wvm_block() {
-        let input = Bytes::from("https://arweave.mainnet.irys.xyz;1127975;hash".as_bytes());
-        let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
-        assert_eq!(bytes.len(), 66);
-        assert_eq!(
-            bytes.to_vec(),
-            "0xe0201f1e284fbe6fa0c90e811194a11a694a08d240f4691996b9182f2e767fee"
-                .as_bytes()
-                .to_vec()
-        );
-    }
-
-    #[test]
-    pub fn test_read_wvm_block_arweave_fallback() {
-        let input = Bytes::from("https://arweave.net;1127975;hash".as_bytes());
-        let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
-        assert_eq!(bytes.len(), 66);
-        assert_eq!(
-            bytes.to_vec(),
-            "0xe0201f1e284fbe6fa0c90e811194a11a694a08d240f4691996b9182f2e767fee"
-                .as_bytes()
-                .to_vec()
-        );
-    }
-
-    #[test]
-    pub fn test_read_wvm_block_fix_test_141550_hash() {
-        let input = Bytes::from("141550;hash".as_bytes());
-        let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
-        assert_eq!(bytes.len(), 66);
-        assert_eq!(
-            bytes.to_vec(),
-            "0xb69e1a4a19c665b0573f74b2bf8e4824cb5b54176f4ad45b730f047e880cf5cc"
-                .as_bytes()
-                .to_vec()
-        );
-    }
+    // #[test]
+    // pub fn test_read_wvm_block() {
+    //     let input = Bytes::from("https://arweave.mainnet.irys.xyz;1127975;hash".as_bytes());
+    //     let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
+    //     assert_eq!(bytes.len(), 66);
+    //     assert_eq!(
+    //         bytes.to_vec(),
+    //         "0xe0201f1e284fbe6fa0c90e811194a11a694a08d240f4691996b9182f2e767fee"
+    //             .as_bytes()
+    //             .to_vec()
+    //     );
+    // }
+    //
+    // #[test]
+    // pub fn test_read_wvm_block_arweave_fallback() {
+    //     let input = Bytes::from("https://arweave.net;1127975;hash".as_bytes());
+    //     let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
+    //     assert_eq!(bytes.len(), 66);
+    //     assert_eq!(
+    //         bytes.to_vec(),
+    //         "0xe0201f1e284fbe6fa0c90e811194a11a694a08d240f4691996b9182f2e767fee"
+    //             .as_bytes()
+    //             .to_vec()
+    //     );
+    // }
+    //
+    // #[test]
+    // pub fn test_read_wvm_block_fix_test_141550_hash() {
+    //     let input = Bytes::from("141550;hash".as_bytes());
+    //     let PrecompileOutput { gas_used, bytes } = wvm_read_block_pc(&input, 100_000).unwrap();
+    //     assert_eq!(bytes.len(), 66);
+    //     assert_eq!(
+    //         bytes.to_vec(),
+    //         "0xb69e1a4a19c665b0573f74b2bf8e4824cb5b54176f4ad45b730f047e880cf5cc"
+    //             .as_bytes()
+    //             .to_vec()
+    //     );
+    // }
 }

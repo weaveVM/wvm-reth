@@ -2,6 +2,7 @@ use reth::primitives::SealedBlockWithSenders;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use wvm_borsh::block::BorshSealedBlockWithSenders;
+use wvm_tx::wvm::WvmSealedBlockWithSenders;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -125,7 +126,12 @@ pub fn from_sealed_block_senders_value(sealed_block: Value) -> Block {
 impl From<BorshSealedBlockWithSenders> for Block {
     fn from(value: BorshSealedBlockWithSenders) -> Self {
         let sealed_block = value.0;
-        from_sealed_block_senders(sealed_block)
+        match sealed_block {
+            WvmSealedBlockWithSenders::V1(data) => {
+                from_sealed_block_senders(data.into())
+            }
+        }
+
     }
 }
 
