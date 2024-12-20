@@ -5,7 +5,7 @@ use exex_wvm_bigquery::{repository::StateRepository, BigQueryClient};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use futures::{stream::FuturesUnordered, StreamExt};
 use std::fmt;
-use tokio::sync::mpsc;
+use tokio::sync::{broadcast, mpsc};
 
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
@@ -16,6 +16,7 @@ use std::{
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
 
+#[derive(Clone)] // Add this
 enum ArActorMessage {
     ProcessBlock { block: SealedBlockWithSenders, notification_type: String },
     Shutdown,
@@ -75,6 +76,7 @@ struct ArActor {
     state_repo: Arc<StateRepository>,
     big_query_client: Arc<BigQueryClient>,
     ar_uploader: UploaderProvider,
+    worker_id: usize,
 }
 
 impl ArActor {
@@ -82,12 +84,24 @@ impl ArActor {
         receiver: mpsc::Receiver<ArActorMessage>,
         state_repo: Arc<StateRepository>,
         big_query_client: Arc<BigQueryClient>,
+        worker_id: usize,
     ) -> Self {
-        Self { receiver, state_repo, big_query_client, ar_uploader: UploaderProvider::new(None) }
+        Self {
+            receiver,
+            state_repo,
+            big_query_client,
+            ar_uploader: UploaderProvider::new(None),
+            worker_id,
+        }
     }
 
     async fn run(mut self) {
-        info!(target: "wvm::exex", "ArActor started");
+        info!(
+            target: "wvm::exex",
+            worker_id = self.worker_id,
+            "ArActor worker started"
+        );
+
         let mut in_flight = FuturesUnordered::new();
 
         loop {
@@ -95,7 +109,11 @@ impl ArActor {
                 Some(msg) = self.receiver.recv() => {
                     match msg {
                         ArActorMessage::Shutdown => {
-                            info!(target: "wvm:exex:ArActor", "ArActor shutting down");
+                            info!(
+                                target: "wvm::exex",
+                                worker_id = self.worker_id,
+                                "ArActor worker shutting down"
+                            );
                             break;
                         }
                         ArActorMessage::ProcessBlock { block, notification_type } => {
@@ -103,56 +121,84 @@ impl ArActor {
                             let big_query_client = self.big_query_client.clone();
                             let ar_uploader = self.ar_uploader.clone();
                             let block_number = block.number;
+                            let worker_id = self.worker_id;
+
+                            info!(
+                                target: "wvm::exex",
+                                worker_id = self.worker_id,
+                                block_number,
+                                in_flight_count = in_flight.len(),
+                                "Starting block processing"
+                            );
 
                             in_flight.push(tokio::spawn(async move {
-                            match handle_block(
-                                block,
-                                &notification_type,
-                                state_repo,
-                                big_query_client,
-                                ar_uploader,
-                            ).await {
-                                Ok(arweave_id) => {
-                                    info!(
-                                        target: "wvm::exex",
-                                        block_number = block_number,
-                                        arweave_id = arweave_id,
-                                        "Block processed successfully"
-                                    );
-                                    Ok(block_number)
+                                match handle_block(
+                                    block,
+                                    &notification_type,
+                                    state_repo,
+                                    big_query_client,
+                                    ar_uploader,
+                                ).await {
+                                    Ok(arweave_id) => {
+                                        info!(
+                                            target: "wvm::exex",
+                                            worker_id,
+                                            block_number,
+                                            arweave_id,
+                                            "Block processed successfully"
+                                        );
+                                        Ok(block_number)
+                                    }
+                                    Err(ArActorError::BlockExists) => {
+                                        info!(
+                                            target: "wvm::exex",
+                                            worker_id,
+                                            block_number,
+                                            "Block already exists"
+                                        );
+                                        Ok(block_number)
+                                    }
+                                    Err(e) => {
+                                        error!(
+                                            target: "wvm::exex",
+                                            worker_id,
+                                            %e,
+                                            block_number,
+                                            "Failed to process block"
+                                        );
+                                        Err((block_number, e))
+                                    }
                                 }
-                                Err(ArActorError::BlockExists) => {
-                                    info!(
-                                        target: "wvm::exex",
-                                        block_number = block_number,
-                                        "Block already exists"
-                                    );
-                                    Ok(block_number)
-                                }
-                                Err(e) => {
-                                    error!(
-                                        target: "wvm::exex",
-                                        %e,
-                                        block_number = block_number,
-                                        "Failed to process block"
-                                    );
-                                    Err((block_number, e))
-                                }
-                            }
                             }));
-                       }
+                        }
                     }
                 }
                 Some(result) = in_flight.next() => {
                     match result {
                         Ok(Ok(block_number)) => {
-                            info!(target: "wvm::exex", "Completed block {}", block_number);
+                            info!(
+                                target: "wvm::exex",
+                                worker_id = self.worker_id,
+                                block_number,
+                                "Completed block processing"
+                            );
                         }
                         Ok(Err((block_number, e))) => {
-                            error!(target: "wvm::exex", "Failed block {}: {:?}", block_number, e);
+                            error!(
+                                target: "wvm::exex",
+                                worker_id = self.worker_id,
+                                block_number,
+                                error = %e,
+                                "Failed to process block"
+                            );
                         }
                         Err(e) => {
-                            error!(target: "wvm::exex", "Task panicked: {}", e);
+                            error!(
+                                target: "wvm::exex",
+                                worker_id = self.worker_id,
+                                error = %e,
+                                "Task panicked"
+                            );
                         }
                     }
                 }
@@ -164,12 +210,14 @@ impl ArActor {
         if remaining > 0 {
             info!(
                 target: "wvm::exex",
-                "Shutting down with {} unfinished blocks",
-                remaining
+                worker_id = self.worker_id,
+                remaining,
+                "Worker shutting down with unfinished blocks"
             );
         }
     }
 }
+
 
 // Keep in same file but separate from ArActor
 async fn handle_block(
@@ -221,7 +269,11 @@ async fn upload_to_arweave(
     block_number: BlockNumber,
     block_hash: &str,
 ) -> Result<String, ArActorError> {
-    ArweaveRequest::new()
+    let start_time = std::time::Instant::now();
+
+    let mut request = ArweaveRequest::new();
+
+    request
         .set_tag("Content-Type", "application/octet-stream")
         .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
         .set_tag("Block-Number", block_number.to_string().as_str())
@@ -229,10 +281,38 @@ async fn upload_to_arweave(
         .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
         .set_tag("Network", get_network_tag().as_str())
         .set_tag("WeaveVM:Internal-Chain", notification_type)
-        .set_data(data.to_vec())
-        .send_with_provider(ar_uploader)
-        .await
-        .map_err(|e| ArActorError::ArweaveUploadFailed { block_number, error: e.to_string() })
+        .set_data(data.to_vec());
+
+    match request.send_with_provider(ar_uploader).await {
+        Ok(response) => {
+            let total_duration = start_time.elapsed();
+
+            // Log successful upload
+            info!(
+                target: "wvm::exex",
+                block_number = block_number,
+                total_duration = ?total_duration.as_millis(),
+                "Arweave upload completed successfully: {}",
+                response
+            );
+
+            Ok(response)
+        }
+        Err(e) => {
+            let total_duration = start_time.elapsed();
+
+            // Log failed upload with timing details
+            error!(
+                target: "wvm::exex",
+                block_number = block_number,
+                total_duration = ?total_duration.as_millis(),
+                error = %e,
+                "Failed to upload block to Arweave"
+            );
+
+            Err(ArActorError::ArweaveUploadFailed { block_number, error: e.to_string() })
+        }
+    }
 }
 
 async fn update_bigquery(
@@ -242,19 +322,51 @@ async fn update_bigquery(
     block_number: BlockNumber,
     arweave_id: &str,
 ) -> Result<(), ArActorError> {
-    // Update tags
+    let start_time = std::time::Instant::now();
+
     update_bigquery_tags(big_query_client, block).await?;
 
-    // Then save block
-    exex_wvm_bigquery::save_block(state_repo.clone(), block, block_number, arweave_id.to_string())
-        .await
-        .map_err(|e| ArActorError::BigQueryError {
-            block_number,
-            operation: "block",
-            error: e.to_string(),
-        })?;
+    // Perform BigQuery operations (tags update and block save)
+    let result = exex_wvm_bigquery::save_block(
+        state_repo.clone(),
+        block,
+        block_number,
+        arweave_id.to_string(),
+    )
+    .await;
 
-    Ok(())
+    // Measure total duration
+
+    match result {
+        Ok(_) => {
+            let total_duration = start_time.elapsed();
+            // Log success with timing details
+            info!(
+                target: "wvm::exex",
+                block_number = block_number,
+                total_duration = ?total_duration.as_millis(),
+                "BigQuery update completed successfully"
+            );
+            Ok(())
+        }
+        Err(e) => {
+            let total_duration = start_time.elapsed();
+            // Log failure with timing details
+            error!(
+                target: "wvm::exex",
+                block_number = block_number,
+                total_duration = ?total_duration.as_millis(),
+                error = %e,
+                "BigQuery update failed"
+            );
+
+            Err(ArActorError::BigQueryError {
+                block_number,
+                operation: "save_block",
+                error: e.to_string(),
+            })
+        }
+    }
 }
 
 async fn update_bigquery_tags(
@@ -315,7 +427,6 @@ fn generate_tags_query(
     ))
 }
 
-// Actor Handle
 #[derive(Clone)]
 pub struct ArweaveActorHandle {
     sender: mpsc::Sender<ArActorMessage>,
@@ -324,13 +435,84 @@ pub struct ArweaveActorHandle {
 impl ArweaveActorHandle {
     pub async fn new(buffer_size: usize) -> Self {
         info!(target: "wvm::exex", "Creating new ArweaveActor with buffer size {}", buffer_size);
+
         let (sender, receiver) = mpsc::channel(buffer_size);
         let big_query_client = Arc::new(new_etl_exex_biguery_client().await);
         let state_repo = Arc::new(StateRepository::new(big_query_client.clone()));
 
-        let actor = ArActor::new(receiver, state_repo, big_query_client);
+        let actor = ArActor::new(receiver, state_repo, big_query_client, 0);
 
-        tokio::spawn(actor.run());
+        tokio::spawn(async move {
+            actor.run().await;
+        });
+
+        Self { sender }
+    }
+
+    pub async fn new_parallel(buffer_size: usize, num_workers: usize) -> Self {
+        info!(
+        target: "wvm::exex",
+        "Creating {} parallel ArActors with shared queue of size {}",
+        num_workers,
+        buffer_size
+    );
+
+        // Create a channel for each worker
+        let mut worker_channels = Vec::with_capacity(num_workers);
+        let big_query_client = Arc::new(new_etl_exex_biguery_client().await);
+
+        // Create workers with their own receivers
+        for id in 0..num_workers {
+            let (worker_sender, worker_receiver) = mpsc::channel(buffer_size);
+            let worker_state_repo = Arc::new(StateRepository::new(big_query_client.clone()));
+
+            let worker = ArActor::new(
+                worker_receiver,
+                worker_state_repo,
+                big_query_client.clone(),
+                id,
+            );
+
+            tokio::spawn(async move {
+                worker.run().await;
+            });
+
+            worker_channels.push(worker_sender);
+        }
+
+        // Create round-robin distributor
+        let (sender, mut distributor_receiver) = mpsc::channel(buffer_size);
+        let worker_channels = Arc::new(worker_channels);
+
+        // Spawn distributor task
+        let dist_channels = worker_channels.clone();
+        tokio::spawn(async move {
+            let mut current_worker = 0;
+
+            while let Some(msg) = distributor_receiver.recv().await {
+                if let Err(e) = dist_channels[current_worker].send(msg).await {
+                    error!(
+                    target: "wvm::exex",
+                    worker_id = current_worker,
+                    error = %e,
+                    "Failed to forward message to worker"
+                );
+                }
+                current_worker = (current_worker + 1) % dist_channels.len();
+            }
+
+            // On channel close, send shutdown to all workers
+            for (id, worker) in dist_channels.iter().enumerate() {
+                if let Err(e) = worker.send(ArActorMessage::Shutdown).await {
+                    error!(
+                    target: "wvm::exex",
+                    worker_id = id,
+                    error = %e,
+                    "Failed to send shutdown to worker"
+                );
+                }
+            }
+        });
 
         Self { sender }
     }
@@ -347,6 +529,9 @@ impl ArweaveActorHandle {
     }
 
     pub async fn shutdown(&self) -> Result<(), ArActorError> {
-        self.sender.send(ArActorMessage::Shutdown).await.map_err(|_| ArActorError::ActorUnavailable)
+        self.sender
+            .send(ArActorMessage::Shutdown)
+            .await
+            .map_err(|_| ArActorError::ActorUnavailable)
     }
 }

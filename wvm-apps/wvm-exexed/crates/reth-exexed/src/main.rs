@@ -21,6 +21,7 @@ use exex::ar_actor::ArweaveActorHandle;
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
 use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
 
+
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
     ar_actor_handle: Arc<ArweaveActorHandle>,
@@ -38,18 +39,18 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             }
         };
 
-        let mut notification_type = "";
-        match &notification {
+        let notification_type = match &notification {
             ExExNotification::ChainCommitted { new } => {
-                notification_type = "ChainCommitted";
                 info!(committed_chain = ?new.range(), "Received commit");
+                "ChainCommitted"
             }
             ExExNotification::ChainReorged { old, new } => {
-                notification_type = "ChainReorged";
                 info!(from_chain = ?old.range(), to_chain = ?new.range(), "Received reorg");
+                "ChainReorged"
             }
             ExExNotification::ChainReverted { old } => {
                 info!(reverted_chain = ?old.range(), "Received revert");
+                continue;
             }
         };
 
@@ -69,20 +70,21 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                 continue;
             }
 
-            // Then process the block
-            if let Err(err) =
-                ar_actor_handle.process_block(block, notification_type.to_string()).await
-            {
-                error!(target: "wvm::exex",
+            // Add .await here
+            if let Err(err) = ar_actor_handle.process_block(block, notification_type.to_string()).await {
+                error!(
+                    target: "wvm::exex",
                     %err,
-                    "Failed to send block to arweave actor to process {}",
-                   block_number);
+                    block_number,
+                    "Failed to send block to arweave actor"
+                );
             }
         }
     }
 
     info!(target: "wvm::exex", "ETL processor shutting down");
-    // Try to shutdown the actor gracefully
+
+    // Add .await here
     if let Err(e) = ar_actor_handle.shutdown().await {
         error!(target: "wvm::exex", %e, "Failed to shutdown ArweaveActor gracefully");
     }
@@ -101,7 +103,19 @@ fn main() -> eyre::Result<()> {
             .parse::<usize>()
             .unwrap_or(1024);
 
-        let ar_actor_handle = Arc::new(ArweaveActorHandle::new(arweave_actor_buffer_size).await);
+        let ar_actor_handle = Arc::new(
+            ArweaveActorHandle::new_parallel(
+                std::env::var("ARWEAVE_ACTOR_BUFFER_SIZE")
+                    .unwrap_or_else(|_| "1024".to_string())
+                    .parse()
+                    .unwrap_or(1024),
+                std::env::var("ARWEAVE_ACTOR_WORKERS")
+                    .unwrap_or_else(|_| "10".to_string())
+                    .parse()
+                    .unwrap_or(10),
+            )
+            .await,
+        );
 
         let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
         // Original config
