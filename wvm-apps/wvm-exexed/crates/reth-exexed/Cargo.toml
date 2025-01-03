@@ -30,5 +30,9 @@ exex-wvm-bigquery.workspace = true
 tracing.workspace = true
 parse_duration.workspace = true
 futures.workspace = true
-
-
+jsonrpsee.workspace = true
+thiserror.workspace = true
+strum = { workspace = true, features = ["derive"] }
+alloy-primitives.workspace = true
+ureq = { version = "2.10.1", features = ["json"] }
+reth-rpc-eth-types.workspace = true

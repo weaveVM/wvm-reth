@@ -5,8 +5,10 @@
 mod constant;
 mod exex;
 mod network_tag;
+mod rpc;
 mod util;
 
+use crate::rpc::private_transaction::EthPrivateTransactionApiServer;
 use crate::{network_tag::get_network_tag, util::check_block_existence};
 use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::repository::StateRepository;
@@ -118,6 +120,12 @@ fn main() -> eyre::Result<()> {
                 })
                 .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) });
         }
+        let handle = handle.extend_rpc_modules(move |ctx| {
+            ctx.modules.merge_configured(EthPrivateTransaction.into_rpc())?;
+            info!(target: "rpc", "Private transaction method added");
+            Ok(())
+        });
+
         let handle = handle.launch().await?;
 
         handle.wait_for_node_exit().await
@@ -138,6 +146,7 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
 }
 
 use crate::exex::ar_process::ArProcess;
+use crate::rpc::private_transaction::EthPrivateTransaction;
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
 use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
 
