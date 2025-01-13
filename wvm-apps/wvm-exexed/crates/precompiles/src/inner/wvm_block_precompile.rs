@@ -120,8 +120,13 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                             "Borsh-Brotli" => {
                                 let unbrotli = from_brotli(bytes);
                                 let unborsh =
-                                    borsh::from_slice::<BorshSealedBlockWithSenders>(&unbrotli)
-                                        .unwrap();
+                                    borsh::from_slice::<BorshSealedBlockWithSenders>(&unbrotli);
+
+                                let unborsh = unborsh.map_err(|_| {
+                                    PrecompileError::Other(
+                                        "Block could not be deserialized".to_string(),
+                                    )
+                                })?;
 
                                 let str_block = Block::from(unborsh);
                                 let data = process_block_to_field(field, str_block);

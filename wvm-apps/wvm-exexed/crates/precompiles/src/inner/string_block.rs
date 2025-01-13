@@ -127,11 +127,8 @@ impl From<BorshSealedBlockWithSenders> for Block {
     fn from(value: BorshSealedBlockWithSenders) -> Self {
         let sealed_block = value.0;
         match sealed_block {
-            WvmSealedBlockWithSenders::V1(data) => {
-                from_sealed_block_senders(data.into())
-            }
+            WvmSealedBlockWithSenders::V1(data) => from_sealed_block_senders(data.into()),
         }
-
     }
 }
 
