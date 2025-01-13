@@ -1,3 +1,5 @@
+use std::cell::LazyCell;
+use std::time::Duration;
 use crate::inner::{
     arweave_precompile::ARWEAVE_UPLOAD_PC, arweave_read_precompile::ARWEAVE_READ_PC,
     gbq_precompile::GBQ_READ_PC, kyve_precompile::KYVE_READ_PC, test_precompile::HELLO_WORLD_PC,
@@ -22,6 +24,15 @@ fn hex_to_u64(hex_str: &str) -> u64 {
 fn is_pc_blocked(block_list: &Vec<&str>, addr: i32) -> bool {
     block_list.contains(&addr.to_string().as_str())
 }
+
+pub const REQ_TIMEOUT: LazyCell<Duration> = LazyCell::new(|| {
+    let duration_seconds = std::env::var("DURATION_SECONDS")
+        .ok()
+        .and_then(|val| val.parse::<u64>().ok())
+        .unwrap_or(1000);
+
+    Duration::from_millis(duration_seconds)
+});
 
 pub fn wvm_precompiles() -> impl Iterator<Item = PrecompileWithAddress> {
     // ORDER OF THINGS MATTER

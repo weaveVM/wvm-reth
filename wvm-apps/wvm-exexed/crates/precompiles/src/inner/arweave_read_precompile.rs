@@ -133,6 +133,7 @@ mod arweave_read_pc_tests {
 
     #[test]
     pub fn test_arweave_read_precompile_custom_gateway() {
+        std::env::set_var("DURATION_SECONDS", "20000");
         let input =
             Bytes::from("https://ar-io.dev;bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI".as_bytes());
         let PrecompileOutput { gas_used, bytes } = arweave_read(&input, 100_000).unwrap();
