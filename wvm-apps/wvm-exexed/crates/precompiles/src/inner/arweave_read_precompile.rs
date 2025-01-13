@@ -115,9 +115,9 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 mod arweave_read_pc_tests {
     use crate::inner::arweave_read_precompile::{arweave_read, parse_gateway_content};
     use alloy_primitives::Bytes;
+    use borsh::BorshDeserialize;
     use reth::primitives::revm_primitives::PrecompileOutput;
     use std::time::Instant;
-    use borsh::BorshDeserialize;
     use wvm_borsh::block::BorshSealedBlockWithSenders;
 
     #[test]

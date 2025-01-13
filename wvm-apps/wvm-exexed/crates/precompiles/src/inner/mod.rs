@@ -1,11 +1,11 @@
-use std::cell::LazyCell;
-use std::time::Duration;
 use crate::inner::{
     arweave_precompile::ARWEAVE_UPLOAD_PC, arweave_read_precompile::ARWEAVE_READ_PC,
     gbq_precompile::GBQ_READ_PC, kyve_precompile::KYVE_READ_PC, test_precompile::HELLO_WORLD_PC,
     wvm_block_precompile::WVM_BLOCK_PC,
 };
 use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
+use std::cell::LazyCell;
+use std::time::Duration;
 
 pub mod arweave_precompile;
 mod arweave_read_precompile;
@@ -32,6 +32,13 @@ pub const REQ_TIMEOUT: LazyCell<Duration> = LazyCell::new(|| {
         .unwrap_or(1000);
 
     Duration::from_millis(duration_seconds)
+});
+
+pub const REQ_SIZE: LazyCell<u64> = LazyCell::new(|| {
+    std::env::var("REQ_SIZE")
+        .ok()
+        .and_then(|val| val.parse::<u64>().ok())
+        .unwrap_or((1024 * 1024) * 4)
 });
 
 pub fn wvm_precompiles() -> impl Iterator<Item = PrecompileWithAddress> {

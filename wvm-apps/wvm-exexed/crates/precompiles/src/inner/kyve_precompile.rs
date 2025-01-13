@@ -1,9 +1,9 @@
+use crate::inner::REQ_TIMEOUT;
 use alloy_primitives::Bytes;
 use revm_primitives::{
     Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
 };
 use wvm_static::internal_block;
-use crate::inner::REQ_TIMEOUT;
 
 pub const KYVE_PC_BASE: u64 = 10_000;
 pub const KYVE_API_URL: &str = "https://data.services.kyve.network";
@@ -52,8 +52,11 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     }
 
     let blk_number = block_number.unwrap();
+    let usize_blk_number = blk_number.to_string().parse::<usize>().map_err(|_| {
+        PrecompileErrors::Error(PrecompileError::Other("Invalid Block Number".to_string()))
+    })?;
 
-    if !(blk_number.to_string().parse::<usize>().unwrap() >= 19426589) {
+    if !(usize_blk_number >= 19426589) {
         return Err(PrecompileErrors::Error(PrecompileError::Other(
             "Can only read from block 19426589".to_string(),
         )));
@@ -65,7 +68,7 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         format!("{}/ethereum/beacon/blob_sidecars?block_height={}", KYVE_API_URL, blk_number)
             .as_str(),
     )
-        .timeout((&*REQ_TIMEOUT).clone())
+    .timeout((&*REQ_TIMEOUT).clone())
     .call();
 
     match req {

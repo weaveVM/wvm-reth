@@ -1,8 +1,8 @@
+use crate::inner::{REQ_SIZE, REQ_TIMEOUT};
 use alloy_primitives::Bytes;
 use revm_primitives::{PrecompileError, PrecompileErrors, PrecompileOutput};
 use std::io::Read;
 use wvm_static::internal_block;
-use crate::inner::REQ_TIMEOUT;
 
 pub const DEFAULT_ARWEAVE_TX_ENDPOINT: &str = "https://arweave.net/";
 
@@ -28,10 +28,12 @@ pub fn download_tx(
     //         ))),
     //     }
     // }).unwrap()
-    let download_tx = ureq::get(format!("{}/{}", clean_gateway, tx_id.as_str()).as_str()).timeout((&*REQ_TIMEOUT).clone()).call();
+    let download_tx = ureq::get(format!("{}/{}", clean_gateway, tx_id.as_str()).as_str())
+        .timeout((&*REQ_TIMEOUT).clone())
+        .call();
     match download_tx {
         Ok(tx) => Ok(PrecompileOutput::new(gas_used, {
-            let mut reader = tx.into_reader();
+            let mut reader = tx.into_reader().take((&*REQ_SIZE).clone());
             let mut buffer = vec![];
             let _ = reader.read_to_end(&mut buffer).map_err(|_| {
                 PrecompileError::Other("Arweave Transaction was not found".to_string())
