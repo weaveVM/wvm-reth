@@ -2,6 +2,7 @@ use eyre::Error;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
+use crate::inner::REQ_TIMEOUT;
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Response {
@@ -111,7 +112,7 @@ pub fn build_transaction_query(
 }
 
 pub fn send_graphql(gateway: &str, query: &str) -> Result<Response, Error> {
-    let res = ureq::post(format!("{}/{}", gateway, "graphql").as_str()).send_json(ureq::json!({
+    let res = ureq::post(format!("{}/{}", gateway, "graphql").as_str()).timeout((&*REQ_TIMEOUT).clone()).send_json(ureq::json!({
         "variables": {},
         "query": query
     }));
