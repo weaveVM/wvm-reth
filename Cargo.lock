@@ -172,7 +172,7 @@ dependencies = [
  "alloy-transport",
  "futures",
  "futures-util",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -276,7 +276,7 @@ dependencies = [
  "alloy-sol-types",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
 ]
 
@@ -298,7 +298,7 @@ dependencies = [
  "async-trait",
  "auto_impl",
  "futures-utils-wasm",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -326,7 +326,7 @@ dependencies = [
  "rand 0.8.5",
  "serde_json",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
  "url",
 ]
@@ -397,7 +397,7 @@ dependencies = [
  "schnellru",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
  "url",
@@ -517,7 +517,7 @@ dependencies = [
  "alloy-rpc-types-engine",
  "serde",
  "serde_with",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -596,7 +596,7 @@ dependencies = [
  "alloy-serde",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -634,7 +634,7 @@ dependencies = [
  "auto_impl",
  "elliptic-curve",
  "k256",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -652,7 +652,7 @@ dependencies = [
  "coins-bip39 0.12.0",
  "k256",
  "rand 0.8.5",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -737,7 +737,7 @@ dependencies = [
  "futures-utils-wasm",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tower 0.5.1",
  "tracing",
@@ -1143,7 +1143,7 @@ dependencies = [
  "serde-aux",
  "serde_json",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "url",
 ]
@@ -1341,7 +1341,7 @@ dependencies = [
  "serde_json",
  "strum 0.18.0",
  "strum_macros 0.18.0",
- "thiserror",
+ "thiserror 1.0.66",
  "typed-builder",
  "uuid 0.8.2",
  "zerocopy 0.3.2",
@@ -1544,7 +1544,7 @@ dependencies = [
  "bitflags 2.6.0",
  "cexpr",
  "clang-sys",
- "itertools 0.11.0",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "regex",
@@ -1691,7 +1691,7 @@ dependencies = [
  "static_assertions",
  "tap",
  "thin-vec",
- "thiserror",
+ "thiserror 1.0.66",
  "time",
 ]
 
@@ -1993,7 +1993,7 @@ dependencies = [
  "sha2 0.10.8",
  "strum 0.24.1",
  "strum_macros 0.24.3",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-util 0.6.10",
  "validator",
@@ -2106,7 +2106,7 @@ dependencies = [
  "semver 1.0.23",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -2295,7 +2295,7 @@ dependencies = [
  "k256",
  "serde",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -2311,7 +2311,7 @@ dependencies = [
  "k256",
  "serde",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -2327,7 +2327,7 @@ dependencies = [
  "pbkdf2 0.12.2",
  "rand 0.8.5",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -2343,7 +2343,7 @@ dependencies = [
  "pbkdf2 0.12.2",
  "rand 0.8.5",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -2363,7 +2363,7 @@ dependencies = [
  "serde_derive",
  "sha2 0.10.8",
  "sha3",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -2382,7 +2382,7 @@ dependencies = [
  "serde",
  "sha2 0.10.8",
  "sha3",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -2390,16 +2390,6 @@ name = "colorchoice"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
-
-[[package]]
-name = "colored"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbf2150cce219b664a8a70df7a1f933836724b503f8a413af9365b4dcc4d90b8"
-dependencies = [
- "lazy_static",
- "windows-sys 0.48.0",
-]
 
 [[package]]
 name = "combine"
@@ -3368,7 +3358,7 @@ dependencies = [
  "revm",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "walkdir",
 ]
 
@@ -3528,7 +3518,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.8",
  "sha3",
- "thiserror",
+ "thiserror 1.0.66",
  "uuid 0.8.2",
 ]
 
@@ -3545,7 +3535,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "thiserror",
+ "thiserror 1.0.66",
  "uint 0.9.5",
 ]
 
@@ -3665,7 +3655,7 @@ dependencies = [
  "pin-project",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -3733,7 +3723,7 @@ dependencies = [
  "strum 0.26.3",
  "syn 2.0.87",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tiny-keccak",
  "unicode-xid",
 ]
@@ -3750,7 +3740,7 @@ dependencies = [
  "semver 1.0.23",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
 ]
 
@@ -3774,7 +3764,7 @@ dependencies = [
  "reqwest 0.11.27",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
  "tracing-futures",
@@ -3807,7 +3797,7 @@ dependencies = [
  "reqwest 0.11.27",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-tungstenite 0.20.1",
  "tracing",
@@ -3834,7 +3824,7 @@ dependencies = [
  "ethers-core",
  "rand 0.8.5",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
 ]
 
@@ -3862,7 +3852,7 @@ dependencies = [
  "serde_json",
  "solang-parser",
  "svm-rs",
- "thiserror",
+ "thiserror 1.0.66",
  "tiny-keccak",
  "tokio",
  "tracing",
@@ -3896,7 +3886,7 @@ dependencies = [
  "reth-node-ethereum",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -3984,7 +3974,7 @@ dependencies = [
  "reth-tracing",
  "reth-trie-db",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
 ]
 
@@ -4207,7 +4197,7 @@ dependencies = [
 [[package]]
 name = "exex-wvm-bigquery"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?e?branch=main#e591a8ebf6087867278cc89635cc04a885364236"
+source = "git+https://github.com/weaveVM/exex-templates?e?branch=main#2f7e039caa8e123029a638425de21076f2c76328"
 dependencies = [
  "alloy-primitives",
  "chrono",
@@ -4224,7 +4214,7 @@ dependencies = [
 [[package]]
 name = "exex-wvm-da"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#e591a8ebf6087867278cc89635cc04a885364236"
+source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#2f7e039caa8e123029a638425de21076f2c76328"
 dependencies = [
  "async-trait",
  "borsh 1.5.1",
@@ -4288,7 +4278,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e182f7dbc2ef73d9ef67351c5fbbea084729c48362d3ce9dd44c28e32e277fe5"
 dependencies = [
  "libc",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -4617,7 +4607,7 @@ dependencies = [
  "reqwest 0.11.27",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "time",
  "tokio",
  "tokio-stream",
@@ -4639,7 +4629,7 @@ dependencies = [
  "reqwest 0.12.9",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "time",
  "tokio",
  "tokio-stream",
@@ -4733,7 +4723,7 @@ dependencies = [
  "pin-project",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -5830,7 +5820,7 @@ dependencies = [
  "combine",
  "jni-sys",
  "log",
- "thiserror",
+ "thiserror 1.0.66",
  "walkdir",
 ]
 
@@ -5908,7 +5898,7 @@ dependencies = [
  "rustls-pki-types",
  "rustls-platform-verifier",
  "soketto",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-rustls 0.26.0",
  "tokio-util 0.7.12",
@@ -5936,7 +5926,7 @@ dependencies = [
  "rustc-hash 2.0.0",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -5961,7 +5951,7 @@ dependencies = [
  "rustls-platform-verifier",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tower 0.4.13",
  "tracing",
@@ -6000,7 +5990,7 @@ dependencies = [
  "serde",
  "serde_json",
  "soketto",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.12",
@@ -6017,7 +6007,7 @@ dependencies = [
  "http 1.1.0",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -6056,7 +6046,7 @@ dependencies = [
  "num-bigint 0.4.6",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "yasna",
  "zeroize",
 ]
@@ -6320,7 +6310,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -6343,7 +6333,7 @@ dependencies = [
  "multihash",
  "quick-protobuf",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
  "zeroize",
 ]
@@ -6657,7 +6647,7 @@ dependencies = [
  "metrics",
  "metrics-util",
  "quanta",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -6705,7 +6695,7 @@ dependencies = [
  "reqwest 0.12.9",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -7424,7 +7414,7 @@ dependencies = [
  "js-sys",
  "once_cell",
  "pin-project-lite",
- "thiserror",
+ "thiserror 1.0.66",
  "urlencoding",
 ]
 
@@ -7457,7 +7447,7 @@ dependencies = [
  "ordered-float",
  "percent-encoding",
  "rand 0.8.5",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -7691,7 +7681,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "879952a81a83930934cbf1786752d6dedc3b1f29e8f8fb2ad1d0a36f377cf442"
 dependencies = [
  "memchr",
- "thiserror",
+ "thiserror 1.0.66",
  "ucd-trie",
 ]
 
@@ -7943,7 +7933,7 @@ dependencies = [
  "multiversion",
  "num-traits",
  "polars-error",
- "thiserror",
+ "thiserror 1.0.66",
  "version_check",
 ]
 
@@ -7973,7 +7963,7 @@ dependencies = [
  "regex",
  "serde",
  "smartstring",
- "thiserror",
+ "thiserror 1.0.66",
  "version_check",
  "xxhash-rust",
 ]
@@ -7986,7 +7976,7 @@ checksum = "9b20a09651a299979354945819dc2ce017964b80b916954e9d2ce39002a5f949"
 dependencies = [
  "arrow2",
  "regex",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -8238,7 +8228,7 @@ dependencies = [
  "smallvec",
  "symbolic-demangle",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -8329,7 +8319,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
- "thiserror",
+ "thiserror 1.0.66",
  "url",
 ]
 
@@ -8580,7 +8570,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.11.0",
+ "itertools 0.12.1",
  "proc-macro2",
  "quote",
  "syn 2.0.87",
@@ -8647,7 +8637,7 @@ dependencies = [
  "rustc-hash 2.0.0",
  "rustls 0.23.16",
  "socket2",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -8664,7 +8654,7 @@ dependencies = [
  "rustc-hash 2.0.0",
  "rustls 0.23.16",
  "slab",
- "thiserror",
+ "thiserror 1.0.66",
  "tinyvec",
  "tracing",
 ]
@@ -8873,7 +8863,7 @@ checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
 dependencies = [
  "getrandom 0.2.15",
  "libredox",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -8957,6 +8947,7 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
+ "mime_guess",
  "native-tls",
  "once_cell",
  "percent-encoding",
@@ -9040,6 +9031,21 @@ checksum = "33aaff48fee40ce5c00a89dcad0f14955500f6a0f5309ffb8639fec329480136"
 dependencies = [
  "reqwest 0.11.27",
  "serde",
+]
+
+[[package]]
+name = "reqwest-middleware"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a735987236a8e238bf0296c7e351b999c188ccc11477f311b82b55c93984216"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "http 0.2.12",
+ "reqwest 0.11.27",
+ "serde",
+ "task-local-extensions",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -9227,7 +9233,7 @@ dependencies = [
  "reth-tokio-util",
  "reth-tracing",
  "schnellru",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -9262,7 +9268,7 @@ dependencies = [
  "reth-rpc-types-compat",
  "reth-tracing",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tower 0.4.13",
  "tracing",
@@ -9316,7 +9322,7 @@ dependencies = [
  "reth-execution-errors",
  "reth-primitives",
  "reth-storage-errors",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -9471,7 +9477,7 @@ dependencies = [
  "reth-fs-util",
  "secp256k1 0.29.1",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
  "tikv-jemallocator",
  "tracy-client",
 ]
@@ -9613,7 +9619,7 @@ dependencies = [
  "sysinfo 0.31.4",
  "tempfile",
  "test-fuzz",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -9668,7 +9674,7 @@ dependencies = [
  "reth-trie-db",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
 ]
 
@@ -9709,7 +9715,7 @@ dependencies = [
  "schnellru",
  "secp256k1 0.29.1",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -9734,7 +9740,7 @@ dependencies = [
  "reth-network-peers",
  "reth-tracing",
  "secp256k1 0.29.1",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -9760,7 +9766,7 @@ dependencies = [
  "secp256k1 0.29.1",
  "serde",
  "serde_with",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -9797,7 +9803,7 @@ dependencies = [
  "reth-testing-utils",
  "reth-tracing",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.12",
@@ -9862,7 +9868,7 @@ dependencies = [
  "secp256k1 0.29.1",
  "sha2 0.10.8",
  "sha3",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.12",
@@ -9935,7 +9941,7 @@ dependencies = [
  "reth-prune",
  "reth-stages-api",
  "reth-tasks",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
 ]
@@ -9982,7 +9988,7 @@ dependencies = [
  "reth-trie",
  "reth-trie-parallel",
  "revm-primitives",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -10029,7 +10035,7 @@ dependencies = [
  "reth-execution-errors",
  "reth-fs-util",
  "reth-storage-errors",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -10060,7 +10066,7 @@ dependencies = [
  "serde",
  "snap",
  "test-fuzz",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.12",
@@ -10087,7 +10093,7 @@ dependencies = [
  "reth-codecs-derive",
  "reth-primitives",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -10345,7 +10351,7 @@ dependencies = [
  "reth-transaction-pool",
  "reth-trie-db",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
 ]
 
@@ -10398,7 +10404,7 @@ version = "1.1.1"
 dependencies = [
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -10439,7 +10445,7 @@ dependencies = [
  "rand 0.8.5",
  "reth-tracing",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.12",
@@ -10464,7 +10470,7 @@ dependencies = [
  "reth-mdbx-sys",
  "smallvec",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
 ]
 
@@ -10503,7 +10509,7 @@ dependencies = [
  "reqwest 0.12.9",
  "reth-tracing",
  "serde_with",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -10560,7 +10566,7 @@ dependencies = [
  "serial_test",
  "smallvec",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.12",
@@ -10585,7 +10591,7 @@ dependencies = [
  "reth-network-types",
  "reth-tokio-util",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
 ]
@@ -10621,7 +10627,7 @@ dependencies = [
  "secp256k1 0.29.1",
  "serde_json",
  "serde_with",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "url",
 ]
@@ -10652,7 +10658,7 @@ dependencies = [
  "reth-fs-util",
  "serde",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
  "zstd 0.13.2",
 ]
@@ -10785,7 +10791,7 @@ dependencies = [
  "serde",
  "shellexpand",
  "strum 0.26.3",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "toml 0.8.19",
  "tracing",
@@ -11093,7 +11099,7 @@ dependencies = [
  "reth-trie",
  "revm",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
  "tracing",
 ]
 
@@ -11141,7 +11147,7 @@ dependencies = [
  "reth-transaction-pool",
  "revm",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -11194,7 +11200,7 @@ dependencies = [
  "reth-primitives",
  "reth-transaction-pool",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -11358,7 +11364,7 @@ dependencies = [
  "reth-tokio-util",
  "reth-tracing",
  "rustc-hash 2.0.0",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -11379,7 +11385,7 @@ dependencies = [
  "serde",
  "serde_json",
  "test-fuzz",
- "thiserror",
+ "thiserror 1.0.66",
  "toml 0.8.19",
 ]
 
@@ -11463,7 +11469,7 @@ dependencies = [
  "revm-primitives",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tower 0.4.13",
@@ -11559,7 +11565,7 @@ dependencies = [
  "reth-transaction-pool",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-util 0.7.12",
  "tower 0.4.13",
@@ -11598,7 +11604,7 @@ dependencies = [
  "reth-tokio-util",
  "reth-transaction-pool",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -11685,7 +11691,7 @@ dependencies = [
  "schnellru",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -11782,7 +11788,7 @@ dependencies = [
  "reth-trie",
  "reth-trie-db",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -11809,7 +11815,7 @@ dependencies = [
  "reth-static-file-types",
  "reth-testing-utils",
  "reth-tokio-util",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -11908,7 +11914,7 @@ dependencies = [
  "pin-project",
  "rayon",
  "reth-metrics",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
  "tracing-futures",
@@ -11989,7 +11995,7 @@ dependencies = [
  "serde_json",
  "smallvec",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -12098,7 +12104,7 @@ dependencies = [
  "reth-provider",
  "reth-trie",
  "reth-trie-db",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
 ]
@@ -12120,7 +12126,7 @@ dependencies = [
  "reth-trie",
  "reth-trie-common",
  "smallvec",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -12153,7 +12159,7 @@ dependencies = [
  "colorchoice",
  "revm",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -12959,7 +12965,7 @@ checksum = "c7715380eec75f029a4ef7de39a9200e0a63823176b759d055b613f5a87df6a6"
 dependencies = [
  "percent-encoding",
  "serde",
- "thiserror",
+ "thiserror 1.0.66",
 ]
 
 [[package]]
@@ -13127,10 +13133,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
-name = "shuttle-axum"
-version = "0.47.0"
+name = "shuttle-api-client"
+version = "0.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1806f4f5c6add7321d9820b234b5e41910d36a1689a2be7e5ff59708cf4450e6"
+checksum = "a9fd4345091aa0f5b8bd24b42bc14a78c2b71fdc48e17998305433614c2a56c5"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "headers",
+ "http 0.2.12",
+ "percent-encoding",
+ "reqwest 0.11.27",
+ "reqwest-middleware",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "shuttle-common",
+ "tokio",
+ "tokio-tungstenite 0.20.1",
+ "url",
+ "uuid 1.11.0",
+]
+
+[[package]]
+name = "shuttle-axum"
+version = "0.50.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b62c6cdce72ecbf32c37f23de4c347b91ff2f0d0290f997996ac183e97249532"
 dependencies = [
  "axum 0.7.7",
  "shuttle-runtime",
@@ -13138,11 +13167,11 @@ dependencies = [
 
 [[package]]
 name = "shuttle-codegen"
-version = "0.47.0"
+version = "0.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d0e472cdad882debb65474b618f1a2e1504460b0803f84a0ca18b84493ffd2b"
+checksum = "b6f952c8f559b90777000f7b4803c0bc983405599f2c0b2c68da1569ccd64016"
 dependencies = [
- "proc-macro-error",
+ "proc-macro-error2",
  "proc-macro2",
  "quote",
  "syn 2.0.87",
@@ -13150,11 +13179,12 @@ dependencies = [
 
 [[package]]
 name = "shuttle-common"
-version = "0.47.0"
+version = "0.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31f26e99a8921bb0824d0cb5fa7c2fe077d7b0476634c9b3c99f775ba94b468d"
+checksum = "709313a6ac5aa68df4793b6c733c2fc554aa298bdafdc193d8386131bab17480"
 dependencies = [
  "anyhow",
+ "async-trait",
  "chrono",
  "comfy-table 6.2.0",
  "crossterm 0.27.0",
@@ -13162,15 +13192,17 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-http",
  "pin-project",
+ "reqwest 0.11.27",
  "semver 1.0.23",
  "serde",
  "serde_json",
  "strum 0.26.3",
- "thiserror",
+ "thiserror 2.0.11",
  "tower 0.4.13",
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
+ "typeshare",
  "url",
  "uuid 1.11.0",
  "zeroize",
@@ -13178,9 +13210,9 @@ dependencies = [
 
 [[package]]
 name = "shuttle-proto"
-version = "0.47.0"
+version = "0.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12d68790de14e4048738be652b1c5803a1563aef1a20cc00979855c2e497ec5d"
+checksum = "21a7e0f26860c9acba9533cd5659a9c8b0a0e76b44307628e2925541ac1373fc"
 dependencies = [
  "futures-core",
  "prost",
@@ -13191,15 +13223,16 @@ dependencies = [
 
 [[package]]
 name = "shuttle-runtime"
-version = "0.47.0"
+version = "0.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07c18036c9640c0e74c0ce4a67cc11e4e6603179305f74558035fe5a033ec77f"
+checksum = "47bd47a75e9a09eb623cb4f00fce5f49ed9a968a7a60523d0d94c0d5af677f44"
 dependencies = [
  "anyhow",
  "async-trait",
- "colored",
+ "hyper 0.14.31",
  "serde",
  "serde_json",
+ "shuttle-api-client",
  "shuttle-codegen",
  "shuttle-common",
  "shuttle-proto",
@@ -13209,21 +13242,22 @@ dependencies = [
  "tokio-stream",
  "tokio-util 0.7.12",
  "tonic",
+ "tracing",
  "tracing-subscriber",
 ]
 
 [[package]]
 name = "shuttle-service"
-version = "0.47.0"
+version = "0.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff6f3011b6766b3aad6b93f16aaf9beb5fe9e600e85e409a5077d8e2f0b055c4"
+checksum = "ca5dcd25164380881233e676bd897de629a7d719bf02214c1b6ba16a2d2079c9"
 dependencies = [
  "anyhow",
  "async-trait",
  "serde",
  "shuttle-common",
  "strfmt",
- "thiserror",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -13325,7 +13359,7 @@ checksum = "adc4e5204eb1910f40f9cfa375f6f05b68c3abac4b6fd879c8ff5e7ae8a0a085"
 dependencies = [
  "num-bigint 0.4.6",
  "num-traits",
- "thiserror",
+ "thiserror 1.0.66",
  "time",
 ]
 
@@ -13414,7 +13448,7 @@ dependencies = [
  "lalrpop",
  "lalrpop-util",
  "phf",
- "thiserror",
+ "thiserror 1.0.66",
  "unicode-xid",
 ]
 
@@ -13647,7 +13681,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.8",
- "thiserror",
+ "thiserror 1.0.66",
  "url",
  "zip",
 ]
@@ -13841,6 +13875,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1bbb9f3c5c463a01705937a24fdabc5047929ac764b2d5b9cf681c1f5041ed5"
 
 [[package]]
+name = "task-local-extensions"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba323866e5d033818e3240feeb9f7db2c4296674e4d9e16b97b7bf8f490434e8"
+dependencies = [
+ "pin-utils",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13934,7 +13977,16 @@ version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d171f59dbaa811dbbb1aee1e73db92ec2b122911a48e1390dfe327a821ddede"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 1.0.66",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d452f284b73e6d76dd36758a0c8684b1d5be31f92b89d07fd5822175732206fc"
+dependencies = [
+ "thiserror-impl 2.0.11",
 ]
 
 [[package]]
@@ -13942,6 +13994,17 @@ name = "thiserror-impl"
 version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b08be0f17bd307950653ce45db00cd31200d82b624b36e181337d9c7d92765b5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.87",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26afc1baea8a989337eeb52b6e72a039780ce45c3edfcc9c5b9d112feeb173c2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -14420,7 +14483,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3566e8ce28cc0a3fe42519fc80e6b4c943cc4c8cef275620eb8dac2d3d4e06cf"
 dependencies = [
  "crossbeam-channel",
- "thiserror",
+ "thiserror 1.0.66",
  "time",
  "tracing-subscriber",
 ]
@@ -14588,7 +14651,7 @@ dependencies = [
  "once_cell",
  "rand 0.8.5",
  "smallvec",
- "thiserror",
+ "thiserror 1.0.66",
  "tinyvec",
  "tokio",
  "tracing",
@@ -14611,7 +14674,7 @@ dependencies = [
  "resolv-conf",
  "serde",
  "smallvec",
- "thiserror",
+ "thiserror 1.0.66",
  "tokio",
  "tracing",
  "trust-dns-proto",
@@ -14638,7 +14701,7 @@ dependencies = [
  "rand 0.8.5",
  "rustls 0.21.12",
  "sha1",
- "thiserror",
+ "thiserror 1.0.66",
  "url",
  "utf-8",
 ]
@@ -14659,7 +14722,7 @@ dependencies = [
  "rustls 0.23.16",
  "rustls-pki-types",
  "sha1",
- "thiserror",
+ "thiserror 1.0.66",
  "utf-8",
 ]
 
@@ -14679,6 +14742,28 @@ name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
+
+[[package]]
+name = "typeshare"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19be0f411120091e76e13e5a0186d8e2bcc3e7e244afdb70152197f1a8486ceb"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "typeshare-annotation",
+]
+
+[[package]]
+name = "typeshare-annotation"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a615d6c2764852a2e88a4f16e9ce1ea49bb776b5872956309e170d63a042a34f"
+dependencies = [
+ "quote",
+ "syn 2.0.87",
+]
 
 [[package]]
 name = "ucd-trie"
@@ -15211,7 +15296,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -15549,7 +15634,7 @@ dependencies = [
  "pharos",
  "rustc_version 0.4.1",
  "send_wrapper 0.6.0",
- "thiserror",
+ "thiserror 1.0.66",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -15557,8 +15642,8 @@ dependencies = [
 
 [[package]]
 name = "wvm-archiver"
-version = "0.2.4"
-source = "git+https://github.com/weaveVM/wvm-archiver?branch=main#f2c763f470335d5ecaaac3cf07889171b3ceb6bf"
+version = "0.2.6"
+source = "git+https://github.com/weaveVM/wvm-archiver?branch=main#2752fa49a85861d069d10348e7bb8251bb3fdb6a"
 dependencies = [
  "anyhow",
  "axum 0.7.7",

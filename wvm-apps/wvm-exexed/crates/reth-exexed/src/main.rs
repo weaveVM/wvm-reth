@@ -21,7 +21,6 @@ use exex::ar_actor::ArweaveActorHandle;
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
 use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
 
-
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
     ar_actor_handle: Arc<ArweaveActorHandle>,
@@ -71,7 +70,9 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             }
 
             // Add .await here
-            if let Err(err) = ar_actor_handle.process_block(block, notification_type.to_string()).await {
+            if let Err(err) =
+                ar_actor_handle.process_block(block, notification_type.to_string()).await
+            {
                 error!(
                     target: "wvm::exex",
                     %err,

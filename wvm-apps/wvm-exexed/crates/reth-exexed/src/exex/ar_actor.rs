@@ -218,7 +218,6 @@ impl ArActor {
     }
 }
 
-
 // Keep in same file but separate from ArActor
 async fn handle_block(
     block: SealedBlockWithSenders,
@@ -326,7 +325,8 @@ async fn update_bigquery(
 
     update_bigquery_tags(big_query_client, block).await?;
 
-    // Perform BigQuery operations (tags update and block save)
+    let save_block_start_time = std::time::Instant::now();
+
     let result = exex_wvm_bigquery::save_block(
         state_repo.clone(),
         block,
@@ -334,6 +334,14 @@ async fn update_bigquery(
         arweave_id.to_string(),
     )
     .await;
+
+    let save_block_duration = save_block_start_time.elapsed();
+    info!(
+        target: "wvm::exex",
+        block_number = block_number,
+        duration = ?save_block_duration.as_millis(),
+        "BigQuery save block completed successfully"
+    );
 
     // Measure total duration
 
@@ -382,16 +390,19 @@ async fn update_bigquery_tags(
 
     let query = generate_tags_query(big_query_client, hashes, sealed_block.number)?;
 
+    let start_time = std::time::Instant::now();
     big_query_client.bq_query(query.clone()).await.map_err(|e| ArActorError::BigQueryError {
         block_number: sealed_block.number,
         operation: "tags",
         error: e.to_string(),
     })?;
+    let duration = start_time.elapsed();
 
     info!(
         target: "wvm::exex",
-        "Tags at block {} updated successfully",
-        sealed_block.number
+        block_number = sealed_block.number,
+        duration = ?duration.as_millis(),
+        "Tags updated successfully",
     );
 
     Ok(())
@@ -451,11 +462,11 @@ impl ArweaveActorHandle {
 
     pub async fn new_parallel(buffer_size: usize, num_workers: usize) -> Self {
         info!(
-        target: "wvm::exex",
-        "Creating {} parallel ArActors with shared queue of size {}",
-        num_workers,
-        buffer_size
-    );
+            target: "wvm::exex",
+            "Creating {} parallel ArActors with shared queue of size {}",
+            num_workers,
+            buffer_size
+        );
 
         // Create a channel for each worker
         let mut worker_channels = Vec::with_capacity(num_workers);
@@ -466,12 +477,8 @@ impl ArweaveActorHandle {
             let (worker_sender, worker_receiver) = mpsc::channel(buffer_size);
             let worker_state_repo = Arc::new(StateRepository::new(big_query_client.clone()));
 
-            let worker = ArActor::new(
-                worker_receiver,
-                worker_state_repo,
-                big_query_client.clone(),
-                id,
-            );
+            let worker =
+                ArActor::new(worker_receiver, worker_state_repo, big_query_client.clone(), id);
 
             tokio::spawn(async move {
                 worker.run().await;
@@ -492,11 +499,11 @@ impl ArweaveActorHandle {
             while let Some(msg) = distributor_receiver.recv().await {
                 if let Err(e) = dist_channels[current_worker].send(msg).await {
                     error!(
-                    target: "wvm::exex",
-                    worker_id = current_worker,
-                    error = %e,
-                    "Failed to forward message to worker"
-                );
+                        target: "wvm::exex",
+                        worker_id = current_worker,
+                        error = %e,
+                        "Failed to forward message to worker"
+                    );
                 }
                 current_worker = (current_worker + 1) % dist_channels.len();
             }
@@ -505,11 +512,11 @@ impl ArweaveActorHandle {
             for (id, worker) in dist_channels.iter().enumerate() {
                 if let Err(e) = worker.send(ArActorMessage::Shutdown).await {
                     error!(
-                    target: "wvm::exex",
-                    worker_id = id,
-                    error = %e,
-                    "Failed to send shutdown to worker"
-                );
+                        target: "wvm::exex",
+                        worker_id = id,
+                        error = %e,
+                        "Failed to send shutdown to worker"
+                    );
                 }
             }
         });
@@ -529,9 +536,6 @@ impl ArweaveActorHandle {
     }
 
     pub async fn shutdown(&self) -> Result<(), ArActorError> {
-        self.sender
-            .send(ArActorMessage::Shutdown)
-            .await
-            .map_err(|_| ArActorError::ActorUnavailable)
+        self.sender.send(ArActorMessage::Shutdown).await.map_err(|_| ArActorError::ActorUnavailable)
     }
 }
