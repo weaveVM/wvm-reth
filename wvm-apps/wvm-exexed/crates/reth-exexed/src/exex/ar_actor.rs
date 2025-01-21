@@ -4,17 +4,17 @@ use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::{repository::StateRepository, BigQueryClient};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use futures::{stream::FuturesUnordered, StreamExt};
-use std::fmt;
-use tokio::sync::{broadcast, mpsc};
-
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
 use std::{
+    fmt,
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
+use tokio::sync::mpsc;
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
+use wvm_tx::wvm::{v1::V1WvmSealedBlockWithSenders, WvmSealedBlockWithSenders};
 
 #[derive(Clone)] // Add this
 enum ArActorMessage {
@@ -231,7 +231,7 @@ async fn handle_block(
 
     // 1. Serialize block
     info!(target: "wvm::exex", "Block {} processing: starting serialization", block_number);
-    let borsh_brotli = serialize_block(&block)?;
+    let borsh_brotli = serialize_block(block.clone())?;
     // 2. Upload to Arweave
     info!(target: "wvm::exex", "Block {} processing: starting Arweave upload", block_number);
     let arweave_id = upload_to_arweave(
@@ -251,14 +251,17 @@ async fn handle_block(
     Ok(arweave_id)
 }
 
-fn serialize_block(sealed_block: &SealedBlockWithSenders) -> Result<Vec<u8>, ArActorError> {
+fn serialize_block(msg: SealedBlockWithSenders) -> Result<Vec<u8>, ArActorError> {
     let data_settler = DefaultWvmDataSettler;
-    let borsh_sealed_block = BorshSealedBlockWithSenders(sealed_block.clone());
+    let block_number = msg.block.header.header().number;
 
-    data_settler.process_block(&borsh_sealed_block).map_err(|e| ArActorError::SerializationFailed {
-        block_number: sealed_block.number,
-        error: e.to_string(),
-    })
+    let data = WvmSealedBlockWithSenders::V1(V1WvmSealedBlockWithSenders::from(msg));
+
+    let borsh_sealed_block = BorshSealedBlockWithSenders(data);
+
+    data_settler
+        .process_block(&borsh_sealed_block)
+        .map_err(|e| ArActorError::SerializationFailed { block_number, error: e.to_string() })
 }
 
 async fn upload_to_arweave(

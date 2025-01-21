@@ -4,6 +4,7 @@ use crate::inner::{
     wvm_block_precompile::WVM_BLOCK_PC,
 };
 use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
+use std::{cell::LazyCell, time::Duration};
 
 pub mod arweave_precompile;
 mod arweave_read_precompile;
@@ -22,6 +23,22 @@ fn hex_to_u64(hex_str: &str) -> u64 {
 fn is_pc_blocked(block_list: &Vec<&str>, addr: i32) -> bool {
     block_list.contains(&addr.to_string().as_str())
 }
+
+pub const REQ_TIMEOUT: LazyCell<Duration> = LazyCell::new(|| {
+    let duration_seconds = std::env::var("DURATION_SECONDS")
+        .ok()
+        .and_then(|val| val.parse::<u64>().ok())
+        .unwrap_or(1000);
+
+    Duration::from_millis(duration_seconds)
+});
+
+pub const REQ_SIZE: LazyCell<u64> = LazyCell::new(|| {
+    std::env::var("REQ_SIZE")
+        .ok()
+        .and_then(|val| val.parse::<u64>().ok())
+        .unwrap_or((1024 * 1024) * 4)
+});
 
 pub fn wvm_precompiles() -> impl Iterator<Item = PrecompileWithAddress> {
     // ORDER OF THINGS MATTER
@@ -69,10 +86,8 @@ mod pc_inner_tests {
         let pcs = wvm_precompiles();
         let pcs: Vec<PrecompileWithAddress> = pcs.collect();
         assert_eq!(pcs.len(), 4);
-    }
 
-    #[test]
-    pub fn wvm_precompiles_test() {
+        std::env::remove_var("BLOCKED_PC");
         let mut get_pcs = wvm_precompiles();
         let first = get_pcs.next().unwrap();
         assert_eq!(first.0, u64_to_address(0x17));

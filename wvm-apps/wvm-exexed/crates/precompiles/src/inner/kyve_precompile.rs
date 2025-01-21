@@ -1,3 +1,4 @@
+use crate::inner::REQ_TIMEOUT;
 use alloy_primitives::Bytes;
 use revm_primitives::{
     Precompile, PrecompileError, PrecompileErrors, PrecompileOutput, PrecompileResult,
@@ -51,8 +52,11 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     }
 
     let blk_number = block_number.unwrap();
+    let usize_blk_number = blk_number.to_string().parse::<usize>().map_err(|_| {
+        PrecompileErrors::Error(PrecompileError::Other("Invalid Block Number".to_string()))
+    })?;
 
-    if !(blk_number.to_string().parse::<usize>().unwrap() >= 19426589) {
+    if !(usize_blk_number >= 19426589) {
         return Err(PrecompileErrors::Error(PrecompileError::Other(
             "Can only read from block 19426589".to_string(),
         )));
@@ -60,68 +64,72 @@ fn kyve_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
     let field = field.unwrap();
 
-    internal_block(async {
-        println!(
-            "{}",
-            format!("{}/ethereum/beacon/blob_sidecars?block_height={}", KYVE_API_URL, blk_number)
-        );
-        let req = reqwest::get(
-            format!("{}/ethereum/beacon/blob_sidecars?block_height={}", KYVE_API_URL, blk_number)
-                .as_str(),
-        )
-        .await;
+    let req = ureq::get(
+        format!("{}/ethereum/beacon/blob_sidecars?block_height={}", KYVE_API_URL, blk_number)
+            .as_str(),
+    )
+    .timeout((&*REQ_TIMEOUT).clone())
+    .call();
 
-        match req {
-            Ok(resp) => match resp.json::<serde_json::Value>().await {
-                Ok(json_val) => {
-                    let main_val = json_val.get("value").unwrap();
-
-                    let slot = main_val.get("slot").and_then(|s| s.as_u64()).unwrap().to_string();
-
-                    let blobs = main_val.get("blobs").and_then(|b| b.as_array()).unwrap();
-
-                    let (blob_indx, field) = field.split_once('.').unwrap();
-
-                    if field.eq("slot") {
-                        return Ok(PrecompileOutput::new(gas_used, slot.into_bytes().into()));
-                    }
-
-                    match blobs.get(blob_indx.parse::<usize>().unwrap()) {
-                        Some(get_field) => {
-                            if let Some(field_val) = get_field.get(field) {
-                                Ok(PrecompileOutput::new(
-                                    gas_used,
-                                    field_val.as_str().unwrap().to_string().into_bytes().into(),
-                                ))
-                            } else {
-                                Err(PrecompileErrors::Error(PrecompileError::Other(
-                                    "Field does not exist".to_string(),
-                                )))
-                            }
-                        }
-                        None => Err(PrecompileErrors::Error(PrecompileError::Other(
-                            "Blob index does not exist".to_string(),
-                        ))),
-                    }
-                }
-                Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
+    match req {
+        Ok(resp) => {
+            let json_val = resp.into_json::<serde_json::Value>().map_err(|_| {
+                PrecompileErrors::Error(PrecompileError::Other(
                     "Invalid Response from server".to_string(),
-                ))),
-            },
-            Err(e) => {
-                println!("{:?}", e);
-                println!("{}", e.url().unwrap());
-                println!("{}", e.status().unwrap());
-                println!("{}", e.to_string());
-                Err(PrecompileErrors::Error(PrecompileError::Other(
-                    "Could not connect with KYVE".to_string(),
-                )))
+                ))
+            })?;
+
+            let main_val = json_val.get("value").ok_or_else(|| {
+                PrecompileErrors::Error(PrecompileError::Other("Missing 'value' field".to_string()))
+            })?;
+
+            let slot = main_val
+                .get("slot")
+                .and_then(|s| s.as_u64())
+                .ok_or_else(|| {
+                    PrecompileErrors::Error(PrecompileError::Other(
+                        "Missing or invalid 'slot' field".to_string(),
+                    ))
+                })?
+                .to_string();
+
+            let blobs = main_val.get("blobs").and_then(|b| b.as_array()).ok_or_else(|| {
+                PrecompileErrors::Error(PrecompileError::Other(
+                    "Missing or invalid 'blobs' field".to_string(),
+                ))
+            })?;
+
+            let (blob_indx, field) = field.split_once('.').ok_or_else(|| {
+                PrecompileErrors::Error(PrecompileError::Other("Invalid field format".to_string()))
+            })?;
+
+            if field == "slot" {
+                return Ok(PrecompileOutput::new(gas_used, slot.into_bytes().into()));
             }
+
+            let blob_index = blob_indx.parse::<usize>().map_err(|_| {
+                PrecompileErrors::Error(PrecompileError::Other("Invalid blob index".to_string()))
+            })?;
+
+            let get_field = blobs.get(blob_index).ok_or_else(|| {
+                PrecompileErrors::Error(PrecompileError::Other(
+                    "Blob index does not exist".to_string(),
+                ))
+            })?;
+
+            let field_val = get_field.get(field).and_then(|val| val.as_str()).ok_or_else(|| {
+                PrecompileErrors::Error(PrecompileError::Other("Field does not exist".to_string()))
+            })?;
+
+            Ok(PrecompileOutput::new(gas_used, field_val.to_string().into_bytes().into()))
         }
-    })
-    .map_err(|_| {
-        PrecompileError::Other("Tokio runtime could not block_on for operation".to_string())
-    })?
+        Err(e) => {
+            println!("{:?}", e);
+            Err(PrecompileErrors::Error(PrecompileError::Other(
+                "Could not connect with KYVE".to_string(),
+            )))
+        }
+    }
 }
 
 #[cfg(test)]

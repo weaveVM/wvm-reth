@@ -8270,6 +8270,7 @@ dependencies = [
  "ureq",
  "wvm-borsh",
  "wvm-static",
+ "wvm-tx",
 ]
 
 [[package]]
@@ -10396,6 +10397,7 @@ dependencies = [
  "tracing",
  "wvm-borsh",
  "wvm-static",
+ "wvm-tx",
 ]
 
 [[package]]
@@ -15746,7 +15748,10 @@ dependencies = [
  "alloy-eips",
  "alloy-primitives",
  "alloy-serde",
+ "derive_more 0.99.18",
+ "enum-as-inner",
  "op-alloy-consensus",
+ "paste",
  "reth-primitives",
  "serde",
  "serde_json",
