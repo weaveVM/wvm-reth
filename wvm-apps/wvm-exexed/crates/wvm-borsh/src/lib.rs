@@ -14,8 +14,7 @@ mod tests {
     use reth::primitives::{SealedBlock, Withdrawals};
     use reth_primitives::BlockBody;
     use std::{fs::File, io::Read};
-    use wvm_tx::wvm::v1::V1WvmSealedBlock;
-    use wvm_tx::wvm::WvmSealedBlock;
+    use wvm_tx::wvm::{v1::V1WvmSealedBlock, WvmSealedBlock};
 
     #[test]
     fn test_borsh_block() {

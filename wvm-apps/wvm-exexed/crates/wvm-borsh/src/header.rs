@@ -6,9 +6,10 @@ use crate::{
 use alloy_primitives::{Bytes, B64};
 use borsh::{BorshDeserialize, BorshSerialize};
 use std::io::{Read, Write};
-use wvm_tx::wvm::v1::header::V1WvmHeader;
-use wvm_tx::wvm::v1::V1WvmSealedHeader;
-use wvm_tx::wvm::{MagicIdentifier, WvmHeader, WvmSealedHeader};
+use wvm_tx::wvm::{
+    v1::{header::V1WvmHeader, V1WvmSealedHeader},
+    MagicIdentifier, WvmHeader, WvmSealedHeader,
+};
 
 pub struct BorshHeader(pub WvmHeader);
 pub struct BorshSealedHeader(pub WvmSealedHeader);
@@ -146,8 +147,7 @@ impl BorshDeserialize for BorshSealedHeader {
 mod header_tests {
     use crate::header::BorshSealedHeader;
     use reth::primitives::SealedHeader;
-    use wvm_tx::wvm::v1::V1WvmSealedHeader;
-    use wvm_tx::wvm::WvmSealedHeader;
+    use wvm_tx::wvm::{v1::V1WvmSealedHeader, WvmSealedHeader};
 
     #[test]
     pub fn test_sealed_header() {

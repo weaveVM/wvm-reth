@@ -9,8 +9,8 @@ use reth::primitives::BlockBody;
 
 use alloy_eips::eip4895::Withdrawals;
 use std::io::{Read, Write};
-use wvm_tx::wvm::v1::{V1WvmBlockBody, V1WvmSealedBlock, V1WvmSealedBlockWithSenders};
 use wvm_tx::wvm::{
+    v1::{V1WvmBlockBody, V1WvmSealedBlock, V1WvmSealedBlockWithSenders},
     MagicIdentifier, WvmHeader, WvmSealedBlock, WvmSealedBlockWithSenders, WvmSealedHeader,
     WvmTransactionSigned,
 };
@@ -146,8 +146,10 @@ impl BorshDeserialize for BorshSealedBlockWithSenders {
 mod block_tests {
     use crate::block::{BorshSealedBlock, BorshSealedBlockWithSenders};
     use reth::primitives::{SealedBlock, SealedBlockWithSenders};
-    use wvm_tx::wvm::v1::{V1WvmSealedBlock, V1WvmSealedBlockWithSenders};
-    use wvm_tx::wvm::WvmSealedBlockWithSenders;
+    use wvm_tx::wvm::{
+        v1::{V1WvmSealedBlock, V1WvmSealedBlockWithSenders},
+        WvmSealedBlockWithSenders,
+    };
 
     #[test]
     pub fn test_sealed_block() {

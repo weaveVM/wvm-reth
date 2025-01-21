@@ -1,6 +1,7 @@
-use crate::wvm::v1::header::V1WvmHeader;
-use crate::wvm::v1::transaction::V1WvmTransactionSigned;
-use crate::wvm::v1::{V1WvmSealedBlock, V1WvmSealedBlockWithSenders, V1WvmSealedHeader};
+use crate::wvm::v1::{
+    header::V1WvmHeader, transaction::V1WvmTransactionSigned, V1WvmSealedBlock,
+    V1WvmSealedBlockWithSenders, V1WvmSealedHeader,
+};
 
 use paste::paste;
 

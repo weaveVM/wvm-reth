@@ -3,9 +3,10 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{Transaction, TransactionSigned};
 
 use std::io::{Read, Write};
-use wvm_tx::wvm::v1::transaction::V1WvmTransactionSigned;
-use wvm_tx::wvm::{MagicIdentifier, WvmTransactionSigned};
-use wvm_tx::WvmTransaction;
+use wvm_tx::{
+    wvm::{v1::transaction::V1WvmTransactionSigned, MagicIdentifier, WvmTransactionSigned},
+    WvmTransaction,
+};
 
 pub struct BorshTransactionSigned(pub WvmTransactionSigned);
 pub struct BorshTransaction(pub WvmTransaction);
@@ -70,9 +71,10 @@ mod txs_tests {
 
     use reth::primitives::Transaction;
     use serde_json::Value;
-    use wvm_tx::wvm::v1::transaction::V1WvmTransactionSigned;
-    use wvm_tx::wvm::WvmTransactionSigned;
-    use wvm_tx::WvmTransaction;
+    use wvm_tx::{
+        wvm::{v1::transaction::V1WvmTransactionSigned, WvmTransactionSigned},
+        WvmTransaction,
+    };
 
     #[test]
     pub fn test_sealed_header() {

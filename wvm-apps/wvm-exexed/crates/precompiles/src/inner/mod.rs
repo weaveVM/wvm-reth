@@ -4,8 +4,7 @@ use crate::inner::{
     wvm_block_precompile::WVM_BLOCK_PC,
 };
 use reth::revm::precompile::{u64_to_address, PrecompileWithAddress};
-use std::cell::LazyCell;
-use std::time::Duration;
+use std::{cell::LazyCell, time::Duration};
 
 pub mod arweave_precompile;
 mod arweave_read_precompile;

@@ -153,7 +153,6 @@ members = [
     "testing/testing-utils/",
     "wvm-apps/wvm-exexed/",
     "wvm-apps/wvm-exexed/crates/reth-exexed/",
-    "wvm-apps/wvm-exexed/crates/exex-etl/",
     "wvm-apps/wvm-exexed/crates/lambda/",
     "wvm-apps/wvm-exexed/crates/precompiles/",
     "wvm-apps/wvm-exexed/crates/wvm-borsh/",
@@ -667,3 +666,4 @@ parse_duration = "2.1.1"
 #op-alloy-rpc-types-engine = { git = "https://github.com/alloy-rs/op-alloy", rev = "6a042e7681b1" }
 #op-alloy-network = { git = "https://github.com/alloy-rs/op-alloy", rev = "6a042e7681b1" }
 #op-alloy-consensus = { git = "https://github.com/alloy-rs/op-alloy", rev = "6a042e7681b1" }
+

@@ -1,5 +1,4 @@
-use crate::wvm::v1::header::V1WvmHeader;
-use crate::wvm::v1::transaction::V1WvmTransactionSigned;
+use crate::wvm::v1::{header::V1WvmHeader, transaction::V1WvmTransactionSigned};
 use alloy_consensus::Header;
 use alloy_primitives::{Address, BlockHash};
 use derive_more::{Deref, DerefMut};
