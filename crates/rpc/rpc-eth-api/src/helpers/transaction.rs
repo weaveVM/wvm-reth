@@ -395,6 +395,29 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
         }
     }
 
+    /// WVM Exclusive
+    /// Obtains the Arweave Hash of the transaction containing the WEVM Block
+    fn get_arweave_storage_proof(&self, block_height: String) -> impl Future<Output = Result<String, EthApiError>> + Send
+    where
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call {
+        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+
+        async move {
+            let result_set = bq_client.bq_query_block(block_height).await;
+
+            match result_set {
+                Some(result_set) => {
+                    match result_set.get_string_by_name("arweave_id") {
+                        Ok(Some(arweave_id)) => Ok(arweave_id), // Successfully found the string
+                        Ok(None) => Err(EthApiError::TransactionNotFound), // Field missing
+                        Err(err) => Err(EthApiError::TransactionNotFound), // Handle the inner error
+                    }
+                }
+                None => Err(EthApiError::TransactionNotFound), // Result set is None
+            }
+        }
+    }
+
     /// Signs transaction with a matching signer, if any and submits the transaction to the pool.
     /// Returns the hash of the signed transaction.
     fn send_transaction(
