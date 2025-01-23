@@ -623,8 +623,8 @@ borsh = "1.5.1"
 brotlic = "0.8.2"
 
 # exex-templates
-exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?a", branch = "main" }
-exex-wvm-bigquery = { git = "https://github.com/weaveVM/exex-templates?e", branch = "main" }
+exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?i", branch = "main" }
+exex-wvm-bigquery = { git = "https://github.com/weaveVM/exex-templates?i", branch = "main" }
 
 # fees
 fees = { git = "https://github.com/weaveVM/miscalleneous?c", branch = "main" }

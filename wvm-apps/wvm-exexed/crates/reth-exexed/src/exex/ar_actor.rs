@@ -329,12 +329,14 @@ async fn update_bigquery(
     update_bigquery_tags(big_query_client, block).await?;
 
     let save_block_start_time = std::time::Instant::now();
+    let block_hash = block.block.hash().to_string();
 
     let result = exex_wvm_bigquery::save_block(
         state_repo.clone(),
         block,
         block_number,
         arweave_id.to_string(),
+        block_hash
     )
     .await;
 
