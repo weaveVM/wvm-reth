@@ -17,7 +17,7 @@ use alloy_rpc_types::{
 };
 use alloy_rpc_types_eth::transaction::TransactionRequest;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use reth_rpc_eth_types::wvm::WvmTransactionRequest;
+use reth_rpc_eth_types::wvm::{GetWvmTransactionByTagRequest, WvmTransactionRequest};
 use reth_rpc_server_types::{result::internal_rpc_err, ToRpcResult};
 use tracing::trace;
 
@@ -335,6 +335,14 @@ pub trait EthApi<T: RpcObject, B: RpcObject, R: RpcObject> {
     /// transaction hash.
     #[method(name = "sendWvmTransaction")]
     async fn send_wvm_transaction(&self, request: WvmTransactionRequest) -> RpcResult<B256>;
+
+    /// Sends WVM transaction; will block waiting for signer to return the
+    /// transaction hash.
+    #[method(name = "getWvmTransactionByTag")]
+    async fn get_wvm_transaction_by_tag(
+        &self,
+        request: GetWvmTransactionByTagRequest,
+    ) -> RpcResult<Option<Bytes>>;
 
     /// Gets the arweave transaction id that prooves the permanency of a given block
     #[method(name = "getArweaveStorageProof")]
@@ -779,6 +787,16 @@ where
     async fn send_wvm_transaction(&self, request: WvmTransactionRequest) -> RpcResult<B256> {
         trace!(target: "rpc::eth", ?request, "Serving eth_sendWvmTransaction");
         Ok(EthTransactions::send_wvm_transaction(self, request).await?)
+    }
+
+    /// Handler for: `eth_getWvmTransactionByTag`
+    /// Returns the information about a wvm transaction requested by wvm transaction tag.
+    async fn get_wvm_transaction_by_tag(
+        &self,
+        request: GetWvmTransactionByTagRequest,
+    ) -> RpcResult<B256> {
+        trace!(target: "rpc::eth", ?request, "Serving eth_getWvmTransactionByTag");
+        Ok(EthTransactions::get_wvm_transaction_by_tag(self, request).await?)
     }
 
     /// Handler for: `eth_getArweaveStorageProof`

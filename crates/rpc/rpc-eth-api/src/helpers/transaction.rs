@@ -13,7 +13,7 @@ use reth_primitives::{Receipt, SealedBlockWithSenders, TransactionMeta, Transact
 use reth_provider::{BlockNumReader, BlockReaderIdExt, ReceiptProvider, TransactionsProvider};
 use reth_rpc_eth_types::{
     utils::{binary_search, recover_raw_transaction},
-    wvm::WvmTransactionRequest,
+    wvm::{GetWvmTransactionByTagRequest, WvmTransactionRequest},
     EthApiError, SignError, TransactionSource,
 };
 use reth_rpc_types_compat::transaction::{from_recovered, from_recovered_with_block_context};
@@ -397,13 +397,47 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
     /// WVM Exclusive
     /// Obtains the Arweave Hash of the transaction containing the WEVM Block
-    fn get_arweave_storage_proof(&self, block_height: String) -> impl Future<Output = Result<String, EthApiError>> + Send
+    fn get_arweave_storage_proof(
+        &self,
+        block_height: String,
+    ) -> impl Future<Output = Result<String, EthApiError>> + Send
     where
-        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call {
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
+    {
         let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
 
         async move {
             let result_set = bq_client.bq_query_block(block_height).await;
+
+            match result_set {
+                Some(result_set) => {
+                    match result_set.get_string_by_name("arweave_id") {
+                        Ok(Some(arweave_id)) => Ok(arweave_id), // Successfully found the string
+                        Ok(None) => Err(EthApiError::TransactionNotFound), // Field missing
+                        Err(err) => Err(EthApiError::TransactionNotFound), // Handle the inner error
+                    }
+                }
+                None => Err(EthApiError::TransactionNotFound), // Result set is None
+            }
+        }
+    }
+
+    /// WVM Exclusive
+    /// Obtains transactions using tag
+    fn get_wvm_transaction_by_tag(
+        &self,
+        req: GetWvmTransactionByTagRequest,
+    ) -> impl Future<Output = Result<String, EthApiError>> + Send
+    where
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
+    {
+        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+
+        async move {
+            if req.tag.is_none() {
+                return Err(EthApiError::InvalidParams("empty tag in request".to_string()))
+            }
+            let result_set = bq_client.bq_query_transaction_by_tag(req.tag).await;
 
             match result_set {
                 Some(result_set) => {
