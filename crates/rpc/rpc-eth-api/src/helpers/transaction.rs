@@ -485,7 +485,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
             }
 
             result
-                .get_string_by_name("hash")
+                .get_string_by_name("tx_hash")
                 .map_err(|_| EthApiError::TransactionNotFound)?
                 .ok_or(EthApiError::TransactionNotFound)
         }
