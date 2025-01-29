@@ -794,7 +794,7 @@ where
     async fn get_wvm_transaction_by_tag(
         &self,
         request: GetWvmTransactionByTagRequest,
-    ) -> RpcResult<B256> {
+    ) -> RpcResult<Option<Bytes>> {
         trace!(target: "rpc::eth", ?request, "Serving eth_getWvmTransactionByTag");
         Ok(EthTransactions::get_wvm_transaction_by_tag(self, request).await?)
     }
