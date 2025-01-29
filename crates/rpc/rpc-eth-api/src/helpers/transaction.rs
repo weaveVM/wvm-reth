@@ -435,6 +435,8 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
                 }
             };
 
+            tracing::debug!(first = tag.0, second = tag.1, "incoming tag");
+
             let hash_str = Self::query_transaction_by_tag(&bq_client, tag)
                 .await
                 .map_err(Self::Error::from_eth_err)?;
@@ -442,6 +444,8 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
             let hash = B256::from_str(&hash_str).map_err(|_| {
                 EthApiError::InvalidParams("invalid hash format".to_string()).into_eth_err()
             })?;
+
+            tracing::debug!(target = "wvm", "found hash of tx by tag! {tx_hash}", tx_hash = hash);
 
             self.spawn_blocking_io(move |ref this| {
                 this.provider()
