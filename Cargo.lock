@@ -4227,7 +4227,7 @@ dependencies = [
 [[package]]
 name = "exex-wvm-bigquery"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?i?branch=main#0797ea70966cd418b794efbce6e76149b32897c6"
+source = "git+https://github.com/weaveVM/exex-templates?i?tag=v0.1.0#2f7e039caa8e123029a638425de21076f2c76328"
 dependencies = [
  "alloy-primitives",
  "chrono",
@@ -4244,7 +4244,7 @@ dependencies = [
 [[package]]
 name = "exex-wvm-da"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?i?branch=main#0797ea70966cd418b794efbce6e76149b32897c6"
+source = "git+https://github.com/weaveVM/exex-templates?i?tag=v0.1.0#2f7e039caa8e123029a638425de21076f2c76328"
 dependencies = [
  "async-trait",
  "borsh 1.5.5",

@@ -409,17 +409,9 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
         let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
 
         async move {
-            let result_set = bq_client.bq_query_block(block_height).await;
-
-            match result_set {
-                Some(result_set) => {
-                    match result_set.get_string_by_name("arweave_id") {
-                        Ok(Some(arweave_id)) => Ok(arweave_id), // Successfully found the string
-                        Ok(None) => Err(EthApiError::TransactionNotFound), // Field missing
-                        Err(err) => Err(EthApiError::TransactionNotFound), // Handle the inner error
-                    }
-                }
-                None => Err(EthApiError::TransactionNotFound), // Result set is None
+            match bq_client.bq_query_state(block_height.clone()).await {
+                Some(arweave_id) => Ok(arweave_id),
+                None => Err(EthApiError::TransactionNotFound),
             }
         }
     }
