@@ -382,7 +382,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
             bq_client
                 .insert_generic(
-                    "confirmed_tags",
+                    "tags",
                     None,
                     TagsTbl {
                         hash: hash.to_string(),

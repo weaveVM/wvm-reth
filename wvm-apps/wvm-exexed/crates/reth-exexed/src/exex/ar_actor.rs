@@ -336,7 +336,6 @@ async fn update_bigquery(
         block,
         block_number,
         arweave_id.to_string(),
-        block_hash,
     )
     .await;
 
