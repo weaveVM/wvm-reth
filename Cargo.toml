@@ -622,9 +622,8 @@ borsh = "1.5.1"
 # brotli
 brotlic = "0.8.2"
 
-# exex-templates
-exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?i", branch = "main" }
-exex-wvm-bigquery = { git = "https://github.com/weaveVM/exex-templates?i", branch = "main" }
+exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?i", tag = "v0.1.0" }
+exex-wvm-bigquery = { git = "https://github.com/weaveVM/exex-templates?i", tag = "v0.1.0" }
 
 # fees
 fees = { git = "https://github.com/weaveVM/miscalleneous?c", branch = "main" }
@@ -667,3 +666,4 @@ parse_duration = "2.1.1"
 #op-alloy-network = { git = "https://github.com/alloy-rs/op-alloy", rev = "6a042e7681b1" }
 #op-alloy-consensus = { git = "https://github.com/alloy-rs/op-alloy", rev = "6a042e7681b1" }
 
+# exex-templates

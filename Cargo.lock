@@ -223,13 +223,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "alloy-eip7702"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cabf647eb4650c91a9d38cb6f972bb320009e7e9d61765fb688a86f1563b33e8"
+dependencies = [
+ "alloy-primitives",
+ "alloy-rlp",
+ "derive_more 1.0.0",
+ "k256",
+ "serde",
+]
+
+[[package]]
 name = "alloy-eips"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b69e06cf9c37be824b9d26d6d101114fdde6af0c87de2828b414c05c4b3daa71"
 dependencies = [
  "alloy-eip2930",
- "alloy-eip7702",
+ "alloy-eip7702 0.3.2",
  "alloy-primitives",
  "alloy-rlp",
  "alloy-serde",
@@ -1152,7 +1165,7 @@ dependencies = [
 name = "arweave-upload"
 version = "1.1.1"
 dependencies = [
- "borsh 1.5.1",
+ "borsh 1.5.5",
  "bundlr-sdk",
  "dotenv",
  "eyre",
@@ -1786,9 +1799,9 @@ dependencies = [
 
 [[package]]
 name = "borsh"
-version = "1.5.1"
+version = "1.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6362ed55def622cddc70a4746a68554d7b687713770de539e59a739b249f8ed"
+checksum = "5430e3be710b68d984d1391c854eb431a9d548640711faa54eecb1df93db91cc"
 dependencies = [
  "cfg_aliases",
 ]
@@ -1808,16 +1821,15 @@ dependencies = [
 
 [[package]]
 name = "borsh-derive"
-version = "1.5.1"
+version = "1.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3ef8005764f53cd4dca619f5bf64cafd4664dada50ece25e4d81de54c80cc0b"
+checksum = "f8b668d39970baad5356d7c83a86fee3a539e6f93bf6764c97368243e17a0487"
 dependencies = [
  "once_cell",
  "proc-macro-crate 3.2.0",
  "proc-macro2",
  "quote",
  "syn 2.0.87",
- "syn_derive",
 ]
 
 [[package]]
@@ -3355,7 +3367,7 @@ dependencies = [
  "reth-provider",
  "reth-revm",
  "reth-stages",
- "revm",
+ "revm 17.0.0",
  "serde",
  "serde_json",
  "thiserror 1.0.66",
@@ -3873,6 +3885,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
+name = "evm-state-reconstructing"
+version = "0.1.0"
+source = "git+https://github.com/weaveVM/evm-state-reconstructing.git?branch=main#7e30c214b66008cf8bde48c85b8505bd4a99b1f4"
+dependencies = [
+ "borsh 1.5.5",
+ "borsh-derive 1.5.5",
+ "ethereum-types",
+ "ethers",
+ "eyre",
+ "futures",
+ "hex",
+ "revm 19.4.0",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "example-beacon-api-sidecar-fetcher"
 version = "0.1.0"
 dependencies = [
@@ -4197,7 +4227,7 @@ dependencies = [
 [[package]]
 name = "exex-wvm-bigquery"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?e?branch=main#2f7e039caa8e123029a638425de21076f2c76328"
+source = "git+https://github.com/weaveVM/exex-templates?i?tag=v0.1.0#2f7e039caa8e123029a638425de21076f2c76328"
 dependencies = [
  "alloy-primitives",
  "chrono",
@@ -4214,10 +4244,10 @@ dependencies = [
 [[package]]
 name = "exex-wvm-da"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?a?branch=main#2f7e039caa8e123029a638425de21076f2c76328"
+source = "git+https://github.com/weaveVM/exex-templates?i?tag=v0.1.0#2f7e039caa8e123029a638425de21076f2c76328"
 dependencies = [
  "async-trait",
- "borsh 1.5.1",
+ "borsh 1.5.5",
  "brotlic",
  "eyre",
  "wvm-archiver",
@@ -8246,7 +8276,7 @@ version = "1.1.1"
 dependencies = [
  "alloy-primitives",
  "arweave-upload",
- "borsh 1.5.1",
+ "borsh 1.5.5",
  "eyre",
  "parking_lot",
  "rbrotli",
@@ -8262,7 +8292,7 @@ dependencies = [
  "reth-revm",
  "reth-tracing",
  "reth-trie-db",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "schnellru",
  "serde",
  "serde_json",
@@ -8834,7 +8864,7 @@ dependencies = [
 name = "rbrotli"
 version = "1.1.1"
 dependencies = [
- "borsh 1.5.1",
+ "borsh 1.5.5",
  "brotlic",
  "reth",
  "serde_json",
@@ -9156,7 +9186,7 @@ dependencies = [
  "reth-tokio-util",
  "reth-transaction-pool",
  "reth-trie",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -9183,7 +9213,7 @@ dependencies = [
  "reth-revm",
  "reth-tasks",
  "reth-transaction-pool",
- "revm",
+ "revm 17.0.0",
  "tokio",
  "tracing",
 ]
@@ -9349,7 +9379,7 @@ dependencies = [
  "reth-storage-api",
  "reth-testing-utils",
  "reth-trie",
- "revm",
+ "revm 17.0.0",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -9557,7 +9587,7 @@ dependencies = [
  "reth-consensus",
  "reth-primitives",
  "reth-storage-api",
- "revm-primitives",
+ "revm-primitives 13.0.0",
 ]
 
 [[package]]
@@ -9988,7 +10018,7 @@ dependencies = [
  "reth-tracing",
  "reth-trie",
  "reth-trie-parallel",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "thiserror 1.0.66",
  "tokio",
  "tokio-stream",
@@ -10019,7 +10049,7 @@ dependencies = [
  "reth-revm",
  "reth-rpc-types-compat",
  "reth-trie",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "serde",
  "serde_json",
  "tokio",
@@ -10182,8 +10212,8 @@ dependencies = [
  "reth-revm",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
- "revm-primitives",
+ "revm 17.0.0",
+ "revm-primitives 13.0.0",
  "tracing",
 ]
 
@@ -10220,8 +10250,8 @@ dependencies = [
  "reth-prune-types",
  "reth-revm",
  "reth-storage-errors",
- "revm",
- "revm-primitives",
+ "revm 17.0.0",
+ "revm-primitives 13.0.0",
 ]
 
 [[package]]
@@ -10242,7 +10272,7 @@ dependencies = [
  "reth-primitives",
  "reth-revm",
  "reth-testing-utils",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "secp256k1 0.29.1",
  "serde_json",
 ]
@@ -10259,7 +10289,7 @@ dependencies = [
  "reth-consensus",
  "reth-prune-types",
  "reth-storage-errors",
- "revm-primitives",
+ "revm-primitives 13.0.0",
 ]
 
 [[package]]
@@ -10274,7 +10304,7 @@ dependencies = [
  "reth-execution-errors",
  "reth-primitives",
  "reth-trie",
- "revm",
+ "revm 17.0.0",
  "serde",
  "serde_with",
 ]
@@ -10377,7 +10407,7 @@ name = "reth-exexed"
 version = "1.1.1"
 dependencies = [
  "arweave-upload",
- "borsh 1.5.1",
+ "borsh 1.5.5",
  "brotlic",
  "exex-wvm-bigquery",
  "exex-wvm-da",
@@ -10841,7 +10871,7 @@ dependencies = [
  "reth-tracing",
  "reth-transaction-pool",
  "reth-trie-db",
- "revm",
+ "revm 17.0.0",
  "serde_json",
  "tokio",
 ]
@@ -11010,8 +11040,8 @@ dependencies = [
  "reth-primitives",
  "reth-prune-types",
  "reth-revm",
- "revm",
- "revm-primitives",
+ "revm 17.0.0",
+ "revm-primitives 13.0.0",
  "tracing",
 ]
 
@@ -11065,7 +11095,7 @@ dependencies = [
  "reth-tracing",
  "reth-transaction-pool",
  "reth-trie-db",
- "revm",
+ "revm 17.0.0",
  "serde",
  "serde_json",
  "tokio",
@@ -11099,7 +11129,7 @@ dependencies = [
  "reth-rpc-types-compat",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
+ "revm 17.0.0",
  "sha2 0.10.8",
  "thiserror 1.0.66",
  "tracing",
@@ -11147,7 +11177,7 @@ dependencies = [
  "reth-rpc-server-types",
  "reth-tasks",
  "reth-transaction-pool",
- "revm",
+ "revm 17.0.0",
  "serde_json",
  "thiserror 1.0.66",
  "tokio",
@@ -11180,7 +11210,7 @@ dependencies = [
  "reth-payload-primitives",
  "reth-primitives",
  "reth-provider",
- "revm",
+ "revm 17.0.0",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -11253,7 +11283,7 @@ dependencies = [
  "reth-static-file-types",
  "reth-testing-utils",
  "reth-trie-common",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "secp256k1 0.29.1",
  "serde",
  "serde_json",
@@ -11273,7 +11303,7 @@ dependencies = [
  "alloy-rlp",
  "arbitrary",
  "bincode",
- "borsh 1.5.1",
+ "borsh 1.5.5",
  "byteorder",
  "bytes",
  "derive_more 1.0.0",
@@ -11284,7 +11314,7 @@ dependencies = [
  "rand 0.8.5",
  "reth-codecs",
  "reth-testing-utils",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "roaring",
  "serde",
  "serde_json",
@@ -11335,7 +11365,7 @@ dependencies = [
  "reth-testing-utils",
  "reth-trie",
  "reth-trie-db",
- "revm",
+ "revm 17.0.0",
  "strum 0.26.3",
  "tempfile",
  "tokio",
@@ -11405,7 +11435,7 @@ dependencies = [
  "reth-storage-api",
  "reth-storage-errors",
  "reth-trie",
- "revm",
+ "revm 17.0.0",
 ]
 
 [[package]]
@@ -11466,9 +11496,9 @@ dependencies = [
  "reth-testing-utils",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
+ "revm 17.0.0",
  "revm-inspectors",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "serde",
  "serde_json",
  "thiserror 1.0.66",
@@ -11627,6 +11657,7 @@ dependencies = [
  "async-trait",
  "auto_impl",
  "dyn-clone",
+ "exex-wvm-bigquery",
  "futures",
  "jsonrpsee",
  "jsonrpsee-types",
@@ -11646,9 +11677,9 @@ dependencies = [
  "reth-tasks",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
+ "revm 17.0.0",
  "revm-inspectors",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "serde",
  "serde_json",
  "tokio",
@@ -11687,9 +11718,9 @@ dependencies = [
  "reth-tasks",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
+ "revm 17.0.0",
  "revm-inspectors",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "schnellru",
  "serde",
  "serde_json",
@@ -11990,7 +12021,7 @@ dependencies = [
  "reth-storage-api",
  "reth-tasks",
  "reth-tracing",
- "revm",
+ "revm 17.0.0",
  "rustc-hash 2.0.0",
  "schnellru",
  "serde",
@@ -12024,7 +12055,7 @@ dependencies = [
  "reth-stages-types",
  "reth-storage-errors",
  "reth-trie-common",
- "revm",
+ "revm 17.0.0",
  "serde",
  "serde_json",
  "serde_with",
@@ -12052,7 +12083,7 @@ dependencies = [
  "proptest-arbitrary-interop",
  "reth-codecs",
  "reth-primitives-traits",
- "revm-primitives",
+ "revm-primitives 13.0.0",
  "serde",
 ]
 
@@ -12077,7 +12108,7 @@ dependencies = [
  "reth-storage-errors",
  "reth-trie",
  "reth-trie-common",
- "revm",
+ "revm 17.0.0",
  "serde",
  "serde_json",
  "similar-asserts",
@@ -12140,10 +12171,28 @@ dependencies = [
  "cfg-if",
  "dyn-clone",
  "once_cell",
- "revm-interpreter",
- "revm-precompile",
+ "revm-interpreter 13.0.0",
+ "revm-precompile 14.0.0",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "revm"
+version = "19.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1538aea4d103a8044820eede9b1254e1b5a2a2abaf3f9a67bef19f8865cf1826"
+dependencies = [
+ "auto_impl",
+ "cfg-if",
+ "dyn-clone",
+ "ethers-core",
+ "ethers-providers",
+ "revm-interpreter 15.1.0",
+ "revm-precompile 16.0.0",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -12159,7 +12208,7 @@ dependencies = [
  "boa_engine",
  "boa_gc",
  "colorchoice",
- "revm",
+ "revm 17.0.0",
  "serde_json",
  "thiserror 1.0.66",
 ]
@@ -12169,7 +12218,17 @@ name = "revm-interpreter"
 version = "13.0.0"
 source = "git+https://github.com/weaveVM/wvm-revm?branch=main#1839a61fde89c99d352bf9a47d1d1a7edcee4ab2"
 dependencies = [
- "revm-primitives",
+ "revm-primitives 13.0.0",
+ "serde",
+]
+
+[[package]]
+name = "revm-interpreter"
+version = "15.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0f632e761f171fb2f6ace8d1552a5793e0350578d4acec3e79ade1489f4c2a6"
+dependencies = [
+ "revm-primitives 15.1.0",
  "serde",
 ]
 
@@ -12185,7 +12244,26 @@ dependencies = [
  "k256",
  "once_cell",
  "p256",
- "revm-primitives",
+ "revm-primitives 13.0.0",
+ "ripemd",
+ "secp256k1 0.29.1",
+ "sha2 0.10.8",
+ "substrate-bn",
+]
+
+[[package]]
+name = "revm-precompile"
+version = "16.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6542fb37650dfdbf4b9186769e49c4a8bc1901a3280b2ebf32f915b6c8850f36"
+dependencies = [
+ "aurora-engine-modexp",
+ "blst",
+ "c-kzg",
+ "cfg-if",
+ "k256",
+ "once_cell",
+ "revm-primitives 15.1.0",
  "ripemd",
  "secp256k1 0.29.1",
  "sha2 0.10.8",
@@ -12198,7 +12276,27 @@ version = "13.0.0"
 source = "git+https://github.com/weaveVM/wvm-revm?branch=main#1839a61fde89c99d352bf9a47d1d1a7edcee4ab2"
 dependencies = [
  "alloy-eip2930",
- "alloy-eip7702",
+ "alloy-eip7702 0.3.2",
+ "alloy-primitives",
+ "auto_impl",
+ "bitflags 2.6.0",
+ "bitvec",
+ "c-kzg",
+ "cfg-if",
+ "dyn-clone",
+ "enumn",
+ "hex",
+ "serde",
+]
+
+[[package]]
+name = "revm-primitives"
+version = "15.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48faea1ecf2c9f80d9b043bbde0db9da616431faed84c4cfa3dd7393005598e6"
+dependencies = [
+ "alloy-eip2930",
+ "alloy-eip7702 0.5.0",
  "alloy-primitives",
  "auto_impl",
  "bitflags 2.6.0",
@@ -12907,9 +13005,9 @@ checksum = "a3f0bf26fd526d2a95683cd0f87bf103b8539e2ca1ef48ce002d67aad59aa0b4"
 
 [[package]]
 name = "serde"
-version = "1.0.214"
+version = "1.0.217"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f55c3193aca71c12ad7890f1785d2b73e1b9f63a0bbc353c08ef26fe03fc56b5"
+checksum = "02fc4265df13d6fa1d00ecff087228cc0a2b5f3c0e87e258d8b94a156e984c70"
 dependencies = [
  "serde_derive",
 ]
@@ -12927,9 +13025,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.214"
+version = "1.0.217"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de523f781f095e28fa605cdce0f8307e451cc0fd14e2eb4cd2e98a355b147766"
+checksum = "5a9bf7cf98d04a2b28aead066b7496853d4779c9cc183c440dbac457641e19a0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -12938,9 +13036,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.132"
+version = "1.0.137"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d726bfaff4b320266d395898905d0eba0345aae23b54aee3a737e260fd46db03"
+checksum = "930cfb6e6abf99298aaad7d29abbef7a9999a9a8806a40088f55f0dcec03146b"
 dependencies = [
  "indexmap 2.6.0",
  "itoa",
@@ -13740,18 +13838,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16320d4a2021ba1a32470b3759676114a918885e9800e68ad60f2c67969fba62"
 dependencies = [
  "paste",
- "proc-macro2",
- "quote",
- "syn 2.0.87",
-]
-
-[[package]]
-name = "syn_derive"
-version = "0.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1329189c02ff984e9736652b1631330da25eaa6bc639089ed4915d25446cbe7b"
-dependencies = [
- "proc-macro-error",
  "proc-macro2",
  "quote",
  "syn 2.0.87",
@@ -15644,18 +15730,19 @@ dependencies = [
 
 [[package]]
 name = "wvm-archiver"
-version = "0.2.6"
-source = "git+https://github.com/weaveVM/wvm-archiver?branch=main#2752fa49a85861d069d10348e7bb8251bb3fdb6a"
+version = "0.3.0"
+source = "git+https://github.com/weaveVM/wvm-archiver?branch=main#31ea9cf0b22229fc0cb6efe7295c9943b55bcf63"
 dependencies = [
  "anyhow",
  "axum 0.7.7",
- "borsh 1.5.1",
- "borsh-derive 1.5.1",
+ "borsh 1.5.5",
+ "borsh-derive 1.5.5",
  "brotli 6.0.0",
  "dotenv",
  "ethers",
  "ethers-core",
  "ethers-providers",
+ "evm-state-reconstructing",
  "planetscale-driver",
  "serde",
  "serde_json",
@@ -15671,7 +15758,7 @@ dependencies = [
  "alloy-consensus",
  "alloy-eips",
  "alloy-primitives",
- "borsh 1.5.1",
+ "borsh 1.5.5",
  "dotenv",
  "eyre",
  "reqwest 0.12.9",
@@ -15692,7 +15779,7 @@ version = "1.0.0"
 dependencies = [
  "alloy-primitives",
  "arweave-upload",
- "borsh 1.5.1",
+ "borsh 1.5.5",
  "brotlic",
  "exex-wvm-bigquery",
  "exex-wvm-da",
