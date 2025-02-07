@@ -273,8 +273,8 @@ async fn upload_to_arweave(
 ) -> Result<String, ArActorError> {
     let start_time = std::time::Instant::now();
 
+    // First upload (Arweave data settlement)
     let mut request = ArweaveRequest::new();
-
     request
         .set_tag("Content-Type", "application/octet-stream")
         .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
@@ -288,8 +288,6 @@ async fn upload_to_arweave(
     match request.send_with_provider(ar_uploader).await {
         Ok(response) => {
             let total_duration = start_time.elapsed();
-
-            // Log successful upload
             info!(
                 target: "wvm::exex",
                 block_number = block_number,
@@ -298,12 +296,51 @@ async fn upload_to_arweave(
                 response
             );
 
+            // After first successful upload, attest Arweave data settlement to AO (WeaveDrive)
+            // https://hackmd.io/@ao-docs/H1JK_WezR
+            let second_start_time = std::time::Instant::now();
+            let mut second_request = ArweaveRequest::new();
+            second_request
+                .set_tag("Content-Type", "application/json")
+                .set_tag("WeaveVM:Encoding", "JSON")
+                .set_tag("Data-Protocol", "ao")
+                .set_tag("Type", "Attestation")
+                .set_tag("Message", &response)
+                .set_tag("Block-Number", block_number.to_string().as_str())
+                .set_tag("Block-Hash", block_hash)
+                .set_data(serde_json::json!({
+                    "data_settlement_tx_id": response,
+                    "block_number": block_number,
+                    "block_hash": block_hash,
+                }).to_string().into_bytes());
+
+            match second_request.send_with_provider(ar_uploader).await {
+                Ok(second_tx_id) => {
+                    info!(
+                        target: "wvm::exex",
+                        block_number = block_number,
+                        primary_tx = response,
+                        secondary_tx = second_tx_id,
+                        secondary_duration = ?second_start_time.elapsed().as_millis(),
+                        "Secondary Arweave upload completed successfully"
+                    );
+                }
+                Err(e) => {
+                    error!(
+                        target: "wvm::exex",
+                        block_number = block_number,
+                        primary_tx = response,
+                        error = %e,
+                        duration = ?second_start_time.elapsed().as_millis(),
+                        "Secondary Arweave upload failed (WeaveDrive attestation)"
+                    );
+                }
+            }
+
             Ok(response)
         }
         Err(e) => {
             let total_duration = start_time.elapsed();
-
-            // Log failed upload with timing details
             error!(
                 target: "wvm::exex",
                 block_number = block_number,
