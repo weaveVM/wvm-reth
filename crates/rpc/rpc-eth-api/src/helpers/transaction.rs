@@ -1,6 +1,5 @@
 //! Database access for `eth_` transaction RPC methods. Loads transaction and receipt data w.r.t.
 //! network.
-
 use alloy_consensus::Transaction;
 use alloy_dyn_abi::TypedData;
 use alloy_eips::{eip2718::Encodable2718, BlockId};
@@ -8,18 +7,20 @@ use alloy_network::TransactionBuilder;
 use alloy_primitives::{Address, Bytes, TxHash, B256};
 use alloy_rpc_types::{BlockNumberOrTag, TransactionInfo};
 use alloy_rpc_types_eth::transaction::TransactionRequest;
+use exex_wvm_bigquery::BigQueryClient;
 use futures::Future;
 use reth_primitives::{Receipt, SealedBlockWithSenders, TransactionMeta, TransactionSigned};
 use reth_provider::{BlockNumReader, BlockReaderIdExt, ReceiptProvider, TransactionsProvider};
 use reth_rpc_eth_types::{
     utils::{binary_search, recover_raw_transaction},
-    wvm::WvmTransactionRequest,
+    wvm::{GetWvmTransactionByTagRequest, WvmTransactionRequest},
     EthApiError, SignError, TransactionSource,
 };
 use reth_rpc_types_compat::transaction::{from_recovered, from_recovered_with_block_context};
 use reth_transaction_pool::{PoolTransaction, TransactionOrigin, TransactionPool};
 use serde::Serialize;
 use std::{
+    str::FromStr,
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -354,7 +355,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
     /// Tags will be then be used for easier indexing of the chain transaction itself
     fn send_wvm_transaction(
         &self,
-        mut request: WvmTransactionRequest,
+        request: WvmTransactionRequest,
     ) -> impl Future<Output = Result<B256, Self::Error>> + Send
     where
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
@@ -364,6 +365,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
         async move {
             let tags = request.tags;
+
             let hash = self.send_raw_transaction(request.tx).await?;
             let created_at = {
                 let now = SystemTime::now();
@@ -392,6 +394,104 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
                 .map_err(|_| EthApiError::InternalEthError)?;
 
             Ok(hash)
+        }
+    }
+
+    /// WVM Exclusive
+    /// Obtains the Arweave Hash of the transaction containing the WEVM Block
+    fn get_arweave_storage_proof(
+        &self,
+        block_height: String,
+    ) -> impl Future<Output = Result<String, EthApiError>> + Send
+    where
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
+    {
+        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+
+        async move {
+            match bq_client.bq_query_state(block_height.clone()).await {
+                Some(arweave_id) => Ok(arweave_id),
+                None => Err(EthApiError::TransactionNotFound),
+            }
+        }
+    }
+
+    /// WVM Exclusive
+    /// Obtains transactions using tag
+    fn get_wvm_transaction_by_tag(
+        &self,
+        req: GetWvmTransactionByTagRequest,
+    ) -> impl Future<Output = Result<Option<Bytes>, Self::Error>> + Send
+    where
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
+    {
+        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+        async move {
+            let tag = match req.tag {
+                Some(tag) => tag,
+                None => {
+                    return Err(EthApiError::InvalidParams("empty tag in request".to_string())
+                        .into_eth_err())
+                }
+            };
+
+            tracing::debug!(first = tag.0, second = tag.1, "incoming tag");
+
+            let hash_str = Self::query_transaction_by_tag(&bq_client, tag)
+                .await
+                .map_err(Self::Error::from_eth_err)?;
+
+            let hash = B256::from_str(&hash_str).map_err(|_| {
+                EthApiError::InvalidParams("invalid hash format".to_string()).into_eth_err()
+            })?;
+
+            tracing::debug!(target = "wvm", "found hash of tx by tag! {tx_hash}", tx_hash = hash);
+
+            self.spawn_blocking_io(move |ref this| {
+                this.provider()
+                    .transaction_by_hash(hash)
+                    .map_err(Self::Error::from_eth_err)
+                    .map(|maybe_tx| maybe_tx.map(|tx| tx.encoded_2718().into()))
+            })
+            .await
+        }
+    }
+
+    fn query_transaction_by_tag(
+        bq_client: &BigQueryClient,
+        tag: (String, String),
+    ) -> impl Future<Output = Result<String, EthApiError>> + Send {
+        async move {
+            let table_name =
+                format!("`{}.{}.{}`", bq_client.project_id, bq_client.dataset_id, "confirmed_tags");
+
+            let query = format!(
+                r#"
+                SELECT t.tx_hash
+                FROM {} t
+                WHERE EXISTS (
+                  SELECT 1
+                  FROM UNNEST(JSON_EXTRACT_ARRAY(tags)) AS tag_pair
+                  WHERE JSON_EXTRACT_SCALAR(tag_pair, '$[0]') = "{}"
+                  AND JSON_EXTRACT_SCALAR(tag_pair, '$[1]') = "{}"
+                )
+                LIMIT 1
+
+                "#,
+                table_name, tag.0, tag.1
+            );
+
+            let mut result =
+                bq_client.bq_query(query).await.map_err(|e| EthApiError::InternalEthError)?;
+
+            if !result.next_row() {
+                return Err(EthApiError::TransactionNotFound)
+            }
+
+            result
+                .get_string_by_name("tx_hash")
+                .map_err(|_| EthApiError::TransactionNotFound)?
+                .ok_or(EthApiError::TransactionNotFound)
         }
     }
 

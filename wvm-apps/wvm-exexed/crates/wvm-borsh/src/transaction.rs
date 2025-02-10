@@ -3,10 +3,13 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use reth::primitives::{Transaction, TransactionSigned};
 
 use std::io::{Read, Write};
-use wvm_tx::WvmTransaction;
+use wvm_tx::{
+    wvm::{v1::transaction::V1WvmTransactionSigned, MagicIdentifier, WvmTransactionSigned},
+    WvmTransaction,
+};
 
-pub struct BorshTransactionSigned(pub TransactionSigned);
-pub struct BorshTransaction(pub Transaction);
+pub struct BorshTransactionSigned(pub WvmTransactionSigned);
+pub struct BorshTransaction(pub WvmTransaction);
 
 impl BorshSerialize for BorshTransaction {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
@@ -20,15 +23,21 @@ impl BorshDeserialize for BorshTransaction {
     fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
         let bytes = Vec::<u8>::deserialize_reader(reader)?;
         let tx: WvmTransaction = serde_json::from_slice(bytes.as_slice()).unwrap();
-        Ok(BorshTransaction(tx.into()))
+        Ok(BorshTransaction(tx))
     }
 }
 
 impl BorshSerialize for BorshTransactionSigned {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        BorshB256(self.0.hash).serialize(writer)?;
-        BorshSignature(self.0.signature).serialize(writer)?;
-        BorshTransaction(self.0.transaction.clone()).serialize(writer)?;
+        self.0.magic_identifier().serialize(writer)?;
+
+        match &self.0 {
+            WvmTransactionSigned::V1(transaction_signed) => {
+                BorshB256(transaction_signed.hash).serialize(writer)?;
+                BorshSignature(transaction_signed.signature).serialize(writer)?;
+                BorshTransaction(transaction_signed.transaction.clone()).serialize(writer)?;
+            }
+        }
 
         Ok(())
     }
@@ -36,15 +45,22 @@ impl BorshSerialize for BorshTransactionSigned {
 
 impl BorshDeserialize for BorshTransactionSigned {
     fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
-        let hash = BorshB256::deserialize_reader(reader)?;
-        let bytes_signature = BorshSignature::deserialize_reader(reader)?;
-        let tx = BorshTransaction::deserialize_reader(reader)?;
+        let magic_identifier: u8 = u8::deserialize_reader(reader)?;
 
-        Ok(BorshTransactionSigned(TransactionSigned {
-            hash: hash.0,
-            signature: bytes_signature.0,
-            transaction: tx.0,
-        }))
+        match magic_identifier {
+            0u8 => {
+                let hash = BorshB256::deserialize_reader(reader)?;
+                let bytes_signature = BorshSignature::deserialize_reader(reader)?;
+                let tx = BorshTransaction::deserialize_reader(reader)?;
+
+                Ok(BorshTransactionSigned(WvmTransactionSigned::V1(V1WvmTransactionSigned {
+                    hash: hash.0,
+                    signature: bytes_signature.0,
+                    transaction: tx.0,
+                })))
+            }
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "Invalid Magic Identifier")),
+        }
     }
 }
 
@@ -55,15 +71,20 @@ mod txs_tests {
 
     use reth::primitives::Transaction;
     use serde_json::Value;
-    use wvm_tx::WvmTransaction;
+    use wvm_tx::{
+        wvm::{v1::transaction::V1WvmTransactionSigned, WvmTransactionSigned},
+        WvmTransaction,
+    };
 
     #[test]
     pub fn test_sealed_header() {
         let data = TransactionSigned::default();
-        let borsh_data = BorshTransactionSigned(data.clone());
+        let borsh_data = BorshTransactionSigned(WvmTransactionSigned::V1(
+            V1WvmTransactionSigned::from(data.clone()),
+        ));
         let to_borsh = borsh::to_vec(&borsh_data).unwrap();
         let from_borsh: BorshTransactionSigned = borsh::from_slice(to_borsh.as_slice()).unwrap();
-        assert_eq!(data, from_borsh.0);
+        assert_eq!(data.hash, from_borsh.0.as_v1().unwrap().hash);
     }
 
     #[test]

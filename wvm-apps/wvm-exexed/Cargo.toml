@@ -8,8 +8,6 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
-exex-wvm-bigquery.workspace = true
-exex-wvm-da.workspace = true
 reth-revm.workspace = true
 reth-ethereum-engine-primitives.workspace = true
 reth-primitives.workspace = true
@@ -27,6 +25,8 @@ eyre.workspace = true
 futures.workspace = true
 alloy-primitives.workspace = true
 tokio.workspace = true
+exex-wvm-bigquery.workspace = true
+exex-wvm-da.workspace = true
 
 # bigquery dependencies
 gcp-bigquery-client = "0.17.0"
@@ -39,7 +39,6 @@ arweave-upload = { path = "crates/arweave-upload" }
 precompiles = { path = "crates/precompiles" }
 wvm-borsh = { path = "crates/wvm-borsh" }
 wvm-static.workspace = true
-exex-etl = { path = "crates/exex-etl" }
 rbrotli = { path = "crates/brotli" }
 wvm-tx = { path = "crates/tx" }
 borsh.workspace = true

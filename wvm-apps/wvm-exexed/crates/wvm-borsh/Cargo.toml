@@ -18,7 +18,7 @@ eyre.workspace = true
 dotenv = {version = "0.15.0"}
 tokio = "1.38.0"
 borsh.workspace = true
-reth-primitives.workspace = true
+reth-primitives = { workspace = true, features = ["reth-codec"]}
 alloy-primitives.workspace = true
 wvm-tx = { path = "../tx" }
 alloy-eips.workspace = true

@@ -17,17 +17,15 @@ eyre.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
 wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
-exex-etl = { path = "../exex-etl" }
 lambda = { path = "../lambda" }
 arweave-upload = { path = "../arweave-upload" }
 precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
 wvm-static = { path = "../../../../crates/wvm-static" }
+wvm-tx = { path = "../tx" }
 tokio.workspace = true
 exex-wvm-da.workspace = true
 exex-wvm-bigquery.workspace = true
 tracing.workspace = true
 parse_duration.workspace = true
 futures.workspace = true
-
-

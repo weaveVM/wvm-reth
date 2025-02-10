@@ -7,10 +7,6 @@ mod exex;
 mod network_tag;
 mod util;
 
-use crate::{network_tag::get_network_tag, util::check_block_existence};
-use arweave_upload::{ArweaveRequest, UploaderProvider};
-use exex_wvm_bigquery::repository::StateRepository;
-use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;
@@ -20,11 +16,14 @@ use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
 use reth_primitives::constants::SLOT_DURATION;
 use std::sync::Arc;
 use tracing::{error, info};
-use wvm_borsh::block::BorshSealedBlockWithSenders;
+
+use exex::ar_actor::ArweaveActorHandle;
+use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
+use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
-    ar_process: Arc<ArProcess>,
+    ar_actor_handle: Arc<ArweaveActorHandle>,
 ) -> eyre::Result<()> {
     while let Some(notification_result) = ctx.notifications.next().await {
         let notification = match notification_result {
@@ -39,22 +38,25 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
             }
         };
 
-        let mut notification_type = "";
-        match &notification {
+        let notification_type = match &notification {
             ExExNotification::ChainCommitted { new } => {
-                notification_type = "ChainCommitted";
                 info!(committed_chain = ?new.range(), "Received commit");
+                "ChainCommitted"
             }
             ExExNotification::ChainReorged { old, new } => {
-                notification_type = "ChainReorged";
                 info!(from_chain = ?old.range(), to_chain = ?new.range(), "Received reorg");
+                "ChainReorged"
             }
             ExExNotification::ChainReverted { old } => {
                 info!(reverted_chain = ?old.range(), "Received revert");
+                continue;
             }
         };
 
         if let Some(committed_chain) = notification.committed_chain() {
+            let block = committed_chain.tip().clone();
+            let block_number = block.number;
+
             if let Err(err) =
                 ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().num_hash()))
             {
@@ -62,23 +64,31 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                     target: "wvm::exex",
                     %err,
                     "Failed to send FinishedHeight event for block {}",
-                    committed_chain.tip().block.header.header().number
+                   block_number
                 );
                 continue;
             }
-        }
 
-        if let Some(committed_chain) = notification.committed_chain() {
-            let sealed_block_with_senders = committed_chain.tip().clone();
-            let _ = ar_process
-                .sender
-                .send((sealed_block_with_senders, notification_type.to_string()))
-                .await;
-            info!(target: "wvm::exex", "Exex block has been streamed");
-            // Handle recovery if `receiver` is dropped
+            // Add .await here
+            if let Err(err) =
+                ar_actor_handle.process_block(block, notification_type.to_string()).await
+            {
+                error!(
+                    target: "wvm::exex",
+                    %err,
+                    block_number,
+                    "Failed to send block to arweave actor"
+                );
+            }
         }
     }
 
+    info!(target: "wvm::exex", "ETL processor shutting down");
+
+    // Add .await here
+    if let Err(e) = ar_actor_handle.shutdown().await {
+        error!(target: "wvm::exex", %e, "Failed to shutdown ArweaveActor gracefully");
+    }
     Ok(())
 }
 
@@ -86,10 +96,28 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 fn main() -> eyre::Result<()> {
     let _rt = &*SUPERVISOR_RT;
     let _bc = &*PRECOMPILE_WVM_BIGQUERY_CLIENT;
-    let ar_process = Arc::new(ArProcess::new(10));
 
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         // Initializations
+        let arweave_actor_buffer_size = std::env::var("ARWEAVE_ACTOR_BUFFER_SIZE")
+            .unwrap_or_else(|_| "1024".to_string())
+            .parse::<usize>()
+            .unwrap_or(1024);
+
+        let ar_actor_handle = Arc::new(
+            ArweaveActorHandle::new_parallel(
+                std::env::var("ARWEAVE_ACTOR_BUFFER_SIZE")
+                    .unwrap_or_else(|_| "1024".to_string())
+                    .parse()
+                    .unwrap_or(1024),
+                std::env::var("ARWEAVE_ACTOR_WORKERS")
+                    .unwrap_or_else(|_| "10".to_string())
+                    .parse()
+                    .unwrap_or(10),
+            )
+            .await,
+        );
+
         let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
         // Original config
         let mut config = builder.config().clone();
@@ -114,7 +142,7 @@ fn main() -> eyre::Result<()> {
         if run_exex == "true" {
             handle = handle
                 .install_exex("exex-etl", |ctx| async move {
-                    Ok(exex_etl_processor(ctx, ar_process.clone()))
+                    Ok(exex_etl_processor(ctx, ar_actor_handle))
                 })
                 .install_exex("exex-lambda", |ctx| async move { Ok(exex_lambda_processor(ctx)) });
         }
@@ -136,11 +164,6 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
     let secs = duration.as_secs();
     SLOT_DURATION.as_secs() * secs
 }
-
-use crate::exex::ar_process::ArProcess;
-use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
-use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
-
 async fn new_etl_exex_biguery_client() -> BigQueryClient {
     let config_path: String =
         std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());

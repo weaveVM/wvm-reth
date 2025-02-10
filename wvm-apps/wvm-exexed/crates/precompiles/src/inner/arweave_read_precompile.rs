@@ -77,37 +77,31 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let res = match id_str {
         Ok(id) => {
             let (gateway, tx_id) = parse_gateway_content(id.as_str());
-            internal_block(async {
-                let clean_gateway = clean_gateway_url(gateway.as_str());
-                let query = build_transaction_query(Some(&[tx_id.clone()]), None, None, None, true);
-                let now = Instant::now();
-                let data = send_graphql(clean_gateway.as_str(), query.as_str()).await;
+            let clean_gateway = clean_gateway_url(gateway.as_str());
+            let query = build_transaction_query(Some(&[tx_id.clone()]), None, None, None, true);
 
-                let tx_size = if let Ok(data) = data {
-                    let resp = data.data;
-                    let tx = resp.transactions.edges.get(0);
-                    if let Some(&ref tx) = tx {
-                        let tx_size = tx.clone().node.data.unwrap().size;
-                        let tx_size = tx_size.parse::<usize>().unwrap();
-                        tx_size
-                    } else {
-                        0
-                    }
-                } else {
-                    0
-                };
+            let data = send_graphql(clean_gateway.as_str(), query.as_str());
+            let tx_size = match data {
+                Ok(data) => data
+                    .data
+                    .transactions
+                    .edges
+                    .get(0)
+                    .and_then(|edge| edge.node.data.as_ref())
+                    .and_then(|data| data.size.parse::<usize>().ok())
+                    .unwrap_or(0),
+                Err(_) => 0,
+            };
 
-                if TX_MAX_SIZE >= tx_size {
-                    download_tx(gas_used, clean_gateway, tx_id).await
-                } else {
-                    Err(PrecompileErrors::Error(PrecompileError::Other(
-                        "Arweave Transaction size is greater than allowed (18mb)".to_string(),
-                    )))
-                }
-            })
-            .map_err(|_| {
+            if tx_size > TX_MAX_SIZE {
+                return Err(PrecompileErrors::Error(PrecompileError::Other(
+                    "Arweave Transaction size is greater than allowed (18mb)".to_string(),
+                )));
+            }
+
+            Ok(download_tx(gas_used, clean_gateway, tx_id).map_err(|_| {
                 PrecompileError::Other("Tokio runtime could not block_on for operation".to_string())
-            })?
+            })?)
         }
         Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
             "Transaction id could not be parsed".to_string(),
@@ -121,8 +115,10 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 mod arweave_read_pc_tests {
     use crate::inner::arweave_read_precompile::{arweave_read, parse_gateway_content};
     use alloy_primitives::Bytes;
+    use borsh::BorshDeserialize;
     use reth::primitives::revm_primitives::PrecompileOutput;
     use std::time::Instant;
+    use wvm_borsh::block::BorshSealedBlockWithSenders;
 
     #[test]
     pub fn test_arweave_read_precompile() {
@@ -137,6 +133,7 @@ mod arweave_read_pc_tests {
 
     #[test]
     pub fn test_arweave_read_precompile_custom_gateway() {
+        std::env::set_var("DURATION_SECONDS", "20000");
         let input =
             Bytes::from("https://ar-io.dev;bs318IdjLWQK7pF_bNIbJnpade8feD7yGAS8xIffJDI".as_bytes());
         let PrecompileOutput { gas_used, bytes } = arweave_read(&input, 100_000).unwrap();
