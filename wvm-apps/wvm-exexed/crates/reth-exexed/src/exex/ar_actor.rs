@@ -308,11 +308,15 @@ async fn upload_to_arweave(
                 .set_tag("Message", &response)
                 .set_tag("Block-Number", block_number.to_string().as_str())
                 .set_tag("Block-Hash", block_hash)
-                .set_data(serde_json::json!({
-                    "data_settlement_tx_id": response,
-                    "block_number": block_number,
-                    "block_hash": block_hash,
-                }).to_string().into_bytes());
+                .set_data(
+                    serde_json::json!({
+                        "data_settlement_tx_id": response,
+                        "block_number": block_number,
+                        "block_hash": block_hash,
+                    })
+                    .to_string()
+                    .into_bytes(),
+                );
 
             match second_request.send_with_provider(ar_uploader).await {
                 Ok(second_tx_id) => {
@@ -373,6 +377,7 @@ async fn update_bigquery(
         block,
         block_number,
         arweave_id.to_string(),
+        block_hash,
     )
     .await;
 
