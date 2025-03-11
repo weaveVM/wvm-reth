@@ -60,12 +60,11 @@ impl BigQueryClientManager {
                     }
                 }
                 Err(e) => {
-                    panic!("failed to parse json");
+                    panic!("failed to parse json: {e:?}");
                     error!(target: "wvm::static", error = ?e, "Failed to parse BigQuery config from environment");
                 }
             }
         } else {
-            panic!("no env var!");
             info!(target: "wvm::static", "BigQuery config not found in environment, falling back to file");
         }
 

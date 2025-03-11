@@ -4,14 +4,6 @@ participants:
   - el_type: reth
     el_image: "wvm:local"
     el_extra_params:
-      - --http
-      - --http.addr=0.0.0.0
-      - --http.api=eth,net,trace,txpool,web3,rpc,debug,admin
-      - --http.corsdomain=*
-      - --ws
-      - --ws.addr=0.0.0.0
-      - --ws.api=eth,net,trace,txpool,web3,rpc,debug,admin
-      - --ws.origins=*
       - --rpc.eth-proof-window=3888000
       - --txpool.minimal-protocol-fee=500000
       - --txpool.max-tx-input-bytes=10485760
@@ -24,19 +16,13 @@ participants:
       TOKIO_CORE_THREADS: "24"
       TOKIO_BLOCKING_THREADS: "24"
       TOKIO_IO_DRIVER_QUEUE_SIZE: "100000"
-      BIGQUERY_CONFIG: ""
+      CONFIG: "/bq-config/bq-config.json"
 
     cl_type: lighthouse
-    supernode: true
+    # supernode: true
     cl_image: "wvm-lighthouse:local"
     cl_extra_params:
-      - --testnet-dir=/testnetdata/
-      - --http
-      - --http-address=0.0.0.0
-      - --staking
-      - --subscribe-all-subnets
-      - --http-allow-origin=*
-      - --slots-per-restore-point=256
+      - --network wvm
       - --beacon-processor-max-workers=40
       - --beacon-processor-work-queue-len=32768
       - --beacon-processor-reprocess-queue-len=24576
@@ -46,18 +32,15 @@ participants:
     use_separate_vc: true
     vc_type: lighthouse
     vc_image: "wvm-lighthouse:local"
-    vc_extra_params:
-      - --builder-proposals
-      - --suggested-fee-recipient=0xa2A0D977847805fE224B789D8C4d3D711ab251e7
-      - --http-allow-origin=*
-      - --http
+    # vc_extra_params:
+    #  - --suggested-fee-recipient=0xa2A0D977847805fE224B789D8C4d3D711ab251e7
     count: 1
 
 # Network parameters
 network_params:
   # network: "wvmlocaldevnet"
-  # preset: "mainnet"
-  # devnet_repo: "ethpandaops"
+  preset: "mainnet"
+  devnet_repo: "weaveVM"
   # network_id: "111222"
   # deposit_contract_address: "0x4242424242424242424242424242424242424242"
   seconds_per_slot: 1
@@ -91,26 +74,26 @@ network_params:
   #     balance: "4360000000000000000000000"
 
 # Additional services configuration
-additional_services:
-  - assertoor
-  - broadcaster
-  - tx_spammer
-  - blob_spammer
-  - custom_flood
-  - spamoor
-  - spamoor_blob
-  - el_forkmon
-  - blockscout
-  - beacon_metrics_gazer
-  - dora
-  - full_beaconchain_explorer
-  - prometheus_grafana
-  - blobscan
-  - dugtrio
-  - blutgang
-  - forky
-  - apache
-  - tracoor
+# additional_services:
+#   - assertoor
+#   - broadcaster
+#   - tx_spammer
+#   - blob_spammer
+#   - custom_flood
+#   - spamoor
+#   - spamoor_blob
+#   - el_forkmon
+#   - blockscout
+#   - beacon_metrics_gazer
+#   - dora
+#   - full_beaconchain_explorer
+#   - prometheus_grafana
+#   - blobscan
+#   - dugtrio
+#   - blutgang
+#   - forky
+#   - apache
+#   - tracoor
 
 # Global settings
 global_log_level: "info"

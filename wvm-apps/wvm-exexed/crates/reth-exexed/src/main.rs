@@ -167,7 +167,6 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
 
 async fn new_etl_exex_biguery_client() -> BigQueryClient {
     if let Ok(env_config) = std::env::var("BIGQUERY_CONFIG") {
-        panic!("read env var in main");
         info!(target: "wvm::exex", "exex big_query config found in evnironment variable");
         match serde_json::from_str::<BigQueryConfig>(&env_config) {
             Ok(bq_config) => {
