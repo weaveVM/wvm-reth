@@ -22,7 +22,6 @@ participants:
     # supernode: true
     cl_image: "wvm-lighthouse:local"
     cl_extra_params:
-      - --network wvm
       - --beacon-processor-max-workers=40
       - --beacon-processor-work-queue-len=32768
       - --beacon-processor-reprocess-queue-len=24576
@@ -39,7 +38,7 @@ participants:
 # Network parameters
 network_params:
   # network: "wvmlocaldevnet"
-  preset: "mainnet"
+  # preset: "mainnet"
   devnet_repo: "weaveVM"
   # network_id: "111222"
   # deposit_contract_address: "0x4242424242424242424242424242424242424242"
