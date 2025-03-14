@@ -177,12 +177,12 @@ async fn new_etl_exex_biguery_client() -> BigQueryClient {
                         return bgc
                     }
                     Err(e) => {
-                        error!(target: "wvm::exex", error = ?e, "Failed to initialize BigQuery client from environment variable, falling back to file");
+                        panic!("Failed to initialize BigQuery client from environment variable, falling back to file: {e}");
                     }
                 }
             }
             Err(e) => {
-                error!(target: "wvm::exex", error = ?e, "Failed to parse BIGQUERY_CONFIG environment variable, falling back to file");
+                panic!( "Failed to parse BIGQUERY_CONFIG environment variable, falling back to file: {e}");
             }
         }
     }

@@ -54,12 +54,14 @@ impl BigQueryClientManager {
                             return Arc::new(client);
                         }
                         Err(e) => {
-                            error!(target: "wvm::static", error = ?e, "Failed to initialize BigQuery client from environment config");
+                            panic!(
+                                "Failed to initialize BigQuery client from environment config: {e}"
+                            );
                         }
                     }
                 }
                 Err(e) => {
-                    error!(target: "wvm::static", error = ?e, "Failed to parse BigQuery config from environment");
+                    panic!("Failed to parse BigQuery config from environment: {e}");
                 }
             }
         } else {
@@ -82,16 +84,16 @@ impl BigQueryClientManager {
                             return Arc::new(client);
                         }
                         Err(e) => {
-                            error!(target: "wvm::static", error = ?e, "Failed to initialize BigQuery client from file");
+                            panic!("Failed to initialize BigQuery client from file: {e}");
                         }
                     },
                     Err(e) => {
-                        error!(target: "wvm::static", error = ?e, "Failed to parse BigQuery config from file");
+                        panic!("Failed to parse BigQuery config from file: {e}");
                     }
                 }
             }
             Err(e) => {
-                error!(target: "wvm::static", path = %config_path, error = ?e, "Failed to open BigQuery config file");
+                panic!("Failed to open BigQuery config file: {e}");
             }
         }
     }
