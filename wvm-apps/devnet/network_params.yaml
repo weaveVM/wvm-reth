@@ -2,7 +2,7 @@
 participants:
   # First node - Bootstrap node
   - el_type: reth
-    el_image: "wvm:local"
+    el_image: "us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm:latest"
     el_extra_params:
       - --rpc.eth-proof-window=3888000
       - --txpool.minimal-protocol-fee=500000
@@ -20,7 +20,7 @@ participants:
 
     cl_type: lighthouse
     # supernode: true
-    cl_image: "wvm-lighthouse:local"
+    cl_image: "us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm-lighthouse:latest"
     cl_extra_params:
       - --beacon-processor-max-workers=40
       - --beacon-processor-work-queue-len=32768
@@ -30,7 +30,7 @@ participants:
 
     use_separate_vc: true
     vc_type: lighthouse
-    vc_image: "wvm-lighthouse:local"
+    vc_image: "us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm-lighthouse:latest"
     # vc_extra_params:
     #  - --suggested-fee-recipient=0xa2A0D977847805fE224B789D8C4d3D711ab251e7
     count: 1
@@ -66,11 +66,11 @@ network_params:
   # preregistered_validator_keys_mnemonic: "giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete"
 
   # # Genesis parameters
-  # prefunded_accounts:
-  #   "0x197f818c1313dc58b32d88078ecdfb40ea822614":
-  #     balance: "5000000000000000000000000"
-  #   "0xa2A0D977847805fE224B789D8C4d3D711ab251e7":
-  #     balance: "4360000000000000000000000"
+  prefunded_accounts:
+    "0x197f818c1313dc58b32d88078ecdfb40ea822614":
+      balance: "5000000000000000000000000"
+    "0xa2A0D977847805fE224B789D8C4d3D711ab251e7":
+      balance: "4360000000000000000000000"
 
 # Additional services configuration
 # additional_services:
