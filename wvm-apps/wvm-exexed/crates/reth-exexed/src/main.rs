@@ -164,7 +164,29 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
     let secs = duration.as_secs();
     SLOT_DURATION.as_secs() * secs
 }
+
 async fn new_etl_exex_biguery_client() -> BigQueryClient {
+    if let Ok(env_config) = std::env::var("BIGQUERY_CONFIG") {
+        info!(target: "wvm::exex", "exex big_query config found in evnironment variable");
+        match serde_json::from_str::<BigQueryConfig>(&env_config) {
+            Ok(bq_config) => {
+                info!(target: "wvm::exex", "etl exex bigquery config parsed from environment variable");
+                match BigQueryClient::new(&bq_config).await {
+                    Ok(bgc) => {
+                        info!(target: "wvm::exex", "etl exex bigquery client initialized from environment variable");
+                        return bgc
+                    }
+                    Err(e) => {
+                        panic!("Failed to initialize BigQuery client from environment variable, falling back to file: {e}");
+                    }
+                }
+            }
+            Err(e) => {
+                panic!( "Failed to parse BIGQUERY_CONFIG environment variable, falling back to file: {e}");
+            }
+        }
+    }
+
     let config_path: String =
         std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
 

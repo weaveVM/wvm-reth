@@ -42,9 +42,11 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         ArweaveRequest::new()
             .set_private_key(SOLANA_SILLY_PRIVATE_KEY.to_string())
             .set_tag("Content-Type", "application/octet-stream")
-            .set_tag("WeaveVM:Precompile", "true")
-            .set_tag("WeaveVM:Encoding", "Brotli")
-            .set_tag("WeaveVM:Precompile-Address", PC_ADDRESS.to_string().as_str())
+            // here it was safe to switch all "weaveVM:*" to "LN:*" because the precompiles
+            // tx data on Arweave isn't read back into the EVM chain
+            .set_tag("LN:Precompile", "true")
+            .set_tag("LN:Encoding", "Brotli")
+            .set_tag("LN:Precompile-Address", PC_ADDRESS.to_string().as_str())
             .set_data(input)
             .send()
             .await

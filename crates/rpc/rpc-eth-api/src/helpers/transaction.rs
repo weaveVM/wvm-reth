@@ -399,9 +399,13 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
     /// WVM Exclusive
     /// Obtains the Arweave Hash of the transaction containing the WEVM Block
-    fn get_arweave_storage_proof(&self, block_height: String,) -> impl Future<Output = Result<String, EthApiError>> + Send
+    fn get_arweave_storage_proof(
+        &self,
+        block_height: String,
+    ) -> impl Future<Output = Result<String, EthApiError>> + Send
     where
-        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call {
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
+    {
         let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
 
         async move {

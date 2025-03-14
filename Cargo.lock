@@ -4253,7 +4253,7 @@ dependencies = [
 [[package]]
 name = "exex-wvm-bigquery"
 version = "1.0.0"
-source = "git+https://github.com/weaveVM/exex-templates?i?tag=v0.2.0#0797ea70966cd418b794efbce6e76149b32897c6"
+source = "git+https://github.com/weaveVM/exex-templates?i?tag=v0.3.2#55e96bb32bd360277af833b9bd4cca4daf4fcbec"
 dependencies = [
  "alloy-primitives",
  "chrono",
@@ -4265,6 +4265,7 @@ dependencies = [
  "polars",
  "serde",
  "serde_json",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -4340,7 +4341,7 @@ dependencies = [
 [[package]]
 name = "fees"
 version = "0.1.0"
-source = "git+https://github.com/weaveVM/miscalleneous?c?branch=main#8ed3bf038a727c9cfb52f7d706dca10c8e206e63"
+source = "git+https://github.com/weaveVM/miscalleneous?c?branch=main#5188e48024c1f0fb1b7b8d78cc75151132561d28"
 dependencies = [
  "reqwest 0.12.12",
  "serde_json",

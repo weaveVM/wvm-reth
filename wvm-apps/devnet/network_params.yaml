@@ -1,0 +1,100 @@
+# Specification of the participants in the network
+participants:
+  # First node - Bootstrap node
+  - el_type: reth
+    el_image: "us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm:latest"
+    el_extra_params:
+      - --rpc.eth-proof-window=3888000
+      - --txpool.minimal-protocol-fee=500000
+      - --txpool.max-tx-input-bytes=10485760
+    el_extra_env_vars:
+      WVM_DEFAULT_MAX_TX_INPUT_BYTES: "10485760"
+      BLOCKED_PC: "17,18,19,20,21,22"
+      ARWEAVE_ACTOR_BUFFER_SIZE: "100000"
+      ARWEAVE_ACTOR_WORKERS: "24"
+      TOKIO_WORKER_THREADS: "48"
+      TOKIO_CORE_THREADS: "24"
+      TOKIO_BLOCKING_THREADS: "24"
+      TOKIO_IO_DRIVER_QUEUE_SIZE: "100000"
+      CONFIG: "/bq-config/bq-config.json"
+
+    cl_type: lighthouse
+    # supernode: true
+    cl_image: "us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm-lighthouse:latest"
+    cl_extra_params:
+      - --beacon-processor-max-workers=40
+      - --beacon-processor-work-queue-len=32768
+      - --beacon-processor-reprocess-queue-len=24576
+      - --beacon-processor-attestation-batch-size=2048
+      - --beacon-processor-aggregate-batch-size=2048
+
+    use_separate_vc: true
+    vc_type: lighthouse
+    vc_image: "us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm-lighthouse:latest"
+    # vc_extra_params:
+    #  - --suggested-fee-recipient=0xa2A0D977847805fE224B789D8C4d3D711ab251e7
+    count: 1
+
+# Network parameters
+network_params:
+  # network: "wvmlocaldevnet"
+  # preset: "mainnet"
+  devnet_repo: "weaveVM"
+  # network_id: "111222"
+  # deposit_contract_address: "0x4242424242424242424242424242424242424242"
+  seconds_per_slot: 1
+  genesis_delay: 20
+  genesis_gaslimit: 500000000
+
+  # Fork configurations
+  altair_fork_epoch: 0
+  bellatrix_fork_epoch: 0
+  capella_fork_epoch: 0
+  deneb_fork_epoch: 0
+  electra_fork_epoch: 100000000
+  fulu_fork_epoch: 100000001
+
+  # # Additional parameters
+  # ejection_balance: 16000000000
+  # eth1_follow_distance: 128
+  # min_validator_withdrawability_delay: 256
+  # shard_committee_period: 256
+
+  # # Validator configuration
+  # num_validator_keys_per_node: 64
+  # preregistered_validator_count: 64
+  # preregistered_validator_keys_mnemonic: "giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete"
+
+  # # Genesis parameters
+  prefunded_accounts:
+    "0x197f818c1313dc58b32d88078ecdfb40ea822614":
+      balance: "5000000000000000000000000"
+    "0xa2A0D977847805fE224B789D8C4d3D711ab251e7":
+      balance: "4360000000000000000000000"
+
+# Additional services configuration
+# additional_services:
+#   - assertoor
+#   - broadcaster
+#   - tx_spammer
+#   - blob_spammer
+#   - custom_flood
+#   - spamoor
+#   - spamoor_blob
+#   - el_forkmon
+#   - blockscout
+#   - beacon_metrics_gazer
+#   - dora
+#   - full_beaconchain_explorer
+#   - prometheus_grafana
+#   - blobscan
+#   - dugtrio
+#   - blutgang
+#   - forky
+#   - apache
+#   - tracoor
+
+# Global settings
+global_log_level: "info"
+disable_peer_scoring: true
+persistent: true
