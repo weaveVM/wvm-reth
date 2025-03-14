@@ -4341,7 +4341,7 @@ dependencies = [
 [[package]]
 name = "fees"
 version = "0.1.0"
-source = "git+https://github.com/weaveVM/miscalleneous?c?branch=main#8ed3bf038a727c9cfb52f7d706dca10c8e206e63"
+source = "git+https://github.com/weaveVM/miscalleneous?c?branch=main#5188e48024c1f0fb1b7b8d78cc75151132561d28"
 dependencies = [
  "reqwest 0.12.12",
  "serde_json",
