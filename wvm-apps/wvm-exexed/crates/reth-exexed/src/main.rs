@@ -83,7 +83,6 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
         }
     }
 
-    
     info!(target: "wvm::exex", "ETL processor shutting down");
 
     // Add .await here
