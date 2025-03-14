@@ -11,6 +11,8 @@ pub(crate) fn check_block_existence(block_hash: &str, irys: bool) -> bool {
         Some(&[
             ("Block-Hash".to_string(), vec![block_hash.to_string()]),
             ("Protocol".to_string(), vec!["WeaveVM-ExEx".to_string()]),
+            // this check is disabled, but once we activate it, we should
+            // append `("Protocol".to_string(), vec!["LN-ExEx".to_string()])`
         ]),
         Some(&WVM_DATA_PUBLISHERS.map(|i| i.to_string())),
         Some("DESC".to_string()),
