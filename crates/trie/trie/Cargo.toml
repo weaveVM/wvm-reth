@@ -14,23 +14,25 @@ workspace = true
 [dependencies]
 # reth
 reth-execution-errors.workspace = true
-reth-primitives.workspace = true
+reth-primitives-traits.workspace = true
 reth-stages-types.workspace = true
 reth-storage-errors.workspace = true
-reth-trie-common.workspace = true
+reth-trie-sparse.workspace = true
+reth-trie-common = { workspace = true, features = ["rayon"] }
 
 revm.workspace = true
 
 # alloy
+alloy-eips.workspace = true
 alloy-rlp.workspace = true
 alloy-primitives.workspace = true
 alloy-consensus.workspace = true
+alloy-trie.workspace = true
 
 # tracing
 tracing.workspace = true
 
 # misc
-rayon.workspace = true
 auto_impl.workspace = true
 itertools.workspace = true
 
@@ -41,15 +43,10 @@ metrics = { workspace = true, optional = true }
 # `test-utils` feature
 triehash = { version = "0.8", optional = true }
 
-# `serde` feature
-serde = { workspace = true, optional = true }
-
-# `serde-bincode-compat` feature
-serde_with = { workspace = true, optional = true }
-
 [dev-dependencies]
 # reth
-reth-primitives = { workspace = true, features = ["test-utils", "arbitrary"] }
+reth-primitives-traits = { workspace = true, features = ["test-utils"] }
+reth-ethereum-primitives = { workspace = true, features = ["arbitrary", "std"] }
 reth-trie-common = { workspace = true, features = ["test-utils", "arbitrary"] }
 
 # trie
@@ -60,32 +57,28 @@ proptest.workspace = true
 proptest-arbitrary-interop.workspace = true
 serde_json.workspace = true
 criterion.workspace = true
-bincode.workspace = true
 
 [features]
 metrics = ["reth-metrics", "dep:metrics"]
 serde = [
-	"dep:serde",
-	"alloy-consensus/serde",
-	"alloy-primitives/serde",
-	"revm/serde"
-]
-serde-bincode-compat = [
-	"serde_with",
-	"reth-primitives/serde-bincode-compat",
-	"alloy-consensus/serde-bincode-compat"
+    "alloy-primitives/serde",
+    "alloy-consensus/serde",
+    "alloy-trie/serde",
+    "alloy-eips/serde",
+    "revm/serde",
+    "reth-trie-common/serde",
+    "reth-primitives-traits/serde",
+    "reth-stages-types/serde",
 ]
 test-utils = [
-	"triehash",
-	"reth-trie-common/test-utils",
-	"reth-primitives/test-utils",
-	"revm/test-utils",
-	"reth-stages-types/test-utils"
+    "triehash",
+    "revm/test-utils",
+    "reth-primitives-traits/test-utils",
+    "reth-trie-common/test-utils",
+    "reth-ethereum-primitives/test-utils",
+    "reth-trie-sparse/test-utils",
+    "reth-stages-types/test-utils",
 ]
-
-[[bench]]
-name = "prefix_set"
-harness = false
 
 [[bench]]
 name = "hash_post_state"

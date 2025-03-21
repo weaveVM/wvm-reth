@@ -83,10 +83,15 @@ pub mod gas_oracle {
     /// The default gas limit for `eth_call` and adjacent calls.
     ///
     /// This is different from the default to regular 30M block gas limit
+<<<<<<< HEAD
     /// [`ETHEREUM_BLOCK_GAS_LIMIT`](reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT) to allow
     /// for more complex calls.
     // WVM: 500_000_000
     pub const RPC_DEFAULT_GAS_CAP: u64 = 500_000_000;
+=======
+    /// `ETHEREUM_BLOCK_GAS_LIMIT_30M` to allow for more complex calls.
+    pub const RPC_DEFAULT_GAS_CAP: u64 = 50_000_000;
+>>>>>>> upstream-v1.2.0
 
     /// Allowed error ratio for gas estimation
     /// Taken from Geth's implementation in order to pass the hive tests
@@ -117,8 +122,8 @@ pub mod cache {
     /// Default cache size for the receipts cache: 2000 receipts.
     pub const DEFAULT_RECEIPT_CACHE_MAX_LEN: u32 = 2000;
 
-    /// Default cache size for the env cache: 1000 envs.
-    pub const DEFAULT_ENV_CACHE_MAX_LEN: u32 = 1000;
+    /// Default cache size for the header cache: 1000 headers.
+    pub const DEFAULT_HEADER_CACHE_MAX_LEN: u32 = 1000;
 
     /// Default number of concurrent database requests.
     pub const DEFAULT_CONCURRENT_DB_REQUESTS: usize = 512;

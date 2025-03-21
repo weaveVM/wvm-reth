@@ -1,39 +1,48 @@
+use super::OpNodeCore;
+use crate::{OpEthApi, OpEthApiError};
 use alloy_primitives::{Bytes, TxKind, U256};
 use alloy_rpc_types_eth::transaction::TransactionRequest;
 use reth_evm::ConfigureEvm;
-use reth_primitives::{
-    revm_primitives::{BlockEnv, OptimismFields, TxEnv},
-    Header,
-};
+use reth_provider::ProviderHeader;
 use reth_rpc_eth_api::{
-    helpers::{Call, EthCall, LoadPendingBlock, LoadState, SpawnBlocking},
-    FromEthApiError, IntoEthApiError, RpcNodeCore,
+    helpers::{estimate::EstimateCall, Call, EthCall, LoadBlock, LoadState, SpawnBlocking},
+    FromEthApiError, FromEvmError, FullEthApiTypes, IntoEthApiError,
 };
 use reth_rpc_eth_types::{revm_utils::CallFees, RpcInvalidTransactionError};
-
-use crate::{OpEthApi, OpEthApiError};
+use revm::primitives::{BlockEnv, OptimismFields, TxEnv};
 
 impl<N> EthCall for OpEthApi<N>
 where
-    Self: Call + LoadPendingBlock,
-    N: RpcNodeCore,
+    Self: EstimateCall + LoadBlock + FullEthApiTypes,
+    N: OpNodeCore,
+{
+}
+
+impl<N> EstimateCall for OpEthApi<N>
+where
+    Self: Call,
+    Self::Error: From<OpEthApiError>,
+    N: OpNodeCore,
 {
 }
 
 impl<N> Call for OpEthApi<N>
 where
-    Self: LoadState<Evm: ConfigureEvm<Header = Header>> + SpawnBlocking,
+    Self: LoadState<
+            Evm: ConfigureEvm<Header = ProviderHeader<Self::Provider>, TxEnv = TxEnv>,
+            Error: FromEvmError<Self::Evm>,
+        > + SpawnBlocking,
     Self::Error: From<OpEthApiError>,
-    N: RpcNodeCore,
+    N: OpNodeCore,
 {
     #[inline]
     fn call_gas_limit(&self) -> u64 {
-        self.inner.gas_cap()
+        self.inner.eth_api.gas_cap()
     }
 
     #[inline]
     fn max_simulate_blocks(&self) -> u64 {
-        self.inner.max_simulate_blocks()
+        self.inner.eth_api.max_simulate_blocks()
     }
 
     fn create_txn_env(
@@ -42,7 +51,7 @@ where
         request: TransactionRequest,
     ) -> Result<TxEnv, Self::Error> {
         // Ensure that if versioned hashes are set, they're not empty
-        if request.blob_versioned_hashes.as_ref().map_or(false, |hashes| hashes.is_empty()) {
+        if request.blob_versioned_hashes.as_ref().is_some_and(|hashes| hashes.is_empty()) {
             return Err(RpcInvalidTransactionError::BlobTransactionMissingBlobHashes.into_eth_err())
         }
 

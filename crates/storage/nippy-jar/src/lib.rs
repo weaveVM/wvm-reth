@@ -17,14 +17,10 @@ use serde::{Deserialize, Serialize};
 use std::{
     error::Error as StdError,
     fs::File,
+    io::Read,
     ops::Range,
     path::{Path, PathBuf},
 };
-
-// Windows specific extension for std::fs
-#[cfg(windows)]
-use std::os::windows::prelude::OpenOptionsExt;
-
 use tracing::*;
 
 /// Compression algorithms supported by `NippyJar`.
@@ -206,9 +202,14 @@ impl<H: NippyJarHeader> NippyJar<H> {
         let config_file = File::open(&config_path)
             .map_err(|err| reth_fs_util::FsPathError::open(err, config_path))?;
 
-        let mut obj: Self = bincode::deserialize_from(&config_file)?;
+        let mut obj = Self::load_from_reader(config_file)?;
         obj.path = path.to_path_buf();
         Ok(obj)
+    }
+
+    /// Deserializes an instance of [`Self`] from a [`Read`] type.
+    pub fn load_from_reader<R: Read>(reader: R) -> Result<Self, NippyJarError> {
+        Ok(bincode::deserialize_from(reader)?)
     }
 
     /// Returns the path for the data file

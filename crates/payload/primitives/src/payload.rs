@@ -1,8 +1,10 @@
 use crate::{MessageValidationKind, PayloadAttributes};
+use alloc::vec::Vec;
+use alloy_eips::eip4895::Withdrawal;
 use alloy_primitives::B256;
-use alloy_rpc_types::engine::ExecutionPayload;
+use alloy_rpc_types_engine::ExecutionPayload;
 
-/// Either an [`ExecutionPayload`] or a types that implements the [`PayloadAttributes`] trait.
+/// Either an [`ExecutionPayload`] or a type that implements the [`PayloadAttributes`] trait.
 ///
 /// This is a helper type to unify pre-validation of version specific fields of the engine API.
 #[derive(Debug)]
@@ -39,7 +41,7 @@ where
     Attributes: PayloadAttributes,
 {
     /// Return the withdrawals for the payload or attributes.
-    pub fn withdrawals(&self) -> Option<&Vec<alloy_rpc_types::Withdrawal>> {
+    pub fn withdrawals(&self) -> Option<&Vec<Withdrawal>> {
         match self {
             Self::ExecutionPayload { payload, .. } => payload.withdrawals(),
             Self::PayloadAttributes(attributes) => attributes.withdrawals(),

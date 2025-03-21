@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
 use std::time::Duration;
+=======
+use core::time::Duration;
+>>>>>>> upstream-v1.2.0
 
 /// The thresholds at which the execution stage writes state changes to the database.
 ///

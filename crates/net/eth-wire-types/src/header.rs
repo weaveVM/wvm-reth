@@ -87,10 +87,9 @@ impl From<HeadersDirection> for bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_consensus::{EMPTY_OMMER_ROOT_HASH, EMPTY_ROOT_HASH};
+    use alloy_consensus::{Header, EMPTY_OMMER_ROOT_HASH, EMPTY_ROOT_HASH};
     use alloy_primitives::{address, b256, bloom, bytes, hex, Address, Bytes, B256, U256};
     use alloy_rlp::{Decodable, Encodable};
-    use reth_primitives::Header;
     use std::str::FromStr;
 
     // Test vector from: https://eips.ethereum.org/EIPS/eip-2481
@@ -143,7 +142,7 @@ mod tests {
             blob_gas_used: None,
             excess_blob_gas: None,
             parent_beacon_block_root: None,
-            requests_hash: None
+            requests_hash: None,
         };
         assert_eq!(header.hash_slow(), expected_hash);
     }

@@ -16,8 +16,9 @@ use reth_cli_commands::{
 use reth_cli_runner::CliRunner;
 use reth_db::DatabaseEnv;
 use reth_ethereum_cli::chainspec::EthereumChainSpecParser;
+use reth_network::EthNetworkPrimitives;
 use reth_node_builder::{NodeBuilder, WithLaunchContext};
-use reth_node_ethereum::{EthExecutorProvider, EthereumNode};
+use reth_node_ethereum::{consensus::EthBeaconConsensus, EthExecutorProvider, EthereumNode};
 use reth_node_metrics::recorder::install_prometheus_recorder;
 use reth_tracing::FileWorkerGuard;
 use std::{ffi::OsString, fmt, future::Future, sync::Arc};
@@ -151,6 +152,9 @@ impl<C: ChainSpecParser<ChainSpec = ChainSpec>, Ext: clap::Args + fmt::Debug> Cl
         let _ = install_prometheus_recorder();
 
         let runner = CliRunner::default();
+        let components = |spec: Arc<C::ChainSpec>| {
+            (EthExecutorProvider::ethereum(spec.clone()), EthBeaconConsensus::new(spec))
+        };
         match self.command {
             Commands::Node(command) => {
                 runner.run_command_until_exit(|ctx| command.execute(ctx, launcher))
@@ -161,17 +165,19 @@ impl<C: ChainSpecParser<ChainSpec = ChainSpec>, Ext: clap::Args + fmt::Debug> Cl
             Commands::InitState(command) => {
                 runner.run_blocking_until_ctrl_c(command.execute::<EthereumNode>())
             }
-            Commands::Import(command) => runner.run_blocking_until_ctrl_c(
-                command.execute::<EthereumNode, _, _>(EthExecutorProvider::ethereum),
-            ),
+            Commands::Import(command) => {
+                runner.run_blocking_until_ctrl_c(command.execute::<EthereumNode, _, _>(components))
+            }
             Commands::DumpGenesis(command) => runner.run_blocking_until_ctrl_c(command.execute()),
             Commands::Db(command) => {
                 runner.run_blocking_until_ctrl_c(command.execute::<EthereumNode>())
             }
             Commands::Stage(command) => runner.run_command_until_exit(|ctx| {
-                command.execute::<EthereumNode, _, _>(ctx, EthExecutorProvider::ethereum)
+                command.execute::<EthereumNode, _, _, EthNetworkPrimitives>(ctx, components)
             }),
-            Commands::P2P(command) => runner.run_until_ctrl_c(command.execute()),
+            Commands::P2P(command) => {
+                runner.run_until_ctrl_c(command.execute::<EthNetworkPrimitives>())
+            }
             #[cfg(feature = "dev")]
             Commands::TestVectors(command) => runner.run_until_ctrl_c(command.execute()),
             Commands::Config(command) => runner.run_until_ctrl_c(command.execute()),
@@ -230,7 +236,7 @@ pub enum Commands<C: ChainSpecParser, Ext: clap::Args + fmt::Debug> {
     Config(config_cmd::Command),
     /// Various debug routines
     #[command(name = "debug")]
-    Debug(debug_cmd::Command<C>),
+    Debug(Box<debug_cmd::Command<C>>),
     /// Scripts for node recovery
     #[command(name = "recover")]
     Recover(recover::Command<C>),

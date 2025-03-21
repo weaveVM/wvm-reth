@@ -3,6 +3,7 @@
 use crate::{
     bench::{
         context::BenchContext,
+        new_payload_fcu::from_any_rpc_block,
         output::{
             NewPayloadResult, TotalGasOutput, TotalGasRow, GAS_OUTPUT_SUFFIX,
             NEW_PAYLOAD_OUTPUT_SUFFIX,
@@ -12,12 +13,11 @@ use crate::{
 };
 use alloy_primitives::B256;
 use alloy_provider::Provider;
+use alloy_rpc_types_engine::ExecutionPayload;
 use clap::Parser;
 use csv::Writer;
 use reth_cli_runner::CliContext;
 use reth_node_core::args::BenchmarkArgs;
-use reth_primitives::Block;
-use reth_rpc_types_compat::engine::payload::block_to_payload;
 use std::time::Instant;
 use tracing::{debug, info};
 
@@ -43,10 +43,10 @@ impl Command {
         let (sender, mut receiver) = tokio::sync::mpsc::channel(1000);
         tokio::task::spawn(async move {
             while benchmark_mode.contains(next_block) {
-                let block_res = block_provider.get_block_by_number(next_block.into(), true).await;
+                let block_res =
+                    block_provider.get_block_by_number(next_block.into(), true.into()).await;
                 let block = block_res.unwrap().unwrap();
-                let block_hash = block.header.hash;
-                let block = Block::try_from(block.inner).unwrap().seal(block_hash);
+                let block = from_any_rpc_block(block);
 
                 next_block += 1;
                 sender.send(block).await.unwrap();
@@ -59,16 +59,18 @@ impl Command {
 
         while let Some(block) = receiver.recv().await {
             // just put gas used here
-            let gas_used = block.header.gas_used;
+            let gas_used = block.gas_used;
 
             let versioned_hashes: Vec<B256> =
-                block.blob_versioned_hashes().into_iter().copied().collect();
+                block.body().blob_versioned_hashes_iter().copied().collect();
             let parent_beacon_block_root = block.parent_beacon_block_root;
-            let payload = block_to_payload(block);
+            let (payload, _) =
+                ExecutionPayload::from_block_unchecked(block.hash(), &block.into_block());
 
             let block_number = payload.block_number();
 
             debug!(
+                target: "reth-bench",
                 number=?payload.block_number(),
                 "Sending payload to engine",
             );
