@@ -245,7 +245,7 @@ RPC:
       --http.api <HTTP_API>
           Rpc Modules to be configured for the HTTP server
 
-          [possible values: admin, debug, eth, net, trace, txpool, web3, rpc, reth, ots, flashbots]
+          [possible values: admin, debug, eth, net, trace, txpool, web3, rpc, reth, ots, flashbots, miner]
 
       --http.corsdomain <HTTP_CORSDOMAIN>
           Http Corsdomain to allow request from
@@ -269,7 +269,7 @@ RPC:
       --ws.api <WS_API>
           Rpc Modules to be configured for the WS server
 
-          [possible values: admin, debug, eth, net, trace, txpool, web3, rpc, reth, ots, flashbots]
+          [possible values: admin, debug, eth, net, trace, txpool, web3, rpc, reth, ots, flashbots, miner]
 
       --ipcdisable
           Disable the IPC-RPC server
@@ -381,8 +381,8 @@ RPC State Cache:
 
           [default: 2000]
 
-      --rpc-cache.max-envs <MAX_ENVS>
-          Max number of bytes for cached env data
+      --rpc-cache.max-headers <MAX_HEADERS>
+          Max number of headers in cache
 
           [default: 1000]
 
@@ -443,6 +443,16 @@ TxPool:
 
           [default: 20]
 
+      --txpool.blobpool-max-count <BLOBPOOL_MAX_COUNT>
+          Max number of transaction in the blobpool
+
+          [default: 10000]
+
+      --txpool.blobpool-max-size <BLOBPOOL_MAX_SIZE>
+          Max size of the blobpool in megabytes
+
+          [default: 20]
+
       --txpool.max-account-slots <MAX_ACCOUNT_SLOTS>
           Max number of executable transaction slots guaranteed per account
 
@@ -458,7 +468,7 @@ TxPool:
 
           [default: 7]
 
-      --txpool.gas-limit <GAS_LIMIT>
+      --txpool.gas-limit <ENFORCED_GAS_LIMIT>
           The default enforced gas limit for transactions entering the pool
 
           [default: 30000000]
@@ -502,16 +512,26 @@ TxPool:
 
           [default: 1024]
 
+      --txpool.max-new-pending-txs-notifications <MAX_NEW_PENDING_TXS_NOTIFICATIONS>
+          How many new pending transactions to buffer and send to in progress pending transaction iterators
+
+          [default: 200]
+
+      --txpool.lifetime <DURATION>
+          Maximum amount of time non-executable transaction are queued
+
+          [default: 10800]
+
 Builder:
-      --builder.extradata <EXTRADATA>
+      --builder.extradata <EXTRA_DATA>
           Block extra data set by the payload builder
 
           [default: reth/<VERSION>/<OS>]
 
       --builder.gaslimit <GAS_LIMIT>
-          Target gas ceiling for built blocks
+          Target gas limit for built blocks
 
-          [default: 30000000]
+          [default: 36000000]
 
       --builder.interval <DURATION>
           The interval at which the job should build a new payload after the last.
@@ -677,14 +697,6 @@ Pruning:
           Configure receipts log filter. Format: <`address`>:<`prune_mode`>[,<`address`>:<`prune_mode`>...] Where <`prune_mode`> can be 'full', 'distance:<`blocks`>', or 'before:<`block_number`>'
 
 Engine:
-      --engine.experimental
-          Enable the experimental engine features on reth binary
-
-          DEPRECATED: experimental engine is default now, use --engine.legacy to enable the legacy functionality
-
-      --engine.legacy
-          Enable the legacy engine on reth binary
-
       --engine.persistence-threshold <PERSISTENCE_THRESHOLD>
           Configure persistence threshold for engine experimental
 
@@ -694,6 +706,20 @@ Engine:
           Configure the target number of blocks to keep in memory
 
           [default: 2]
+
+      --engine.legacy-state-root
+          Enable legacy state root
+
+      --engine.caching-and-prewarming
+          Enable cross-block caching and parallel prewarming
+
+      --engine.cross-block-cache-size <CROSS_BLOCK_CACHE_SIZE>
+          Configure the size of cross-block cache in megabytes
+
+          [default: 4096]
+
+      --engine.state-root-task-compare-updates
+          Enable comparing trie updates from the state root task to the trie updates from the regular state root calculation
 
 Logging:
       --log.stdout.format <FORMAT>

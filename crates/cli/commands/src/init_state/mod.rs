@@ -1,18 +1,17 @@
 //! Command that initializes the node from a genesis file.
 
-use crate::common::{AccessRights, Environment, EnvironmentArgs};
+use crate::common::{AccessRights, CliNodeTypes, Environment, EnvironmentArgs};
 use alloy_primitives::{B256, U256};
 use clap::Parser;
 use reth_chainspec::{EthChainSpec, EthereumHardforks};
 use reth_cli::chainspec::ChainSpecParser;
 use reth_db_common::init::init_from_state_dump;
-use reth_node_builder::NodeTypesWithEngine;
+use reth_node_api::NodePrimitives;
 use reth_primitives::SealedHeader;
 use reth_provider::{
     BlockNumReader, DatabaseProviderFactory, StaticFileProviderFactory, StaticFileWriter,
 };
-
-use std::{fs::File, io::BufReader, path::PathBuf, str::FromStr};
+use std::{io::BufReader, path::PathBuf, str::FromStr};
 use tracing::info;
 
 pub mod without_evm;
@@ -68,9 +67,13 @@ pub struct InitStateCommand<C: ChainSpecParser> {
 
 impl<C: ChainSpecParser<ChainSpec: EthChainSpec + EthereumHardforks>> InitStateCommand<C> {
     /// Execute the `init` command
-    pub async fn execute<N: NodeTypesWithEngine<ChainSpec = C::ChainSpec>>(
-        self,
-    ) -> eyre::Result<()> {
+    pub async fn execute<N>(self) -> eyre::Result<()>
+    where
+        N: CliNodeTypes<
+            ChainSpec = C::ChainSpec,
+            Primitives: NodePrimitives<BlockHeader = alloy_consensus::Header>,
+        >,
+    {
         info!(target: "reth::cli", "Reth init-state starting");
 
         let Environment { config, provider_factory, .. } = self.env.init::<N>(AccessRights::RW)?;
@@ -97,7 +100,6 @@ impl<C: ChainSpecParser<ChainSpec: EthChainSpec + EthereumHardforks>> InitStateC
             if last_block_number == 0 {
                 without_evm::setup_without_evm(
                     &provider_rw,
-                    &static_file_provider,
                     // &header,
                     // header_hash,
                     SealedHeader::new(header, header_hash),
@@ -105,7 +107,7 @@ impl<C: ChainSpecParser<ChainSpec: EthChainSpec + EthereumHardforks>> InitStateC
                 )?;
 
                 // SAFETY: it's safe to commit static files, since in the event of a crash, they
-                // will be unwinded according to database checkpoints.
+                // will be unwound according to database checkpoints.
                 //
                 // Necessary to commit, so the header is accessible to provider_rw and
                 // init_state_dump
@@ -119,8 +121,7 @@ impl<C: ChainSpecParser<ChainSpec: EthChainSpec + EthereumHardforks>> InitStateC
 
         info!(target: "reth::cli", "Initiating state dump");
 
-        let file = File::open(self.state)?;
-        let reader = BufReader::new(file);
+        let reader = BufReader::new(reth_fs_util::open(self.state)?);
 
         let hash = init_from_state_dump(reader, &provider_rw, config.stages.etl)?;
 

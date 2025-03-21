@@ -140,6 +140,15 @@ impl RpcModuleSelection {
             (None, None) => true,
         }
     }
+
+    /// Returns true if the selection contains the given module.
+    pub fn contains(&self, module: &RethRpcModule) -> bool {
+        match self {
+            Self::All => true,
+            Self::Standard => Self::STANDARD_MODULES.contains(module),
+            Self::Selection(s) => s.contains(module),
+        }
+    }
 }
 
 impl From<&HashSet<RethRpcModule>> for RpcModuleSelection {
@@ -260,6 +269,8 @@ pub enum RethRpcModule {
     Ots,
     /// `flashbots_` module
     Flashbots,
+    /// `miner_` module
+    Miner,
 }
 
 // === impl RethRpcModule ===
@@ -309,6 +320,7 @@ impl FromStr for RethRpcModule {
             "reth" => Self::Reth,
             "ots" => Self::Ots,
             "flashbots" => Self::Flashbots,
+            "miner" => Self::Miner,
             _ => return Err(ParseError::VariantNotFound),
         })
     }

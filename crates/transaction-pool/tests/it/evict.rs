@@ -1,5 +1,7 @@
 //! Transaction pool eviction tests.
 
+use alloy_consensus::Transaction;
+use alloy_eips::eip1559::{ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE};
 use alloy_primitives::{Address, B256};
 use rand::distributions::Uniform;
 use reth_primitives::constants::{
@@ -90,7 +92,7 @@ async fn only_blobs_eviction() {
             let set = set.into_vec();
 
             // ensure that the first nonce is 0
-            assert_eq!(set[0].get_nonce(), 0);
+            assert_eq!(set[0].nonce(), 0);
 
             // and finally insert it into the pool
             let results = pool.add_transactions(TransactionOrigin::External, set).await;
@@ -197,7 +199,7 @@ async fn mixed_eviction() {
             );
 
             let set = set.into_inner().into_vec();
-            assert_eq!(set[0].get_nonce(), 0);
+            assert_eq!(set[0].nonce(), 0);
 
             let results = pool.add_transactions(TransactionOrigin::External, set).await;
             for (i, result) in results.iter().enumerate() {

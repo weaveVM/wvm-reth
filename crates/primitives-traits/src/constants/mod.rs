@@ -107,9 +107,8 @@ pub const EIP1559_DEFAULT_ELASTICITY_MULTIPLIER: u64 = 2;
 /// Minimum gas limit allowed for transactions.
 pub const MINIMUM_GAS_LIMIT: u64 = 5000;
 
-/// Holesky genesis hash: `0xb5f7f912443c940f21fd611f12828d75b534364ed9e95ca4e307729a4661bde4`
-pub const HOLESKY_GENESIS_HASH: B256 =
-    b256!("b5f7f912443c940f21fd611f12828d75b534364ed9e95ca4e307729a4661bde4");
+/// The bound divisor of the gas limit, used in update calculations.
+pub const GAS_LIMIT_BOUND_DIVISOR: u64 = 1024;
 
 /// The number of blocks to unwind during a reorg that already became a part of canonical chain.
 ///

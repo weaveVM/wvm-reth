@@ -1,4 +1,5 @@
-use alloy_primitives::{hex, private::getrandom::getrandom, TxKind};
+use alloy_eips::eip4895::Withdrawals;
+use alloy_primitives::{hex, private::getrandom::getrandom, PrimitiveSignature, TxKind};
 use arbitrary::Arbitrary;
 use eyre::{Context, Result};
 use proptest::{
@@ -16,13 +17,15 @@ use reth_codecs::alloy::{
     withdrawal::Withdrawal,
 };
 use reth_db::{
-    models::{AccountBeforeTx, StoredBlockBodyIndices, StoredBlockOmmers, StoredBlockWithdrawals},
+    models::{
+        AccountBeforeTx, StaticFileBlockWithdrawals, StoredBlockBodyIndices, StoredBlockOmmers,
+        StoredBlockWithdrawals,
+    },
     ClientVersion,
 };
 use reth_fs_util as fs;
 use reth_primitives::{
-    Account, Log, LogData, Receipt, ReceiptWithBloom, StorageEntry, Transaction,
-    TransactionSignedNoHash, TxType, Withdrawals,
+    Account, Log, LogData, Receipt, StorageEntry, Transaction, TransactionSigned, TxType,
 };
 use reth_prune_types::{PruneCheckpoint, PruneMode};
 use reth_stages_types::{
@@ -75,14 +78,13 @@ compact_types!(
         // reth-primitives
         Account,
         Receipt,
-        Withdrawals,
-        ReceiptWithBloom,
         // reth_codecs::alloy
         Authorization,
         GenesisAccount,
         Header,
         HeaderExt,
         Withdrawal,
+        Withdrawals,
         TxEip2930,
         TxEip1559,
         TxEip4844,
@@ -111,8 +113,9 @@ compact_types!(
         StoredBlockOmmers,
         StoredBlockBodyIndices,
         StoredBlockWithdrawals,
+        StaticFileBlockWithdrawals,
         // Manual implementations
-        TransactionSignedNoHash,
+        TransactionSigned,
         // Bytecode, // todo revm arbitrary
         StorageEntry,
         // MerkleCheckpoint, // todo storedsubnode -> branchnodecompact arbitrary
@@ -126,7 +129,7 @@ compact_types!(
     ],
     // These types require an extra identifier which is usually stored elsewhere (eg. parent type).
     identifier: [
-        // Signature todo we for v we only store parity(true || false), while v can take more values
+        PrimitiveSignature,
         Transaction,
         TxType,
         TxKind
@@ -196,7 +199,7 @@ where
     let type_name = type_name::<T>();
     print!("{}", &type_name);
 
-    let mut bytes = std::iter::repeat(0u8).take(256).collect::<Vec<u8>>();
+    let mut bytes = std::iter::repeat_n(0u8, 256).collect::<Vec<u8>>();
     let mut compact_buffer = vec![];
 
     let mut values = Vec::with_capacity(VECTOR_SIZE);
@@ -212,7 +215,7 @@ where
                 Err(err) => {
                     if tries < 5 && matches!(err, arbitrary::Error::NotEnoughData) {
                         tries += 1;
-                        bytes.extend(std::iter::repeat(0u8).take(256));
+                        bytes.extend(std::iter::repeat_n(0u8, 256));
                     } else {
                         return Err(err)?
                     }
@@ -270,7 +273,7 @@ where
 
         let (reconstructed, _) = T::from_compact(&compact_bytes, len_or_identifier);
         reconstructed.to_compact(&mut buffer);
-        assert_eq!(buffer, compact_bytes);
+        assert_eq!(buffer, compact_bytes, "mismatch {}", type_name);
     }
 
     println!(" ✅");
