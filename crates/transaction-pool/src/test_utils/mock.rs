@@ -350,6 +350,26 @@ impl MockTransaction {
         }
     }
 
+    /// Returns a new EIP7702 transaction with random address and hash and empty values
+    pub fn eip7702() -> Self {
+        Self::Eip7702 {
+            chain_id: 1,
+            hash: B256::random(),
+            sender: Address::random(),
+            nonce: 0,
+            max_fee_per_gas: MIN_PROTOCOL_BASE_FEE as u128,
+            max_priority_fee_per_gas: MIN_PROTOCOL_BASE_FEE as u128,
+            gas_limit: 0,
+            to: Address::random(),
+            value: Default::default(),
+            input: Bytes::new(),
+            access_list: Default::default(),
+            authorization_list: vec![],
+            size: Default::default(),
+            cost: U256::ZERO,
+        }
+    }
+
     /// Returns a new EIP4844 transaction with random address and hash and empty values
     pub fn eip4844() -> Self {
         Self::Eip4844 {

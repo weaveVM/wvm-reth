@@ -16,12 +16,9 @@ use crate::{
     PropagatedTransactions, TransactionEvents, TransactionOrigin, TransactionPool,
     TransactionValidationOutcome, TransactionValidator, ValidPoolTransaction,
 };
-// use alloy_eips::{
-    eip1559::ETHEREUM_BLOCK_GAS_LIMIT_30M,
+use alloy_eips::{
     eip4844::{BlobAndProofV1, BlobTransactionSidecar},
 };
-
-use alloy_eips::eip4844::BlobAndProofV1;
 use alloy_primitives::{Address, TxHash, B256, U256};
 use reth_eth_wire_types::HandleMempoolData;
 use reth_primitives::{constants::ETHEREUM_BLOCK_GAS_LIMIT, BlobTransactionSidecar};

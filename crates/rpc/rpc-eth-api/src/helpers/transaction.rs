@@ -1,5 +1,6 @@
 //! Database access for `eth_` transaction RPC methods. Loads transaction and receipt data w.r.t.
 //! network.
+
 use super::{EthApiSpec, EthSigner, LoadBlock, LoadReceipt, LoadState, SpawnBlocking};
 use crate::{
     helpers::estimate::EstimateCall, FromEthApiError, FullEthApiTypes, IntoEthApiError,
@@ -25,7 +26,16 @@ use reth_rpc_eth_types::{
     wvm::{GetWvmTransactionByTagRequest, WvmTransactionRequest},
     EthApiError, SignError, TransactionSource,
 };
+use alloy_rpc_types_eth::{transaction::TransactionRequest, BlockNumberOrTag, TransactionInfo};
 
+use reth_node_api::BlockBody;
+use reth_primitives::{transaction::SignedTransactionIntoRecoveredExt, RecoveredBlock};
+use reth_primitives_traits::SignedTransaction;
+use reth_provider::{
+    BlockNumReader, BlockReaderIdExt, ProviderBlock, ProviderReceipt, ProviderTx, ReceiptProvider,
+    TransactionsProvider,
+};
+use reth_rpc_eth_types::{utils::binary_search, EthApiError, SignError, TransactionSource};
 use reth_rpc_types_compat::transaction::TransactionCompat;
 use reth_transaction_pool::{PoolTransaction, TransactionOrigin, TransactionPool};
 use serde::Serialize;

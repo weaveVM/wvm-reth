@@ -18,6 +18,14 @@
 extern crate alloc;
 
 use alloc::{sync::Arc, vec::Vec};
+use alloy_consensus::{BlockHeader, Header};
+use alloy_primitives::{Address, U256};
+use core::{convert::Infallible, fmt::Debug};
+use reth_chainspec::{ChainSpec, EthChainSpec, MAINNET};
+use reth_evm::{env::EvmEnv, ConfigureEvm, ConfigureEvmEnv, Database, Evm, NextBlockEnvAttributes};
+use reth_primitives::TransactionSigned;
+use reth_primitives_traits::transaction::execute::FillTxEnv;
+use revm::{inspector_handle_register, EvmBuilder};
 use alloy_primitives::{Address, Bytes, TxKind, U256};
 use reth_chainspec::{ChainSpec, Head};
 use reth_evm::{ConfigureEvm, ConfigureEvmEnv, NextBlockEnvAttributes};

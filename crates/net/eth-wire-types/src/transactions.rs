@@ -387,9 +387,6 @@ mod tests {
         let expected_transactions =
             RequestPair { request_id: 0, message: PooledTransactions(message) };
 
-        let decoded_transactions =
-            RequestPair::<PooledTransactions>::decode(&mut &data[..]).unwrap();
-
         // checking tx by tx for easier debugging if there are any regressions
         for (decoded, expected) in
             decoded_transactions.message.0.iter().zip(expected_transactions.message.0.iter())

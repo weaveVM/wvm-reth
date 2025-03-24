@@ -64,8 +64,8 @@ pub struct TxPoolArgs {
     pub minimal_protocol_basefee: u64,
 
     /// The default enforced gas limit for transactions entering the pool
-    #[arg(long = "txpool.gas-limit", default_value_t = *ETHEREUM_BLOCK_GAS_LIMIT)]
-    pub gas_limit: u64,
+    #[arg(long = "txpool.gas-limit", default_value_t = ETHEREUM_BLOCK_GAS_LIMIT_30M)]
+    pub enforced_gas_limit: u64,
 
     /// Price bump percentage to replace an already existing blob transaction
     #[arg(long = "blobpool.pricebump", default_value_t = REPLACE_BLOB_PRICE_BUMP)]
@@ -109,7 +109,6 @@ pub struct TxPoolArgs {
     #[arg(long = "txpool.lifetime", value_parser = parse_duration_from_secs_or_ms, default_value = "10800", value_name = "DURATION")]
     pub max_queued_lifetime: Duration,
 }
-
 fn internal_default_max_tx_bytes() -> usize {
     *DEFAULT_MAX_TX_INPUT_BYTES
 }
