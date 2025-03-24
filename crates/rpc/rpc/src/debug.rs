@@ -1,7 +1,7 @@
 use alloy_consensus::BlockHeader;
 use alloy_eips::{eip2718::Encodable2718, BlockId, BlockNumberOrTag};
 use alloy_genesis::ChainConfig;
-use alloy_primitives::{Address, Bytes, B256, U256};
+use alloy_primitives::{Address, Bytes, B256};
 use alloy_rlp::{Decodable, Encodable};
 use alloy_rpc_types_debug::ExecutionWitness;
 use alloy_rpc_types_eth::{
@@ -17,17 +17,22 @@ use async_trait::async_trait;
 use jsonrpsee::core::RpcResult;
 use reth_chainspec::{EthChainSpec, EthereumHardforks};
 use reth_evm::{
-    env::EvmEnv,
     execute::{BlockExecutorProvider, Executor},
-    ConfigureEvmEnv, TransactionEnv,
+    ConfigureEvm, EvmEnvFor, TxEnvFor,
 };
-use reth_primitives::{NodePrimitives, ReceiptWithBloom, RecoveredBlock};
-use reth_primitives_traits::{Block as _, BlockBody, SignedTransaction};
+use reth_primitives_traits::{
+    Block as _, BlockBody, NodePrimitives, ReceiptWithBloom, RecoveredBlock, SignedTransaction,
+};
 use reth_provider::{
     BlockIdReader, BlockReaderIdExt, ChainSpecProvider, HeaderProvider, ProviderBlock,
-    ReceiptProviderIdExt, StateProofProvider, TransactionVariant,
+    ReceiptProviderIdExt, StateProofProvider, StateProvider, StateProviderFactory,
+    TransactionVariant,
 };
-use reth_revm::{database::StateProviderDatabase, witness::ExecutionWitnessRecord};
+use reth_revm::{
+    database::StateProviderDatabase,
+    db::{CacheDB, State},
+    witness::ExecutionWitnessRecord,
+};
 use reth_rpc_api::DebugApiServer;
 use reth_rpc_eth_api::{
     helpers::{EthTransactions, TraceExt},
@@ -36,10 +41,7 @@ use reth_rpc_eth_api::{
 use reth_rpc_eth_types::{EthApiError, StateCacheDb};
 use reth_rpc_server_types::{result::internal_rpc_err, ToRpcResult};
 use reth_tasks::pool::BlockingTaskGuard;
-use revm::{
-    db::{CacheDB, State},
-    primitives::db::DatabaseCommit,
-};
+use revm::{context_interface::Transaction, state::EvmState, DatabaseCommit};
 use revm_inspectors::tracing::{
     FourByteInspector, MuxInspector, TracingInspector, TracingInspectorConfig, TransactionContext,
 };
@@ -96,7 +98,7 @@ where
     async fn trace_block(
         &self,
         block: Arc<RecoveredBlock<ProviderBlock<Eth::Provider>>>,
-        evm_env: EvmEnv<<Eth::Evm as ConfigureEvmEnv>::Spec>,
+        evm_env: EvmEnvFor<Eth::Evm>,
         opts: GethDebugTracingOptions,
     ) -> Result<Vec<TraceResult>, Eth::Error> {
         // replay all transactions of the block
@@ -108,12 +110,12 @@ where
 
                 this.eth_api().apply_pre_execution_changes(&block, &mut db, &evm_env)?;
 
-                let mut transactions = block.transactions_with_sender().enumerate().peekable();
+                let mut transactions = block.transactions_recovered().enumerate().peekable();
                 let mut inspector = None;
-                while let Some((index, (signer, tx))) = transactions.next() {
+                while let Some((index, tx)) = transactions.next() {
                     let tx_hash = *tx.tx_hash();
 
-                    let tx_env = this.eth_api().evm_config().tx_env(tx, *signer);
+                    let tx_env = this.eth_api().evm_config().tx_env(tx);
 
                     let (result, state_changes) = this.trace_transaction(
                         &opts,
@@ -198,7 +200,7 @@ where
 
         let ((evm_env, _), block) = futures::try_join!(
             self.eth_api().evm_env_at(block_hash.into()),
-            self.eth_api().block_with_senders(block_hash.into()),
+            self.eth_api().recovered_block(block_hash.into()),
         )?;
 
         let block = block.ok_or(EthApiError::HeaderNotFound(block_id))?;
@@ -228,7 +230,7 @@ where
         let this = self.clone();
         self.eth_api()
             .spawn_with_state_at_block(state_at, move |state| {
-                let block_txs = block.transactions_with_sender();
+                let block_txs = block.transactions_recovered();
 
                 // configure env for the target transaction
                 let tx = transaction.into_recovered();
@@ -245,7 +247,7 @@ where
                     *tx.tx_hash(),
                 )?;
 
-                let tx_env = this.eth_api().evm_config().tx_env(tx.tx(), tx.signer());
+                let tx_env = this.eth_api().evm_config().tx_env(&tx);
 
                 this.trace_transaction(
                     &opts,
@@ -368,12 +370,8 @@ where
                                 let db = db.0;
 
                                 let tx_info = TransactionInfo {
-                                    block_number: Some(
-                                        evm_env.block_env.number.try_into().unwrap_or_default(),
-                                    ),
-                                    base_fee: Some(
-                                        evm_env.block_env.basefee.try_into().unwrap_or_default(),
-                                    ),
+                                    block_number: Some(evm_env.block_env.number),
+                                    base_fee: Some(evm_env.block_env.basefee),
                                     hash: None,
                                     block_hash: None,
                                     index: None,
@@ -446,12 +444,9 @@ where
                                 tx_env.clone(),
                                 &mut inspector,
                             )?;
-                            let env = revm_primitives::Env::boxed(
-                                evm_env.cfg_env,
-                                evm_env.block_env,
-                                tx_env.into(),
-                            );
-                            inspector.json_result(res, &env, db).map_err(Eth::Error::from_eth_err)
+                            inspector
+                                .json_result(res, &tx_env, &evm_env.block_env, db)
+                                .map_err(Eth::Error::from_eth_err)
                         })
                         .await?;
 
@@ -502,7 +497,7 @@ where
         let target_block = block_number.unwrap_or_default();
         let ((mut evm_env, _), block) = futures::try_join!(
             self.eth_api().evm_env_at(target_block),
-            self.eth_api().block_with_senders(target_block),
+            self.eth_api().recovered_block(target_block),
         )?;
 
         let opts = opts.unwrap_or_default();
@@ -536,11 +531,11 @@ where
                 if replay_block_txs {
                     // only need to replay the transactions in the block if not all transactions are
                     // to be replayed
-                    let transactions = block.transactions_with_sender().take(num_txs);
+                    let transactions = block.transactions_recovered().take(num_txs);
 
                     // Execute all transactions until index
-                    for (signer, tx) in transactions {
-                        let tx_env = this.eth_api().evm_config().tx_env(tx, *signer);
+                    for tx in transactions {
+                        let tx_env = this.eth_api().evm_config().tx_env(tx);
                         let (res, _) = this.eth_api().transact(&mut db, evm_env.clone(), tx_env)?;
                         db.commit(res.state);
                     }
@@ -606,7 +601,7 @@ where
         let this = self.clone();
         let block = this
             .eth_api()
-            .block_with_senders(hash.into())
+            .recovered_block(hash.into())
             .await?
             .ok_or(EthApiError::HeaderNotFound(hash.into()))?;
 
@@ -624,7 +619,7 @@ where
         let this = self.clone();
         let block = this
             .eth_api()
-            .block_with_senders(block_id.into())
+            .recovered_block(block_id.into())
             .await?
             .ok_or(EthApiError::HeaderNotFound(block_id.into()))?;
 
@@ -655,9 +650,25 @@ where
                 let state = state_provider
                     .witness(Default::default(), hashed_state)
                     .map_err(EthApiError::from)?;
-                Ok(ExecutionWitness { state: state.into_iter().collect(), codes, keys })
+                Ok(ExecutionWitness { state, codes, keys })
             })
             .await
+    }
+
+    /// Returns the code associated with a given hash at the specified block ID. If no code is
+    /// found, it returns None. If no block ID is provided, it defaults to the latest block.
+    pub async fn debug_code_by_hash(
+        &self,
+        hash: B256,
+        block_id: Option<BlockId>,
+    ) -> Result<Option<Bytes>, Eth::Error> {
+        Ok(self
+            .provider()
+            .state_by_block_id(block_id.unwrap_or_default())
+            .map_err(Eth::Error::from_eth_err)?
+            .bytecode_by_hash(&hash)
+            .map_err(Eth::Error::from_eth_err)?
+            .map(|b| b.original_bytes()))
     }
 
     /// Executes the configured transaction with the environment on the given database.
@@ -677,12 +688,12 @@ where
     fn trace_transaction(
         &self,
         opts: &GethDebugTracingOptions,
-        evm_env: EvmEnv<<Eth::Evm as ConfigureEvmEnv>::Spec>,
-        tx_env: <Eth::Evm as ConfigureEvmEnv>::TxEnv,
+        evm_env: EvmEnvFor<Eth::Evm>,
+        tx_env: TxEnvFor<Eth::Evm>,
         db: &mut StateCacheDb<'_>,
         transaction_context: Option<TransactionContext>,
         fused_inspector: &mut Option<TracingInspector>,
-    ) -> Result<(GethTrace, revm_primitives::EvmState), Eth::Error> {
+    ) -> Result<(GethTrace, EvmState), Eth::Error> {
         let GethDebugTracingOptions { config, tracer, tracer_config, .. } = opts;
 
         let tx_info = TransactionInfo {
@@ -692,8 +703,8 @@ where
                 .map(|c| c.tx_index.map(|i| i as u64))
                 .unwrap_or_default(),
             block_hash: transaction_context.as_ref().map(|c| c.block_hash).unwrap_or_default(),
-            block_number: Some(evm_env.block_env.number.try_into().unwrap_or_default()),
-            base_fee: Some(evm_env.block_env.basefee.try_into().unwrap_or_default()),
+            block_number: Some(evm_env.block_env.number),
+            base_fee: Some(evm_env.block_env.basefee),
         };
 
         if let Some(tracer) = tracer {
@@ -807,13 +818,9 @@ where
                         self.eth_api().inspect(&mut *db, evm_env, tx_env, &mut inspector)?;
 
                     let state = res.state.clone();
-                    let env = revm_primitives::Env::boxed(
-                        evm_env.cfg_env,
-                        evm_env.block_env,
-                        tx_env.into(),
-                    );
-                    let result =
-                        inspector.json_result(res, &env, db).map_err(Eth::Error::from_eth_err)?;
+                    let result = inspector
+                        .json_result(res, &tx_env, &evm_env.block_env, db)
+                        .map_err(Eth::Error::from_eth_err)?;
                     Ok((GethTrace::JS(result), state))
                 }
             }
@@ -1042,6 +1049,14 @@ where
 
     async fn debug_chaindb_property(&self, _property: String) -> RpcResult<()> {
         Ok(())
+    }
+
+    async fn debug_code_by_hash(
+        &self,
+        hash: B256,
+        block_id: Option<BlockId>,
+    ) -> RpcResult<Option<Bytes>> {
+        Self::debug_code_by_hash(self, hash, block_id).await.map_err(Into::into)
     }
 
     async fn debug_cpu_profile(&self, _file: String, _seconds: u64) -> RpcResult<()> {

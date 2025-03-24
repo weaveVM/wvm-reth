@@ -59,3 +59,6 @@ book/sources/Cargo.lock
 /key.json
 key.json
 
+
+# Cargo chef recipe file
+recipe.json

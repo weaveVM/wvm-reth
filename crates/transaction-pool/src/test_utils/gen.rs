@@ -8,9 +8,8 @@ use reth_primitives::{
     constants::{get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE},
     sign_message, Transaction, TransactionSigned,
 };
-use reth_primitives::{
-    transaction::SignedTransactionIntoRecoveredExt, Transaction, TransactionSigned,
-};
+use reth_ethereum_primitives::{Transaction, TransactionSigned};
+use reth_primitives_traits::transaction::signed::SignedTransaction;
 use reth_primitives_traits::crypto::secp256k1::sign_message;
 
 /// A generator for transactions for testing purposes.

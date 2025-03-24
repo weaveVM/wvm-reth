@@ -7,6 +7,7 @@ use reth_primitives_traits::{BlockBody, SignedTransaction};
 use reth_provider::{BlockReader, ChainSpecProvider};
 use reth_rpc_eth_api::{
     helpers::{EthBlocks, LoadBlock, LoadPendingBlock, LoadReceipt, SpawnBlocking},
+    types::RpcTypes,
     RpcNodeCoreExt, RpcReceipt,
 };
 use reth_rpc_eth_types::{EthApiError, EthReceiptBuilder};
@@ -17,10 +18,10 @@ impl<Provider, Pool, Network, EvmConfig> EthBlocks for EthApi<Provider, Pool, Ne
 where
     Self: LoadBlock<
         Error = EthApiError,
-        NetworkTypes: alloy_network::Network<ReceiptResponse = TransactionReceipt>,
+        NetworkTypes: RpcTypes<Receipt = TransactionReceipt>,
         Provider: BlockReader<
-            Transaction = reth_primitives::TransactionSigned,
-            Receipt = reth_primitives::Receipt,
+            Transaction = reth_ethereum_primitives::TransactionSigned,
+            Receipt = reth_ethereum_primitives::Receipt,
         >,
     >,
     Provider: BlockReader + ChainSpecProvider,

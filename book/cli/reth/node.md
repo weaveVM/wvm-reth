@@ -245,7 +245,7 @@ RPC:
       --http.api <HTTP_API>
           Rpc Modules to be configured for the HTTP server
 
-          [possible values: admin, debug, eth, net, trace, txpool, web3, rpc, reth, ots, flashbots, miner]
+          [possible values: admin, debug, eth, net, trace, txpool, web3, rpc, reth, ots, flashbots, miner, mev]
 
       --http.corsdomain <HTTP_CORSDOMAIN>
           Http Corsdomain to allow request from
@@ -269,7 +269,7 @@ RPC:
       --ws.api <WS_API>
           Rpc Modules to be configured for the WS server
 
-          [possible values: admin, debug, eth, net, trace, txpool, web3, rpc, reth, ots, flashbots, miner]
+          [possible values: admin, debug, eth, net, trace, txpool, web3, rpc, reth, ots, flashbots, miner, mev]
 
       --ipcdisable
           Disable the IPC-RPC server
@@ -720,6 +720,25 @@ Engine:
 
       --engine.state-root-task-compare-updates
           Enable comparing trie updates from the state root task to the trie updates from the regular state root calculation
+
+Ress:
+      --ress.enable
+          Enable support for `ress` subprotocol
+
+      --ress.max-active-connections <MAX_ACTIVE_CONNECTIONS>
+          The maximum number of active connections for `ress` subprotocol
+
+          [default: 5]
+
+      --ress.witness-max-parallel <WITNESS_MAX_PARALLEL>
+          The maximum number of witnesses to generate in parallel
+
+          [default: 5]
+
+      --ress.witness-cache-size <WITNESS_CACHE_SIZE>
+          Witness cache size
+
+          [default: 10]
 
 Logging:
       --log.stdout.format <FORMAT>

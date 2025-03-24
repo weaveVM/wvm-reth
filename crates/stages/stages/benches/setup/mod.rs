@@ -1,12 +1,13 @@
 #![allow(unreachable_pub)]
 use alloy_primitives::{Address, B256, U256};
 use itertools::concat;
-use reth_db::{tables, test_utils::TempDatabase, Database, DatabaseEnv};
+use reth_db::{test_utils::TempDatabase, Database, DatabaseEnv};
 use reth_db_api::{
     cursor::DbCursorRO,
+    tables,
     transaction::{DbTx, DbTxMut},
 };
-use reth_primitives::{Account, SealedBlock, SealedHeader};
+use reth_primitives_traits::{Account, SealedBlock, SealedHeader};
 use reth_provider::{
     test_utils::MockNodeTypesWithDB, DatabaseProvider, DatabaseProviderFactory, TrieWriter,
 };
