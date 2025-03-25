@@ -19,35 +19,29 @@ extern crate alloc;
 
 use alloc::{borrow::Cow, sync::Arc};
 use alloy_consensus::{BlockHeader, Header};
-use alloy_primitives::{Address, U256};
-use core::{convert::Infallible, fmt::Debug};
-use reth_chainspec::{ChainSpec, EthChainSpec, MAINNET};
-use reth_evm::{env::EvmEnv, ConfigureEvm, ConfigureEvmEnv, Database, Evm, NextBlockEnvAttributes};
-use reth_primitives::TransactionSigned;
-use reth_primitives_traits::transaction::execute::FillTxEnv;
-use revm::{inspector_handle_register, EvmBuilder};
-use alloy_primitives::{Address, Bytes, TxKind, U256};
-use reth_chainspec::{ChainSpec, Head};
-use reth_evm::{ConfigureEvm, ConfigureEvmEnv, NextBlockEnvAttributes};
-use reth_primitives::{
-    constants::ETHEREUM_BLOCK_GAS_LIMIT, transaction::FillTxEnv, Header, TransactionSigned,
-};
-use alloy_consensus::{BlockHeader, Header};
 pub use alloy_evm::EthEvm;
 use alloy_evm::{
     eth::{EthBlockExecutionCtx, EthBlockExecutorFactory},
     EthEvmFactory, FromRecoveredTx,
 };
-use alloy_primitives::{Bytes, U256};
+use alloy_primitives::{Address, Bytes, TxKind, U256};
 use core::{convert::Infallible, fmt::Debug};
-use reth_chainspec::{ChainSpec, EthChainSpec, MAINNET};
+use reth_chainspec::{ChainSpec, EthChainSpec, Head, MAINNET};
 use reth_ethereum_primitives::{Block, EthPrimitives, TransactionSigned};
-use reth_evm::{ConfigureEvm, EvmEnv, EvmFactory, NextBlockEnvAttributes, TransactionEnv};
-use reth_primitives_traits::{SealedBlock, SealedHeader};
+use reth_evm::{
+    env::EvmEnv, ConfigureEvm, ConfigureEvmEnv, Database, Evm, EvmEnv, EvmFactory,
+    NextBlockEnvAttributes, TransactionEnv,
+};
+use reth_primitives::{
+    constants::ETHEREUM_BLOCK_GAS_LIMIT, transaction::FillTxEnv, Header, TransactionSigned,
+};
+use reth_primitives_traits::{transaction::execute::FillTxEnv, SealedBlock, SealedHeader};
 use revm::{
     context::{BlockEnv, CfgEnv},
     context_interface::block::BlobExcessGasAndPrice,
+    inspector_handle_register,
     primitives::hardfork::SpecId,
+    EvmBuilder,
 };
 
 mod config;

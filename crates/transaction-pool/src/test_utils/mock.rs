@@ -35,8 +35,8 @@ use reth_primitives_traits::{
     InMemorySize, Recovered, SignedTransaction,
 };
 
-use reth_primitives::constants::get_latest_min_protocol_base_fee;
 use alloy_eips::eip4844::env_settings::KzgSettings;
+use reth_primitives::constants::get_latest_min_protocol_base_fee;
 use std::{ops::Range, sync::Arc, time::Instant, vec::IntoIter};
 
 /// A transaction pool implementation using [`MockOrdering`] for transaction ordering.

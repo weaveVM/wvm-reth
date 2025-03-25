@@ -1,10 +1,10 @@
 //! Transaction pool arguments
 
 use crate::cli::config::RethTransactionPoolConfig;
-use reth_primitives::constants::{ETHEREUM_BLOCK_GAS_LIMIT_30M, MIN_PROTOCOL_BASE_FEE};
 use alloy_primitives::Address;
 use clap::Args;
 use reth_cli_util::parse_duration_from_secs_or_ms;
+use reth_primitives::constants::{ETHEREUM_BLOCK_GAS_LIMIT_30M, MIN_PROTOCOL_BASE_FEE};
 use reth_transaction_pool::{
     blobstore::disk::DEFAULT_MAX_CACHED_BLOBS,
     maintain::MAX_QUEUED_TRANSACTION_LIFETIME,
@@ -15,8 +15,7 @@ use reth_transaction_pool::{
     REPLACE_BLOB_PRICE_BUMP, TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER,
     TXPOOL_SUBPOOL_MAX_SIZE_MB_DEFAULT, TXPOOL_SUBPOOL_MAX_TXS_DEFAULT,
 };
-use std::sync::atomic::Ordering::SeqCst;
-use std::time::Duration;
+use std::{sync::atomic::Ordering::SeqCst, time::Duration};
 
 /// Parameters for debugging purposes
 #[derive(Debug, Clone, Args, PartialEq, Eq)]

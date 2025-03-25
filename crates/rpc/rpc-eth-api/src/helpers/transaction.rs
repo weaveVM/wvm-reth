@@ -25,7 +25,6 @@ use reth_rpc_eth_types::{
     wvm::{GetWvmTransactionByTagRequest, WvmTransactionRequest},
     EthApiError, SignError, TransactionSource,
 };
-use alloy_rpc_types_eth::{transaction::TransactionRequest, BlockNumberOrTag, TransactionInfo};
 
 use reth_node_api::BlockBody;
 use reth_primitives::{transaction::SignedTransactionIntoRecoveredExt, RecoveredBlock};

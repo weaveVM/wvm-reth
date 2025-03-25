@@ -1,5 +1,5 @@
-use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
 use core::time::Duration;
+use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
 
 /// The thresholds at which the execution stage writes state changes to the database.
 ///

@@ -4,13 +4,14 @@ use alloy_eips::{eip2718::Encodable2718, eip2930::AccessList};
 use alloy_primitives::{Address, Bytes, TxKind, B256, U256};
 use rand::Rng;
 use reth_chainspec::MAINNET;
+use reth_ethereum_primitives::{Transaction, TransactionSigned};
 use reth_primitives::{
     constants::{get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE},
     sign_message, Transaction, TransactionSigned,
 };
-use reth_ethereum_primitives::{Transaction, TransactionSigned};
-use reth_primitives_traits::transaction::signed::SignedTransaction;
-use reth_primitives_traits::crypto::secp256k1::sign_message;
+use reth_primitives_traits::{
+    crypto::secp256k1::sign_message, transaction::signed::SignedTransaction,
+};
 
 /// A generator for transactions for testing purposes.
 #[derive(Debug)]
