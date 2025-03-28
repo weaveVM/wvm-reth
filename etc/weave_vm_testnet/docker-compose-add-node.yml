@@ -138,46 +138,46 @@ services:
       - lighthousedata:/data
       - testnetdata:/testnetdata
       - ./../jwttoken:/root/jwt:ro
-    command: |
-      lighthouse bn \
-        --datadir /data \
-        --testnet-dir=/testnetdata/ \
-        --http \
-        --http-address 0.0.0.0 \
-        --execution-endpoint http://reth:8551 \
-        --metrics \
-        --metrics-address 0.0.0.0 \
-        --execution-jwt /root/jwt/jwt.hex \
-        --staking \
-        --allow-insecure-genesis-sync \
-        --import-all-attestations \
-        --subscribe-all-subnets \
-        --http-allow-origin "*" \
-        --disable-packet-filter \
-        --listen-address=0.0.0.0 \
-        --port=9000 \
-        --discovery-port=9000 \
-        --enr-tcp-port 9000 \
-        --enr-udp-port 9000 \
-        --enr-quic-port 9002 \
-        --enr-address local_IP \
-        --boot-nodes enr:-MS4QGnys7w5RrTO6mcb7f-peLirfomMmJ1pCk6dJXnmsOOncvcoTF1QycWNcFlya6_7Og_YAU7GD7i0UGKTXF2cZZNFh2F0dG5ldHOI__________-EZXRoMpAQuELhmQAABP__________gmlkgnY0gmlwhCJa_3uEcXVpY4IjKYlzZWNwMjU2azGhA4JvPcYQl5afLu9lASW-CJjWFmKcuAVubt1v-XofpgvbiHN5bmNuZXRzD4N0Y3CCIyiDdWRwgiMo  \
-        --libp2p-addresses "/ip4/34.90.255.123/tcp/9000/p2p/16Uiu2HAmMS9jWTEM59JmoCXXR2F9VPoWvTSSuhkdzqfD88LYVYEW" \
-        --trusted-peers "16Uiu2HAmMS9jWTEM59JmoCXXR2F9VPoWvTSSuhkdzqfD88LYVYEW" \
-        --disable-peer-scoring \
-        --reconstruct-historic-states \
-        --genesis-backfill \
-        --disable-upnp \
-        --disable-enr-auto-update \
-        --disable-backfill-rate-limiting \
-        --slots-per-restore-point 256 \
-        --beacon-processor-max-workers 40 \
-        --beacon-processor-work-queue-len 32768 \
-        --beacon-processor-reprocess-queue-len 24576 \
-        --beacon-processor-attestation-batch-size 2048 \
-        --beacon-processor-aggregate-batch-size 2048 \
-        --disable-inbound-rate-limiter \
-        --validator-monitor-auto
+    command: >
+      lighthouse bn
+      --datadir /data
+      --testnet-dir=/testnetdata/
+      --http
+      --http-address 0.0.0.0
+      --execution-endpoint http://reth:8551
+      --metrics
+      --metrics-address 0.0.0.0
+      --execution-jwt /root/jwt/jwt.hex
+      --staking
+      --allow-insecure-genesis-sync
+      --import-all-attestations
+      --subscribe-all-subnets
+      --http-allow-origin "*"
+      --disable-packet-filter
+      --listen-address=0.0.0.0
+      --port=9000
+      --discovery-port=9000
+      --enr-tcp-port 9000
+      --enr-udp-port 9000
+      --enr-quic-port 9002
+      --enr-address local_IP
+      --boot-nodes enr:-MS4QGnys7w5RrTO6mcb7f-peLirfomMmJ1pCk6dJXnmsOOncvcoTF1QycWNcFlya6_7Og_YAU7GD7i0UGKTXF2cZZNFh2F0dG5ldHOI__________-EZXRoMpAQuELhmQAABP__________gmlkgnY0gmlwhCJa_3uEcXVpY4IjKYlzZWNwMjU2azGhA4JvPcYQl5afLu9lASW-CJjWFmKcuAVubt1v-XofpgvbiHN5bmNuZXRzD4N0Y3CCIyiDdWRwgiMo
+      --libp2p-addresses "/ip4/34.90.255.123/tcp/9000/p2p/16Uiu2HAmMS9jWTEM59JmoCXXR2F9VPoWvTSSuhkdzqfD88LYVYEW"
+      --trusted-peers "16Uiu2HAmMS9jWTEM59JmoCXXR2F9VPoWvTSSuhkdzqfD88LYVYEW"
+      --disable-peer-scoring
+      --reconstruct-historic-states
+      --genesis-backfill
+      --disable-upnp
+      --disable-enr-auto-update
+      --disable-backfill-rate-limiting
+      --slots-per-restore-point 256
+      --beacon-processor-max-workers 40
+      --beacon-processor-work-queue-len 32768
+      --beacon-processor-reprocess-queue-len 24576
+      --beacon-processor-attestation-batch-size 2048
+      --beacon-processor-aggregate-batch-size 2048
+      --disable-inbound-rate-limiter
+      --validator-monitor-auto
     ulimits:
       nofile:
         soft: 65536
@@ -188,16 +188,19 @@ services:
     volumes:
       - testnetdata:/testnetdata
       - lighthousedata:/data
-    command: |
-      lighthouse vc \
-        --builder-proposals \
-        --testnet-dir=/testnetdata/ \
-        --beacon-nodes http://beacon-chain:5052 \
-        --datadir=/data/custom/ \
-        --init-slashing-protection \
-        --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7 \
-        --http-allow-origin "*" \
-        --http
+    command:
+      - lighthouse
+      - vc
+      - --builder-proposals
+      - --testnet-dir=/testnetdata/
+      - --beacon-nodes
+      - http://beacon-chain:5052
+      - --datadir=/data/custom/
+      - --init-slashing-protection
+      - --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7
+      - --http-allow-origin
+      - "*"
+      - --http
 
 volumes:
   reth_data:
