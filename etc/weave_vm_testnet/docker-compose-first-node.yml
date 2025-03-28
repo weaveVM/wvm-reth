@@ -173,19 +173,16 @@ services:
     volumes:
       - testnetdata:/testnetdata
       - lighthousedata:/data
-    command:
-      - lighthouse
-      - vc
-      - --builder-proposals
-      - --testnet-dir=/testnetdata/
-      - --beacon-nodes
-      - http://beacon-chain:5052
-      - --datadir=/data/custom/
-      - --init-slashing-protection
-      - --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7
-      - --http-allow-origin
-      - "*"
-      - --http
+    command: >
+      lighthouse vc
+      --builder-proposals
+      --testnet-dir=/testnetdata/
+      --beacon-nodes http://beacon-chain:5052
+      --datadir=/data/custom/
+      --init-slashing-protection
+      --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7
+      --http-allow-origin "*"
+      --http
         
 volumes:
   reth_data:
