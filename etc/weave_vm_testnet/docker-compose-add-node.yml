@@ -45,8 +45,8 @@ services:
       - --discovery.port=30303
       - --enable-discv5-discovery
       - --discovery.v5.port=30304
-      - --trusted-peers=enode://e6592ab87a01aeb6425a494629355718984ce26f5f256f2e1c90615bd0c93d0afabcf87caddc0d058123f6e47f26503c937970833186647201f2ffda759dcc74@34.107.39.173:30303
-      - --bootnodes=enode://e6592ab87a01aeb6425a494629355718984ce26f5f256f2e1c90615bd0c93d0afabcf87caddc0d058123f6e47f26503c937970833186647201f2ffda759dcc74@34.107.39.173:30303
+      - --trusted-peers=enode://d7d550089b6849aa68916f50e5137017719825bce0f7571be1c6483a24d01dcbd12712849fc8a808af05f124d871817b0448031de2b82935434b1e3b11ba89ab@34.90.255.123:30303
+      - --bootnodes=enode://d7d550089b6849aa68916f50e5137017719825bce0f7571be1c6483a24d01dcbd12712849fc8a808af05f124d871817b0448031de2b82935434b1e3b11ba89ab@34.90.255.123:30303
       - --rpc.eth-proof-window=3888000
       - --txpool.minimal-protocol-fee=500000
       - --rpc.max-request-size=512
@@ -161,9 +161,9 @@ services:
         --enr-udp-port 9000 \
         --enr-quic-port 9002 \
         --enr-address local_IP \
-        --boot-nodes enrX \
-        --libp2p-addresses "/ip4/10.156.0.10/udp/9000/p2p/16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU" \
-        --trusted-peers "16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU" \
+        --boot-nodes enr:-MS4QGnys7w5RrTO6mcb7f-peLirfomMmJ1pCk6dJXnmsOOncvcoTF1QycWNcFlya6_7Og_YAU7GD7i0UGKTXF2cZZNFh2F0dG5ldHOI__________-EZXRoMpAQuELhmQAABP__________gmlkgnY0gmlwhCJa_3uEcXVpY4IjKYlzZWNwMjU2azGhA4JvPcYQl5afLu9lASW-CJjWFmKcuAVubt1v-XofpgvbiHN5bmNuZXRzD4N0Y3CCIyiDdWRwgiMo  \
+        --libp2p-addresses "/ip4/34.90.255.123/tcp/9000/p2p/16Uiu2HAmMS9jWTEM59JmoCXXR2F9VPoWvTSSuhkdzqfD88LYVYEW" \
+        --trusted-peers "16Uiu2HAmMS9jWTEM59JmoCXXR2F9VPoWvTSSuhkdzqfD88LYVYEW" \
         --disable-peer-scoring \
         --reconstruct-historic-states \
         --genesis-backfill \
