@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   reth:
-    image: reth:local # ghcr.io/paradigmxyz/reth:latest
+    image: us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm:v0.4.2 # ghcr.io/paradigmxyz/reth:latest
     container_name: reth
     restart: unless-stopped
     ports:
@@ -126,7 +126,7 @@ services:
 
   # Consensus client part
   beacon-chain:
-    image: wvm-lighthouse:local
+    image: us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm-lighthouse:latest
     ports:
       - "5052:5052/tcp" # rpc
       - "5053:5053/tcp"
@@ -138,19 +138,66 @@ services:
       - lighthousedata:/data
       - testnetdata:/testnetdata
       - ./../jwttoken:/root/jwt:ro
-    command: >
-      lighthouse bn --datadir /data --testnet-dir=/testnetdata/ --http --http-address 0.0.0.0 --execution-endpoint http://reth:8551 --metrics --metrics-address 0.0.0.0 --execution-jwt /root/jwt/jwt.hex --staking --allow-insecure-genesis-sync --import-all-attestations --subscribe-all-subnets --http-allow-origin "*" --disable-packet-filter --listen-address=0.0.0.0 --port=9000 --discovery-port=9000 --enr-tcp-port 9000 --enr-udp-port 9000 --enr-quic-port 9002 --enr-address local_IP --boot-nodes enrX --libp2p-addresses "/ip4/10.156.0.10/udp/9000/p2p/16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU" --trusted-peers "16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU" --disable-peer-scoring --reconstruct-historic-states --genesis-backfill --disable-upnp --disable-enr-auto-update --disable-backfill-rate-limiting --slots-per-restore-point 256 --beacon-processor-max-workers 40 --beacon-processor-work-queue-len 32768 --beacon-processor-reprocess-queue-len 24576 --beacon-processor-attestation-batch-size 2048 --beacon-processor-aggregate-batch-size 2048 --disable-inbound-rate-limiter --validator-monitor-auto
+    command: |
+      lighthouse bn \
+        --datadir /data \
+        --testnet-dir=/testnetdata/ \
+        --http \
+        --http-address 0.0.0.0 \
+        --execution-endpoint http://reth:8551 \
+        --metrics \
+        --metrics-address 0.0.0.0 \
+        --execution-jwt /root/jwt/jwt.hex \
+        --staking \
+        --allow-insecure-genesis-sync \
+        --import-all-attestations \
+        --subscribe-all-subnets \
+        --http-allow-origin "*" \
+        --disable-packet-filter \
+        --listen-address=0.0.0.0 \
+        --port=9000 \
+        --discovery-port=9000 \
+        --enr-tcp-port 9000 \
+        --enr-udp-port 9000 \
+        --enr-quic-port 9002 \
+        --enr-address local_IP \
+        --boot-nodes enrX \
+        --libp2p-addresses "/ip4/10.156.0.10/udp/9000/p2p/16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU" \
+        --trusted-peers "16Uiu2HAky8jLEX6FWJZPFVEFCCu3HahNxPPmeTw2U9JyjiNBHRUU" \
+        --disable-peer-scoring \
+        --reconstruct-historic-states \
+        --genesis-backfill \
+        --disable-upnp \
+        --disable-enr-auto-update \
+        --disable-backfill-rate-limiting \
+        --slots-per-restore-point 256 \
+        --beacon-processor-max-workers 40 \
+        --beacon-processor-work-queue-len 32768 \
+        --beacon-processor-reprocess-queue-len 24576 \
+        --beacon-processor-attestation-batch-size 2048 \
+        --beacon-processor-aggregate-batch-size 2048 \
+        --disable-inbound-rate-limiter \
+        --validator-monitor-auto
     ulimits:
       nofile:
         soft: 65536
         hard: 65536
 
   validator:
-    image: wvm-lighthouse:local
+    image: us-east1-docker.pkg.dev/promising-rock-414216/wvm/wvm-lighthouse:latest
     volumes:
       - testnetdata:/testnetdata
       - lighthousedata:/data
-    command: lighthouse vc --builder-proposals --testnet-dir=/testnetdata/ --beacon-nodes http://beacon-chain:5052 --datadir=/data/custom/ --init-slashing-protection --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7 --http-allow-origin "*" --http
+    command: |
+      lighthouse vc \
+        --builder-proposals \
+        --testnet-dir=/testnetdata/ \
+        --beacon-nodes http://beacon-chain:5052 \
+        --datadir=/data/custom/ \
+        --init-slashing-protection \
+        --suggested-fee-recipient=a2A0D977847805fE224B789D8C4d3D711ab251e7 \
+        --http-allow-origin "*" \
+        --http
 
 volumes:
   reth_data:
