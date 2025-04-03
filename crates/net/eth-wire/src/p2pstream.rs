@@ -30,7 +30,8 @@ use serde::{Deserialize, Serialize};
 
 /// [`MAX_PAYLOAD_SIZE`] is the maximum size of an uncompressed message payload.
 /// This is defined in [EIP-706](https://eips.ethereum.org/EIPS/eip-706).
-const MAX_PAYLOAD_SIZE: usize = 16 * 1024 * 1024;
+/// @@@ LOAD NETWOWRK: 10x
+const MAX_PAYLOAD_SIZE: usize = 16 * 1024 * 1024 * 10;
 
 /// [`MAX_RESERVED_MESSAGE_ID`] is the maximum message ID reserved for the `p2p` subprotocol. If
 /// there are any incoming messages with an ID greater than this, they are subprotocol messages.
