@@ -1,7 +1,10 @@
 //! Support for maintaining the blob pool.
 
+use alloy_consensus::Typed2718;
+use alloy_eips::eip2718::Encodable2718;
 use alloy_primitives::{BlockNumber, B256};
 use reth_execution_types::ChainBlocks;
+use reth_primitives_traits::{Block, BlockBody, SignedTransaction};
 use std::collections::BTreeMap;
 
 /// The type that is used to track canonical blob transactions.
@@ -37,13 +40,17 @@ impl BlobStoreCanonTracker {
     ///
     /// Note: In case this is a chain that's part of a reorg, this replaces previously tracked
     /// blocks.
-    pub fn add_new_chain_blocks(&mut self, blocks: &ChainBlocks<'_>) {
+    pub fn add_new_chain_blocks<B>(&mut self, blocks: &ChainBlocks<'_, B>)
+    where
+        B: Block<Body: BlockBody<Transaction: SignedTransaction>>,
+    {
         let blob_txs = blocks.iter().map(|(num, block)| {
             let iter = block
-                .body
+                .body()
                 .transactions()
-                .filter(|tx| tx.transaction.is_eip4844())
-                .map(|tx| tx.hash);
+                .iter()
+                .filter(|tx| tx.is_eip4844())
+                .map(|tx| tx.trie_hash());
             (*num, iter)
         });
         self.add_blocks(blob_txs);
@@ -81,14 +88,12 @@ pub enum BlobStoreUpdates {
 
 #[cfg(test)]
 mod tests {
-    use alloy_consensus::Header;
-    use reth_execution_types::Chain;
-    use reth_primitives::{
-        BlockBody, SealedBlock, SealedBlockWithSenders, SealedHeader, Transaction,
-        TransactionSigned,
-    };
-
     use super::*;
+    use alloy_consensus::Header;
+    use alloy_primitives::PrimitiveSignature as Signature;
+    use reth_ethereum_primitives::{Transaction, TransactionSigned};
+    use reth_execution_types::Chain;
+    use reth_primitives_traits::{RecoveredBlock, SealedBlock, SealedHeader};
 
     #[test]
     fn test_finalized_tracker() {
@@ -119,66 +124,60 @@ mod tests {
         let tx3_hash = B256::random(); // Non-EIP-4844 transaction
 
         // Creating a first block with EIP-4844 transactions
-        let block1 = SealedBlockWithSenders {
-            block: SealedBlock {
-                header: SealedHeader::new(
-                    Header { number: 10, ..Default::default() },
-                    B256::random(),
-                ),
-                body: BlockBody {
+        let block1 = RecoveredBlock::new_sealed(
+            SealedBlock::from_sealed_parts(
+                SealedHeader::new(Header { number: 10, ..Default::default() }, B256::random()),
+                alloy_consensus::BlockBody {
                     transactions: vec![
-                        TransactionSigned {
-                            hash: tx1_hash,
-                            transaction: Transaction::Eip4844(Default::default()),
-                            ..Default::default()
-                        },
-                        TransactionSigned {
-                            hash: tx2_hash,
-                            transaction: Transaction::Eip4844(Default::default()),
-                            ..Default::default()
-                        },
+                        TransactionSigned::new(
+                            Transaction::Eip4844(Default::default()),
+                            Signature::test_signature(),
+                            tx1_hash,
+                        ),
+                        TransactionSigned::new(
+                            Transaction::Eip4844(Default::default()),
+                            Signature::test_signature(),
+                            tx2_hash,
+                        ),
                         // Another transaction that is not EIP-4844
-                        TransactionSigned {
-                            hash: B256::random(),
-                            transaction: Transaction::Eip7702(Default::default()),
-                            ..Default::default()
-                        },
+                        TransactionSigned::new(
+                            Transaction::Eip7702(Default::default()),
+                            Signature::test_signature(),
+                            B256::random(),
+                        ),
                     ],
                     ..Default::default()
                 },
-            },
-            ..Default::default()
-        };
+            ),
+            Default::default(),
+        );
 
         // Creating a second block with EIP-1559 and EIP-2930 transactions
         // Note: This block does not contain any EIP-4844 transactions
-        let block2 = SealedBlockWithSenders {
-            block: SealedBlock {
-                header: SealedHeader::new(
-                    Header { number: 11, ..Default::default() },
-                    B256::random(),
-                ),
-                body: BlockBody {
+        let block2 = RecoveredBlock::new_sealed(
+            SealedBlock::from_sealed_parts(
+                SealedHeader::new(Header { number: 11, ..Default::default() }, B256::random()),
+                alloy_consensus::BlockBody {
                     transactions: vec![
-                        TransactionSigned {
-                            hash: tx3_hash,
-                            transaction: Transaction::Eip1559(Default::default()),
-                            ..Default::default()
-                        },
-                        TransactionSigned {
-                            hash: tx2_hash,
-                            transaction: Transaction::Eip2930(Default::default()),
-                            ..Default::default()
-                        },
+                        TransactionSigned::new(
+                            Transaction::Eip1559(Default::default()),
+                            Signature::test_signature(),
+                            tx3_hash,
+                        ),
+                        TransactionSigned::new(
+                            Transaction::Eip2930(Default::default()),
+                            Signature::test_signature(),
+                            tx2_hash,
+                        ),
                     ],
                     ..Default::default()
                 },
-            },
-            ..Default::default()
-        };
+            ),
+            Default::default(),
+        );
 
         // Extract blocks from the chain
-        let chain = Chain::new(vec![block1, block2], Default::default(), None);
+        let chain: Chain = Chain::new(vec![block1, block2], Default::default(), None);
         let blocks = chain.into_inner().0;
 
         // Add new chain blocks to the tracker

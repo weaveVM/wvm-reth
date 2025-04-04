@@ -278,11 +278,13 @@ async fn upload_to_arweave(
     request
         .set_tag("Content-Type", "application/octet-stream")
         .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
+        .set_tag("LN:Encoding", "Borsh-Brotli")
         .set_tag("Block-Number", block_number.to_string().as_str())
         .set_tag("Block-Hash", block_hash)
         .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
         .set_tag("Network", get_network_tag().as_str())
         .set_tag("WeaveVM:Internal-Chain", notification_type)
+        .set_tag("LN:Internal-Chain", notification_type)
         .set_data(data.to_vec());
 
     match request.send_with_provider(ar_uploader).await {
@@ -302,7 +304,7 @@ async fn upload_to_arweave(
             let mut second_request = ArweaveRequest::new();
             second_request
                 .set_tag("Content-Type", "application/json")
-                .set_tag("WeaveVM:Encoding", "JSON")
+                .set_tag("LN:Encoding", "JSON")
                 .set_tag("Data-Protocol", "ao")
                 .set_tag("Type", "Attestation")
                 .set_tag("Message", &response)

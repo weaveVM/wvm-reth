@@ -2,10 +2,10 @@
 
 /// Optimism specific payload building errors.
 #[derive(Debug, thiserror::Error)]
-pub enum OptimismPayloadBuilderError {
+pub enum OpPayloadBuilderError {
     /// Thrown when a transaction fails to convert to a
-    /// [`reth_primitives::TransactionSignedEcRecovered`].
-    #[error("failed to convert deposit transaction to TransactionSignedEcRecovered")]
+    /// [`reth_primitives::Recovered`].
+    #[error("failed to convert deposit transaction to RecoveredTx")]
     TransactionEcRecoverFailed,
     /// Thrown when the L1 block info could not be parsed from the calldata of the
     /// first transaction supplied in the payload attributes.
@@ -20,18 +20,4 @@ pub enum OptimismPayloadBuilderError {
     /// Thrown when a blob transaction is included in a sequencer's block.
     #[error("blob transaction included in sequencer block")]
     BlobTransactionRejected,
-}
-
-/// Error type for EIP-1559 parameters
-#[derive(Debug, thiserror::Error)]
-pub enum EIP1559ParamError {
-    /// No EIP-1559 parameters provided
-    #[error("No EIP-1559 parameters provided")]
-    NoEIP1559Params,
-    /// Denominator overflow
-    #[error("Denominator overflow")]
-    DenominatorOverflow,
-    /// Elasticity overflow
-    #[error("Elasticity overflow")]
-    ElasticityOverflow,
 }

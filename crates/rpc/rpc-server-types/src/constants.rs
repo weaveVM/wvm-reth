@@ -67,6 +67,9 @@ pub mod gas_oracle {
     /// The default maximum number of blocks to use for the gas price oracle.
     pub const MAX_HEADER_HISTORY: u64 = 1024;
 
+    /// The default maximum number of allowed reward percentiles
+    pub const MAX_REWARD_PERCENTILE_COUNT: u64 = 100;
+
     /// Number of recent blocks to check for gas price
     pub const DEFAULT_GAS_PRICE_BLOCKS: u32 = 20;
 
@@ -117,8 +120,8 @@ pub mod cache {
     /// Default cache size for the receipts cache: 2000 receipts.
     pub const DEFAULT_RECEIPT_CACHE_MAX_LEN: u32 = 2000;
 
-    /// Default cache size for the env cache: 1000 envs.
-    pub const DEFAULT_ENV_CACHE_MAX_LEN: u32 = 1000;
+    /// Default cache size for the header cache: 1000 headers.
+    pub const DEFAULT_HEADER_CACHE_MAX_LEN: u32 = 1000;
 
     /// Default number of concurrent database requests.
     pub const DEFAULT_CONCURRENT_DB_REQUESTS: usize = 512;

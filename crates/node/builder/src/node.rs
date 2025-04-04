@@ -1,5 +1,6 @@
 // re-export the node api types
 pub use reth_node_api::{FullNodeTypes, NodeTypes, NodeTypesWithEngine};
+use reth_payload_builder::PayloadBuilderHandle;
 
 use std::{
     marker::PhantomData,
@@ -12,7 +13,6 @@ use reth_node_core::{
     dirs::{ChainPath, DataDirPath},
     node_config::NodeConfig,
 };
-use reth_payload_builder::PayloadBuilderHandle;
 use reth_provider::ChainSpecProvider;
 use reth_rpc_api::EngineApiClient;
 use reth_rpc_builder::{auth::AuthServerHandle, RpcServerHandle};
@@ -71,6 +71,8 @@ where
     type ChainSpec = <N::Types as NodeTypes>::ChainSpec;
 
     type StateCommitment = <N::Types as NodeTypes>::StateCommitment;
+
+    type Storage = <N::Types as NodeTypes>::Storage;
 }
 
 impl<N, C, AO> NodeTypesWithEngine for AnyNode<N, C, AO>
@@ -116,7 +118,7 @@ pub struct FullNode<Node: FullNodeComponents, AddOns: NodeAddOns<Node>> {
     /// Provider to interact with the node's database
     pub provider: Node::Provider,
     /// Handle to the node's payload builder service.
-    pub payload_builder: PayloadBuilderHandle<<Node::Types as NodeTypesWithEngine>::Engine>,
+    pub payload_builder_handle: PayloadBuilderHandle<<Node::Types as NodeTypesWithEngine>::Engine>,
     /// Task executor for the node.
     pub task_executor: TaskExecutor,
     /// The initial node config.
@@ -135,7 +137,7 @@ impl<Node: FullNodeComponents, AddOns: NodeAddOns<Node>> Clone for FullNode<Node
             pool: self.pool.clone(),
             network: self.network.clone(),
             provider: self.provider.clone(),
-            payload_builder: self.payload_builder.clone(),
+            payload_builder_handle: self.payload_builder_handle.clone(),
             task_executor: self.task_executor.clone(),
             config: self.config.clone(),
             data_dir: self.data_dir.clone(),
