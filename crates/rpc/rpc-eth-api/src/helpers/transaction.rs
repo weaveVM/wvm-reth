@@ -29,7 +29,7 @@ use crate::{
     FromEthApiError, FullEthApiTypes, IntoEthApiError, RpcNodeCore, RpcNodeCoreExt, RpcReceipt,
     RpcTransaction,
 };
-use wvm_static::PRECOMPILE_WVM_BIGQUERY_CLIENT;
+use wvm_static::PRECOMPILE_WVM_LOADDB_CLIENT;
 
 use super::{
     Call, EthApiSpec, EthSigner, LoadBlock, LoadPendingBlock, LoadReceipt, LoadState, SpawnBlocking,
@@ -361,7 +361,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
     {
         // WVM
-        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+        let load_db_client = (&*PRECOMPILE_WVM_LOADDB_CLIENT).clone();
 
         async move {
             let tags = request.tags;
@@ -373,23 +373,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
                 since_epoch.as_millis()
             };
 
-            #[derive(Serialize)]
-            struct TagsTbl {
-                hash: String,
-                tags: String,
-                created_at: u128,
-            }
-
-            bq_client
-                .insert_generic(
-                    "tags",
-                    None,
-                    TagsTbl {
-                        hash: hash.to_string(),
-                        tags: serde_json::to_string(&tags).unwrap(),
-                        created_at,
-                    },
-                )
+            load_db_client.save_tx_tag(hash.to_string(), tags.unwrap_or(vec![]), created_at)
                 .await
                 .map_err(|_| EthApiError::InternalEthError)?;
 
@@ -402,18 +386,14 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
     fn get_arweave_storage_proof(&self, block_height: String,) -> impl Future<Output = Result<String, EthApiError>> + Send
     where
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call {
-        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+        let bq_client = (&*PRECOMPILE_WVM_LOADDB_CLIENT).clone();
 
         async move {
-            let result_set = bq_client.bq_query_block(block_height).await;
+            let result_set = bq_client.query_raw_state(block_height).await;
 
             match result_set {
                 Some(result_set) => {
-                    match result_set.get_string_by_name("arweave_id") {
-                        Ok(Some(arweave_id)) => Ok(arweave_id), // Successfully found the string
-                        Ok(None) => Err(EthApiError::TransactionNotFound), // Field missing
-                        Err(err) => Err(EthApiError::TransactionNotFound), // Handle the inner error
-                    }
+                    Ok(result_set.arweave_id)
                 }
                 None => Err(EthApiError::TransactionNotFound), // Result set is None
             }
@@ -429,7 +409,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
     where
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
     {
-        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+        let bq_client = (&*PRECOMPILE_WVM_LOADDB_CLIENT).clone();
         async move {
             let tag = match req.tag {
                 Some(tag) => tag,

@@ -4340,7 +4340,7 @@ dependencies = [
 [[package]]
 name = "fees"
 version = "0.1.0"
-source = "git+https://github.com/weaveVM/miscalleneous?c?branch=main#8ed3bf038a727c9cfb52f7d706dca10c8e206e63"
+source = "git+https://github.com/weaveVM/miscalleneous?c?branch=main#5188e48024c1f0fb1b7b8d78cc75151132561d28"
 dependencies = [
  "reqwest 0.12.12",
  "serde_json",
@@ -15924,16 +15924,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "wvm-load-db"
+version = "1.1.1"
+dependencies = [
+ "async-trait",
+ "eyre",
+ "planetscale-driver",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "wvm-static"
 version = "1.1.1"
 dependencies = [
- "exex-wvm-bigquery",
  "eyre",
  "once_cell",
  "serde_json",
  "tokio",
  "tokio-util 0.7.13",
  "tracing",
+ "wvm-load-db",
 ]
 
 [[package]]
