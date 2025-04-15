@@ -23,7 +23,7 @@ fn process_tx_sequencer(tx: &TransactionSigned) -> Option<String> {
         let is_tx_to_seq = is_transaction_to_sequencer(to);
         let is_input_empty = tx.transaction.input().is_empty();
         if is_tx_to_seq && !is_input_empty {
-            return Some(tx.hash.to_string())
+            return Some(tx.hash.to_string());
         }
     }
 
