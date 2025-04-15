@@ -1,13 +1,15 @@
 pub mod drivers;
 
 use async_trait::async_trait;
+use planetscale_driver::Database;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt::Debug;
 
+#[derive(Serialize, Deserialize, Database)]
 pub struct RawState {
     pub block_number: i128,
-    pub sealed_block_with_senders: Value,
+    pub sealed_block_with_senders: String,
     pub arweave_id: String,
     pub timestamp: i128,
     pub block_hash: String,
@@ -35,4 +37,6 @@ pub trait LoadDbConnection: Send + Sync {
         tags: Vec<(String, String)>,
         created_at: u128,
     ) -> eyre::Result<()>;
+
+    async fn query_transaction_by_tags(&self, tag: (String, String)) -> Option<String>;
 }

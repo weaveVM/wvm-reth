@@ -40,12 +40,13 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             let wvm_bgc = (&*PRECOMPILE_WVM_LOADDB_CLIENT).clone();
 
             let res_from_bgc =
-                internal_block(async { wvm_bgc.query_state(block_id.to_string()).await })
-                    .map_err(|_| {
+                internal_block(async { wvm_bgc.query_state(block_id.to_string()).await }).map_err(
+                    |_| {
                         PrecompileError::Other(
                             "Tokio runtime could not block_on for operation".to_string(),
                         )
-                    })?;
+                    },
+                )?;
 
             Some((field, res_from_bgc))
         }

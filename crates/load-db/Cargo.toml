@@ -12,3 +12,4 @@ planetscale-driver = "0.5.1"
 serde = { version = "1.0.217", features = ["derive"] }
 async-trait = "0.1.86"
 eyre.workspace = true
+anyhow = "1.0.98"

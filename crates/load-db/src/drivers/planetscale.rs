@@ -1,8 +1,8 @@
 use crate::{LoadDbConnection, RawState};
 use async_trait::async_trait;
 use eyre::eyre;
-use planetscale_driver::PSConnection;
-use serde::Serialize;
+use planetscale_driver::{query, Database, PSConnection};
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -26,11 +26,29 @@ impl PlanetScaleDriver {
 #[async_trait]
 impl LoadDbConnection for PlanetScaleDriver {
     async fn query_raw_state(&self, block_id: String) -> Option<RawState> {
-        todo!()
+        let table_name = "state";
+        let select_clause = format!(
+            "SELECT block_number, JSON_UNQUOTE(sealed_block_with_senders) AS sealed_block_with_senders, arweave_id, timestamp, block_hash FROM {}",
+            table_name
+        );
+
+        let get_query = if let Ok(num) = block_id.parse::<i128>() {
+            format!("{} WHERE block_number = {}", select_clause, num)
+        } else {
+            format!(
+                "{} WHERE arweave_id = '{}' OR block_hash = '{}'",
+                select_clause, block_id, block_id
+            )
+        };
+
+        let conn = self.get_conn();
+        let fetch = query(get_query.as_str()).fetch_one::<RawState>(&conn).await;
+
+        fetch.ok()
     }
 
     async fn query_state(&self, block_id: String) -> Option<String> {
-        todo!()
+        self.query_raw_state(block_id).await.map(|e| e.sealed_block_with_senders)
     }
 
     async fn save_hashes(&self, hashes: &[String], block_number: u64) -> eyre::Result<()> {
@@ -45,7 +63,7 @@ impl LoadDbConnection for PlanetScaleDriver {
             .join(", ");
 
         let insert_query = format!(
-            "INSERT INTO {} (tx_hash, tags, block_id, `timestamp`)
+            "INSERT INTO {} (hash, tags, block_id, created_at)
      SELECT t.hash, t.tags, {}, {}
      FROM {} t
      WHERE t.hash IN ({}) AND t.created_at <= {}",
@@ -126,5 +144,34 @@ impl LoadDbConnection for PlanetScaleDriver {
         conn.execute(&insert_query).await.map_err(|e| eyre!(e.to_string()))?;
 
         Ok(())
+    }
+
+    async fn query_transaction_by_tags(&self, tag: (String, String)) -> Option<String> {
+        #[derive(Serialize, Deserialize, Database)]
+        struct QueryTxByTagResult {
+            pub hash: String,
+        }
+
+        let query_str = format!(
+            "SELECT t.hash hash
+FROM {} t,
+JSON_TABLE(
+  t.tags, '$[*]'
+  COLUMNS (
+    tag_key VARCHAR(255) PATH '$[0]',
+    tag_value VARCHAR(255) PATH '$[1]'
+  )
+) AS tags_flat
+WHERE tags_flat.tag_key = '{}'
+  AND tags_flat.tag_value = '{}'
+LIMIT 1;",
+            "confirmed_tags", tag.0, tag.1
+        );
+
+        let conn = self.get_conn();
+
+        let fetch_tag = query(query_str.as_str()).fetch_one::<QueryTxByTagResult>(&conn).await;
+
+        fetch_tag.ok().map(|e| e.hash)
     }
 }
