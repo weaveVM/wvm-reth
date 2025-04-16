@@ -6509,6 +6509,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ee93343901ab17bd981295f2cf0026d4ad018c7c31ba84549a4ddbb47a45104"
 
 [[package]]
+name = "load-db"
+version = "1.1.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "eyre",
+ "planetscale-driver",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11717,6 +11729,7 @@ dependencies = [
  "futures",
  "jsonrpsee",
  "jsonrpsee-types",
+ "load-db",
  "parking_lot",
  "reth-chainspec",
  "reth-errors",
@@ -11740,7 +11753,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
- "wvm-load-db",
  "wvm-static",
 ]
 
@@ -15925,28 +15937,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "wvm-load-db"
-version = "1.1.1"
-dependencies = [
- "anyhow",
- "async-trait",
- "eyre",
- "planetscale-driver",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "wvm-static"
 version = "1.1.1"
 dependencies = [
  "eyre",
+ "load-db",
  "once_cell",
  "serde_json",
  "tokio",
  "tokio-util 0.7.13",
  "tracing",
- "wvm-load-db",
 ]
 
 [[package]]

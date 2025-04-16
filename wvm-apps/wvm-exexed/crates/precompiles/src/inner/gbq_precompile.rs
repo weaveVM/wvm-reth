@@ -6,7 +6,7 @@ use crate::inner::{
 use alloy_primitives::Bytes;
 use revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult};
 use serde_json::Value;
-use wvm_static::{internal_block, PRECOMPILE_WVM_LOADDB_CLIENT};
+use wvm_static::{internal_block, PRECOMPILE_LOADDB_CLIENT};
 
 pub const GBQ_READ_PC: Precompile = Precompile::Standard(gbq_read);
 
@@ -37,7 +37,7 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             };
 
             // It needs to be obtained OUTSIDE the thread
-            let wvm_bgc = (&*PRECOMPILE_WVM_LOADDB_CLIENT).clone();
+            let wvm_bgc = (&*PRECOMPILE_LOADDB_CLIENT).clone();
 
             let res_from_bgc =
                 internal_block(async { wvm_bgc.query_state(block_id.to_string()).await }).map_err(

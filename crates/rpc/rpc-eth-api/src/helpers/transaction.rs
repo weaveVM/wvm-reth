@@ -29,7 +29,7 @@ use crate::{
     FromEthApiError, FullEthApiTypes, IntoEthApiError, RpcNodeCore, RpcNodeCoreExt, RpcReceipt,
     RpcTransaction,
 };
-use wvm_static::PRECOMPILE_WVM_LOADDB_CLIENT;
+use wvm_static::PRECOMPILE_LOADDB_CLIENT;
 
 use super::{
     Call, EthApiSpec, EthSigner, LoadBlock, LoadPendingBlock, LoadReceipt, LoadState, SpawnBlocking,
@@ -362,7 +362,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
     {
         // WVM
-        let load_db_client = (&*PRECOMPILE_WVM_LOADDB_CLIENT).clone();
+        let load_db_client = (&*PRECOMPILE_LOADDB_CLIENT).clone();
 
         async move {
             let tags = request.tags;
@@ -387,10 +387,10 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
     fn get_arweave_storage_proof(&self, block_height: String,) -> impl Future<Output = Result<String, EthApiError>> + Send
     where
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call {
-        let bq_client = (&*PRECOMPILE_WVM_LOADDB_CLIENT).clone();
+        let load_db_client = (&*PRECOMPILE_LOADDB_CLIENT).clone();
 
         async move {
-            let result_set = bq_client.query_raw_state(block_height).await;
+            let result_set = load_db_client.query_raw_state(block_height).await;
 
             match result_set {
                 Some(result_set) => {
@@ -410,7 +410,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
     where
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
     {
-        let bq_client = (&*PRECOMPILE_WVM_LOADDB_CLIENT).clone();
+        let load_db_client = (&*PRECOMPILE_LOADDB_CLIENT).clone();
         async move {
             let tag = match req.tag {
                 Some(tag) => tag,
@@ -422,7 +422,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
             tracing::debug!(first = tag.0, second = tag.1, "incoming tag");
 
-            let hash_str = bq_client.query_transaction_by_tags(tag)
+            let hash_str = load_db_client.query_transaction_by_tags(tag)
                 .await
                 .ok_or_else(|| EthApiError::TransactionNotFound.into_eth_err())?;
 

@@ -19,7 +19,7 @@ use tracing::{error, info};
 
 use exex::ar_actor::ArweaveActorHandle;
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
-use wvm_static::{PRECOMPILE_WVM_LOADDB_CLIENT, SUPERVISOR_RT};
+use wvm_static::{PRECOMPILE_LOADDB_CLIENT, SUPERVISOR_RT};
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
     mut ctx: ExExContext<Node>,
@@ -95,7 +95,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 /// Main loop of the exexed WVM node
 fn main() -> eyre::Result<()> {
     let _rt = &*SUPERVISOR_RT;
-    let _bc = &*PRECOMPILE_WVM_LOADDB_CLIENT;
+    let _bc = &*PRECOMPILE_LOADDB_CLIENT;
 
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         // Initializations

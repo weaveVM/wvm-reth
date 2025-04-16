@@ -12,7 +12,7 @@ pub static SUPERVISOR_RT: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
     tokio::runtime::Builder::new_multi_thread().enable_all().thread_name("wvm").build().unwrap()
 });
 
-pub static PRECOMPILE_WVM_LOADDB_CLIENT: LazyLock<Arc<PlanetScaleDriver>> = LazyLock::new(|| {
+pub static PRECOMPILE_LOADDB_CLIENT: LazyLock<Arc<PlanetScaleDriver>> = LazyLock::new(|| {
     let host = std::env::var("PS_HOST").unwrap_or_default();
     let username = std::env::var("PS_USERNAME").unwrap_or_default();
     let password = std::env::var("PS_PASSWORD").unwrap_or_default();
