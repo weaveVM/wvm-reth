@@ -59,7 +59,7 @@ serde_json.workspace = true
 bincode.workspace = true
 
 [features]
-default = ["std"]
+default = ["std", "serde"]
 std = [
     "reth-primitives-traits/std",
     "reth-codecs?/std",
