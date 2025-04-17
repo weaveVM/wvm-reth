@@ -24,7 +24,6 @@ rbrotli = { path = "../brotli" }
 wvm-static = { path = "../../../../crates/wvm-static" }
 wvm-tx = { path = "../tx" }
 tokio.workspace = true
-exex-wvm-da.workspace = true
 exex-wvm-bigquery.workspace = true
 tracing.workspace = true
 parse_duration.workspace = true

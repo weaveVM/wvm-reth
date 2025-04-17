@@ -687,7 +687,6 @@ borsh = "1.5.1"
 # brotli
 brotlic = "0.8.2"
 
-exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?i", branch = "merge/upstream-v1.2.0-merge-v2" }
 exex-wvm-bigquery = { git = "https://github.com/weaveVM/exex-templates?i", branch = "merge/upstream-v1.2.0-merge-v2" }
 
 # fees

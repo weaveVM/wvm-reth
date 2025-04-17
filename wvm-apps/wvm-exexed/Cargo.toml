@@ -25,7 +25,6 @@ futures.workspace = true
 alloy-primitives.workspace = true
 tokio.workspace = true
 exex-wvm-bigquery.workspace = true
-exex-wvm-da.workspace = true
 
 # Or if it doesn't need an explicit feature at all (serde might be included by default)
 reth-primitives = { workspace = true }
