@@ -5,16 +5,15 @@ use crate::{
 use alloy_consensus::{
     Header, SignableTransaction, Transaction as _, TxEip1559, TxReceipt, EMPTY_ROOT_HASH,
 };
-use alloy_eips::{
-    eip1559::{ETHEREUM_BLOCK_GAS_LIMIT_30M, INITIAL_BASE_FEE},
-    eip7685::Requests,
-};
+use alloy_eips::{eip1559::INITIAL_BASE_FEE, eip7685::Requests};
 use alloy_primitives::{Address, BlockNumber, B256, U256};
 use alloy_signer::SignerSync;
 use alloy_signer_local::PrivateKeySigner;
 use core::marker::PhantomData;
 use rand::{thread_rng, Rng};
-use reth_chainspec::{ChainSpec, EthereumHardfork, MIN_TRANSACTION_GAS};
+use reth_chainspec::{
+    ChainSpec, EthereumHardfork, LOAD_NETWORK_BLOCK_GAS_LIMIT, MIN_TRANSACTION_GAS,
+};
 use reth_ethereum_primitives::{
     Block, BlockBody, EthPrimitives, Receipt, Transaction, TransactionSigned,
 };
@@ -146,7 +145,7 @@ impl<N: NodePrimitives> TestBlockBuilder<N> {
             parent_hash,
             gas_used: transactions.len() as u64 * MIN_TRANSACTION_GAS,
             mix_hash: B256::random(),
-            gas_limit: ETHEREUM_BLOCK_GAS_LIMIT_30M,
+            gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT,
             base_fee_per_gas: Some(INITIAL_BASE_FEE),
             transactions_root: calculate_transaction_root(
                 &transactions.clone().into_iter().map(|tx| tx.into_inner()).collect::<Vec<_>>(),

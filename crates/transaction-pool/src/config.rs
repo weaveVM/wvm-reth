@@ -5,7 +5,7 @@ use crate::{
 };
 use alloy_consensus::constants::EIP4844_TX_TYPE_ID;
 use alloy_primitives::Address;
-use reth_primitives::constants::{ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE};
+use reth_chainspec::{LOAD_NETWORK_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE};
 use std::{collections::HashSet, ops::Mul, sync::atomic::Ordering::SeqCst, time::Duration};
 
 /// Guarantees max transactions for one sender, compatible with geth/erigon
@@ -86,7 +86,7 @@ impl Default for PoolConfig {
             max_account_slots: TXPOOL_MAX_ACCOUNT_SLOTS_PER_SENDER,
             price_bumps: Default::default(),
             minimal_protocol_basefee: MIN_PROTOCOL_BASE_FEE.load(SeqCst),
-            gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
+            gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT,
             local_transactions_config: Default::default(),
             pending_tx_listener_buffer_size: PENDING_TX_LISTENER_BUFFER_SIZE,
             new_tx_listener_buffer_size: NEW_TX_LISTENER_BUFFER_SIZE,

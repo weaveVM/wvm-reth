@@ -1,4 +1,4 @@
-use alloy_eips::eip1559::ETHEREUM_BLOCK_GAS_LIMIT_30M;
+use reth_chainspec::LOAD_NETWORK_BLOCK_GAS_LIMIT;
 use reth_primitives_traits::constants::GAS_LIMIT_BOUND_DIVISOR;
 
 /// Settings for the Ethereum builder.
@@ -16,8 +16,9 @@ impl Default for EthereumBuilderConfig {
 
 impl EthereumBuilderConfig {
     /// Create new payload builder config.
-    pub const fn new() -> Self {
-        Self { desired_gas_limit: ETHEREUM_BLOCK_GAS_LIMIT_30M }
+    /// @LOAD NETWORK: we removedd const fn
+    pub fn new() -> Self {
+        Self { desired_gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT }
     }
 
     /// Set desired gas limit.

@@ -38,9 +38,9 @@ mod tests {
     use super::*;
     use alloy_eips::eip1559::ETHEREUM_BLOCK_GAS_LIMIT_30M;
     use alloy_primitives::{Address, StorageKey, StorageValue, U256};
+    use reth_chainspec::LOAD_NETWORK_BLOCK_GAS_LIMIT;
     use reth_evm_ethereum::EthEvmConfig;
     use reth_network_api::noop::NoopNetwork;
-    use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
     use reth_provider::test_utils::{ExtendedAccount, MockEthProvider, NoopProvider};
     use reth_rpc_eth_api::helpers::EthState;
     use reth_rpc_eth_types::{
@@ -64,7 +64,7 @@ mod tests {
             NoopNetwork::default(),
             cache.clone(),
             GasPriceOracle::new(NoopProvider::default(), Default::default(), cache),
-            *ETHEREUM_BLOCK_GAS_LIMIT,
+            *LOAD_NETWORK_BLOCK_GAS_LIMIT,
             DEFAULT_MAX_SIMULATE_BLOCKS,
             DEFAULT_ETH_PROOF_WINDOW,
             BlockingTaskPool::build().expect("failed to build tracing pool"),
@@ -90,7 +90,7 @@ mod tests {
             (),
             cache.clone(),
             GasPriceOracle::new(mock_provider, Default::default(), cache),
-            *ETHEREUM_BLOCK_GAS_LIMIT,
+            *LOAD_NETWORK_BLOCK_GAS_LIMIT,
             DEFAULT_MAX_SIMULATE_BLOCKS,
             DEFAULT_ETH_PROOF_WINDOW + 1,
             BlockingTaskPool::build().expect("failed to build tracing pool"),

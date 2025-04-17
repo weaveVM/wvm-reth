@@ -18,8 +18,8 @@ use crate::{
 };
 use alloy_eips::eip4844::{BlobAndProofV1, BlobTransactionSidecar};
 use alloy_primitives::{Address, TxHash, B256, U256};
+use reth_chainspec::LOAD_NETWORK_BLOCK_GAS_LIMIT;
 use reth_eth_wire_types::HandleMempoolData;
-use reth_primitives::{constants::ETHEREUM_BLOCK_GAS_LIMIT, BlobTransactionSidecar};
 
 use reth_primitives_traits::Recovered;
 use std::{collections::HashSet, marker::PhantomData, sync::Arc};
@@ -42,7 +42,7 @@ impl TransactionPool for NoopTransactionPool {
 
     fn block_info(&self) -> BlockInfo {
         BlockInfo {
-            block_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
+            block_gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT,
             last_seen_block_hash: Default::default(),
             last_seen_block_number: 0,
             pending_basefee: 0,

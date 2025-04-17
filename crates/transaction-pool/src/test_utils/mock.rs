@@ -36,7 +36,7 @@ use reth_primitives_traits::{
 };
 
 use alloy_eips::eip4844::env_settings::KzgSettings;
-use reth_primitives::constants::get_latest_min_protocol_base_fee;
+use reth_chainspec::get_latest_min_protocol_base_fee;
 use std::{ops::Range, sync::Arc, time::Instant, vec::IntoIter};
 
 /// A transaction pool implementation using [`MockOrdering`] for transaction ordering.
@@ -324,26 +324,6 @@ impl MockTransaction {
             value: Default::default(),
             input: Bytes::new(),
             access_list: Default::default(),
-            size: Default::default(),
-            cost: U256::ZERO,
-        }
-    }
-
-    /// Returns a new EIP7702 transaction with random address and hash and empty values
-    pub fn eip7702() -> Self {
-        Self::Eip7702 {
-            chain_id: 1,
-            hash: B256::random(),
-            sender: Address::random(),
-            nonce: 0,
-            max_fee_per_gas: MIN_PROTOCOL_BASE_FEE as u128,
-            max_priority_fee_per_gas: MIN_PROTOCOL_BASE_FEE as u128,
-            gas_limit: 0,
-            to: Address::random(),
-            value: Default::default(),
-            input: Bytes::new(),
-            access_list: Default::default(),
-            authorization_list: vec![],
             size: Default::default(),
             cost: U256::ZERO,
         }

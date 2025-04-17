@@ -1,8 +1,9 @@
 use crate::wvm::v1::{header::V1WvmHeader, transaction::V1WvmTransactionSigned};
-use alloy_consensus::Header;
+use alloy_eips::eip4895::Withdrawals;
 use alloy_primitives::{Address, BlockHash};
-use derive_more::{Deref, DerefMut};
-use reth_primitives::{BlockBody, SealedBlock, SealedBlockWithSenders, SealedHeader, Withdrawals};
+use std::ptr::hash;
+
+use reth_primitives::{BlockBody, SealedBlock, SealedBlockWithSenders, SealedHeader};
 use serde::{Deserialize, Serialize};
 
 pub mod header;
@@ -86,20 +87,23 @@ impl From<SealedHeader> for V1WvmSealedHeader {
 impl From<SealedBlock> for V1WvmSealedBlock {
     fn from(value: SealedBlock) -> Self {
         V1WvmSealedBlock {
-            header: V1WvmSealedHeader::from(value.header),
-            body: V1WvmBlockBody::from(value.body),
+            header: V1WvmSealedHeader::from(value.header()),
+            body: V1WvmBlockBody::from(value.body()),
         }
     }
 }
 
 impl Into<SealedBlockWithSenders> for V1WvmSealedBlockWithSenders {
     fn into(self) -> SealedBlockWithSenders {
-        SealedBlockWithSenders { block: self.block.into(), senders: self.senders }
+        SealedBlockWithSenders::new(self.block.clone().into(), self.senders, self.block.header.hash)
     }
 }
 
 impl From<SealedBlockWithSenders> for V1WvmSealedBlockWithSenders {
     fn from(value: SealedBlockWithSenders) -> Self {
-        V1WvmSealedBlockWithSenders { block: value.block.into(), senders: value.senders }
+        V1WvmSealedBlockWithSenders {
+            block: value.sealed_block().into(),
+            senders: value.senders().into_vec(),
+        }
     }
 }

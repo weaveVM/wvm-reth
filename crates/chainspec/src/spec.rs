@@ -8,10 +8,7 @@ use crate::{
 use alloc::{boxed::Box, collections::BTreeMap, string::String, sync::Arc, vec::Vec};
 use alloy_chains::{Chain, NamedChain};
 use alloy_consensus::{
-    constants::{
-        DEV_GENESIS_HASH, EMPTY_WITHDRAWALS, HOLESKY_GENESIS_HASH, MAINNET_GENESIS_HASH,
-        SEPOLIA_GENESIS_HASH,
-    },
+    constants::{EMPTY_WITHDRAWALS, HOLESKY_GENESIS_HASH, SEPOLIA_GENESIS_HASH},
     Header,
 };
 use alloy_eips::{
@@ -22,9 +19,8 @@ use alloy_genesis::Genesis;
 use alloy_primitives::{address, b256, Address, BlockNumber, B256, U256};
 use alloy_trie::root::state_root_ref_unhashed;
 use derive_more::From;
-// use alloy_eips::{eip1559::ETHEREUM_BLOCK_GAS_LIMIT, eip4844::BlobAndProofV1};
 
-use alloy_consensus::constants::{DEV_GENESIS_HASH, MAINNET_GENESIS_HASH, SEPOLIA_GENESIS_HASH};
+use alloy_consensus::constants::{DEV_GENESIS_HASH, MAINNET_GENESIS_HASH};
 use reth_ethereum_forks::{
     ChainHardforks, DisplayHardforks, EthereumHardfork, EthereumHardforks, ForkCondition,
     ForkFilter, ForkFilterKey, ForkHash, ForkId, Hardfork, Hardforks, Head, DEV_HARDFORKS,
@@ -33,7 +29,6 @@ use reth_network_peers::{
     holesky_nodes, mainnet_nodes, op_nodes, op_testnet_nodes, sepolia_nodes, NodeRecord,
 };
 
-use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
 use reth_primitives_traits::{sync::LazyLock, SealedHeader};
 
 /// Helper method building a [`Header`] given [`Genesis`] and [`ChainHardforks`].
@@ -114,7 +109,6 @@ pub static MAINNET: LazyLock<Arc<ChainSpec>> = LazyLock::new(|| {
             b256!("0x649bbc62d0e31342afea4e5cd82d4049e7e1ee912fc0889aa790803be39038c5"),
         )),
         base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
-        max_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
         prune_delete_limit: MAINNET_PRUNE_DELETE_LIMIT,
         blob_params: HardforkBlobParams::default(),
     };
@@ -144,7 +138,6 @@ pub static SEPOLIA: LazyLock<Arc<ChainSpec>> = LazyLock::new(|| {
             b256!("0x649bbc62d0e31342afea4e5cd82d4049e7e1ee912fc0889aa790803be39038c5"),
         )),
         base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
-        max_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
         prune_delete_limit: 10000,
         blob_params: HardforkBlobParams::default(),
     };
@@ -172,7 +165,6 @@ pub static HOLESKY: LazyLock<Arc<ChainSpec>> = LazyLock::new(|| {
             b256!("0x649bbc62d0e31342afea4e5cd82d4049e7e1ee912fc0889aa790803be39038c5"),
         )),
         base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
-        max_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
         prune_delete_limit: 10000,
         blob_params: HardforkBlobParams::default(),
     };
@@ -331,7 +323,6 @@ impl Default for ChainSpec {
             hardforks: Default::default(),
             deposit_contract: Default::default(),
             base_fee_params: BaseFeeParamsKind::Constant(BaseFeeParams::ethereum()),
-            max_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
             prune_delete_limit: MAINNET_PRUNE_DELETE_LIMIT,
             blob_params: Default::default(),
         }

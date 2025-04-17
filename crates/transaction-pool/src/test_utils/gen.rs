@@ -3,12 +3,8 @@ use alloy_consensus::{SignableTransaction, TxEip1559, TxEip4844, TxLegacy};
 use alloy_eips::{eip2718::Encodable2718, eip2930::AccessList};
 use alloy_primitives::{Address, Bytes, TxKind, B256, U256};
 use rand::Rng;
-use reth_chainspec::MAINNET;
+use reth_chainspec::{get_latest_min_protocol_base_fee, MAINNET};
 use reth_ethereum_primitives::{Transaction, TransactionSigned};
-use reth_primitives::{
-    constants::{get_latest_min_protocol_base_fee, MIN_PROTOCOL_BASE_FEE},
-    sign_message, Transaction, TransactionSigned,
-};
 use reth_primitives_traits::{
     crypto::secp256k1::sign_message, transaction::signed::SignedTransaction,
 };

@@ -106,7 +106,7 @@ where
             evm_env.block_env.timestamp = timestamp;
         } else {
             // WVM
-            evm_env.block_env.timestamp += U256::from(1); // WVM #356: 1s per block
+            evm_env.block_env.timestamp += 1; // WVM #356: 1s per block
         }
 
         if let Some(difficulty) = difficulty {

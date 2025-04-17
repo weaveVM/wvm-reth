@@ -1,12 +1,12 @@
 use crate::{cli::config::PayloadBuilderConfig, version::default_extra_data};
 use alloy_consensus::constants::MAXIMUM_EXTRA_DATA_SIZE;
-use alloy_eips::{eip1559::ETHEREUM_BLOCK_GAS_LIMIT_36M, merge::SLOT_DURATION};
+use alloy_eips::merge::SLOT_DURATION;
 use clap::{
     builder::{RangedU64ValueParser, TypedValueParser},
     Arg, Args, Command,
 };
+use reth_chainspec::LOAD_NETWORK_BLOCK_GAS_LIMIT;
 use reth_cli_util::{parse_duration_from_secs, parse_duration_from_secs_or_ms};
-use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
 use std::{borrow::Cow, ffi::OsStr, time::Duration};
 
 /// Parameters for configuring the Payload Builder
@@ -18,7 +18,7 @@ pub struct PayloadBuilderArgs {
     pub extra_data: String,
 
     /// Target gas ceiling for built blocks.
-    #[arg(long = "builder.gaslimit", default_value_t = ETHEREUM_BLOCK_GAS_LIMIT, value_name = "GAS_LIMIT")]
+    #[arg(long = "builder.gaslimit", default_value_t = *LOAD_NETWORK_BLOCK_GAS_LIMIT, value_name = "GAS_LIMIT")]
     pub gas_limit: u64,
 
     /// The interval at which the job should build a new payload after the last.
@@ -41,7 +41,7 @@ pub struct PayloadBuilderArgs {
 impl Default for PayloadBuilderArgs {
     fn default() -> Self {
         Self {
-            gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
+            gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT,
             extra_data: default_extra_data(),
             interval: Duration::from_secs(1),
             deadline: SLOT_DURATION,

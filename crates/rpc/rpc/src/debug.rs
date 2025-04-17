@@ -582,8 +582,8 @@ where
                         results.push(trace);
                     }
                     // Increment block_env number and timestamp for the next bundle
-                    evm_env.block_env.number += U256::from(1);
-                    evm_env.block_env.timestamp += U256::from(1); // wvm #356: 1s per block
+                    evm_env.block_env.number += 1;
+                    evm_env.block_env.timestamp += 1; // wvm #356: 1s per block
 
                     all_bundles.push(results);
                 }

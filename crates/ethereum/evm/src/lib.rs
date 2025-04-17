@@ -24,24 +24,16 @@ use alloy_evm::{
     eth::{EthBlockExecutionCtx, EthBlockExecutorFactory},
     EthEvmFactory, FromRecoveredTx,
 };
-use alloy_primitives::{Address, Bytes, TxKind, U256};
+use alloy_primitives::{Bytes, U256};
 use core::{convert::Infallible, fmt::Debug};
-use reth_chainspec::{ChainSpec, EthChainSpec, Head, MAINNET};
+use reth_chainspec::{ChainSpec, EthChainSpec, MAINNET};
 use reth_ethereum_primitives::{Block, EthPrimitives, TransactionSigned};
-use reth_evm::{
-    env::EvmEnv, ConfigureEvm, ConfigureEvmEnv, Database, Evm, EvmEnv, EvmFactory,
-    NextBlockEnvAttributes, TransactionEnv,
-};
-use reth_primitives::{
-    constants::ETHEREUM_BLOCK_GAS_LIMIT, transaction::FillTxEnv, Header, TransactionSigned,
-};
-use reth_primitives_traits::{transaction::execute::FillTxEnv, SealedBlock, SealedHeader};
+use reth_evm::{ConfigureEvm, EvmEnv, EvmFactory, NextBlockEnvAttributes, TransactionEnv};
+use reth_primitives_traits::{SealedBlock, SealedHeader};
 use revm::{
     context::{BlockEnv, CfgEnv},
     context_interface::block::BlobExcessGasAndPrice,
-    inspector_handle_register,
     primitives::hardfork::SpecId,
-    EvmBuilder,
 };
 
 mod config;
