@@ -52,7 +52,7 @@ reth-revm = { workspace = true, features = ["test-utils"] }
 reth-optimism-chainspec.workspace = true
 alloy-genesis.workspace = true
 alloy-consensus.workspace = true
-reth-optimism-primitives = { workspace = true, features = ["arbitrary"] }
+reth-optimism-primitives = { workspace = true, features = ["arbitrary", "serde"] }
 
 [features]
 default = ["std"]

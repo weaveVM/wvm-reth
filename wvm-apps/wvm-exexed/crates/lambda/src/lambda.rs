@@ -2,10 +2,10 @@ use reth::{api::FullNodeComponents, primitives::TransactionSigned};
 
 use alloy_primitives::Address;
 
-use futures::{Stream, StreamExt};
+use futures::StreamExt;
 use reth_exex::ExExContext;
 use serde_json::{self, json};
-use tracing::{error, info};
+use tracing::error;
 
 pub const SEQ_ADDRESS: &str = "0x197f818c1313DC58b32D88078ecdfB40EA822614";
 pub const LAMBDA_ENDPOINT: &str = "https://wvm-lambda-0755acbdae90.herokuapp.com";
@@ -19,7 +19,7 @@ fn is_transaction_to_sequencer(to: Address) -> bool {
 }
 
 fn process_tx_sequencer(tx: &TransactionSigned) -> Option<String> {
-    if let Some(to) = tx.transaction.to() {
+    if let Some(to) = tx.transaction().to() {
         let is_tx_to_seq = is_transaction_to_sequencer(to);
         let is_input_empty = tx.transaction.input().is_empty();
         if is_tx_to_seq && !is_input_empty {
