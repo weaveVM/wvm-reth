@@ -1,8 +1,8 @@
 //! Configuration files.
 
 use eyre::eyre;
+use reth_chainspec::LOAD_NETWORK_BLOCK_GAS_LIMIT;
 use reth_network_types::{PeersConfig, SessionsConfig};
-use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
 use reth_prune_types::PruneModes;
 use reth_stages_types::ExecutionStageThresholds;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -249,7 +249,7 @@ impl Default for ExecutionConfig {
             max_changes: Some(5_000_000),
             // 50k full blocks of 30M gas
             // WVM: 300kk
-            max_cumulative_gas: Some((*ETHEREUM_BLOCK_GAS_LIMIT) * 50_000),
+            max_cumulative_gas: Some((*LOAD_NETWORK_BLOCK_GAS_LIMIT) * 50_000),
             // 10 minutes
             max_duration: Some(Duration::from_secs(10 * 60)),
         }

@@ -53,6 +53,7 @@ impl UploaderProvider {
     pub async fn upload_data(&self, data: Vec<u8>, param_tags: Vec<Tag>) -> eyre::Result<String> {
         let mut tags = vec![
             Tag::new("Protocol", "WeaveVM-ExEx"),
+            Tag::new("Protocol", "LN-ExEx"), // keep Load Network and WeaveVM tags under "Protocol"
             Tag::new("ExEx-Type", "Arweave-Data-Uploader"),
         ];
 

@@ -9,7 +9,7 @@
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     fs::{self, File, OpenOptions, ReadDir},
-    io::{self, BufWriter, Error, ErrorKind, Write},
+    io::{self, BufWriter, Error, Write},
     path::{Path, PathBuf},
 };
 
@@ -210,6 +210,12 @@ impl FsPathError {
     }
 }
 
+/// Wrapper for [`File::open`].
+pub fn open(path: impl AsRef<Path>) -> Result<File> {
+    let path = path.as_ref();
+    File::open(path).map_err(|err| FsPathError::open(err, path))
+}
+
 /// Wrapper for `std::fs::read_to_string`
 pub fn read_to_string(path: impl AsRef<Path>) -> Result<String> {
     let path = path.as_ref();
@@ -318,7 +324,7 @@ where
         File::create(&tmp_path).map_err(|err| FsPathError::create_file(err, &tmp_path))?;
 
     write_fn(&mut file).map_err(|err| FsPathError::Write {
-        source: Error::new(ErrorKind::Other, err.into()),
+        source: Error::other(err.into()),
         path: tmp_path.clone(),
     })?;
 

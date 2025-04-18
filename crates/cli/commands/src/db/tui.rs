@@ -10,8 +10,10 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
     Frame, Terminal,
 };
-use reth_db::RawValue;
-use reth_db_api::table::{Table, TableRow};
+use reth_db_api::{
+    table::{Table, TableRow},
+    RawValue,
+};
 use std::{
     io,
     time::{Duration, Instant},
@@ -365,7 +367,7 @@ where
             .map(|(i, k)| {
                 ListItem::new(format!("[{:0>width$}]: {k:?}", i + app.skip, width = key_length))
             })
-            .collect::<Vec<ListItem<'_>>>();
+            .collect::<Vec<_>>();
 
         let key_list = List::new(formatted_keys)
             .block(Block::default().borders(Borders::ALL).title(format!(

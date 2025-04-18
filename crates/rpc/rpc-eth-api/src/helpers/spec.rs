@@ -1,7 +1,7 @@
 //! Loads chain metadata.
 
 use alloy_primitives::{Address, U256, U64};
-use alloy_rpc_types::{Stage, SyncInfo, SyncStatus};
+use alloy_rpc_types_eth::{Stage, SyncInfo, SyncStatus};
 use futures::Future;
 use reth_chainspec::{ChainInfo, EthereumHardforks};
 use reth_errors::{RethError, RethResult};
@@ -22,11 +22,14 @@ pub trait EthApiSpec:
     Network: NetworkInfo,
 >
 {
+    /// The transaction type signers are using.
+    type Transaction;
+
     /// Returns the block node is started on.
     fn starting_block(&self) -> U256;
 
     /// Returns a handle to the signers owned by provider.
-    fn signers(&self) -> &parking_lot::RwLock<Vec<Box<dyn EthSigner>>>;
+    fn signers(&self) -> &parking_lot::RwLock<Vec<Box<dyn EthSigner<Self::Transaction>>>>;
 
     /// Returns the current ethereum protocol version.
     fn protocol_version(&self) -> impl Future<Output = RethResult<U64>> + Send {

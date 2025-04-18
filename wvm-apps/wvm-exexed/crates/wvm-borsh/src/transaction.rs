@@ -84,7 +84,7 @@ mod txs_tests {
         ));
         let to_borsh = borsh::to_vec(&borsh_data).unwrap();
         let from_borsh: BorshTransactionSigned = borsh::from_slice(to_borsh.as_slice()).unwrap();
-        assert_eq!(data.hash, from_borsh.0.as_v1().unwrap().hash);
+        assert_eq!(*data.hash(), from_borsh.0.as_v1().unwrap().hash);
     }
 
     #[test]

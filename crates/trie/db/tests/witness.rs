@@ -9,9 +9,12 @@ use alloy_primitives::{
 use alloy_rlp::EMPTY_STRING_CODE;
 use reth_db::{cursor::DbCursorRW, tables};
 use reth_db_api::transaction::DbTxMut;
-use reth_primitives::{Account, StorageEntry};
+use reth_primitives_traits::{Account, StorageEntry};
 use reth_provider::{test_utils::create_test_provider_factory, HashingWriter};
-use reth_trie::{proof::Proof, witness::TrieWitness, HashedPostState, HashedStorage, StateRoot};
+use reth_trie::{
+    proof::Proof, witness::TrieWitness, HashedPostState, HashedStorage, MultiProofTargets,
+    StateRoot,
+};
 use reth_trie_db::{DatabaseProof, DatabaseStateRoot, DatabaseTrieWitness};
 
 #[test]
@@ -27,7 +30,7 @@ fn includes_empty_node_preimage() {
     assert_eq!(
         TrieWitness::from_tx(provider.tx_ref())
             .compute(HashedPostState {
-                accounts: HashMap::from([(hashed_address, Some(Account::default()))]),
+                accounts: HashMap::from_iter([(hashed_address, Some(Account::default()))]),
                 storages: HashMap::default(),
             })
             .unwrap(),
@@ -39,13 +42,16 @@ fn includes_empty_node_preimage() {
 
     let state_root = StateRoot::from_tx(provider.tx_ref()).root().unwrap();
     let multiproof = Proof::from_tx(provider.tx_ref())
-        .multiproof(HashMap::from_iter([(hashed_address, HashSet::from_iter([hashed_slot]))]))
+        .multiproof(MultiProofTargets::from_iter([(
+            hashed_address,
+            HashSet::from_iter([hashed_slot]),
+        )]))
         .unwrap();
 
     let witness = TrieWitness::from_tx(provider.tx_ref())
         .compute(HashedPostState {
-            accounts: HashMap::from([(hashed_address, Some(Account::default()))]),
-            storages: HashMap::from([(
+            accounts: HashMap::from_iter([(hashed_address, Some(Account::default()))]),
+            storages: HashMap::from_iter([(
                 hashed_address,
                 HashedStorage::from_iter(false, [(hashed_slot, U256::from(1))]),
             )]),
@@ -77,15 +83,22 @@ fn includes_nodes_for_destroyed_storage_nodes() {
 
     let state_root = StateRoot::from_tx(provider.tx_ref()).root().unwrap();
     let multiproof = Proof::from_tx(provider.tx_ref())
-        .multiproof(HashMap::from_iter([(hashed_address, HashSet::from_iter([hashed_slot]))]))
+        .multiproof(MultiProofTargets::from_iter([(
+            hashed_address,
+            HashSet::from_iter([hashed_slot]),
+        )]))
         .unwrap();
 
-    let witness = TrieWitness::from_tx(provider.tx_ref())
-        .compute(HashedPostState {
-            accounts: HashMap::from([(hashed_address, Some(Account::default()))]),
-            storages: HashMap::from([(hashed_address, HashedStorage::from_iter(true, []))]), // destroyed
-        })
-        .unwrap();
+    let witness =
+        TrieWitness::from_tx(provider.tx_ref())
+            .compute(HashedPostState {
+                accounts: HashMap::from_iter([(hashed_address, Some(Account::default()))]),
+                storages: HashMap::from_iter([(
+                    hashed_address,
+                    HashedStorage::from_iter(true, []),
+                )]), // destroyed
+            })
+            .unwrap();
     assert!(witness.contains_key(&state_root));
     for node in multiproof.account_subtree.values() {
         assert_eq!(witness.get(&keccak256(node)), Some(node));
@@ -110,15 +123,15 @@ fn correctly_decodes_branch_node_values() {
     let mut hashed_storage_cursor =
         provider.tx_ref().cursor_dup_write::<tables::HashedStorages>().unwrap();
     hashed_storage_cursor
-        .upsert(hashed_address, StorageEntry { key: hashed_slot1, value: U256::from(1) })
+        .upsert(hashed_address, &StorageEntry { key: hashed_slot1, value: U256::from(1) })
         .unwrap();
     hashed_storage_cursor
-        .upsert(hashed_address, StorageEntry { key: hashed_slot2, value: U256::from(1) })
+        .upsert(hashed_address, &StorageEntry { key: hashed_slot2, value: U256::from(1) })
         .unwrap();
 
     let state_root = StateRoot::from_tx(provider.tx_ref()).root().unwrap();
     let multiproof = Proof::from_tx(provider.tx_ref())
-        .multiproof(HashMap::from_iter([(
+        .multiproof(MultiProofTargets::from_iter([(
             hashed_address,
             HashSet::from_iter([hashed_slot1, hashed_slot2]),
         )]))
@@ -126,8 +139,8 @@ fn correctly_decodes_branch_node_values() {
 
     let witness = TrieWitness::from_tx(provider.tx_ref())
         .compute(HashedPostState {
-            accounts: HashMap::from([(hashed_address, Some(Account::default()))]),
-            storages: HashMap::from([(
+            accounts: HashMap::from_iter([(hashed_address, Some(Account::default()))]),
+            storages: HashMap::from_iter([(
                 hashed_address,
                 HashedStorage::from_iter(
                     false,

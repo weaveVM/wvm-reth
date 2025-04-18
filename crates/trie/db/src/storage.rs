@@ -1,9 +1,8 @@
-use std::collections::hash_map;
-
 use crate::{DatabaseHashedCursorFactory, DatabaseTrieCursorFactory};
-use alloy_primitives::{keccak256, Address, BlockNumber, B256};
-use reth_db::{cursor::DbCursorRO, models::BlockNumberAddress, tables, DatabaseError};
-use reth_db_api::transaction::DbTx;
+use alloy_primitives::{keccak256, map::hash_map, Address, BlockNumber, B256};
+use reth_db_api::{
+    cursor::DbCursorRO, models::BlockNumberAddress, tables, transaction::DbTx, DatabaseError,
+};
 use reth_execution_errors::StorageRootError;
 use reth_trie::{
     hashed_cursor::HashedPostStateCursorFactory, HashedPostState, HashedStorage, StorageRoot,
@@ -43,6 +42,7 @@ impl<'a, TX: DbTx> DatabaseStorageRoot<'a, TX>
             DatabaseTrieCursorFactory::new(tx),
             DatabaseHashedCursorFactory::new(tx),
             address,
+            Default::default(),
             #[cfg(feature = "metrics")]
             TrieRootMetrics::new(TrieType::Storage),
         )
@@ -53,6 +53,7 @@ impl<'a, TX: DbTx> DatabaseStorageRoot<'a, TX>
             DatabaseTrieCursorFactory::new(tx),
             DatabaseHashedCursorFactory::new(tx),
             hashed_address,
+            Default::default(),
             #[cfg(feature = "metrics")]
             TrieRootMetrics::new(TrieType::Storage),
         )
@@ -70,10 +71,10 @@ impl<'a, TX: DbTx> DatabaseStorageRoot<'a, TX>
             DatabaseTrieCursorFactory::new(tx),
             HashedPostStateCursorFactory::new(DatabaseHashedCursorFactory::new(tx), &state_sorted),
             address,
+            prefix_set,
             #[cfg(feature = "metrics")]
             TrieRootMetrics::new(TrieType::Storage),
         )
-        .with_prefix_set(prefix_set)
         .root()
     }
 }

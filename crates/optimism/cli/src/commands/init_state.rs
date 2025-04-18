@@ -2,17 +2,19 @@
 
 use clap::Parser;
 use reth_cli::chainspec::ChainSpecParser;
-use reth_cli_commands::common::{AccessRights, Environment};
+use reth_cli_commands::common::{AccessRights, CliNodeTypes, Environment};
 use reth_db_common::init::init_from_state_dump;
-use reth_node_builder::NodeTypesWithEngine;
 use reth_optimism_chainspec::OpChainSpec;
-use reth_optimism_primitives::bedrock::{BEDROCK_HEADER, BEDROCK_HEADER_HASH, BEDROCK_HEADER_TTD};
+use reth_optimism_primitives::{
+    bedrock::{BEDROCK_HEADER, BEDROCK_HEADER_HASH, BEDROCK_HEADER_TTD},
+    OpPrimitives,
+};
 use reth_primitives::SealedHeader;
 use reth_provider::{
     BlockNumReader, ChainSpecProvider, DatabaseProviderFactory, StaticFileProviderFactory,
     StaticFileWriter,
 };
-use std::{fs::File, io::BufReader};
+use std::io::BufReader;
 use tracing::info;
 
 /// Initializes the database with the genesis block.
@@ -36,7 +38,7 @@ pub struct InitStateCommandOp<C: ChainSpecParser> {
 
 impl<C: ChainSpecParser<ChainSpec = OpChainSpec>> InitStateCommandOp<C> {
     /// Execute the `init` command
-    pub async fn execute<N: NodeTypesWithEngine<ChainSpec = C::ChainSpec>>(
+    pub async fn execute<N: CliNodeTypes<ChainSpec = C::ChainSpec, Primitives = OpPrimitives>>(
         self,
     ) -> eyre::Result<()> {
         info!(target: "reth::cli", "Reth init-state starting");
@@ -54,13 +56,12 @@ impl<C: ChainSpecParser<ChainSpec = OpChainSpec>> InitStateCommandOp<C> {
             if last_block_number == 0 {
                 reth_cli_commands::init_state::without_evm::setup_without_evm(
                     &provider_rw,
-                    &static_file_provider,
                     SealedHeader::new(BEDROCK_HEADER, BEDROCK_HEADER_HASH),
                     BEDROCK_HEADER_TTD,
                 )?;
 
                 // SAFETY: it's safe to commit static files, since in the event of a crash, they
-                // will be unwinded according to database checkpoints.
+                // will be unwound according to database checkpoints.
                 //
                 // Necessary to commit, so the BEDROCK_HEADER is accessible to provider_rw and
                 // init_state_dump
@@ -74,7 +75,7 @@ impl<C: ChainSpecParser<ChainSpec = OpChainSpec>> InitStateCommandOp<C> {
 
         info!(target: "reth::cli", "Initiating state dump");
 
-        let reader = BufReader::new(File::open(self.init_state.state)?);
+        let reader = BufReader::new(reth_fs_util::open(self.init_state.state)?);
         let hash = init_from_state_dump(reader, &provider_rw, config.stages.etl)?;
 
         provider_rw.commit()?;

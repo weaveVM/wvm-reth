@@ -19,7 +19,7 @@ target/
 testdata/micro/db
 
 # Generated data for stage benchmarks
-crates/stages/testdata
+crates/stages/stages/testdata
 
 # Prometheus data dir
 data/
@@ -59,3 +59,6 @@ book/sources/Cargo.lock
 /key.json
 key.json
 
+
+# Cargo chef recipe file
+recipe.json

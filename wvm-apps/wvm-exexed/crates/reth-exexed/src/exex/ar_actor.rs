@@ -2,7 +2,7 @@ use crate::{network_tag::get_network_tag, new_etl_exex_biguery_client};
 
 use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::{repository::StateRepository, BigQueryClient};
-use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
+// use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use futures::{stream::FuturesUnordered, StreamExt};
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
@@ -252,16 +252,16 @@ async fn handle_block(
 }
 
 fn serialize_block(msg: SealedBlockWithSenders) -> Result<Vec<u8>, ArActorError> {
-    let data_settler = DefaultWvmDataSettler;
+    // let data_settler = DefaultWvmDataSettler;
     let block_number = msg.block.header.header().number;
 
     let data = WvmSealedBlockWithSenders::V1(V1WvmSealedBlockWithSenders::from(msg));
 
     let borsh_sealed_block = BorshSealedBlockWithSenders(data);
 
-    data_settler
-        .process_block(&borsh_sealed_block)
-        .map_err(|e| ArActorError::SerializationFailed { block_number, error: e.to_string() })
+    // data_settler
+    //     .process_block(&borsh_sealed_block)
+    //     .map_err(|e| ArActorError::SerializationFailed { block_number, error: e.to_string() })
 }
 
 async fn upload_to_arweave(
@@ -278,11 +278,13 @@ async fn upload_to_arweave(
     request
         .set_tag("Content-Type", "application/octet-stream")
         .set_tag("WeaveVM:Encoding", "Borsh-Brotli")
+        .set_tag("LN:Encoding", "Borsh-Brotli")
         .set_tag("Block-Number", block_number.to_string().as_str())
         .set_tag("Block-Hash", block_hash)
         .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
         .set_tag("Network", get_network_tag().as_str())
         .set_tag("WeaveVM:Internal-Chain", notification_type)
+        .set_tag("LN:Internal-Chain", notification_type)
         .set_data(data.to_vec());
 
     match request.send_with_provider(ar_uploader).await {
@@ -302,7 +304,7 @@ async fn upload_to_arweave(
             let mut second_request = ArweaveRequest::new();
             second_request
                 .set_tag("Content-Type", "application/json")
-                .set_tag("WeaveVM:Encoding", "JSON")
+                .set_tag("LN:Encoding", "JSON")
                 .set_tag("Data-Protocol", "ao")
                 .set_tag("Type", "Attestation")
                 .set_tag("Message", &response)

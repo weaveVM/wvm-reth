@@ -1,10 +1,12 @@
 use futures_util::TryStreamExt;
-use reth::api::FullNodeComponents;
+use reth::{api::FullNodeComponents, builder::NodeTypes, primitives::EthPrimitives};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::EthereumNode;
 use reth_tracing::tracing::info;
 
-async fn my_exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::Result<()> {
+async fn my_exex<Node: FullNodeComponents<Types: NodeTypes<Primitives = EthPrimitives>>>(
+    mut ctx: ExExContext<Node>,
+) -> eyre::Result<()> {
     while let Some(notification) = ctx.notifications.try_next().await? {
         match &notification {
             ExExNotification::ChainCommitted { new } => {
@@ -27,10 +29,10 @@ async fn my_exex<Node: FullNodeComponents>(mut ctx: ExExContext<Node>) -> eyre::
 }
 
 fn main() -> eyre::Result<()> {
-    reth::cli::Cli::parse_args().run(|builder, _| async move {
+    reth::cli::Cli::parse_args().run(async move |builder, _| {
         let handle = builder
             .node(EthereumNode::default())
-            .install_exex("my-exex", |ctx| async move { Ok(my_exex(ctx)) })
+            .install_exex("my-exex", async move |ctx| Ok(my_exex(ctx)))
             .launch()
             .await?;
 
