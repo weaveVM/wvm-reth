@@ -5,8 +5,8 @@ use std::{
     time::Instant,
 };
 use tracing::info;
-use wvm_load_db::drivers::planetscale::PlanetScaleDriver;
-use wvm_load_db::LoadDbConnection;
+use load_db::drivers::planetscale::PlanetScaleDriver;
+use load_db::LoadDbConnection;
 
 pub static SUPERVISOR_RT: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
     tokio::runtime::Builder::new_multi_thread().enable_all().thread_name("wvm").build().unwrap()

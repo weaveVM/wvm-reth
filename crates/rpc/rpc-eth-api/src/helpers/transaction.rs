@@ -34,7 +34,7 @@ use wvm_static::PRECOMPILE_LOADDB_CLIENT;
 use super::{
     Call, EthApiSpec, EthSigner, LoadBlock, LoadPendingBlock, LoadReceipt, LoadState, SpawnBlocking,
 };
-use wvm_load_db::LoadDbConnection;
+use load_db::LoadDbConnection;
 
 /// Transaction related functions for the [`EthApiServer`](crate::EthApiServer) trait in
 /// the `eth_` namespace.
