@@ -4,9 +4,7 @@ use crate::inner::{
     wvm_block_precompile::{process_block_to_field, process_pc_response_from_str_bytes},
 };
 use alloy_primitives::Bytes;
-use reth::revm::precompile::{
-    PrecompileError, PrecompileFn, PrecompileResult,
-};
+use reth::revm::precompile::{PrecompileError, PrecompileFn, PrecompileResult};
 
 use serde_json::Value;
 use wvm_static::{internal_block, PRECOMPILE_WVM_BIGQUERY_CLIENT};
@@ -22,9 +20,7 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     }
 
     if input.is_empty() {
-        return Err(PrecompileError::Other(
-            "Arweave Transaction Id cannot be empty".to_string(),
-        ));
+        return Err(PrecompileError::Other("Arweave Transaction Id cannot be empty".to_string()));
     }
 
     let id_str = String::from_utf8(input.0.to_vec());
@@ -56,15 +52,10 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     }
     .ok_or(PrecompileError::Other("Invalid Input".to_string()))?;
 
-    let block_str = res.1.ok_or_else(|| {
-        PrecompileError::Other("Unknown block".to_string())
-    })?;
+    let block_str = res.1.ok_or_else(|| PrecompileError::Other("Unknown block".to_string()))?;
 
-    let block = serde_json::from_str::<Value>(&block_str).map_err(|_| {
-        PrecompileError::Other(
-            "Cannot deserialize block with senders".to_string(),
-        )
-    })?;
+    let block = serde_json::from_str::<Value>(&block_str)
+        .map_err(|_| PrecompileError::Other("Cannot deserialize block with senders".to_string()))?;
     let block = from_sealed_block_senders_value(block);
 
     let process_field = process_block_to_field(res.0.to_string(), block);

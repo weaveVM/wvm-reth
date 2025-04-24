@@ -1,8 +1,6 @@
 use alloy_primitives::Bytes;
 
-use reth::revm::precompile::{
-    PrecompileError, PrecompileFn, PrecompileResult, PrecompileOutput,
-};
+use reth::revm::precompile::{PrecompileError, PrecompileFn, PrecompileOutput, PrecompileResult};
 
 pub const HELLO_WORLD_PC: PrecompileFn = hello_world_pc as PrecompileFn;
 

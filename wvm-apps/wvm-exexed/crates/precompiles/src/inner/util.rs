@@ -1,8 +1,6 @@
 use crate::inner::{REQ_SIZE, REQ_TIMEOUT};
 use alloy_primitives::Bytes;
-use reth::revm::precompile::{
-    PrecompileError, PrecompileFn, PrecompileResult, PrecompileOutput,
-};
+use reth::revm::precompile::{PrecompileError, PrecompileFn, PrecompileOutput, PrecompileResult};
 
 use std::io::Read;
 use wvm_static::internal_block;
@@ -44,8 +42,6 @@ pub fn download_tx(
 
             Bytes::from(buffer)
         })),
-        Err(_) => Err(PrecompileError::Other(
-            "Arweave Transaction was not found".to_string(),
-        )),
+        Err(_) => Err(PrecompileError::Other("Arweave Transaction was not found".to_string())),
     }
 }

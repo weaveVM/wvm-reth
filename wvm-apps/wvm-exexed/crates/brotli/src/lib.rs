@@ -21,9 +21,7 @@ pub fn from_brotli(data: Vec<u8>) -> Vec<u8> {
 #[cfg(test)]
 mod brotlic_tests {
     use crate::{from_brotli, to_brotli};
-    use reth::primitives::SealedBlockWithSenders;
-    use reth::primitives::RecoveredBlock;
-    use reth::primitives::Block;
+    use reth::primitives::{Block, RecoveredBlock, SealedBlockWithSenders};
     use wvm_borsh::block::BorshSealedBlockWithSenders;
 
     #[test]

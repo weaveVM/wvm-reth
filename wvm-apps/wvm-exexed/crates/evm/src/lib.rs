@@ -1,6 +1,6 @@
+pub mod cache;
 pub mod config; // WvmEthEvmConfig
 pub mod factory; // WvmEvmFactory
-pub mod cache;
 
 // WrappedPrecompile, PrecompileCache
 

@@ -2,15 +2,13 @@ use alloy_primitives::Bytes;
 use arweave_upload::ArweaveRequest;
 use eyre::eyre;
 use rbrotli::to_brotli;
-use reth::revm::precompile::{
-    PrecompileError, PrecompileFn, PrecompileResult, PrecompileOutput,
-};
+use reth::revm::precompile::{PrecompileError, PrecompileFn, PrecompileOutput, PrecompileResult};
 use wvm_static::internal_block;
 
 pub const PC_ADDRESS: u64 = 0x17;
 pub const ARWEAVE_PC_BASE: u64 = 3_450;
 
-pub const ARWEAVE_UPLOAD_PC: PrecompileFn =arweave_upload as PrecompileFn;
+pub const ARWEAVE_UPLOAD_PC: PrecompileFn = arweave_upload as PrecompileFn;
 
 pub const SOLANA_SILLY_PRIVATE_KEY: &str =
     "kNykCXNxgePDjFbDWjPNvXQRa8U12Ywc19dFVaQ7tebUj3m7H4sF4KKdJwM7yxxb3rqxchdjezX9Szh8bLcQAjb";
@@ -32,9 +30,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 
     /// We use 1012 as a measure to handle exceptions on Irys side.
     if data_size >= 100 * 1012 {
-        return Err(PrecompileError::Other(
-            "Data cannot exceed 101200 bytes".to_string(),
-        ));
+        return Err(PrecompileError::Other("Data cannot exceed 101200 bytes".to_string()));
     }
 
     let res = internal_block(async {
@@ -51,9 +47,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             .await
     })
     .map_err(|_| {
-       PrecompileError::Other(
-            eyre!("Failed to build runtime to call arweave").to_string(),
-        )
+        PrecompileError::Other(eyre!("Failed to build runtime to call arweave").to_string())
     })?;
 
     let byte_resp = if let Ok(tx_id) = res { tx_id.into_bytes() } else { vec![] };
@@ -66,9 +60,7 @@ fn arweave_upload(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 mod arupload_pc_tests {
     use crate::inner::arweave_precompile::{arweave_upload, SOLANA_SILLY_PRIVATE_KEY};
     use alloy_primitives::Bytes;
-    use reth::revm::precompile::{
-        PrecompileOutput,
-    };
+    use reth::revm::precompile::PrecompileOutput;
     use std::env;
 
     #[test]

@@ -6,18 +6,21 @@ use reth::{
         BuilderContext, Node, NodeTypesWithDB, NodeTypesWithEngine,
     },
     payload::{EthBuiltPayload, EthPayloadBuilderAttributes},
+    providers::EthStorage,
 };
-use reth::providers::EthStorage;
 use reth_chainspec::ChainSpec;
 use reth_ethereum_engine_primitives::EthPayloadAttributes;
-use reth_evm_ethereum::EthEvmConfig;
-use reth_evm_ethereum::execute::EthExecutorProvider;
-use reth_node_builder::{NodeAdapter, NodeComponentsBuilder};
-use reth_node_builder::components::BasicPayloadServiceBuilder;
-use reth_node_ethereum::{node::{
-    EthPrimitives, EthereumAddOns, EthereumConsensusBuilder, EthereumExecutorBuilder,
-    EthereumNetworkBuilder, EthereumPayloadBuilder, EthereumPoolBuilder,
-}, BasicBlockExecutorProvider, EthEngineTypes, EthereumNode};
+use reth_evm_ethereum::{execute::EthExecutorProvider, EthEvmConfig};
+use reth_node_builder::{
+    components::BasicPayloadServiceBuilder, NodeAdapter, NodeComponentsBuilder,
+};
+use reth_node_ethereum::{
+    node::{
+        EthPrimitives, EthereumAddOns, EthereumConsensusBuilder, EthereumExecutorBuilder,
+        EthereumNetworkBuilder, EthereumPayloadBuilder, EthereumPoolBuilder,
+    },
+    BasicBlockExecutorProvider, EthEngineTypes, EthereumNode,
+};
 use reth_trie_db::MerklePatriciaTrie;
 
 /// Type configuration for a regular Ethereum node.
@@ -90,7 +93,6 @@ where
     }
 }
 
-
 /// A regular ethereum evm and executor builder.
 #[derive(Debug, Default, Clone, Copy)]
 #[non_exhaustive]
@@ -107,19 +109,14 @@ where
         self,
         ctx: &BuilderContext<Node>,
     ) -> eyre::Result<(Self::EVM, Self::Executor)> {
-
         // let evm_config =
         //     WvmEthEvmConfig::new(ctx.chain_spec(), Default::default(), wvm_precompiles());
         let evm_config = WvmEthEvmConfig { inner: EthEvmConfig::new(ctx.chain_spec()) };
         let executor = BasicBlockExecutorProvider::new(evm_config.clone());
 
-        Ok((
-            evm_config.clone(),
-            executor,
-        ))
+        Ok((evm_config.clone(), executor))
     }
 }
-
 
 impl<Types, Node> ExecutorBuilder<Node> for CustomExecutorBuilder
 where

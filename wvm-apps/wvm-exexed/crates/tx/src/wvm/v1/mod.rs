@@ -2,7 +2,7 @@ use crate::wvm::v1::{header::V1WvmHeader, transaction::V1WvmTransactionSigned};
 use alloy_eips::eip4895::Withdrawals;
 use alloy_primitives::{Address, BlockHash};
 
-use reth_primitives::{BlockBody, RecoveredBlock, SealedBlock, Block, SealedHeader};
+use reth_primitives::{Block, BlockBody, RecoveredBlock, SealedBlock, SealedHeader};
 use serde::{Deserialize, Serialize};
 
 pub mod header;

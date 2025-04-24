@@ -79,12 +79,11 @@ impl BorshDeserialize for BorshSealedBlock {
                             .into_iter()
                             .map(|i| i.0.as_v1().unwrap().clone())
                             .collect(),
-                        withdrawals: withdrawal
-                            .map(|i| {
-                                let original_withdrawals: Vec<alloy_eips::eip4895::Withdrawal> =
-                                    i.into_iter().map(|e| e.0).collect();
-                                alloy_eips::eip4895::Withdrawals::new(original_withdrawals)
-                            }),
+                        withdrawals: withdrawal.map(|i| {
+                            let original_withdrawals: Vec<alloy_eips::eip4895::Withdrawal> =
+                                i.into_iter().map(|e| e.0).collect();
+                            alloy_eips::eip4895::Withdrawals::new(original_withdrawals)
+                        }),
                     },
                 })))
             }

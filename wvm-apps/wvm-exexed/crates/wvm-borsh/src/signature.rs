@@ -1,4 +1,4 @@
-use alloy_primitives::{Parity, Signature, U256, PrimitiveSignature};
+use alloy_primitives::{Parity, PrimitiveSignature, Signature, U256};
 use borsh::{BorshDeserialize, BorshSerialize};
 use std::io::{Error, ErrorKind, Read, Write};
 

@@ -4,10 +4,7 @@ use crate::inner::{
 };
 use alloy_primitives::Bytes;
 
-
-use reth::revm::precompile::{
-    PrecompileError, PrecompileFn, PrecompileResult,
-};
+use reth::revm::precompile::{PrecompileError, PrecompileFn, PrecompileResult};
 
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
@@ -70,9 +67,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     }
 
     if input.is_empty() {
-        return Err(PrecompileError::Other(
-            "Arweave Transaction Id cannot be empty".to_string(),
-        ));
+        return Err(PrecompileError::Other("Arweave Transaction Id cannot be empty".to_string()));
     }
 
     let id_str = String::from_utf8(input.0.to_vec());
@@ -106,9 +101,7 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                 PrecompileError::Other("Tokio runtime could not block_on for operation".to_string())
             })?)
         }
-        Err(_) => Err(PrecompileError::Other(
-            "Transaction id could not be parsed".to_string(),
-        )),
+        Err(_) => Err(PrecompileError::Other("Transaction id could not be parsed".to_string())),
     };
 
     res
@@ -118,11 +111,8 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 mod arweave_read_pc_tests {
     use crate::inner::arweave_read_precompile::{arweave_read, parse_gateway_content};
     use alloy_primitives::Bytes;
+    use reth::revm::precompile::PrecompileOutput;
     use std::time::Instant;
-    use reth::revm::precompile::{
-        PrecompileOutput
-    };
-
 
     #[test]
     pub fn test_arweave_read_precompile() {
