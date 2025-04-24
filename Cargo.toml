@@ -166,6 +166,8 @@ members = [
     "crates/wvm-static/",
     "wvm-apps/wvm-exexed/crates/brotli/",
     "wvm-apps/wvm-exexed/crates/tx/",
+    "wvm-apps/wvm-exexed/crates/evm/",
+    "wvm-apps/wvm-exexed/crates/node/",
 ]
 default-members = ["bin/reth"]
 exclude = ["book/sources", "book/cli"]

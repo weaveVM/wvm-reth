@@ -3676,6 +3676,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
+name = "evm"
+version = "0.1.0"
+dependencies = [
+ "alloy-evm",
+ "alloy-genesis",
+ "alloy-primitives",
+ "eyre",
+ "reth",
+ "reth-chainspec",
+ "reth-ethereum-payload-builder",
+ "reth-evm",
+ "reth-evm-ethereum",
+ "reth-node-api",
+ "reth-node-core",
+ "reth-node-ethereum",
+ "reth-primitives",
+ "reth-primitives-traits",
+ "reth-tracing",
+]
+
+[[package]]
 name = "example-beacon-api-sidecar-fetcher"
 version = "0.1.0"
 dependencies = [
@@ -5965,6 +5986,7 @@ dependencies = [
  "reth",
  "reth-exex",
  "reth-node-ethereum",
+ "reth-primitives-traits",
  "reth-tracing",
  "serde",
  "serde_json",
@@ -6687,6 +6709,10 @@ dependencies = [
  "cfg-if",
  "libc",
 ]
+
+[[package]]
+name = "node"
+version = "0.1.0"
 
 [[package]]
 name = "nom"
@@ -7891,6 +7917,9 @@ dependencies = [
 name = "precompiles"
 version = "1.3.0"
 dependencies = [
+ "alloy-consensus",
+ "alloy-eips",
+ "alloy-evm",
  "alloy-primitives",
  "arweave-upload",
  "borsh 1.5.7",
@@ -7902,10 +7931,13 @@ dependencies = [
  "reth",
  "reth-chainspec",
  "reth-ethereum-engine-primitives",
+ "reth-ethereum-primitives",
+ "reth-evm",
  "reth-evm-ethereum",
  "reth-exex",
  "reth-node-builder",
  "reth-node-ethereum",
+ "reth-primitives-traits",
  "reth-revm",
  "reth-tracing",
  "reth-trie-db",
@@ -8451,6 +8483,7 @@ dependencies = [
  "reth",
  "serde_json",
  "wvm-borsh",
+ "wvm-tx",
 ]
 
 [[package]]
@@ -9944,10 +9977,12 @@ dependencies = [
  "arweave-upload",
  "borsh 1.5.7",
  "brotlic",
+ "evm",
  "exex-wvm-bigquery",
  "eyre",
  "futures",
  "lambda",
+ "node",
  "parse_duration",
  "precompiles",
  "rbrotli",
@@ -15452,6 +15487,7 @@ dependencies = [
  "eyre",
  "reqwest 0.12.15",
  "reth",
+ "reth-ethereum-primitives",
  "reth-exex",
  "reth-node-ethereum",
  "reth-primitives",
@@ -15466,16 +15502,20 @@ dependencies = [
 name = "wvm-exexed"
 version = "1.0.0"
 dependencies = [
+ "alloy-evm",
+ "alloy-genesis",
  "alloy-primitives",
  "arweave-upload",
  "borsh 1.5.7",
  "brotlic",
+ "evm",
  "exex-wvm-bigquery",
  "eyre",
  "futures",
  "gcp-bigquery-client 0.17.1",
  "indexmap 2.7.1",
  "lambda",
+ "node",
  "parking_lot",
  "parse_duration",
  "precompiles",
@@ -15483,10 +15523,13 @@ dependencies = [
  "reth",
  "reth-chainspec",
  "reth-ethereum-engine-primitives",
+ "reth-ethereum-payload-builder",
+ "reth-evm",
  "reth-evm-ethereum",
  "reth-exex",
  "reth-exex-test-utils",
  "reth-node-api",
+ "reth-node-core",
  "reth-node-ethereum",
  "reth-primitives",
  "reth-revm",

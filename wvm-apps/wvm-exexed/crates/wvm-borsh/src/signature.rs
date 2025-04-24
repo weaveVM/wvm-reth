@@ -1,15 +1,15 @@
-use alloy_primitives::{Parity, Signature, U256};
+use alloy_primitives::{Parity, Signature, U256, PrimitiveSignature};
 use borsh::{BorshDeserialize, BorshSerialize};
 use std::io::{Error, ErrorKind, Read, Write};
 
-pub struct BorshSignature(pub Signature);
+pub struct BorshSignature(pub PrimitiveSignature);
 
-pub fn to_signature(bytes: &[u8]) -> std::io::Result<Signature> {
+pub fn to_signature(bytes: &[u8]) -> std::io::Result<PrimitiveSignature> {
     if bytes.len() != 65 {
         return Err(Error::from(ErrorKind::UnexpectedEof));
     }
 
-    let signature = Signature::try_from(bytes).unwrap();
+    let signature = PrimitiveSignature::try_from(bytes).unwrap();
 
     Ok(signature)
 }
@@ -31,11 +31,11 @@ impl BorshDeserialize for BorshSignature {
 #[cfg(test)]
 mod signature_tests {
     use crate::signature::BorshSignature;
-    use alloy_primitives::{Parity, Signature};
+    use alloy_primitives::{Parity, PrimitiveSignature};
 
     #[test]
     pub fn test_sealed_header() {
-        let data = Signature::test_signature();
+        let data = PrimitiveSignature::test_signature();
         let b = data.as_bytes();
         println!("{:?}", b);
         let borsh_data = BorshSignature(data.clone());

@@ -36,7 +36,7 @@ use revm::{
     primitives::hardfork::SpecId,
 };
 
-mod config;
+pub mod config;
 use alloy_eips::eip1559::INITIAL_BASE_FEE;
 pub use config::{revm_spec, revm_spec_by_timestamp_and_block_number};
 use reth_ethereum_forks::EthereumHardfork;

@@ -12,3 +12,4 @@ brotlic.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
 wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
+wvm-tx = { path = "../tx", name = "wvm-tx" }

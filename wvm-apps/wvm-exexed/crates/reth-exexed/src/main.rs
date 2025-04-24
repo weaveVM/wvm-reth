@@ -7,6 +7,9 @@ mod exex;
 mod network_tag;
 mod util;
 
+use evm;
+use node;
+
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
 use precompiles::node::WvmEthExecutorBuilder;

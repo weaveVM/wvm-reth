@@ -1,11 +1,12 @@
-use reth::{api::FullNodeComponents, primitives::TransactionSigned};
-
+use reth::{api::FullNodeComponents, primitives::TransactionSigned, rpc::types::TransactionTrait};
+use reth_primitives_traits::SignedTransaction;
 use alloy_primitives::Address;
 
 use futures::StreamExt;
 use reth_exex::ExExContext;
 use serde_json::{self, json};
 use tracing::error;
+use reth::api::BlockBody;
 
 pub const SEQ_ADDRESS: &str = "0x197f818c1313DC58b32D88078ecdfB40EA822614";
 pub const LAMBDA_ENDPOINT: &str = "https://wvm-lambda-0755acbdae90.herokuapp.com";
@@ -17,13 +18,12 @@ fn is_transaction_to_sequencer(to: Address) -> bool {
 
     to == addr
 }
-
-fn process_tx_sequencer(tx: &TransactionSigned) -> Option<String> {
-    if let Some(to) = tx.transaction().to() {
+fn process_tx_sequencer<T: SignedTransaction>(tx: &T) -> Option<String> {
+    if let Some(to) = tx.transaction().to_owned().to() {
         let is_tx_to_seq = is_transaction_to_sequencer(to);
-        let is_input_empty = tx.transaction.input().is_empty();
+        let is_input_empty = tx.transaction().input().is_empty();
         if is_tx_to_seq && !is_input_empty {
-            return Some(tx.hash.to_string())
+            return Some(tx.tx_hash().to_string())
         }
     }
 
@@ -53,7 +53,7 @@ pub async fn exex_lambda_processor<Node: FullNodeComponents>(
             let client = reqwest::Client::new();
             let last_block = committed_chain.tip();
 
-            for tx in last_block.body.transactions.iter() {
+            for tx in last_block.sealed_block().body().transactions().into_iter(){
                 let potential_hash = process_tx_sequencer(tx);
                 if let Some(tx_hash) = potential_hash {
                     txs.push(tx_hash);

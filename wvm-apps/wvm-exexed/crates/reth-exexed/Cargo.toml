@@ -19,7 +19,6 @@ serde_json.workspace = true
 wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
 lambda = { path = "../lambda" }
 arweave-upload = { path = "../arweave-upload" }
-precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
 wvm-static = { path = "../../../../crates/wvm-static" }
 wvm-tx = { path = "../tx" }
@@ -28,3 +27,7 @@ exex-wvm-bigquery.workspace = true
 tracing.workspace = true
 parse_duration.workspace = true
 futures.workspace = true
+
+precompiles = { path = "../precompiles" }
+evm = { path = "../evm" }
+node = { path = "../node" }

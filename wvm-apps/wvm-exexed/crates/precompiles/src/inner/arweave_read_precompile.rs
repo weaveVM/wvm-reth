@@ -3,9 +3,12 @@ use crate::inner::{
     util::{clean_gateway_url, download_tx, DEFAULT_ARWEAVE_TX_ENDPOINT},
 };
 use alloy_primitives::Bytes;
-use reth::primitives::revm_primitives::{
-    Precompile, PrecompileError, PrecompileErrors, PrecompileResult,
+
+
+use reth::revm::precompile::{
+    PrecompileError, PrecompileFn, PrecompileResult,
 };
+
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use wvm_static::internal_block;
@@ -14,7 +17,7 @@ pub const ARWEAVE_PC_READ_BASE: u64 = 10_000;
 
 pub const TX_MAX_SIZE: usize = 18_874_368; // 18MB
 
-pub const ARWEAVE_READ_PC: Precompile = Precompile::Standard(arweave_read);
+pub const ARWEAVE_READ_PC: PrecompileFn = arweave_read as PrecompileFn;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
@@ -63,13 +66,13 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let gas_used: u64 = (ARWEAVE_PC_READ_BASE as usize + data_size * 3) as u64;
 
     if gas_used > gas_limit {
-        return Err(PrecompileErrors::Error(PrecompileError::OutOfGas));
+        return Err(PrecompileError::OutOfGas);
     }
 
     if input.is_empty() {
-        return Err(PrecompileErrors::Error(PrecompileError::Other(
+        return Err(PrecompileError::Other(
             "Arweave Transaction Id cannot be empty".to_string(),
-        )));
+        ));
     }
 
     let id_str = String::from_utf8(input.0.to_vec());
@@ -94,18 +97,18 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             };
 
             if tx_size > TX_MAX_SIZE {
-                return Err(PrecompileErrors::Error(PrecompileError::Other(
+                return Err(PrecompileError::Other(
                     "Arweave Transaction size is greater than allowed (18mb)".to_string(),
-                )));
+                ));
             }
 
             Ok(download_tx(gas_used, clean_gateway, tx_id).map_err(|_| {
                 PrecompileError::Other("Tokio runtime could not block_on for operation".to_string())
             })?)
         }
-        Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
+        Err(_) => Err(PrecompileError::Other(
             "Transaction id could not be parsed".to_string(),
-        ))),
+        )),
     };
 
     res
@@ -115,10 +118,11 @@ fn arweave_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
 mod arweave_read_pc_tests {
     use crate::inner::arweave_read_precompile::{arweave_read, parse_gateway_content};
     use alloy_primitives::Bytes;
-    use borsh::BorshDeserialize;
-    use reth::primitives::revm_primitives::PrecompileOutput;
     use std::time::Instant;
-    use wvm_borsh::block::BorshSealedBlockWithSenders;
+    use reth::revm::precompile::{
+        PrecompileOutput
+    };
+
 
     #[test]
     pub fn test_arweave_read_precompile() {
