@@ -55,7 +55,6 @@ borsh.workspace = true
 evm = { path = "crates/evm" }
 node = { path = "crates/node" }
 
-
 parse_duration.workspace = true
 
 [dev-dependencies]

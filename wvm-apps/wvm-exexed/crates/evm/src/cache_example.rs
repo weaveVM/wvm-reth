@@ -1,17 +1,13 @@
-use reth::{api::ConfigureEvm, revm::context::BlockEnv};
-use reth_ethereum_payload_builder;
-use std::sync::Arc;
+//! This example shows how to implement a node with a custom EVM that uses a stateful precompile
+
+#![warn(unused_crate_dependencies)]
 
 use alloy_evm::{EvmFactory, eth::EthEvmContext};
 use alloy_genesis::Genesis;
-use alloy_primitives::{Address, Bytes, address};
+use alloy_primitives::{Address, Bytes};
 use parking_lot::RwLock;
 use reth::{
-    builder::{
-        BuilderContext, NodeBuilder,
-        components::{BasicPayloadServiceBuilder, ExecutorBuilder, PayloadBuilderBuilder},
-    },
-    payload::{EthBuiltPayload, EthPayloadBuilderAttributes},
+    builder::{BuilderContext, NodeBuilder, components::ExecutorBuilder},
     revm::{
         MainBuilder, MainContext,
         context::{Cfg, Context, TxEnv},
@@ -22,57 +18,50 @@ use reth::{
         handler::{EthPrecompiles, PrecompileProvider},
         inspector::{Inspector, NoOpInspector},
         interpreter::{InterpreterResult, interpreter::EthInterpreter},
-        precompile::{
-            PrecompileError, PrecompileFn, PrecompileOutput, PrecompileResult, Precompiles,
-        },
+        precompile::PrecompileError,
         primitives::hardfork::SpecId,
     },
-    rpc::types::engine::PayloadAttributes,
     tasks::TaskManager,
-    transaction_pool::{PoolTransaction, TransactionPool},
 };
 use reth_chainspec::{Chain, ChainSpec};
 use reth_evm::{Database, EvmEnv};
-use reth_evm_ethereum::{EthEvm, EthEvmConfig};
-use reth_node_api::{FullNodeTypes, NodeTypes, NodeTypesWithEngine, PayloadTypes};
+use reth_node_api::{FullNodeTypes, NodeTypes};
 use reth_node_core::{args::RpcServerArgs, node_config::NodeConfig};
 use reth_node_ethereum::{
-    BasicBlockExecutorProvider, EthereumNode,
-    node::{EthereumAddOns, EthereumPayloadBuilder},
+    BasicBlockExecutorProvider, EthEvmConfig, EthereumNode, evm::EthEvm, node::EthereumAddOns,
 };
-use reth_primitives::{EthPrimitives, TransactionSigned};
+use reth_primitives::EthPrimitives;
 use reth_tracing::{RethTracer, Tracer};
 use schnellru::{ByLength, LruMap};
-use std::sync::OnceLock;
+use std::{collections::HashMap, sync::Arc};
 
-use precompiles::inner::wvm_precompiles;
+/// Type alias for the LRU cache used within the [`PrecompileCache`].
+type PrecompileLRUCache = LruMap<(SpecId, Bytes, u64), Result<InterpreterResult, PrecompileError>>;
 
 type WrappedEthEvm<DB, I> = EthEvm<DB, I, WrappedPrecompile<EthPrecompiles>>;
 
-/// Returns precompiles with WVM additions.
-pub fn wvm_enhanced_precompiles() -> &'static Precompiles {
-    static INSTANCE: OnceLock<Precompiles> = OnceLock::new();
-    INSTANCE.get_or_init(|| {
-        // Clone the latest standard precompiles
-        let mut precompiles = Precompiles::latest().clone();
-
-        // Add WVM precompiles
-        precompiles.extend(wvm_precompiles());
-
-        precompiles
-    })
+/// A cache for precompile inputs / outputs.
+///
+/// This assumes that the precompile is a standard precompile, as in `StandardPrecompileFn`, meaning
+/// its inputs are only `(Bytes, u64)`.
+///
+/// NOTE: This does not work with "context stateful precompiles", ie `ContextStatefulPrecompile` or
+/// `ContextStatefulPrecompileMut`. They are explicitly banned.
+#[derive(Debug, Default)]
+pub struct PrecompileCache {
+    /// Caches for each precompile input / output.
+    cache: HashMap<Address, PrecompileLRUCache>,
 }
 
-/// Custom EVM configuration.
+/// Custom EVM factory.
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive]
-pub struct WvmEvmFactory {
-    precompile_cache: Arc<RwLock<super::cache::PrecompileCache>>,
+pub struct MyEvmFactory {
+    precompile_cache: Arc<RwLock<PrecompileCache>>,
 }
 
-impl EvmFactory for WvmEvmFactory {
+impl EvmFactory for MyEvmFactory {
     type Evm<DB: Database, I: Inspector<EthEvmContext<DB>, EthInterpreter>> = WrappedEthEvm<DB, I>;
-
     type Tx = TxEnv;
     type Error<DBError: core::error::Error + Send + Sync + 'static> = EVMError<DBError>;
     type HaltReason = HaltReason;
@@ -87,7 +76,7 @@ impl EvmFactory for WvmEvmFactory {
             .with_cfg(input.cfg_env)
             .with_block(input.block_env)
             .build_mainnet_with_inspector(NoOpInspector {})
-            .with_precompiles(WrappedPrecompile::new(wvm_enhanced_precompiles(), new_cache));
+            .with_precompiles(WrappedPrecompile::new(EthPrecompiles::default(), new_cache));
 
         EthEvm::new(evm, false)
     }
@@ -101,73 +90,6 @@ impl EvmFactory for WvmEvmFactory {
         EthEvm::new(self.create_evm(db, input).into_inner().with_inspector(inspector), true)
     }
 }
-
-/// Builds a regular ethereum block executor that uses the custom EVM.
-#[derive(Debug, Default, Clone)]
-#[non_exhaustive]
-pub struct WvmExecutorBuilder {
-    /// The precompile cache to use for all executors.
-    precompile_cache: Arc<RwLock<super::cache::PrecompileCache>>,
-}
-
-impl<Node> ExecutorBuilder<Node> for WvmExecutorBuilder
-where
-    Node: FullNodeTypes<Types: NodeTypes<ChainSpec = ChainSpec, Primitives = EthPrimitives>>,
-{
-    type EVM = EthEvmConfig<WvmEvmFactory>;
-    type Executor = BasicBlockExecutorProvider<Self::EVM>;
-
-    async fn build_evm(
-        self,
-        ctx: &BuilderContext<Node>,
-    ) -> eyre::Result<(Self::EVM, Self::Executor)> {
-        let evm_config = EthEvmConfig::new_with_evm_factory(
-            ctx.chain_spec(),
-            WvmEvmFactory { precompile_cache: self.precompile_cache.clone() },
-        );
-
-        Ok((evm_config.clone(), BasicBlockExecutorProvider::new(evm_config)))
-    }
-}
-
-/// Builds a regular ethereum block executor that uses the custom EVM.
-#[derive(Debug, Default, Clone)]
-#[non_exhaustive]
-pub struct WvmPayloadBuilder {
-    inner: EthereumPayloadBuilder,
-}
-
-impl<Types, Node, Pool> PayloadBuilderBuilder<Node, Pool> for WvmPayloadBuilder
-where
-    Types: NodeTypesWithEngine<ChainSpec = ChainSpec, Primitives = EthPrimitives>,
-    Node: FullNodeTypes<Types = Types>,
-    Pool: TransactionPool<Transaction: PoolTransaction<Consensus = TransactionSigned>>
-        + Unpin
-        + 'static,
-    Types::Engine: PayloadTypes<
-            BuiltPayload = EthBuiltPayload,
-            PayloadAttributes = PayloadAttributes,
-            PayloadBuilderAttributes = EthPayloadBuilderAttributes,
-        >,
-{
-    type PayloadBuilder = reth_ethereum_payload_builder::EthereumPayloadBuilder<
-        Pool,
-        Node::Provider,
-        EthEvmConfig<WvmEvmFactory>,
-    >;
-
-    async fn build_payload_builder(
-        self,
-        ctx: &BuilderContext<Node>,
-        pool: Pool,
-    ) -> eyre::Result<Self::PayloadBuilder> {
-        let evm_config =
-            EthEvmConfig::new_with_evm_factory(ctx.chain_spec(), WvmEvmFactory::default());
-        self.inner.build(evm_config, ctx, pool)
-    }
-}
-
-use super::cache::{PrecompileCache, PrecompileLRUCache};
 
 /// A custom precompile that contains the cache and precompile it wraps.
 #[derive(Clone)]
@@ -183,7 +105,7 @@ pub struct WrappedPrecompile<P> {
 impl<P> WrappedPrecompile<P> {
     /// Given a [`PrecompileProvider`] and cache for a specific precompiles, create a
     /// wrapper that can be used inside Evm.
-    pub fn new(precompile: P, cache: Arc<RwLock<PrecompileCache>>) -> Self {
+    fn new(precompile: P, cache: Arc<RwLock<PrecompileCache>>) -> Self {
         WrappedPrecompile { precompile, cache: cache.clone(), spec: SpecId::LATEST }
     }
 }
@@ -237,4 +159,66 @@ impl<CTX: ContextTr, P: PrecompileProvider<CTX, Output = InterpreterResult>> Pre
     fn warm_addresses(&self) -> Box<impl Iterator<Item = Address>> {
         self.precompile.warm_addresses()
     }
+}
+
+/// Builds a regular ethereum block executor that uses the custom EVM.
+#[derive(Debug, Default, Clone)]
+#[non_exhaustive]
+pub struct MyExecutorBuilder {
+    /// The precompile cache to use for all executors.
+    precompile_cache: Arc<RwLock<PrecompileCache>>,
+}
+
+impl<Node> ExecutorBuilder<Node> for MyExecutorBuilder
+where
+    Node: FullNodeTypes<Types: NodeTypes<ChainSpec = ChainSpec, Primitives = EthPrimitives>>,
+{
+    type EVM = EthEvmConfig<MyEvmFactory>;
+    type Executor = BasicBlockExecutorProvider<Self::EVM>;
+
+    async fn build_evm(
+        self,
+        ctx: &BuilderContext<Node>,
+    ) -> eyre::Result<(Self::EVM, Self::Executor)> {
+        let evm_config = EthEvmConfig::new_with_evm_factory(
+            ctx.chain_spec(),
+            MyEvmFactory { precompile_cache: self.precompile_cache.clone() },
+        );
+        Ok((evm_config.clone(), BasicBlockExecutorProvider::new(evm_config)))
+    }
+}
+
+#[tokio::main]
+async fn main() -> eyre::Result<()> {
+    let _guard = RethTracer::new().init()?;
+
+    let tasks = TaskManager::current();
+
+    // create a custom chain spec
+    let spec = ChainSpec::builder()
+        .chain(Chain::mainnet())
+        .genesis(Genesis::default())
+        .london_activated()
+        .paris_activated()
+        .shanghai_activated()
+        .cancun_activated()
+        .build();
+
+    let node_config =
+        NodeConfig::test().with_rpc(RpcServerArgs::default().with_http()).with_chain(spec);
+
+    let handle = NodeBuilder::new(node_config)
+        .testing_node(tasks.executor())
+        // configure the node with regular ethereum types
+        .with_types::<EthereumNode>()
+        // use default ethereum components but with our executor
+        .with_components(EthereumNode::components().executor(MyExecutorBuilder::default()))
+        .with_add_ons(EthereumAddOns::default())
+        .launch()
+        .await
+        .unwrap();
+
+    println!("Node started");
+
+    handle.node_exit_future.await
 }

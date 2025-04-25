@@ -32,22 +32,4 @@ use reth_node_ethereum::{
 };
 use reth_primitives::EthPrimitives;
 use reth_tracing::{RethTracer, Tracer};
-use schnellru::{ByLength, LruMap};
 use std::{collections::HashMap, sync::Arc};
-
-/// Type alias for the LRU cache used within the [`PrecompileCache`].
-pub type PrecompileLRUCache =
-    LruMap<(SpecId, Bytes, u64), Result<InterpreterResult, PrecompileError>>;
-
-/// A cache for precompile inputs / outputs.
-///
-/// This assumes that the precompile is a standard precompile, as in `StandardPrecompileFn`, meaning
-/// its inputs are only `(Bytes, u64)`.
-///
-/// NOTE: This does not work with "context stateful precompiles", ie `ContextStatefulPrecompile` or
-/// `ContextStatefulPrecompileMut`. They are explicitly banned.
-#[derive(Debug, Default)]
-pub struct PrecompileCache {
-    /// Caches for each precompile input / output.
-    pub cache: HashMap<Address, PrecompileLRUCache>,
-}

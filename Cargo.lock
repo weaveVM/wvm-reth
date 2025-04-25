@@ -3683,8 +3683,11 @@ dependencies = [
  "alloy-genesis",
  "alloy-primitives",
  "eyre",
+ "parking_lot",
+ "precompiles",
  "reth",
  "reth-chainspec",
+ "reth-ethereum",
  "reth-ethereum-payload-builder",
  "reth-evm",
  "reth-evm-ethereum",
@@ -3694,6 +3697,8 @@ dependencies = [
  "reth-primitives",
  "reth-primitives-traits",
  "reth-tracing",
+ "schnellru",
+ "tokio",
 ]
 
 [[package]]
