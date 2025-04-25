@@ -82,12 +82,13 @@ impl EvmFactory for WvmEvmFactory {
     fn create_evm<DB: Database>(&self, db: DB, input: EvmEnv) -> Self::Evm<DB, NoOpInspector> {
         let new_cache = self.precompile_cache.clone();
 
+        let enchanced_precompiles = EthPrecompiles { precompiles: wvm_enhanced_precompiles() };
         let evm = Context::mainnet()
             .with_db(db)
             .with_cfg(input.cfg_env)
             .with_block(input.block_env)
             .build_mainnet_with_inspector(NoOpInspector {})
-            .with_precompiles(WrappedPrecompile::new(wvm_enhanced_precompiles(), new_cache));
+            .with_precompiles(WrappedPrecompile::new(enchanced_precompiles, new_cache));
 
         EthEvm::new(evm, false)
     }
