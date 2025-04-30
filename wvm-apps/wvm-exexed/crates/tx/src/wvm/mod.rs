@@ -3,7 +3,8 @@ use crate::wvm::v1::{
     V1WvmSealedBlockWithSenders, V1WvmSealedHeader,
 };
 
-use paste::paste;
+use reth_primitives::Block;
+use reth_primitives_traits::RecoveredBlock;
 
 pub mod v1;
 
@@ -50,6 +51,12 @@ define_wvm_enum!(WvmSealedBlock, {
 define_wvm_enum!(WvmSealedBlockWithSenders, {
     V1(V1WvmSealedBlockWithSenders) => 0u8,
 });
+
+impl From<RecoveredBlock<Block>> for WvmSealedBlockWithSenders {
+    fn from(value: RecoveredBlock<Block>) -> Self {
+        WvmSealedBlockWithSenders::V1(V1WvmSealedBlockWithSenders::from(value))
+    }
+}
 
 define_wvm_enum!(WvmHeader, {
     V1(V1WvmHeader) => 0u8,

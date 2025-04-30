@@ -19,9 +19,9 @@ fn is_transaction_to_sequencer(to: Address) -> bool {
     to == addr
 }
 fn process_tx_sequencer<T: SignedTransaction>(tx: &T) -> Option<String> {
-    if let Some(to) = tx.transaction().to_owned().to() {
+    if let Some(to) = tx.to() {
         let is_tx_to_seq = is_transaction_to_sequencer(to);
-        let is_input_empty = tx.transaction().input().is_empty();
+        let is_input_empty = tx.input().is_empty();
         if is_tx_to_seq && !is_input_empty {
             return Some(tx.tx_hash().to_string())
         }

@@ -7,16 +7,16 @@ mod exex;
 mod network_tag;
 mod util;
 
-use evm;
-use node;
-
+use alloy_consensus;
+use evm::{self, WvmExecutorBuilder, WvmPayloadBuilder};
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
-use precompiles::node::WvmEthExecutorBuilder;
+use node;
 use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder};
+use reth_chainspec;
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
 use reth_node_ethereum::{node::EthereumAddOns, EthereumNode};
-use reth_primitives::constants::SLOT_DURATION;
+use reth_primitives_traits::{constants::SLOT_DURATION, AlloyBlockHeader};
 use std::sync::Arc;
 use tracing::{error, info};
 
@@ -24,10 +24,16 @@ use exex::ar_actor::ArweaveActorHandle;
 use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
 use wvm_static::{PRECOMPILE_WVM_BIGQUERY_CLIENT, SUPERVISOR_RT};
 
-async fn exex_etl_processor<Node: FullNodeComponents>(
+async fn exex_etl_processor<Node>(
     mut ctx: ExExContext<Node>,
     ar_actor_handle: Arc<ArweaveActorHandle>,
-) -> eyre::Result<()> {
+) -> eyre::Result<()>
+where
+    Node: FullNodeComponents,
+    <Node::Types as reth::api::NodeTypes>::Primitives: reth_primitives_traits::NodePrimitives<
+        Block = alloy_consensus::Block<reth_primitives::TransactionSigned>,
+    >,
+{
     while let Some(notification_result) = ctx.notifications.next().await {
         let notification = match notification_result {
             Ok(notification) => notification,
@@ -58,7 +64,7 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
 
         if let Some(committed_chain) = notification.committed_chain() {
             let block = committed_chain.tip().clone();
-            let block_number = block.number;
+            let block_number = block.header().number();
 
             if let Err(err) =
                 ctx.events.send(ExExEvent::FinishedHeight(committed_chain.tip().num_hash()))
@@ -72,7 +78,6 @@ async fn exex_etl_processor<Node: FullNodeComponents>(
                 continue;
             }
 
-            // Add .await here
             if let Err(err) =
                 ar_actor_handle.process_block(block, notification_type.to_string()).await
             {
@@ -121,7 +126,7 @@ fn main() -> eyre::Result<()> {
             .await,
         );
 
-        let _init_fee_manager = &*reth_primitives::constants::WVM_FEE_MANAGER;
+        let _init_fee_manager = &*reth_chainspec::WVM_FEE_MANAGER;
         // Original config
         let mut config = builder.config().clone();
         let pruning_args = config.pruning.clone();
@@ -138,7 +143,7 @@ fn main() -> eyre::Result<()> {
             .with_database(builder.db().clone())
             .with_launch_context(builder.task_executor().clone())
             .with_types::<EthereumNode>()
-            .with_components(EthereumNode::components().executor(WvmEthExecutorBuilder::default()))
+            .with_components(EthereumNode::components().executor(WvmExecutorBuilder::default()))
             .with_add_ons(EthereumAddOns::default());
 
         let run_exex = (std::env::var("RUN_EXEX").unwrap_or(String::from("false"))).to_lowercase();

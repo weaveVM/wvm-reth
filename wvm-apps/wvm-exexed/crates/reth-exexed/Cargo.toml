@@ -13,6 +13,9 @@ reth-exex.workspace = true
 reth-node-ethereum.workspace = true
 reth-tracing.workspace = true
 reth-primitives.workspace = true
+reth-primitives-traits.workspace = true
+reth-chainspec.workspace = true
+
 eyre.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
@@ -24,9 +27,14 @@ wvm-static = { path = "../../../../crates/wvm-static" }
 wvm-tx = { path = "../tx" }
 tokio.workspace = true
 exex-wvm-bigquery.workspace = true
+exex-wvm-da.workspace = true
+
 tracing.workspace = true
 parse_duration.workspace = true
 futures.workspace = true
+
+alloy-primitives.workspace = true
+alloy-consensus.workspace = true
 
 precompiles = { path = "../precompiles" }
 evm = { path = "../evm" }

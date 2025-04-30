@@ -51,7 +51,7 @@ impl BigQueryClientManager {
                     match BigQueryClient::new(&bq_config).await {
                         Ok(client) => {
                             info!(target: "wvm::static", "Successfully initialized BigQuery client from environment");
-                            return Arc::new(client);
+                            return Arc::new(client)
                         }
                         Err(e) => {
                             panic!(
@@ -81,7 +81,7 @@ impl BigQueryClientManager {
                     Ok(bq_config) => match BigQueryClient::new(&bq_config).await {
                         Ok(client) => {
                             info!(target: "wvm::static", "Successfully initialized BigQuery client from file");
-                            return Arc::new(client);
+                            Arc::new(client)
                         }
                         Err(e) => {
                             panic!("Failed to initialize BigQuery client from file: {e}");

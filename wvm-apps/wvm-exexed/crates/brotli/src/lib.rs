@@ -27,7 +27,7 @@ mod brotlic_tests {
     #[test]
     pub fn test_brotlic_block() {
         let recovered_block: RecoveredBlock<Block> = RecoveredBlock::default();
-        let borsh_block = BorshSealedBlockWithSenders(recovered_block);
+        let borsh_block = BorshSealedBlockWithSenders(recovered_block.into());
         let borsh_vec = borsh::to_vec(&borsh_block).unwrap();
         let brotli = to_brotli(borsh_vec.clone());
         assert!(brotli.len() < borsh_vec.len());

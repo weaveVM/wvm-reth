@@ -1,11 +1,11 @@
 use crate::{network_tag::get_network_tag, new_etl_exex_biguery_client};
 
+use alloy_primitives::BlockNumber;
 use arweave_upload::{ArweaveRequest, UploaderProvider};
 use exex_wvm_bigquery::{repository::StateRepository, BigQueryClient};
-// use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
+use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use futures::{stream::FuturesUnordered, StreamExt};
-use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
-use reth_primitives::SealedBlockWithSenders;
+use reth_primitives_traits::{self, RecoveredBlock};
 use std::{
     fmt,
     sync::Arc,
@@ -18,7 +18,7 @@ use wvm_tx::wvm::{v1::V1WvmSealedBlockWithSenders, WvmSealedBlockWithSenders};
 
 #[derive(Clone)] // Add this
 enum ArActorMessage {
-    ProcessBlock { block: SealedBlockWithSenders, notification_type: String },
+    ProcessBlock { block: RecoveredBlock<reth_primitives::Block>, notification_type: String },
     Shutdown,
 }
 
@@ -220,7 +220,7 @@ impl ArActor {
 
 // Keep in same file but separate from ArActor
 async fn handle_block(
-    block: SealedBlockWithSenders,
+    block: RecoveredBlock<reth_primitives::Block>,
     notification_type: &str,
     state_repo: Arc<StateRepository>,
     big_query_client: Arc<BigQueryClient>,
@@ -251,17 +251,17 @@ async fn handle_block(
     Ok(arweave_id)
 }
 
-fn serialize_block(msg: SealedBlockWithSenders) -> Result<Vec<u8>, ArActorError> {
-    // let data_settler = DefaultWvmDataSettler;
-    let block_number = msg.block.header.header().number;
+fn serialize_block(msg: RecoveredBlock<reth_primitives::Block>) -> Result<Vec<u8>, ArActorError> {
+    let data_settler = DefaultWvmDataSettler;
+    let block_number = msg.clone().into_header().number;
 
     let data = WvmSealedBlockWithSenders::V1(V1WvmSealedBlockWithSenders::from(msg));
 
     let borsh_sealed_block = BorshSealedBlockWithSenders(data);
 
-    // data_settler
-    //     .process_block(&borsh_sealed_block)
-    //     .map_err(|e| ArActorError::SerializationFailed { block_number, error: e.to_string() })
+    data_settler
+        .process_block(&borsh_sealed_block)
+        .map_err(|e| ArActorError::SerializationFailed { block_number, error: e.to_string() })
 }
 
 async fn upload_to_arweave(
@@ -281,7 +281,7 @@ async fn upload_to_arweave(
         .set_tag("LN:Encoding", "Borsh-Brotli")
         .set_tag("Block-Number", block_number.to_string().as_str())
         .set_tag("Block-Hash", block_hash)
-        .set_tag("Client-Version", reth_primitives::constants::RETH_CLIENT_VERSION)
+        .set_tag("Client-Version", reth_primitives_traits::constants::RETH_CLIENT_VERSION)
         .set_tag("Network", get_network_tag().as_str())
         .set_tag("WeaveVM:Internal-Chain", notification_type)
         .set_tag("LN:Internal-Chain", notification_type)
@@ -363,7 +363,7 @@ async fn upload_to_arweave(
 async fn update_bigquery(
     state_repo: &Arc<StateRepository>,
     big_query_client: &Arc<BigQueryClient>,
-    block: &SealedBlockWithSenders,
+    block: &RecoveredBlock<reth_primitives::Block>,
     block_number: BlockNumber,
     arweave_id: &str,
 ) -> Result<(), ArActorError> {
@@ -372,7 +372,7 @@ async fn update_bigquery(
     update_bigquery_tags(big_query_client, block).await?;
 
     let save_block_start_time = std::time::Instant::now();
-    let block_hash = block.block.hash().to_string();
+    let block_hash = block.hash().to_string();
 
     let result = exex_wvm_bigquery::save_block(
         state_repo.clone(),
@@ -427,10 +427,10 @@ async fn update_bigquery(
 
 async fn update_bigquery_tags(
     big_query_client: &Arc<BigQueryClient>,
-    sealed_block: &SealedBlockWithSenders,
+    sealed_block: &RecoveredBlock<reth_primitives::Block>,
 ) -> Result<(), ArActorError> {
     let hashes: Vec<String> =
-        sealed_block.body.transactions.iter().map(|e| e.hash.to_string()).collect();
+        sealed_block.body().transactions.iter().map(|e| e.hash().to_string()).collect();
 
     if hashes.is_empty() {
         return Ok(());
@@ -574,7 +574,7 @@ impl ArweaveActorHandle {
 
     pub async fn process_block(
         &self,
-        block: SealedBlockWithSenders,
+        block: RecoveredBlock<reth_primitives::Block>,
         notification_type: String,
     ) -> Result<(), ArActorError> {
         self.sender

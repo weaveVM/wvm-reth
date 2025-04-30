@@ -399,7 +399,9 @@ reth-optimism-cli = { path = "crates/optimism/cli" }
 reth-optimism-consensus = { path = "crates/optimism/consensus", default-features = false }
 reth-optimism-forks = { path = "crates/optimism/hardforks", default-features = false }
 reth-optimism-payload-builder = { path = "crates/optimism/payload" }
-reth-optimism-primitives = { path = "crates/optimism/primitives", features = ["serde"]  }
+reth-optimism-primitives = { path = "crates/optimism/primitives", features = [
+    "serde",
+] }
 reth-optimism-rpc = { path = "crates/optimism/rpc" }
 reth-optimism-storage = { path = "crates/optimism/storage" }
 reth-optimism-txpool = { path = "crates/optimism/txpool" }
@@ -691,6 +693,8 @@ brotlic = "0.8.2"
 
 exex-wvm-bigquery = { git = "https://github.com/weaveVM/exex-templates?i", branch = "merge/upstream-v1.2.0-merge-v2" }
 
+exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?i", branch = "merge/upstream-v1.2.0-merge-v2" }
+
 # fees
 fees = { git = "https://github.com/weaveVM/miscalleneous?c", branch = "main" }
 
@@ -774,7 +778,11 @@ revm-handler = { git = "https://github.com/weaveVM/wvm-revm", branch = "merge-up
 revm-inspectors = { git = "https://github.com/weaveVM/revm-inspectors", branch = "merge-upstream-v0.15.0" }
 op-revm = { git = "https://github.com/weaveVM/wvm-revm", branch = "merge-upstream-v19.5.0" }
 
-reth-optimism-primitives = { path = "crates/optimism/primitives", features = ["serde", "reth-codec"] }
+reth-optimism-primitives = { path = "crates/optimism/primitives", features = [
+    "serde",
+    "reth-codec",
+] }
+
 
 # [patch.crates-io]
 # alloy-consensus = { git = "https://github.com/alloy-rs/alloy", rev = "cfb13aa" }
