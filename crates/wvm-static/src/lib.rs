@@ -1,3 +1,4 @@
+use load_db::{drivers::planetscale::PlanetScaleDriver, LoadDbConnection};
 use once_cell::sync::Lazy;
 use std::{
     future::Future,
@@ -5,8 +6,6 @@ use std::{
     time::Instant,
 };
 use tracing::info;
-use load_db::drivers::planetscale::PlanetScaleDriver;
-use load_db::LoadDbConnection;
 
 pub static SUPERVISOR_RT: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
     tokio::runtime::Builder::new_multi_thread().enable_all().thread_name("wvm").build().unwrap()

@@ -4,6 +4,7 @@ use crate::inner::{
     wvm_block_precompile::{process_block_to_field, process_pc_response_from_str_bytes},
 };
 use alloy_primitives::Bytes;
+use load_db::LoadDbConnection;
 use revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult};
 use serde_json::Value;
 use wvm_static::{internal_block, PRECOMPILE_LOADDB_CLIENT};

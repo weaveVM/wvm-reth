@@ -431,6 +431,7 @@ reth-trie-parallel = { path = "crates/trie/parallel" }
 
 # wvm
 wvm-static = { path = "crates/wvm-static" }
+load-db = { path = "crates/load-db" }
 
 # revm
 revm = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features = [

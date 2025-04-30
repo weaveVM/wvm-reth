@@ -374,7 +374,8 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
                 since_epoch.as_millis()
             };
 
-            load_db_client.save_tx_tag(hash.to_string(), tags.unwrap_or(vec![]), created_at)
+            load_db_client
+                .save_tx_tag(hash.to_string(), tags.unwrap_or(vec![]), created_at)
                 .await
                 .map_err(|_| EthApiError::InternalEthError)?;
 
@@ -384,18 +385,20 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
     /// WVM Exclusive
     /// Obtains the Arweave Hash of the transaction containing the WEVM Block
-    fn get_arweave_storage_proof(&self, block_height: String,) -> impl Future<Output = Result<String, EthApiError>> + Send
+    fn get_arweave_storage_proof(
+        &self,
+        block_height: String,
+    ) -> impl Future<Output = Result<String, EthApiError>> + Send
     where
-        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call {
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
+    {
         let load_db_client = (&*PRECOMPILE_LOADDB_CLIENT).clone();
 
         async move {
             let result_set = load_db_client.query_raw_state(block_height).await;
 
             match result_set {
-                Some(result_set) => {
-                    Ok(result_set.arweave_id)
-                }
+                Some(result_set) => Ok(result_set.arweave_id),
                 None => Err(EthApiError::TransactionNotFound), // Result set is None
             }
         }
@@ -422,7 +425,8 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
             tracing::debug!(first = tag.0, second = tag.1, "incoming tag");
 
-            let hash_str = load_db_client.query_transaction_by_tags(tag)
+            let hash_str = load_db_client
+                .query_transaction_by_tags(tag)
                 .await
                 .ok_or_else(|| EthApiError::TransactionNotFound.into_eth_err())?;
 

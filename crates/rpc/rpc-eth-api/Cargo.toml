@@ -63,7 +63,7 @@ wvm-static.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 exex-wvm-bigquery.workspace = true
-load-db = { path = "../../load-db", name = "load-db" }
+load-db.workspace = true
 
 [features]
 js-tracer = ["revm-inspectors/js-tracer", "reth-rpc-eth-types/js-tracer"]

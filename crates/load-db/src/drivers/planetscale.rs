@@ -3,8 +3,10 @@ use async_trait::async_trait;
 use eyre::eyre;
 use planetscale_driver::{query, Database, PSConnection};
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    fmt::Debug,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 #[derive(Debug, Default, Clone)]
 pub struct PlanetScaleDriver {
