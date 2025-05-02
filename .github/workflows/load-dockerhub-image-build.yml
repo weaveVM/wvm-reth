@@ -5,6 +5,7 @@ on:
       - main
       - dev
       - dockercomposeaction
+      - implement-new-db-driver
     tags:
       - "*"
   workflow_dispatch:
