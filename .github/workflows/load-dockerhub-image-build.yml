@@ -6,7 +6,7 @@ on:
       - main
       - dev
       - dockercomposeaction
-      - implement-new-db-driver
+      - implement-new-db-driver # ← your extra branch
     tags:
       - "*"
   workflow_dispatch:
@@ -47,14 +47,17 @@ jobs:
         with:
           buildkitd-flags: --debug
 
-      - name: Build local test image (single-platform)
-        id: localbuild
+      - name: Build and export image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           push: false
           load: true
-          tags: wvm:local
+          tags: |
+            wvm:local
+            ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       - name: Verify local image
         run: |
@@ -108,12 +111,11 @@ jobs:
           cd ..
           sudo rm -rf .testnet
 
-      - name: Push multi-arch image to DockerHub
-        if: success() || (github.event_name == 'workflow_dispatch' && github.event.inputs.force_build == 'true')
+      - name: Push to DockerHub
+        if: success() || github.event.inputs.force_build == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
