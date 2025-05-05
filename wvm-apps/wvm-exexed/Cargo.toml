@@ -42,6 +42,7 @@ wvm-static.workspace = true
 rbrotli = { path = "crates/brotli" }
 wvm-tx = { path = "crates/tx" }
 borsh.workspace = true
+load-db.workspace = true
 
 parse_duration.workspace = true
 

@@ -29,11 +29,12 @@ use crate::{
     FromEthApiError, FullEthApiTypes, IntoEthApiError, RpcNodeCore, RpcNodeCoreExt, RpcReceipt,
     RpcTransaction,
 };
-use wvm_static::PRECOMPILE_WVM_BIGQUERY_CLIENT;
+use wvm_static::PRECOMPILE_LOADDB_CLIENT;
 
 use super::{
     Call, EthApiSpec, EthSigner, LoadBlock, LoadPendingBlock, LoadReceipt, LoadState, SpawnBlocking,
 };
+use load_db::LoadDbConnection;
 
 /// Transaction related functions for the [`EthApiServer`](crate::EthApiServer) trait in
 /// the `eth_` namespace.
@@ -361,7 +362,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
     {
         // WVM
-        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+        let load_db_client = (&*PRECOMPILE_LOADDB_CLIENT).clone();
 
         async move {
             let tags = request.tags;
@@ -373,23 +374,8 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
                 since_epoch.as_millis()
             };
 
-            #[derive(Serialize)]
-            struct TagsTbl {
-                hash: String,
-                tags: String,
-                created_at: u128,
-            }
-
-            bq_client
-                .insert_generic(
-                    "tags",
-                    None,
-                    TagsTbl {
-                        hash: hash.to_string(),
-                        tags: serde_json::to_string(&tags).unwrap(),
-                        created_at,
-                    },
-                )
+            load_db_client
+                .save_tx_tag(hash.to_string(), tags.unwrap_or(vec![]), created_at)
                 .await
                 .map_err(|_| EthApiError::InternalEthError)?;
 
@@ -399,22 +385,20 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
     /// WVM Exclusive
     /// Obtains the Arweave Hash of the transaction containing the WEVM Block
-    fn get_arweave_storage_proof(&self, block_height: String,) -> impl Future<Output = Result<String, EthApiError>> + Send
+    fn get_arweave_storage_proof(
+        &self,
+        block_height: String,
+    ) -> impl Future<Output = Result<String, EthApiError>> + Send
     where
-        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call {
-        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+        Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
+    {
+        let load_db_client = (&*PRECOMPILE_LOADDB_CLIENT).clone();
 
         async move {
-            let result_set = bq_client.bq_query_block(block_height).await;
+            let result_set = load_db_client.query_raw_state(block_height).await;
 
             match result_set {
-                Some(result_set) => {
-                    match result_set.get_string_by_name("arweave_id") {
-                        Ok(Some(arweave_id)) => Ok(arweave_id), // Successfully found the string
-                        Ok(None) => Err(EthApiError::TransactionNotFound), // Field missing
-                        Err(err) => Err(EthApiError::TransactionNotFound), // Handle the inner error
-                    }
-                }
+                Some(result_set) => Ok(result_set.arweave_id),
                 None => Err(EthApiError::TransactionNotFound), // Result set is None
             }
         }
@@ -429,7 +413,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
     where
         Self: EthApiSpec + LoadBlock + LoadPendingBlock + Call,
     {
-        let bq_client = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+        let load_db_client = (&*PRECOMPILE_LOADDB_CLIENT).clone();
         async move {
             let tag = match req.tag {
                 Some(tag) => tag,
@@ -441,9 +425,10 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
             tracing::debug!(first = tag.0, second = tag.1, "incoming tag");
 
-            let hash_str = Self::query_transaction_by_tag(&bq_client, tag)
+            let hash_str = load_db_client
+                .query_transaction_by_tags(tag)
                 .await
-                .map_err(Self::Error::from_eth_err)?;
+                .ok_or_else(|| EthApiError::TransactionNotFound.into_eth_err())?;
 
             let hash = B256::from_str(&hash_str).map_err(|_| {
                 EthApiError::InvalidParams("invalid hash format".to_string()).into_eth_err()
@@ -458,44 +443,6 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
                     .map(|maybe_tx| maybe_tx.map(|tx| tx.encoded_2718().into()))
             })
             .await
-        }
-    }
-
-    fn query_transaction_by_tag(
-        bq_client: &BigQueryClient,
-        tag: (String, String),
-    ) -> impl Future<Output = Result<String, EthApiError>> + Send {
-        async move {
-            let table_name =
-                format!("`{}.{}.{}`", bq_client.project_id, bq_client.dataset_id, "confirmed_tags");
-
-            let query = format!(
-                r#"
-                SELECT t.tx_hash
-                FROM {} t
-                WHERE EXISTS (
-                  SELECT 1
-                  FROM UNNEST(JSON_EXTRACT_ARRAY(tags)) AS tag_pair
-                  WHERE JSON_EXTRACT_SCALAR(tag_pair, '$[0]') = "{}"
-                  AND JSON_EXTRACT_SCALAR(tag_pair, '$[1]') = "{}"
-                )
-                LIMIT 1
-
-                "#,
-                table_name, tag.0, tag.1
-            );
-
-            let mut result =
-                bq_client.bq_query(query).await.map_err(|e| EthApiError::InternalEthError)?;
-
-            if !result.next_row() {
-                return Err(EthApiError::TransactionNotFound)
-            }
-
-            result
-                .get_string_by_name("tx_hash")
-                .map_err(|_| EthApiError::TransactionNotFound)?
-                .ok_or(EthApiError::TransactionNotFound)
         }
     }
 

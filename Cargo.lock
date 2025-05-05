@@ -902,9 +902,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.95"
+version = "1.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
+checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
 
 [[package]]
 name = "aquamarine"
@@ -4340,7 +4340,7 @@ dependencies = [
 [[package]]
 name = "fees"
 version = "0.1.0"
-source = "git+https://github.com/weaveVM/miscalleneous?c?branch=main#8ed3bf038a727c9cfb52f7d706dca10c8e206e63"
+source = "git+https://github.com/weaveVM/miscalleneous?c?branch=main#5188e48024c1f0fb1b7b8d78cc75151132561d28"
 dependencies = [
  "reqwest 0.12.12",
  "serde_json",
@@ -6509,6 +6509,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ee93343901ab17bd981295f2cf0026d4ad018c7c31ba84549a4ddbb47a45104"
 
 [[package]]
+name = "load-db"
+version = "1.1.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "eyre",
+ "planetscale-driver",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8321,6 +8333,7 @@ dependencies = [
  "arweave-upload",
  "borsh 1.5.5",
  "eyre",
+ "load-db",
  "parking_lot",
  "rbrotli",
  "reqwest 0.12.12",
@@ -10470,6 +10483,7 @@ dependencies = [
  "eyre",
  "futures",
  "lambda",
+ "load-db",
  "parse_duration",
  "precompiles",
  "rbrotli",
@@ -11717,6 +11731,7 @@ dependencies = [
  "futures",
  "jsonrpsee",
  "jsonrpsee-types",
+ "load-db",
  "parking_lot",
  "reth-chainspec",
  "reth-errors",
@@ -15897,6 +15912,7 @@ dependencies = [
  "gcp-bigquery-client 0.17.1",
  "indexmap 2.7.1",
  "lambda",
+ "load-db",
  "parking_lot",
  "parse_duration",
  "precompiles",
@@ -15927,8 +15943,8 @@ dependencies = [
 name = "wvm-static"
 version = "1.1.1"
 dependencies = [
- "exex-wvm-bigquery",
  "eyre",
+ "load-db",
  "once_cell",
  "serde_json",
  "tokio",

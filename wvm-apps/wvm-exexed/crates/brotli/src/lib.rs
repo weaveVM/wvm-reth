@@ -27,6 +27,7 @@ mod brotlic_tests {
     #[test]
     pub fn test_brotlic_block() {
         let sealed_block_with_senders = SealedBlockWithSenders::default();
+        // TODO: fix it
         let borsh_block = BorshSealedBlockWithSenders(sealed_block_with_senders);
         let borsh_vec = borsh::to_vec(&borsh_block).unwrap();
         let brotli = to_brotli(borsh_vec.clone());

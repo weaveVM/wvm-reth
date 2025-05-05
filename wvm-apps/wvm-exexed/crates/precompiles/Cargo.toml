@@ -26,7 +26,6 @@ tokio.workspace = true
 reqwest-graphql = "1.0.0"
 rbrotli = { path = "../brotli" }
 wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
-wvm-static = { path = "../../../../crates/wvm-static" }
 wvm-tx = { path = "../tx" }
 borsh.workspace = true
 alloy-primitives.workspace = true
@@ -34,3 +33,6 @@ ureq = { version = "2.10.1", features = ["json"] }
 reth-evm-ethereum.workspace = true
 reth-trie-db.workspace = true
 reth-node-builder.workspace = true
+
+wvm-static = { path = "../../../../crates/wvm-static" }
+load-db = { path = "../../../../crates/load-db" }

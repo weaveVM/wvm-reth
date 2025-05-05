@@ -4,9 +4,10 @@ use crate::inner::{
     wvm_block_precompile::{process_block_to_field, process_pc_response_from_str_bytes},
 };
 use alloy_primitives::Bytes;
+use load_db::LoadDbConnection;
 use revm_primitives::{Precompile, PrecompileError, PrecompileErrors, PrecompileResult};
 use serde_json::Value;
-use wvm_static::{internal_block, PRECOMPILE_WVM_BIGQUERY_CLIENT};
+use wvm_static::{internal_block, PRECOMPILE_LOADDB_CLIENT};
 
 pub const GBQ_READ_PC: Precompile = Precompile::Standard(gbq_read);
 
@@ -37,15 +38,16 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
             };
 
             // It needs to be obtained OUTSIDE the thread
-            let wvm_bgc = (&*PRECOMPILE_WVM_BIGQUERY_CLIENT).clone();
+            let wvm_bgc = (&*PRECOMPILE_LOADDB_CLIENT).clone();
 
             let res_from_bgc =
-                internal_block(async { wvm_bgc.bq_query_state(block_id.to_string()).await })
-                    .map_err(|_| {
+                internal_block(async { wvm_bgc.query_state(block_id.to_string()).await }).map_err(
+                    |_| {
                         PrecompileError::Other(
                             "Tokio runtime could not block_on for operation".to_string(),
                         )
-                    })?;
+                    },
+                )?;
 
             Some((field, res_from_bgc))
         }
