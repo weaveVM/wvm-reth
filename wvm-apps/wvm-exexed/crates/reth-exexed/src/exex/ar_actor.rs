@@ -356,13 +356,6 @@ async fn save_block(
         load_db_repo.save_block(block, block_number, arweave_id.to_string(), block_hash).await;
 
     let save_block_duration = save_block_start_time.elapsed();
-    info!(
-        target: "wvm::exex",
-        block_number = block_number,
-        duration = ?save_block_duration.as_millis(),
-        "save block completed successfully"
-    );
-
     match result {
         Ok(_) => {
             let total_duration = start_time.elapsed();
