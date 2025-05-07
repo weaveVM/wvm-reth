@@ -6,11 +6,7 @@ use futures::{stream::FuturesUnordered, StreamExt};
 use load_db::LoadDbConnection;
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
-use std::{
-    fmt,
-    sync::Arc,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fmt, sync::Arc};
 use tokio::sync::mpsc;
 use tracing::{error, info};
 use wvm_borsh::block::BorshSealedBlockWithSenders;
@@ -36,7 +32,7 @@ pub enum ArActorError {
         block_number: u64,
         error: String,
     },
-    BigQueryError {
+    StoreBlockDataError {
         block_number: u64,
         operation: &'static str, // "tags" or "block"
         error: String,
@@ -57,12 +53,8 @@ impl fmt::Display for ArActorError {
             ArActorError::ArweaveUploadFailed { block_number, error } => {
                 write!(f, "Failed to upload block {} to Arweave: {}", block_number, error)
             }
-            ArActorError::BigQueryError { block_number, operation, error } => {
-                write!(
-                    f,
-                    "BigQuery {} operation failed for block {}: {}",
-                    operation, block_number, error
-                )
+            ArActorError::StoreBlockDataError { block_number, operation, error } => {
+                write!(f, "{} operation failed for block {}: {}", operation, block_number, error)
             }
             ArActorError::ActorUnavailable => write!(f, "Actor is unavailable"),
             ArActorError::ResponseError => write!(f, "Failed to receive response from actor"),
@@ -109,7 +101,7 @@ impl ArActor {
                             break;
                         }
                         ArActorMessage::ProcessBlock { block, notification_type } => {
-                            let load_db_repo = self.load_db_repo;
+                            let load_db_repo = self.load_db_repo.clone();
                             let ar_uploader = self.ar_uploader.clone();
                             let block_number = block.number;
                             let worker_id = self.worker_id;
@@ -232,9 +224,9 @@ async fn handle_block(
     )
     .await?;
 
-    // 3. Update BigQuery
-    info!(target: "wvm::exex", "Block {} processing: starting BigQuery update", block_number);
-    update_bigquery(load_db_repo, &block, block.number, &arweave_id).await?;
+    // 3. Save Block
+    info!(target: "wvm::exex", "Block {} processing: starting to save block in load db store", block_number);
+    save_block(load_db_repo, &block, block.number, &arweave_id).await?;
 
     info!(target: "wvm::exex", "Block {} processing: completed", block_number);
     Ok(arweave_id)
@@ -347,7 +339,7 @@ async fn upload_to_arweave(
     }
 }
 
-async fn update_bigquery(
+async fn save_block(
     load_db_repo: Arc<dyn LoadDbConnection + Send + Sync + 'static>,
     block: &SealedBlockWithSenders,
     block_number: BlockNumber,
@@ -355,54 +347,44 @@ async fn update_bigquery(
 ) -> Result<(), ArActorError> {
     let start_time = std::time::Instant::now();
 
-    update_bigquery_tags(big_query_client, block).await?;
+    update_tags(&load_db_repo, block).await?;
 
     let save_block_start_time = std::time::Instant::now();
     let block_hash = block.block.hash().to_string();
 
-    let result = exex_wvm_bigquery::save_block(
-        load_db_repo,
-        block,
-        block_number,
-        arweave_id.to_string(),
-        block_hash,
-    )
-    .await;
+    let result =
+        load_db_repo.save_block(block, block_number, arweave_id.to_string(), block_hash).await;
 
     let save_block_duration = save_block_start_time.elapsed();
     info!(
         target: "wvm::exex",
         block_number = block_number,
         duration = ?save_block_duration.as_millis(),
-        "BigQuery save block completed successfully"
+        "save block completed successfully"
     );
-
-    // Measure total duration
 
     match result {
         Ok(_) => {
             let total_duration = start_time.elapsed();
-            // Log success with timing details
             info!(
                 target: "wvm::exex",
                 block_number = block_number,
                 total_duration = ?total_duration.as_millis(),
-                "BigQuery update completed successfully"
+                "save block completed successfully"
             );
             Ok(())
         }
         Err(e) => {
             let total_duration = start_time.elapsed();
-            // Log failure with timing details
             error!(
                 target: "wvm::exex",
                 block_number = block_number,
                 total_duration = ?total_duration.as_millis(),
                 error = %e,
-                "BigQuery update failed"
+                "save block failed"
             );
 
-            Err(ArActorError::BigQueryError {
+            Err(ArActorError::StoreBlockDataError {
                 block_number,
                 operation: "save_block",
                 error: e.to_string(),
@@ -411,8 +393,8 @@ async fn update_bigquery(
     }
 }
 
-async fn update_bigquery_tags(
-    big_query_client: &Arc<BigQueryClient>,
+async fn update_tags(
+    load_db_repo: &Arc<dyn LoadDbConnection + Send + Sync + 'static>,
     sealed_block: &SealedBlockWithSenders,
 ) -> Result<(), ArActorError> {
     let hashes: Vec<String> =
@@ -422,14 +404,14 @@ async fn update_bigquery_tags(
         return Ok(());
     }
 
-    let query = generate_tags_query(big_query_client, hashes, sealed_block.number)?;
-
     let start_time = std::time::Instant::now();
-    big_query_client.bq_query(query.clone()).await.map_err(|e| ArActorError::BigQueryError {
-        block_number: sealed_block.number,
-        operation: "tags",
-        error: e.to_string(),
-    })?;
+    load_db_repo.save_hashes(hashes.as_slice(), sealed_block.number).await.map_err(|e| {
+        ArActorError::StoreBlockDataError {
+            block_number: sealed_block.number,
+            operation: "update tags",
+            error: e.to_string(),
+        }
+    });
     let duration = start_time.elapsed();
 
     info!(
@@ -442,50 +424,21 @@ async fn update_bigquery_tags(
     Ok(())
 }
 
-fn generate_tags_query(
-    big_query_client: &Arc<BigQueryClient>,
-    hashes: Vec<String>,
-    block_number: BlockNumber,
-) -> Result<String, ArActorError> {
-    let confirmed_tags_tbl_name = format!(
-        "`{}.{}.{}`",
-        big_query_client.project_id, big_query_client.dataset_id, "confirmed_tags"
-    );
-    let tags_tbl_name =
-        format!("`{}.{}.{}`", big_query_client.project_id, big_query_client.dataset_id, "tags");
-
-    let in_clause =
-        hashes.into_iter().map(|hash| format!("\"{}\"", hash)).collect::<Vec<String>>().join(", ");
-
-    let ms = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|e| ArActorError::BigQueryError {
-            block_number,
-            operation: "tags",
-            error: format!("Time error: {}", e),
-        })?
-        .as_millis();
-
-    Ok(format!(
-        "INSERT INTO {} (tx_hash, tags, block_id, `timestamp`) SELECT t.hash, t.tags, {}, {} FROM {} t WHERE t.hash IN({}) AND t.created_at <= {}",
-        confirmed_tags_tbl_name, block_number, ms, tags_tbl_name, in_clause, ms
-    ))
-}
-
 #[derive(Clone)]
 pub struct ArweaveActorHandle {
     sender: mpsc::Sender<ArActorMessage>,
 }
 
 impl ArweaveActorHandle {
-    pub async fn new(buffer_size: usize) -> Self {
+    pub async fn new(
+        buffer_size: usize,
+        load_db_repo: Arc<dyn LoadDbConnection + Send + Sync + 'static>,
+    ) -> Self {
         info!(target: "wvm::exex", "Creating new ArweaveActor with buffer size {}", buffer_size);
 
         let (sender, receiver) = mpsc::channel(buffer_size);
-        // let big_query_client = Arc::new(new_etl_exex_biguery_client().await);
-        // let state_repo = Arc::new(StateRepository::new(big_query_client.clone()));
 
-        let actor = ArActor::new(receiver, state_repo, big_query_client, 0);
+        let actor = ArActor::new(receiver, load_db_repo, 0);
 
         tokio::spawn(async move {
             actor.run().await;
@@ -494,7 +447,11 @@ impl ArweaveActorHandle {
         Self { sender }
     }
 
-    pub async fn new_parallel(buffer_size: usize, num_workers: usize) -> Self {
+    pub async fn new_parallel(
+        buffer_size: usize,
+        num_workers: usize,
+        load_db_repo: Arc<dyn LoadDbConnection + Send + Sync + 'static>,
+    ) -> Self {
         info!(
             target: "wvm::exex",
             "Creating {} parallel ArActors with shared queue of size {}",
@@ -502,17 +459,12 @@ impl ArweaveActorHandle {
             buffer_size
         );
 
-        // Create a channel for each worker
         let mut worker_channels = Vec::with_capacity(num_workers);
-        // let big_query_client = Arc::new(new_etl_exex_biguery_client().await);
 
-        // Create workers with their own receivers
         for id in 0..num_workers {
             let (worker_sender, worker_receiver) = mpsc::channel(buffer_size);
-            let worker_state_repo = Arc::new(StateRepository::new(big_query_client.clone()));
 
-            let worker =
-                ArActor::new(worker_receiver, worker_state_repo, big_query_client.clone(), id);
+            let worker = ArActor::new(worker_receiver, load_db_repo.clone(), id);
 
             tokio::spawn(async move {
                 worker.run().await;
@@ -521,11 +473,9 @@ impl ArweaveActorHandle {
             worker_channels.push(worker_sender);
         }
 
-        // Create round-robin distributor
         let (sender, mut distributor_receiver) = mpsc::channel(buffer_size);
         let worker_channels = Arc::new(worker_channels);
 
-        // Spawn distributor task
         let dist_channels = worker_channels.clone();
         tokio::spawn(async move {
             let mut current_worker = 0;
@@ -542,7 +492,6 @@ impl ArweaveActorHandle {
                 current_worker = (current_worker + 1) % dist_channels.len();
             }
 
-            // On channel close, send shutdown to all workers
             for (id, worker) in dist_channels.iter().enumerate() {
                 if let Err(e) = worker.send(ArActorMessage::Shutdown).await {
                     error!(
