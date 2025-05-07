@@ -9,7 +9,7 @@ mod util;
 
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
-use load_db::{drivers::planetscale::PlanetScaleDriver, LoadDbConnection};
+use load_db::drivers::planetscale::PlanetScaleDriver;
 use precompiles::node::WvmEthExecutorBuilder;
 use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
@@ -19,7 +19,6 @@ use std::sync::Arc;
 use tracing::{error, info};
 
 use exex::ar_actor::ArweaveActorHandle;
-use exex_wvm_bigquery::{BigQueryClient, BigQueryConfig};
 use wvm_static::{PRECOMPILE_LOADDB_CLIENT, SUPERVISOR_RT};
 
 async fn exex_etl_processor<Node: FullNodeComponents>(
@@ -167,24 +166,6 @@ fn parse_prune_config(prune_conf: &str) -> u64 {
     let duration = parse_duration::parse(d).unwrap();
     let secs = duration.as_secs();
     SLOT_DURATION.as_secs() * secs
-}
-async fn new_etl_exex_biguery_client() -> BigQueryClient {
-    let config_path: String =
-        std::env::var("CONFIG").unwrap_or_else(|_| "./bq-config.json".to_string());
-
-    info!(target: "wvm::exex","etl exex big_query config applied from: {}", config_path);
-
-    let config_file = std::fs::File::open(config_path).expect("bigquery config path exists");
-    let reader = std::io::BufReader::new(config_file);
-
-    let bq_config: BigQueryConfig =
-        serde_json::from_reader(reader).expect("bigquery config read from file");
-
-    let bgc = BigQueryClient::new(&bq_config).await.unwrap();
-
-    info!(target: "wvm::exex", "etl exex bigquery client initialized");
-
-    bgc
 }
 
 async fn init_planetscale_client() -> PlanetScaleDriver {

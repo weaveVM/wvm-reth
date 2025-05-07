@@ -25,7 +25,6 @@ eyre.workspace = true
 futures.workspace = true
 alloy-primitives.workspace = true
 tokio.workspace = true
-exex-wvm-bigquery.workspace = true
 exex-wvm-da.workspace = true
 
 # bigquery dependencies
