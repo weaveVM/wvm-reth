@@ -6516,6 +6516,7 @@ dependencies = [
  "async-trait",
  "eyre",
  "planetscale-driver",
+ "reth-primitives",
  "serde",
  "serde_json",
 ]

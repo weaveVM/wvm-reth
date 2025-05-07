@@ -2,6 +2,7 @@ use crate::{LoadDbConnection, RawState};
 use async_trait::async_trait;
 use eyre::eyre;
 use planetscale_driver::{query, Database, PSConnection};
+use reth_primitives::SealedBlockWithSenders;
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::Debug,
@@ -59,7 +60,7 @@ impl LoadDbConnection for PlanetScaleDriver {
         let timestamp = timestamp.as_millis();
 
         let in_clause = hashes
-            .into_iter()
+            .iter()
             .map(|hash| format!("'{}'", hash.replace('\'', "''")))
             .collect::<Vec<String>>()
             .join(", ");
@@ -83,16 +84,13 @@ impl LoadDbConnection for PlanetScaleDriver {
         Ok(())
     }
 
-    async fn save_block<T>(
+    async fn save_block(
         &self,
-        block: &T,
+        block: &SealedBlockWithSenders,
         block_number: u64,
         arweave_id: String,
         block_hash: String,
-    ) -> eyre::Result<()>
-    where
-        T: ?Sized + Serialize + Send + Sync,
-    {
+    ) -> eyre::Result<()> {
         let sealed_json = serde_json::to_string(block)?;
         let escaped_json = sealed_json.replace('\'', "''");
 

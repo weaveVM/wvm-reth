@@ -1,9 +1,9 @@
-use crate::{network_tag::get_network_tag, new_etl_exex_biguery_client};
+use crate::network_tag::get_network_tag;
 
 use arweave_upload::{ArweaveRequest, UploaderProvider};
-use exex_wvm_bigquery::{repository::StateRepository, BigQueryClient};
 use exex_wvm_da::{DefaultWvmDataSettler, WvmDataSettler};
 use futures::{stream::FuturesUnordered, StreamExt};
+use load_db::LoadDbConnection;
 use reth::primitives::revm_primitives::alloy_primitives::BlockNumber;
 use reth_primitives::SealedBlockWithSenders;
 use std::{
@@ -73,8 +73,7 @@ impl fmt::Display for ArActorError {
 /// Main actor struct that maintains state and processes messages
 struct ArActor {
     receiver: mpsc::Receiver<ArActorMessage>,
-    state_repo: Arc<StateRepository>,
-    big_query_client: Arc<BigQueryClient>,
+    load_db_repo: Arc<dyn LoadDbConnection + Send + Sync + 'static>,
     ar_uploader: UploaderProvider,
     worker_id: usize,
 }
@@ -82,17 +81,10 @@ struct ArActor {
 impl ArActor {
     fn new(
         receiver: mpsc::Receiver<ArActorMessage>,
-        state_repo: Arc<StateRepository>,
-        big_query_client: Arc<BigQueryClient>,
+        load_db_repo: Arc<dyn LoadDbConnection + Send + Sync + 'static>,
         worker_id: usize,
     ) -> Self {
-        Self {
-            receiver,
-            state_repo,
-            big_query_client,
-            ar_uploader: UploaderProvider::new(None),
-            worker_id,
-        }
+        Self { receiver, load_db_repo, ar_uploader: UploaderProvider::new(None), worker_id }
     }
 
     async fn run(mut self) {
@@ -117,8 +109,7 @@ impl ArActor {
                             break;
                         }
                         ArActorMessage::ProcessBlock { block, notification_type } => {
-                            let state_repo = self.state_repo.clone();
-                            let big_query_client = self.big_query_client.clone();
+                            let load_db_repo = self.load_db_repo;
                             let ar_uploader = self.ar_uploader.clone();
                             let block_number = block.number;
                             let worker_id = self.worker_id;
@@ -135,8 +126,7 @@ impl ArActor {
                                 match handle_block(
                                     block,
                                     &notification_type,
-                                    state_repo,
-                                    big_query_client,
+                                load_db_repo,
                                     ar_uploader,
                                 ).await {
                                     Ok(arweave_id) => {
@@ -222,8 +212,7 @@ impl ArActor {
 async fn handle_block(
     block: SealedBlockWithSenders,
     notification_type: &str,
-    state_repo: Arc<StateRepository>,
-    big_query_client: Arc<BigQueryClient>,
+    load_db_repo: Arc<dyn LoadDbConnection + Send + Sync + 'static>,
     ar_uploader: UploaderProvider,
 ) -> ArActorResponse {
     let block_hash_str = block.hash().to_string();
@@ -245,7 +234,7 @@ async fn handle_block(
 
     // 3. Update BigQuery
     info!(target: "wvm::exex", "Block {} processing: starting BigQuery update", block_number);
-    update_bigquery(&state_repo, &big_query_client, &block, block.number, &arweave_id).await?;
+    update_bigquery(load_db_repo, &block, block.number, &arweave_id).await?;
 
     info!(target: "wvm::exex", "Block {} processing: completed", block_number);
     Ok(arweave_id)
@@ -359,8 +348,7 @@ async fn upload_to_arweave(
 }
 
 async fn update_bigquery(
-    state_repo: &Arc<StateRepository>,
-    big_query_client: &Arc<BigQueryClient>,
+    load_db_repo: Arc<dyn LoadDbConnection + Send + Sync + 'static>,
     block: &SealedBlockWithSenders,
     block_number: BlockNumber,
     arweave_id: &str,
@@ -373,7 +361,7 @@ async fn update_bigquery(
     let block_hash = block.block.hash().to_string();
 
     let result = exex_wvm_bigquery::save_block(
-        state_repo.clone(),
+        load_db_repo,
         block,
         block_number,
         arweave_id.to_string(),
@@ -494,8 +482,8 @@ impl ArweaveActorHandle {
         info!(target: "wvm::exex", "Creating new ArweaveActor with buffer size {}", buffer_size);
 
         let (sender, receiver) = mpsc::channel(buffer_size);
-        let big_query_client = Arc::new(new_etl_exex_biguery_client().await);
-        let state_repo = Arc::new(StateRepository::new(big_query_client.clone()));
+        // let big_query_client = Arc::new(new_etl_exex_biguery_client().await);
+        // let state_repo = Arc::new(StateRepository::new(big_query_client.clone()));
 
         let actor = ArActor::new(receiver, state_repo, big_query_client, 0);
 
@@ -516,7 +504,7 @@ impl ArweaveActorHandle {
 
         // Create a channel for each worker
         let mut worker_channels = Vec::with_capacity(num_workers);
-        let big_query_client = Arc::new(new_etl_exex_biguery_client().await);
+        // let big_query_client = Arc::new(new_etl_exex_biguery_client().await);
 
         // Create workers with their own receivers
         for id in 0..num_workers {

@@ -2,9 +2,8 @@ pub mod drivers;
 
 use async_trait::async_trait;
 use planetscale_driver::Database;
+use reth_primitives::SealedBlockWithSenders;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::fmt::Debug;
 
 #[derive(Serialize, Deserialize, Database)]
 pub struct RawState {
@@ -16,20 +15,18 @@ pub struct RawState {
 }
 
 #[async_trait]
-pub trait LoadDbConnection: Send + Sync {
+pub trait LoadDbConnection: Send + Sync + 'static {
     async fn query_raw_state(&self, block_id: String) -> Option<RawState>;
     async fn query_state(&self, block_id: String) -> Option<String>;
     async fn save_hashes(&self, hashes: &[String], block_number: u64) -> eyre::Result<()>;
 
-    async fn save_block<T>(
+    async fn save_block(
         &self,
-        block: &T,
+        block: &SealedBlockWithSenders,
         block_number: u64,
         arweave_id: String,
         block_hash: String,
-    ) -> eyre::Result<()>
-    where
-        T: ?Sized + Serialize + Send + Sync;
+    ) -> eyre::Result<()>;
 
     async fn save_tx_tag(
         &self,
