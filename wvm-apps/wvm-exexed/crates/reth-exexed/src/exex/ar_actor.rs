@@ -411,7 +411,7 @@ async fn update_tags(
             operation: "update tags",
             error: e.to_string(),
         }
-    });
+    })?;
     let duration = start_time.elapsed();
 
     info!(

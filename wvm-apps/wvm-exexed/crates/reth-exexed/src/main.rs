@@ -9,6 +9,7 @@ mod util;
 
 use futures::StreamExt;
 use lambda::lambda::exex_lambda_processor;
+use load_db::{drivers::planetscale::PlanetScaleDriver, LoadDbConnection};
 use precompiles::node::WvmEthExecutorBuilder;
 use reth::{api::FullNodeComponents, args::PruningArgs, builder::NodeBuilder};
 use reth_exex::{ExExContext, ExExEvent, ExExNotification};
@@ -99,6 +100,8 @@ fn main() -> eyre::Result<()> {
 
     reth::cli::Cli::parse_args().run(|builder, _| async move {
         // Initializations
+        let load_db_repo = init_planetscale_client().await;
+
         let arweave_actor_buffer_size = std::env::var("ARWEAVE_ACTOR_BUFFER_SIZE")
             .unwrap_or_else(|_| "1024".to_string())
             .parse::<usize>()
@@ -114,6 +117,7 @@ fn main() -> eyre::Result<()> {
                     .unwrap_or_else(|_| "10".to_string())
                     .parse()
                     .unwrap_or(10),
+                Arc::new(load_db_repo),
             )
             .await,
         );
@@ -181,6 +185,15 @@ async fn new_etl_exex_biguery_client() -> BigQueryClient {
     info!(target: "wvm::exex", "etl exex bigquery client initialized");
 
     bgc
+}
+
+async fn init_planetscale_client() -> PlanetScaleDriver {
+    let host = std::env::var("PS_HOST").unwrap_or_default();
+    let username = std::env::var("PS_USERNAME").unwrap_or_default();
+    let password = std::env::var("PS_PASSWORD").unwrap_or_default();
+
+    let planet_scale_driver = PlanetScaleDriver::new(host, username, password);
+    planet_scale_driver
 }
 
 #[cfg(test)]
