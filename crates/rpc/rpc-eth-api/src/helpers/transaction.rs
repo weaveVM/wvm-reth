@@ -7,7 +7,6 @@ use alloy_network::TransactionBuilder;
 use alloy_primitives::{Address, Bytes, TxHash, B256};
 use alloy_rpc_types::{BlockNumberOrTag, TransactionInfo};
 use alloy_rpc_types_eth::transaction::TransactionRequest;
-use exex_wvm_bigquery::BigQueryClient;
 use futures::Future;
 use reth_primitives::{Receipt, SealedBlockWithSenders, TransactionMeta, TransactionSigned};
 use reth_provider::{BlockNumReader, BlockReaderIdExt, ReceiptProvider, TransactionsProvider};
@@ -352,7 +351,7 @@ pub trait EthTransactions: LoadTransaction<Provider: BlockReaderIdExt> {
 
     /// WVM Exclusive
     /// Sends a transaction to the blockchain (raw)
-    /// And saves the transaction with tags in GBQ.
+    /// And saves the transaction with tags in load db storage.
     /// Tags will be then be used for easier indexing of the chain transaction itself
     fn send_wvm_transaction(
         &self,
