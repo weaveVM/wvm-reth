@@ -8,9 +8,9 @@ rust-version.workspace = true
 
 [dependencies]
 eyre.workspace = true
-exex-wvm-bigquery.workspace = true
 tracing.workspace = true
 serde_json.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["full"]}
 tokio-util = { workspace = true, features = ["full"] }
 once_cell = { workspace = true }
+load-db = { workspace = true }

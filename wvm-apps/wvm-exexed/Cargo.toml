@@ -25,7 +25,6 @@ eyre.workspace = true
 futures.workspace = true
 alloy-primitives.workspace = true
 tokio.workspace = true
-exex-wvm-bigquery.workspace = true
 exex-wvm-da.workspace = true
 
 # bigquery dependencies
@@ -42,6 +41,7 @@ wvm-static.workspace = true
 rbrotli = { path = "crates/brotli" }
 wvm-tx = { path = "crates/tx" }
 borsh.workspace = true
+load-db.workspace = true
 
 parse_duration.workspace = true
 
