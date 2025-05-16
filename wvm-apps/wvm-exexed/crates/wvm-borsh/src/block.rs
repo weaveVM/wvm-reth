@@ -5,9 +5,7 @@ use crate::{
     withdrawal::BorshWithdrawal,
 };
 use borsh::{BorshDeserialize, BorshSerialize};
-use reth::primitives::BlockBody;
 
-use alloy_eips::eip4895::Withdrawals;
 use std::io::{Read, Write};
 use wvm_tx::wvm::{
     v1::{V1WvmBlockBody, V1WvmSealedBlock, V1WvmSealedBlockWithSenders},
@@ -81,13 +79,11 @@ impl BorshDeserialize for BorshSealedBlock {
                             .into_iter()
                             .map(|i| i.0.as_v1().unwrap().clone())
                             .collect(),
-                        withdrawals: withdrawal
-                            .map(|i| {
-                                let original_withdrawals: Vec<alloy_eips::eip4895::Withdrawal> =
-                                    i.into_iter().map(|e| e.0).collect();
-                                original_withdrawals
-                            })
-                            .map(|i| reth_primitives::Withdrawals::new(i)),
+                        withdrawals: withdrawal.map(|i| {
+                            let original_withdrawals: Vec<alloy_eips::eip4895::Withdrawal> =
+                                i.into_iter().map(|e| e.0).collect();
+                            alloy_eips::eip4895::Withdrawals::new(original_withdrawals)
+                        }),
                     },
                 })))
             }
@@ -154,21 +150,23 @@ mod block_tests {
     #[test]
     pub fn test_sealed_block() {
         let block = SealedBlock::default();
-        let wvm_block = V1WvmSealedBlock::from(block.clone());
+        let block_clone = SealedBlock::clone(&block);
+        let wvm_block = V1WvmSealedBlock::from(block);
         let borsh_block = BorshSealedBlock(wvm_tx::wvm::WvmSealedBlock::V1(wvm_block));
         let to_borsh = borsh::to_vec(&borsh_block).unwrap();
         let from_borsh: BorshSealedBlock = borsh::from_slice(to_borsh.as_slice()).unwrap();
-        assert_eq!(block, from_borsh.0.as_v1().unwrap().clone().into());
+        assert_eq!(block_clone, from_borsh.0.as_v1().unwrap().clone().into());
     }
 
     #[test]
     pub fn test_sealed_block_w_senders() {
         let block = SealedBlockWithSenders::default();
-        let wvm_block = V1WvmSealedBlockWithSenders::from(block.clone());
+        let block_clone = SealedBlockWithSenders::clone(&block);
+        let wvm_block = V1WvmSealedBlockWithSenders::from(block);
         let borsh_block = BorshSealedBlockWithSenders(WvmSealedBlockWithSenders::V1(wvm_block));
         let to_borsh = borsh::to_vec(&borsh_block).unwrap();
         let from_borsh: BorshSealedBlockWithSenders =
             borsh::from_slice(to_borsh.as_slice()).unwrap();
-        assert_eq!(block, from_borsh.0.as_v1().unwrap().clone().into());
+        assert_eq!(block_clone, from_borsh.0.as_v1().unwrap().clone().into());
     }
 }

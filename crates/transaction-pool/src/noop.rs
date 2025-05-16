@@ -13,16 +13,15 @@ use crate::{
     validate::ValidTransaction,
     AllPoolTransactions, AllTransactionsEvents, BestTransactions, BlockInfo, EthPoolTransaction,
     EthPooledTransaction, NewTransactionEvent, PoolResult, PoolSize, PoolTransaction,
-    PooledTransactionsElement, PropagatedTransactions, TransactionEvents, TransactionOrigin,
-    TransactionPool, TransactionValidationOutcome, TransactionValidator, ValidPoolTransaction,
+    PropagatedTransactions, TransactionEvents, TransactionOrigin, TransactionPool,
+    TransactionValidationOutcome, TransactionValidator, ValidPoolTransaction,
 };
-// use alloy_eips::{eip1559::ETHEREUM_BLOCK_GAS_LIMIT, eip4844::BlobAndProofV1};
-
-use alloy_eips::eip4844::BlobAndProofV1;
+use alloy_eips::eip4844::{BlobAndProofV1, BlobTransactionSidecar};
 use alloy_primitives::{Address, TxHash, B256, U256};
+use reth_chainspec::LOAD_NETWORK_BLOCK_GAS_LIMIT;
 use reth_eth_wire_types::HandleMempoolData;
-use reth_primitives::{constants::ETHEREUM_BLOCK_GAS_LIMIT, BlobTransactionSidecar};
 
+use reth_primitives_traits::Recovered;
 use std::{collections::HashSet, marker::PhantomData, sync::Arc};
 use tokio::sync::{mpsc, mpsc::Receiver};
 
@@ -43,7 +42,7 @@ impl TransactionPool for NoopTransactionPool {
 
     fn block_info(&self) -> BlockInfo {
         BlockInfo {
-            block_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
+            block_gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT,
             last_seen_block_hash: Default::default(),
             last_seen_block_number: 0,
             pending_basefee: 0,
@@ -136,14 +135,14 @@ impl TransactionPool for NoopTransactionPool {
         &self,
         _tx_hashes: Vec<TxHash>,
         _limit: GetPooledTransactionLimit,
-    ) -> Vec<PooledTransactionsElement> {
+    ) -> Vec<<Self::Transaction as PoolTransaction>::Pooled> {
         vec![]
     }
 
     fn get_pooled_transaction_element(
         &self,
         _tx_hash: TxHash,
-    ) -> Option<PooledTransactionsElement> {
+    ) -> Option<Recovered<<Self::Transaction as PoolTransaction>::Pooled>> {
         None
     }
 
@@ -161,6 +160,13 @@ impl TransactionPool for NoopTransactionPool {
     }
 
     fn pending_transactions(&self) -> Vec<Arc<ValidPoolTransaction<Self::Transaction>>> {
+        vec![]
+    }
+
+    fn pending_transactions_max(
+        &self,
+        _max: usize,
+    ) -> Vec<Arc<ValidPoolTransaction<Self::Transaction>>> {
         vec![]
     }
 

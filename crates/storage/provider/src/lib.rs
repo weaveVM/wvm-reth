@@ -36,7 +36,7 @@ pub use reth_execution_types::*;
 pub mod bundle_state;
 
 /// Re-export `OriginalValuesKnown`
-pub use revm::db::states::OriginalValuesKnown;
+pub use revm_database::states::OriginalValuesKnown;
 
 /// Writer standalone type.
 pub mod writer;
@@ -45,6 +45,9 @@ pub use reth_chain_state::{
     CanonStateNotification, CanonStateNotificationSender, CanonStateNotificationStream,
     CanonStateNotifications, CanonStateSubscriptions,
 };
+
+// reexport traits to avoid breaking changes
+pub use reth_storage_api::{HistoryWriter, StatsReader};
 
 pub(crate) fn to_range<R: std::ops::RangeBounds<u64>>(bounds: R) -> std::ops::Range<u64> {
     let start = match bounds.start_bound() {

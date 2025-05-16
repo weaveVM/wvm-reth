@@ -69,7 +69,7 @@ mod txs_tests {
     use crate::transaction::BorshTransactionSigned;
     use reth::primitives::TransactionSigned;
 
-    use reth::primitives::Transaction;
+    use reth_primitives::Transaction as RethTransaction;
     use serde_json::Value;
     use wvm_tx::{
         wvm::{v1::transaction::V1WvmTransactionSigned, WvmTransactionSigned},
@@ -84,7 +84,7 @@ mod txs_tests {
         ));
         let to_borsh = borsh::to_vec(&borsh_data).unwrap();
         let from_borsh: BorshTransactionSigned = borsh::from_slice(to_borsh.as_slice()).unwrap();
-        assert_eq!(data.hash, from_borsh.0.as_v1().unwrap().hash);
+        assert_eq!(*data.hash(), from_borsh.0.as_v1().unwrap().hash);
     }
 
     #[test]
@@ -118,10 +118,20 @@ mod txs_tests {
         let newer_tx: WvmTransaction = serde_json::from_str(newer_data).unwrap();
         println!("{:?}", newer_tx);
 
-        let txs: (Transaction, Transaction) = (to_tx.into(), newer_tx.into());
+        let txs: (RethTransaction, RethTransaction) = (to_tx.into(), newer_tx.into());
         println!("{:?}", txs.0);
         println!("{:?}", txs.1);
-        assert_eq!(txs.0.as_legacy().unwrap().chain_id.unwrap(), 9496);
-        assert_eq!(txs.1.as_legacy().unwrap().chain_id.unwrap(), 9496);
+
+        if let RethTransaction::Legacy(tx) = &txs.0 {
+            assert_eq!(tx.chain_id.unwrap(), 9496);
+        } else {
+            panic!("expected Legacy transaction");
+        }
+
+        if let RethTransaction::Legacy(tx) = &txs.1 {
+            assert_eq!(tx.chain_id.unwrap(), 9496);
+        } else {
+            panic!("expected Legacy transaction");
+        }
     }
 }

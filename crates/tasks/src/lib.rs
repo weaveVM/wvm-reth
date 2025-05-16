@@ -111,6 +111,13 @@ dyn_clone::clone_trait_object!(TaskSpawner);
 #[non_exhaustive]
 pub struct TokioTaskExecutor;
 
+impl TokioTaskExecutor {
+    /// Converts the instance to a boxed [`TaskSpawner`].
+    pub fn boxed(self) -> Box<dyn TaskSpawner + 'static> {
+        Box::new(self)
+    }
+}
+
 impl TaskSpawner for TokioTaskExecutor {
     fn spawn(&self, fut: BoxFuture<'static, ()>) -> JoinHandle<()> {
         tokio::task::spawn(fut)
@@ -169,7 +176,7 @@ pub struct TaskManager {
 // === impl TaskManager ===
 
 impl TaskManager {
-    /// Returns a a [`TaskManager`] over the currently running Runtime.
+    /// Returns a [`TaskManager`] over the currently running Runtime.
     ///
     /// # Panics
     ///

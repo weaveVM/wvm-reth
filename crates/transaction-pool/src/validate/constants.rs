@@ -1,4 +1,4 @@
-use reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT;
+use reth_chainspec::LOAD_NETWORK_BLOCK_GAS_LIMIT;
 use std::{cell::LazyCell, env::VarError};
 
 /// [`TX_SLOT_BYTE_SIZE`] is used to calculate how many data slots a single transaction
@@ -16,7 +16,7 @@ pub const DEFAULT_MAX_TX_INPUT_BYTES: LazyCell<usize> = LazyCell::new(|| {
     let default_value = {
         // 20k (gas) ----> 128kb
         // 500k (gas) ----> x // 3200
-        let gas_limit = (&*ETHEREUM_BLOCK_GAS_LIMIT).clone();
+        let gas_limit = (&*LOAD_NETWORK_BLOCK_GAS_LIMIT).clone();
 
         (((gas_limit * 128_000) / 20_000) / 1000) as usize // -> to bytes (3.2mb)
     };

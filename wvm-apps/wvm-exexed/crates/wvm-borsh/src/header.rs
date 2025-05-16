@@ -151,7 +151,7 @@ mod header_tests {
 
     #[test]
     pub fn test_sealed_header() {
-        let block = SealedHeader::default();
+        let block: SealedHeader = SealedHeader::default();
         let borsh_block =
             BorshSealedHeader(WvmSealedHeader::V1(V1WvmSealedHeader::from(block.clone())));
         let to_borsh = borsh::to_vec(&borsh_block).unwrap();

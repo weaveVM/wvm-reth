@@ -1,11 +1,10 @@
 use crate::utils::{test_address, test_rpc_builder};
-use alloy_rpc_types_eth::{Block, Receipt, Transaction};
+use alloy_rpc_types_eth::{Block, Header, Receipt, Transaction};
 use jsonrpsee::{
     server::{middleware::rpc::RpcServiceT, RpcServiceBuilder},
     types::Request,
     MethodResponse,
 };
-use reth_rpc::EthApi;
 use reth_rpc_builder::{RpcServerConfig, TransportRpcModuleConfig};
 use reth_rpc_eth_api::EthApiClient;
 use reth_rpc_server_types::RpcModuleSelection;
@@ -60,10 +59,9 @@ where
 #[tokio::test(flavor = "multi_thread")]
 async fn test_rpc_middleware() {
     let builder = test_rpc_builder();
-    let modules = builder.build(
-        TransportRpcModuleConfig::set_http(RpcModuleSelection::All),
-        Box::new(EthApi::with_spawner),
-    );
+    let eth_api = builder.bootstrap_eth_api();
+    let modules =
+        builder.build(TransportRpcModuleConfig::set_http(RpcModuleSelection::All), eth_api);
 
     let mylayer = MyMiddlewareLayer::default();
 
@@ -75,7 +73,7 @@ async fn test_rpc_middleware() {
         .unwrap();
 
     let client = handle.http_client().unwrap();
-    EthApiClient::<Transaction, Block, Receipt>::protocol_version(&client).await.unwrap();
+    EthApiClient::<Transaction, Block, Receipt, Header>::protocol_version(&client).await.unwrap();
     let count = mylayer.count.load(Ordering::Relaxed);
     assert_eq!(count, 1);
 }
