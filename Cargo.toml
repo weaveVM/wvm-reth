@@ -434,13 +434,13 @@ wvm-static = { path = "crates/wvm-static" }
 load-db = { path = "crates/load-db" }
 
 # revm
-revm = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features = [
+revm = { git = "https://github.com/weaveVM/wvm-revm", tag = "load-v0.6.0", features = [
     "std",
     "secp256k1",
     "blst",
 ], default-features = false }
-revm-inspectors = { git = "https://github.com/weaveVM/revm-inspectors?v", branch = "main" }
-revm-primitives = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features = [
+revm-inspectors = { git = "https://github.com/weaveVM/revm-inspectors?v", tag = "load-v0.6.0" }
+revm-primitives = { git = "https://github.com/weaveVM/wvm-revm", tag = "load-v0.6.0", features = [
     "std",
 ], default-features = false }
 
@@ -624,7 +624,7 @@ borsh = "1.5.1"
 # brotli
 brotlic = "0.8.2"
 
-exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?i", tag = "v0.1.0" }
+exex-wvm-da = { git = "https://github.com/weaveVM/exex-templates?i", tag = "load-v0.6.0" }
 
 # fees
 fees = { git = "https://github.com/weaveVM/miscalleneous?c", branch = "main" }
