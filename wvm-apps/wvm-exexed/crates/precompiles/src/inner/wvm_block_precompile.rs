@@ -8,12 +8,11 @@ use crate::{
 };
 use alloy_primitives::Bytes;
 use rbrotli::from_brotli;
-use reth::primitives::revm_primitives::{Precompile, PrecompileOutput, PrecompileResult};
-use revm_primitives::{PrecompileError, PrecompileErrors};
-use wvm_borsh::block::BorshSealedBlockWithSenders;
-use wvm_static::internal_block;
+use reth::revm::precompile::{PrecompileError, PrecompileFn, PrecompileOutput, PrecompileResult};
 
-pub const WVM_BLOCK_PC: Precompile = Precompile::Standard(wvm_read_block_pc);
+use wvm_borsh::block::BorshSealedBlockWithSenders;
+
+pub const WVM_BLOCK_PC: PrecompileFn = wvm_read_block_pc as PrecompileFn;
 
 pub const WVM_BLOCK_PC_READ_BASE: u64 = 10_000;
 
@@ -60,13 +59,11 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     let gas_used: u64 = (WVM_BLOCK_PC_READ_BASE as usize + data_size * 3) as u64;
 
     if gas_used > gas_limit {
-        return Err(PrecompileErrors::Error(PrecompileError::OutOfGas));
+        return Err(PrecompileError::OutOfGas);
     }
 
     if input.is_empty() {
-        return Err(PrecompileErrors::Error(PrecompileError::Other(
-            "A block id must be provided".to_string(),
-        )));
+        return Err(PrecompileError::Other("A block id must be provided".to_string()));
     }
 
     let block_id = String::from_utf8(input.0.to_vec());
@@ -75,9 +72,7 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
         Ok(input_data) => {
             let (gateway, block_id, field) = parse_req_input(input_data.as_str());
             if field.len() == 0 {
-                Err(PrecompileErrors::Error(PrecompileError::Other(
-                    "A field must be specified".to_string(),
-                )))
+                Err(PrecompileError::Other("A field must be specified".to_string()))
             } else {
                 let clean_gateway = clean_gateway_url(gateway.as_str());
                 let query = build_transaction_query(
@@ -97,18 +92,14 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                 let edge = match edge {
                     Some(edge) => edge,
                     None => {
-                        return Err(PrecompileErrors::Error(PrecompileError::Other(
-                            "Unknown Block".to_string(),
-                        )));
+                        return Err(PrecompileError::Other("Unknown Block".to_string()));
                     }
                 };
 
                 let tags = edge.node.tags.unwrap_or_else(Vec::new);
                 let encoding =
                     tags.iter().find(|i| i.name == "WeaveVM:Encoding").ok_or_else(|| {
-                        PrecompileErrors::Error(PrecompileError::Other(
-                            "Missing WeaveVM:Encoding tag".to_string(),
-                        ))
+                        PrecompileError::Other("Missing WeaveVM:Encoding tag".to_string())
                     })?;
 
                 let get_data = download_tx(gas_used, clean_gateway.clone(), edge.node.id);
@@ -132,14 +123,10 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                                 let data = process_block_to_field(field, str_block);
                                 process_pc_response_from_str_bytes(gas_used, data)
                             }
-                            _ => Err(PrecompileErrors::Error(PrecompileError::Other(
-                                "Unknown encoding".to_string(),
-                            ))),
+                            _ => Err(PrecompileError::Other("Unknown encoding".to_string())),
                         }
                     }
-                    Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
-                        "Invalid data".to_string(),
-                    ))),
+                    Err(_) => Err(PrecompileError::Other("Invalid data".to_string())),
                 };
 
                 Ok(output.map_err(|_| {
@@ -147,20 +134,18 @@ fn wvm_read_block_pc(input: &Bytes, gas_limit: u64) -> PrecompileResult {
                 })?)
             }
         }
-        Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
-            "Block id could not be parsed".to_string(),
-        ))),
+        Err(_) => Err(PrecompileError::Other("Block id could not be parsed".to_string())),
     }
 }
 
 pub fn process_pc_response_from_str_bytes(
     gas_used: u64,
     data: Option<Vec<u8>>,
-) -> Result<PrecompileOutput, PrecompileErrors> {
+) -> Result<PrecompileOutput, PrecompileError> {
     if let Some(valid_data) = data {
         Ok(PrecompileOutput::new(gas_used, valid_data.into()))
     } else {
-        Err(PrecompileErrors::Error(PrecompileError::Other("Unknown field".to_string())))
+        Err(PrecompileError::Other("Unknown field".to_string()))
     }
 }
 
@@ -197,7 +182,9 @@ pub fn process_block_to_field(field: String, str_block: Block) -> Option<Vec<u8>
 mod arweave_read_pc_tests {
     use crate::inner::wvm_block_precompile::wvm_read_block_pc;
     use alloy_primitives::Bytes;
-    use reth::primitives::revm_primitives::PrecompileOutput;
+    use reth::revm::precompile::{
+        PrecompileError, PrecompileFn, PrecompileOutput, PrecompileResult,
+    };
 
     // #[test]
     // pub fn test_read_wvm_block() {

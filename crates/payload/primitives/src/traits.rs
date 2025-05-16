@@ -1,73 +1,33 @@
-use crate::{PayloadEvents, PayloadKind, PayloadTypes};
-use alloy_eips::eip7685::Requests;
-use alloy_primitives::{Address, B256, U256};
-use alloy_rpc_types::{
-    engine::{PayloadAttributes as EthPayloadAttributes, PayloadId},
-    Withdrawal,
+use alloc::vec::Vec;
+use alloy_eips::{
+    eip4895::{Withdrawal, Withdrawals},
+    eip7685::Requests,
 };
-use op_alloy_rpc_types_engine::OpPayloadAttributes;
-use reth_chain_state::ExecutedBlock;
-use reth_primitives::{SealedBlock, Withdrawals};
-use tokio::sync::oneshot;
+use alloy_primitives::{Address, B256, U256};
+use alloy_rpc_types_engine::{PayloadAttributes as EthPayloadAttributes, PayloadId};
+use core::fmt;
+use reth_chain_state::ExecutedBlockWithTrieUpdates;
+use reth_primitives::{NodePrimitives, SealedBlock};
 
-/// A type that can request, subscribe to and resolve payloads.
-#[async_trait::async_trait]
-pub trait PayloadBuilder: Send + Unpin {
-    /// The Payload type for the builder.
-    type PayloadType: PayloadTypes;
-    /// The error type returned by the builder.
-    type Error;
-
-    /// Sends a message to the service to start building a new payload for the given payload.
-    ///
-    /// Returns a receiver that will receive the payload id.
-    fn send_new_payload(
-        &self,
-        attr: <Self::PayloadType as PayloadTypes>::PayloadBuilderAttributes,
-    ) -> oneshot::Receiver<Result<PayloadId, Self::Error>>;
-
-    /// Returns the best payload for the given identifier.
-    async fn best_payload(
-        &self,
-        id: PayloadId,
-    ) -> Option<Result<<Self::PayloadType as PayloadTypes>::BuiltPayload, Self::Error>>;
-
-    /// Resolves the payload job and returns the best payload that has been built so far.
-    async fn resolve_kind(
-        &self,
-        id: PayloadId,
-        kind: PayloadKind,
-    ) -> Option<Result<<Self::PayloadType as PayloadTypes>::BuiltPayload, Self::Error>>;
-
-    /// Resolves the payload job as fast and possible and returns the best payload that has been
-    /// built so far.
-    async fn resolve(
-        &self,
-        id: PayloadId,
-    ) -> Option<Result<<Self::PayloadType as PayloadTypes>::BuiltPayload, Self::Error>> {
-        self.resolve_kind(id, PayloadKind::Earliest).await
-    }
-
-    /// Sends a message to the service to subscribe to payload events.
-    /// Returns a receiver that will receive them.
-    async fn subscribe(&self) -> Result<PayloadEvents<Self::PayloadType>, Self::Error>;
-}
-
-/// Represents a built payload type that contains a built [`SealedBlock`] and can be converted into
+/// Represents a built payload type that contains a built `SealedBlock` and can be converted into
 /// engine API execution payloads.
-pub trait BuiltPayload: Send + Sync + std::fmt::Debug {
+#[auto_impl::auto_impl(&, Arc)]
+pub trait BuiltPayload: Send + Sync + fmt::Debug {
+    /// The node's primitive types
+    type Primitives: NodePrimitives;
+
     /// Returns the built block (sealed)
-    fn block(&self) -> &SealedBlock;
+    fn block(&self) -> &SealedBlock<<Self::Primitives as NodePrimitives>::Block>;
 
     /// Returns the fees collected for the built block
     fn fees(&self) -> U256;
 
     /// Returns the entire execution data for the built block, if available.
-    fn executed_block(&self) -> Option<ExecutedBlock> {
+    fn executed_block(&self) -> Option<ExecutedBlockWithTrieUpdates<Self::Primitives>> {
         None
     }
 
-    /// Returns the EIP-7865 requests for the payload if any.
+    /// Returns the EIP-7685 requests for the payload if any.
     fn requests(&self) -> Option<Requests>;
 }
 
@@ -75,7 +35,7 @@ pub trait BuiltPayload: Send + Sync + std::fmt::Debug {
 ///
 /// This is used as a conversion type, transforming a payload attributes type that the engine API
 /// receives, into a type that the payload builder can use.
-pub trait PayloadBuilderAttributes: Send + Sync + std::fmt::Debug {
+pub trait PayloadBuilderAttributes: Send + Sync + fmt::Debug {
     /// The payload attributes that can be used to construct this type. Used as the argument in
     /// [`PayloadBuilderAttributes::try_new`].
     type RpcPayloadAttributes;
@@ -120,7 +80,7 @@ pub trait PayloadBuilderAttributes: Send + Sync + std::fmt::Debug {
 ///
 /// This type is emitted as part of the forkchoiceUpdated call
 pub trait PayloadAttributes:
-    serde::de::DeserializeOwned + serde::Serialize + std::fmt::Debug + Clone + Send + Sync + 'static
+    serde::de::DeserializeOwned + serde::Serialize + fmt::Debug + Clone + Send + Sync + 'static
 {
     /// Returns the timestamp to be used in the payload job.
     fn timestamp(&self) -> u64;
@@ -146,7 +106,8 @@ impl PayloadAttributes for EthPayloadAttributes {
     }
 }
 
-impl PayloadAttributes for OpPayloadAttributes {
+#[cfg(feature = "op")]
+impl PayloadAttributes for op_alloy_rpc_types_engine::OpPayloadAttributes {
     fn timestamp(&self) -> u64 {
         self.payload_attributes.timestamp
     }

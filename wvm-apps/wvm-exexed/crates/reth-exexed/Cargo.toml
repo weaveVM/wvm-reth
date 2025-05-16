@@ -13,13 +13,15 @@ reth-exex.workspace = true
 reth-node-ethereum.workspace = true
 reth-tracing.workspace = true
 reth-primitives.workspace = true
+reth-primitives-traits.workspace = true
+reth-chainspec.workspace = true
+
 eyre.workspace = true
 borsh.workspace = true
 serde_json.workspace = true
 wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
 lambda = { path = "../lambda" }
 arweave-upload = { path = "../arweave-upload" }
-precompiles = { path = "../precompiles" }
 rbrotli = { path = "../brotli" }
 wvm-static = { path = "../../../../crates/wvm-static" }
 load-db = { path = "../../../../crates/load-db" }
@@ -29,3 +31,10 @@ tokio.workspace = true
 tracing.workspace = true
 parse_duration.workspace = true
 futures.workspace = true
+
+alloy-primitives.workspace = true
+alloy-consensus.workspace = true
+
+precompiles = { path = "../precompiles" }
+evm = { path = "../evm" }
+node = { path = "../node" }

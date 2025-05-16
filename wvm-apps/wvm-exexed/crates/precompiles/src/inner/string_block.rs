@@ -56,7 +56,11 @@ pub fn from_sealed_block_senders(sealed_block: SealedBlockWithSenders) -> Block 
         state_root: Some(sealed_block.state_root.to_string()),
         timestamp: Some(sealed_block.timestamp.to_string()),
         total_difficulty: None,
-        transactions: sealed_block.transactions().map(|i| i.hash.to_string()).collect(),
+        transactions: sealed_block
+            .into_body()
+            .transactions()
+            .map(|i| i.hash().to_string())
+            .collect(),
     }
 }
 

@@ -19,7 +19,7 @@ reth-node-ethereum.workspace = true
 reth-tracing.workspace = true
 serde_json.workspace = true
 serde.workspace = true
-reqwest = { workspace = true, features = ["http2", "gzip"]}
+reqwest = { workspace = true, features = ["http2", "gzip"] }
 eyre.workspace = true
 arweave-upload = { path = "../arweave-upload" }
 tokio.workspace = true
@@ -29,10 +29,16 @@ wvm-borsh = { path = "../wvm-borsh", name = "wvm-borsh" }
 wvm-tx = { path = "../tx" }
 borsh.workspace = true
 alloy-primitives.workspace = true
+alloy-evm.workspace = true
+alloy-consensus.workspace = true
 ureq = { version = "2.10.1", features = ["json"] }
 reth-evm-ethereum.workspace = true
+reth-evm.workspace = true
 reth-trie-db.workspace = true
 reth-node-builder.workspace = true
+alloy-eips.workspace = true
+reth-ethereum-primitives.workspace = true
+reth-primitives-traits.workspace = true
 
 wvm-static = { path = "../../../../crates/wvm-static" }
 load-db = { path = "../../../../crates/load-db" }

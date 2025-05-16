@@ -1,6 +1,7 @@
 use crate::inner::{REQ_SIZE, REQ_TIMEOUT};
 use alloy_primitives::Bytes;
-use revm_primitives::{PrecompileError, PrecompileErrors, PrecompileOutput};
+use reth::revm::precompile::{PrecompileError, PrecompileFn, PrecompileOutput, PrecompileResult};
+
 use std::io::Read;
 use wvm_static::internal_block;
 
@@ -17,7 +18,7 @@ pub fn download_tx(
     gas_used: u64,
     clean_gateway: String,
     tx_id: String,
-) -> Result<PrecompileOutput, PrecompileErrors> {
+) -> Result<PrecompileOutput, PrecompileError> {
     // LEGACY
     // internal_block(async {
     //     let download_tx = reqwest::get(format!("{}/{}", clean_gateway, tx_id.as_str())).await;
@@ -41,8 +42,6 @@ pub fn download_tx(
 
             Bytes::from(buffer)
         })),
-        Err(_) => Err(PrecompileErrors::Error(PrecompileError::Other(
-            "Arweave Transaction was not found".to_string(),
-        ))),
+        Err(_) => Err(PrecompileError::Other("Arweave Transaction was not found".to_string())),
     }
 }

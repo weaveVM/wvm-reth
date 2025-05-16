@@ -1,10 +1,9 @@
 //! Transaction pool eviction tests.
 
+use alloy_consensus::Transaction;
 use alloy_primitives::{Address, B256};
 use rand::distributions::Uniform;
-use reth_primitives::constants::{
-    get_latest_min_protocol_base_fee, ETHEREUM_BLOCK_GAS_LIMIT, MIN_PROTOCOL_BASE_FEE,
-};
+use reth_chainspec::{get_latest_min_protocol_base_fee, LOAD_NETWORK_BLOCK_GAS_LIMIT};
 use reth_transaction_pool::{
     error::PoolErrorKind,
     test_utils::{
@@ -29,7 +28,7 @@ async fn only_blobs_eviction() {
 
     let pool: TestPool = TestPoolBuilder::default().with_config(pool_config.clone()).into();
     let block_info = BlockInfo {
-        block_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
+        block_gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT,
         last_seen_block_hash: B256::ZERO,
         last_seen_block_number: 0,
         pending_basefee: 10,
@@ -90,7 +89,7 @@ async fn only_blobs_eviction() {
             let set = set.into_vec();
 
             // ensure that the first nonce is 0
-            assert_eq!(set[0].get_nonce(), 0);
+            assert_eq!(set[0].nonce(), 0);
 
             // and finally insert it into the pool
             let results = pool.add_transactions(TransactionOrigin::External, set).await;
@@ -143,7 +142,7 @@ async fn mixed_eviction() {
 
     let pool: TestPool = TestPoolBuilder::default().with_config(pool_config.clone()).into();
     let block_info = BlockInfo {
-        block_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
+        block_gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT,
         last_seen_block_hash: B256::ZERO,
         last_seen_block_number: 0,
         pending_basefee: 10,
@@ -197,7 +196,7 @@ async fn mixed_eviction() {
             );
 
             let set = set.into_inner().into_vec();
-            assert_eq!(set[0].get_nonce(), 0);
+            assert_eq!(set[0].nonce(), 0);
 
             let results = pool.add_transactions(TransactionOrigin::External, set).await;
             for (i, result) in results.iter().enumerate() {
@@ -245,7 +244,7 @@ async fn nonce_gaps_eviction() {
 
     let pool: TestPool = TestPoolBuilder::default().with_config(pool_config.clone()).into();
     let block_info = BlockInfo {
-        block_gas_limit: *ETHEREUM_BLOCK_GAS_LIMIT,
+        block_gas_limit: *LOAD_NETWORK_BLOCK_GAS_LIMIT,
         last_seen_block_hash: B256::ZERO,
         last_seen_block_number: 0,
         pending_basefee: 10,
