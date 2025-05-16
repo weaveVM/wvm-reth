@@ -10124,6 +10124,7 @@ dependencies = [
  "borsh 1.5.7",
  "brotlic",
  "evm",
+ "exex-wvm-da",
  "eyre",
  "futures",
  "lambda",

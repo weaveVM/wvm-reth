@@ -25,6 +25,7 @@ arweave-upload = { path = "../arweave-upload" }
 rbrotli = { path = "../brotli" }
 wvm-static = { path = "../../../../crates/wvm-static" }
 load-db = { path = "../../../../crates/load-db" }
+exex-wvm-da.workspace = true
 
 wvm-tx = { path = "../tx" }
 tokio.workspace = true
