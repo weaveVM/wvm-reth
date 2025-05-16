@@ -34,7 +34,6 @@ alloy-consensus.workspace = true
 alloy-evm.workspace = true
 alloy-genesis.workspace = true
 tokio.workspace = true
-exex-wvm-bigquery.workspace = true
 exex-wvm-da.workspace = true
 
 # Or if it doesn't need an explicit feature at all (serde might be included by default)
@@ -55,6 +54,7 @@ wvm-static.workspace = true
 rbrotli = { path = "crates/brotli" }
 wvm-tx = { path = "crates/tx" }
 borsh.workspace = true
+load-db.workspace = true
 evm = { path = "crates/evm" }
 node = { path = "crates/node" }
 
