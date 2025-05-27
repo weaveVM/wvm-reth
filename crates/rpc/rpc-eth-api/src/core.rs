@@ -348,6 +348,14 @@ pub trait EthApi<T: RpcObject, B: RpcObject, R: RpcObject, H: RpcObject> {
         request: GetWvmTransactionByTagRequest,
     ) -> RpcResult<Option<Bytes>>;
 
+    /// Sends WVM transaction; will block waiting for signer to return the
+    /// transaction hash.
+    #[method(name = "getLoadTransactionByTag")]
+    async fn get_load_transaction_by_tag(
+        &self,
+        request: GetWvmTransactionByTagRequest,
+    ) -> RpcResult<Option<Bytes>>;
+
     /// Gets the arweave transaction id that prooves the permanency of a given block
     #[method(name = "getArweaveStorageProof")]
     async fn get_arweave_storage_proof(&self, block_height: String) -> RpcResult<String>;
@@ -807,6 +815,16 @@ where
     ) -> RpcResult<Option<Bytes>> {
         trace!(target: "rpc::eth", ?request, "Serving eth_getWvmTransactionByTag");
         Ok(EthTransactions::get_wvm_transaction_by_tag(self, request).await?)
+    }
+
+    /// Handler for: `eth_getLoadTransactionByTag`
+    /// For the moment, it routes to `self.get_wvm_transaction_by_tag` for compatability.
+    async fn get_load_transaction_by_tag(
+        &self,
+        request: GetWvmTransactionByTagRequest,
+    ) -> RpcResult<Option<Bytes>> {
+        trace!(target: "rpc::eth", ?request, "Serving eth_getLoadTransactionByTag (route)");
+        Ok(self.get_wvm_transaction_by_tag(request).await?)
     }
 
     /// Handler for: `eth_getArweaveStorageProof`
