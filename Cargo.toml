@@ -434,13 +434,13 @@ wvm-static = { path = "crates/wvm-static" }
 load-db = { path = "crates/load-db" }
 
 # revm
-revm = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features = [
+revm = { git = "https://github.com/weaveVM/wvm-revm", rev = "1839a61fde89c99d352bf9a47d1d1a7edcee4ab2", features = [
     "std",
     "secp256k1",
     "blst",
 ], default-features = false }
-revm-inspectors = { git = "https://github.com/weaveVM/revm-inspectors?v", branch = "main" }
-revm-primitives = { git = "https://github.com/weaveVM/wvm-revm", branch = "main", features = [
+revm-inspectors = { git = "https://github.com/weaveVM/revm-inspectors?v", branch = "stable-inspectors" }
+revm-primitives = { git = "https://github.com/weaveVM/wvm-revm", rev = "1839a61fde89c99d352bf9a47d1d1a7edcee4ab2", features = [
     "std",
 ], default-features = false }
 
