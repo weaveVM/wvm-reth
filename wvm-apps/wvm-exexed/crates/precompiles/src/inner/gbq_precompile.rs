@@ -14,56 +14,57 @@ use wvm_static::{internal_block, PRECOMPILE_LOADDB_CLIENT};
 pub const GBQ_READ_PC: PrecompileFn = gbq_read as PrecompileFn;
 
 fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
-    let data_size = input.len();
-    let gas_used: u64 = (ARWEAVE_PC_READ_BASE as usize + data_size * 3) as u64;
-
-    if gas_used > gas_limit {
-        return Err(PrecompileError::OutOfGas);
-    }
-
-    if input.is_empty() {
-        return Err(PrecompileError::Other("Arweave Transaction Id cannot be empty".to_string()));
-    }
-
-    let id_str = String::from_utf8(input.0.to_vec());
-
-    let res = match id_str {
-        Ok(val) => {
-            let (block_id, field) = {
-                let mut split = val.split(';');
-                (
-                    split.next().map(|e| e.to_string()).unwrap_or(String::default()),
-                    split.next().map(|e| e.to_string()).unwrap_or(String::default()),
-                )
-            };
-
-            // It needs to be obtained OUTSIDE the thread
-            let wvm_bgc = (&*PRECOMPILE_LOADDB_CLIENT).clone();
-
-            let res_from_bgc =
-                internal_block(async { wvm_bgc.query_state(block_id.to_string()).await }).map_err(
-                    |_| {
-                        PrecompileError::Other(
-                            "Tokio runtime could not block_on for operation".to_string(),
-                        )
-                    },
-                )?;
-
-            Some((field, res_from_bgc))
-        }
-        Err(_) => None,
-    }
-    .ok_or(PrecompileError::Other("Invalid Input".to_string()))?;
-
-    let block_str = res.1.ok_or_else(|| PrecompileError::Other("Unknown block".to_string()))?;
-
-    let block = serde_json::from_str::<Value>(&block_str)
-        .map_err(|_| PrecompileError::Other("Cannot deserialize block with senders".to_string()))?;
-    let block = from_sealed_block_senders_value(block);
-
-    let process_field = process_block_to_field(res.0.to_string(), block);
-
-    process_pc_response_from_str_bytes(gas_used, process_field)
+    // let data_size = input.len();
+    // let gas_used: u64 = (ARWEAVE_PC_READ_BASE as usize + data_size * 3) as u64;
+    //
+    // if gas_used > gas_limit {
+    //     return Err(PrecompileError::OutOfGas);
+    // }
+    //
+    // if input.is_empty() {
+    //     return Err(PrecompileError::Other("Arweave Transaction Id cannot be empty".to_string()));
+    // }
+    //
+    // let id_str = String::from_utf8(input.0.to_vec());
+    //
+    // let res = match id_str {
+    //     Ok(val) => {
+    //         let (block_id, field) = {
+    //             let mut split = val.split(';');
+    //             (
+    //                 split.next().map(|e| e.to_string()).unwrap_or(String::default()),
+    //                 split.next().map(|e| e.to_string()).unwrap_or(String::default()),
+    //             )
+    //         };
+    //
+    //         // It needs to be obtained OUTSIDE the thread
+    //         let wvm_bgc = (&*PRECOMPILE_LOADDB_CLIENT).clone();
+    //
+    //         let res_from_bgc =
+    //             internal_block(async { wvm_bgc.query_state(block_id.to_string()).await }).map_err(
+    //                 |_| {
+    //                     PrecompileError::Other(
+    //                         "Tokio runtime could not block_on for operation".to_string(),
+    //                     )
+    //                 },
+    //             )?;
+    //
+    //         Some((field, res_from_bgc))
+    //     }
+    //     Err(_) => None,
+    // }
+    // .ok_or(PrecompileError::Other("Invalid Input".to_string()))?;
+    //
+    // let block_str = res.1.ok_or_else(|| PrecompileError::Other("Unknown block".to_string()))?;
+    //
+    // let block = serde_json::from_str::<Value>(&block_str)
+    //     .map_err(|_| PrecompileError::Other("Cannot deserialize block with senders".to_string()))?;
+    // let block = from_sealed_block_senders_value(block);
+    //
+    // let process_field = process_block_to_field(res.0.to_string(), block);
+    //
+    // process_pc_response_from_str_bytes(gas_used, process_field)
+    return Err(PrecompileError::Other("Precompile unavailable".to_string()));
 }
 
 #[cfg(test)]

@@ -31,7 +31,7 @@ impl LoadDbConnection for PlanetScaleDriver {
     async fn query_raw_state(&self, block_id: String) -> Option<RawState> {
         let table_name = "state";
         let select_clause = format!(
-            "SELECT block_number, JSON_UNQUOTE(sealed_block_with_senders) AS sealed_block_with_senders, arweave_id, timestamp, block_hash FROM {}",
+            "SELECT block_number, arweave_id, timestamp, block_hash FROM {}",
             table_name
         );
 
@@ -91,23 +91,18 @@ impl LoadDbConnection for PlanetScaleDriver {
         arweave_id: String,
         block_hash: String,
     ) -> eyre::Result<()> {
-        let sealed_json = serde_json::to_string(block)?;
-        let escaped_json = sealed_json.replace('\'', "''");
 
         let insert_query = format!(
             "INSERT INTO state (
                 block_number,
-                sealed_block_with_senders,
                 arweave_id,
                 block_hash
             ) VALUES (
                 {},
                 '{}',
-                '{}',
                 '{}'
             );",
             block_number,
-            escaped_json,
             arweave_id.replace('\'', "''"),
             block_hash.replace('\'', "''")
         );
