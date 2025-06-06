@@ -18,6 +18,8 @@ pub struct RawState {
 pub trait LoadDbConnection: Send + Sync + 'static {
     // reads
     async fn query_raw_state(&self, block_id: String) -> Option<RawState>;
+
+    #[deprecated(note="Sealed_block_with_senders is deleted from database. Do not use. Ref is not deleted from struct just yet.")]
     async fn query_state(&self, block_id: String) -> Option<String>;
     async fn query_transaction_by_tags(&self, tag: (String, String)) -> Option<String>;
 
