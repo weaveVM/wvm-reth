@@ -42,8 +42,8 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     //         let wvm_bgc = (&*PRECOMPILE_LOADDB_CLIENT).clone();
     //
     //         let res_from_bgc =
-    //             internal_block(async { wvm_bgc.query_state(block_id.to_string()).await }).map_err(
-    //                 |_| {
+    //             internal_block(async { wvm_bgc.query_state(block_id.to_string()).await
+    // }).map_err(                 |_| {
     //                     PrecompileError::Other(
     //                         "Tokio runtime could not block_on for operation".to_string(),
     //                     )
@@ -70,7 +70,9 @@ fn gbq_read(input: &Bytes, gas_limit: u64) -> PrecompileResult {
     // let process_field = process_block_to_field(res.0.to_string(), block);
     //
     // process_pc_response_from_str_bytes(gas_used, process_field)
-    return Err(PrecompileError::Other("Precompile unavailable".to_string()));
+    PrecompileResult::Err(PrecompileErrors::Error(PrecompileError::Other(
+        "Precompile unavailable".to_string(),
+    )))
 }
 
 #[cfg(test)]

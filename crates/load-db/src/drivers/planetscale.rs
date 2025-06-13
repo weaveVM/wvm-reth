@@ -30,10 +30,8 @@ impl PlanetScaleDriver {
 impl LoadDbConnection for PlanetScaleDriver {
     async fn query_raw_state(&self, block_id: String) -> Option<RawState> {
         let table_name = "state";
-        let select_clause = format!(
-            "SELECT block_number, arweave_id, timestamp, block_hash FROM {}",
-            table_name
-        );
+        let select_clause =
+            format!("SELECT block_number, arweave_id, timestamp, block_hash FROM {}", table_name);
 
         let get_query = if let Ok(num) = block_id.parse::<i128>() {
             format!("{} WHERE block_number = {}", select_clause, num)
@@ -91,7 +89,6 @@ impl LoadDbConnection for PlanetScaleDriver {
         arweave_id: String,
         block_hash: String,
     ) -> eyre::Result<()> {
-
         let insert_query = format!(
             "INSERT INTO state (
                 block_number,
